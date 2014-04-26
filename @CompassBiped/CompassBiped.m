@@ -15,42 +15,39 @@ classdef CompassBiped
         mh=10; % hip mass
         
         L=1; % leg length
-        LegShift=0; % leg shift for clearance
-        Clearance=0.03;
         a=0.5; % leg center of mass
+        I=0; %1/3*1^2*3; % leg moment of inertia
+        
+        LegShift=0; % leg shift var. for clearance
+        Clearance=0.03; % clearance
 
-        I=0; %1/3*1^2*3; % moment of inertia
-        
-        g=9.81;
-        
-        Left=1;
-        Right=2;
+        g=9.81; % Gravity
         
         % Dampening
         dampNS=0; %0.3;
         dampS=0; %0.3;
-
+        
+        % enum
+        Left=1;
+        Right=2;
+        
         % Nondimensional Parameters
-        alphaND=0;
-        omegaND=0;
-        Igag=0;
-        M1=0;
-        M2=0;
-        C1=0;
-        C2=0;
+        alpha=0; aalpha=0;
+        omega=0; Igag=0;
+        M1=0; M2=0;
+        C1gag=0; C2gag=0;
         Ek=0;
 
         % Support Leg position
-        xS=0;
-        yS=0;
+        xS=0; yS=0;
         
         % Support
         Support=2; % Right
         
         % Control torques
-        Torques=[0;0]; % Left; Right
+        Torques=[0;0]; % Ankle; Hip
         
-        NumEvents=2;
+        NumEvents=2; % num. of simulation events
         
         % %%%%%% % Render parameters % %%%%%% %
         m_radius=0.015*3;
@@ -78,9 +75,9 @@ classdef CompassBiped
         % %%%%%% % Class constructor % %%%%%% %
         function CB=CompassBiped(varargin)
             switch nargin
-                case 0
+                case 0 % Empty object
                     CB; %#ok<VUNUS>
-                case 4
+                case 4 % Input is: m, mh, L, a
                     CB.m=varargin{1}; % leg mass
                     CB.mh=varargin{2}; % hip mass
                     CB.L=varargin{3}; % leg length
@@ -97,7 +94,7 @@ classdef CompassBiped
                     % %%%%%% % Render parameters % %%%%%% %
                     CB.m_radius=0.03*varargin{1};
                     CB.mh_radius=0.03*varargin{2};
-                case 6
+                case 6 % Input is: m, mh, L, a, x0, y0
                     CB.m=varargin{1}; % leg mass
                     CB.mh=varargin{2}; % hip mass
                     CB.L=varargin{3}; % leg length
@@ -114,15 +111,13 @@ classdef CompassBiped
                     % %%%%%% % Render parameters % %%%%%% %
                     CB.m_radius=0.03*varargin{1};
                     CB.mh_radius=0.03*varargin{2};
-                case 8
+                case 8 % Input is: m, mh, L, a, I, g, x0, y0
                     CB.m=varargin{1}; % leg mass
                     CB.mh=varargin{2}; % hip mass
                     CB.L=varargin{3}; % leg length
                     CB.a=varargin{4}; % leg center of mass
-
-                    CB.I=varargin{1}*varargin{4}^2*varargin{3}^2; % moment of inertia
-
-                    CB.g=varargin{6};
+                    CB.I=varargin{5}; % moment of inertia
+                    CB.g=varargin{6}; % gravity
 
                     % Support Leg position
                     CB.xS=varargin{7};
@@ -137,14 +132,19 @@ classdef CompassBiped
         
         function [CB] = SetND(CB)
             % Nondimensional Parameters
-            CB.alphaND=CB.mh/CB.m;
-            CB.omegaND=sqrt(CB.g/CB.L);
-            CB.Igag=CB.I/CB.m/CB.L^2;
-            CB.M1=5/2+2*CB.alphaND+2*CB.Igag;
-            CB.M2=1/2+2*CB.Igag;
-            CB.C1=CB.dampS*2*CB.omegaND/CB.m/CB.g/CB.L;
-            CB.C2=CB.dampNS*2*CB.omegaND/CB.m/CB.g/CB.L;
-            CB.Ek=2/CB.m/CB.g/CB.L;
+            CB.alpha=CB.m/CB.mh;
+            CB.aalpha=CB.a*CB.alpha;
+            CB.omega=sqrt(CB.g/CB.L);
+            CB.Igag=CB.I/CB.mh/CB.L^2;
+            LMg = CB.mh*CB.L*CB.g;
+            DampND = CB.omega/LMg;
+            CB.C1gag=CB.dampS*DampND;
+            CB.C2gag=CB.dampNS*DampND;
+            
+            % ND matrices elements
+            CB.M1=(CB.a-2+2/CB.a)*CB.aalpha+CB.Igag+1;
+            CB.M2=CB.a*CB.aalpha+CB.Igag;
+            CB.Ek=1/LMg;
         end
         
         % %%%%%% % Get position % %%%%%% %
@@ -185,8 +185,8 @@ classdef CompassBiped
                 % Hip mass
                 [ mhx, mhy ] = GetPos(CB, X, 'Hip');
 
-                x=(CB.m*m1x+CB.m*m2x+CB.mh*mhx)/(CB.m+CB.m+CB.mh);
-                y=(CB.m*m1y+CB.m*m2y+CB.mh*mhy)/(CB.m+CB.m+CB.mh);
+                x=(CB.m*m1x+CB.m*m2x+CB.mh*mhx)/(2*CB.m+CB.mh);
+                y=(CB.m*m1y+CB.m*m2y+CB.mh*mhy)/(2*CB.m+CB.mh);
             end
         end
         
@@ -227,8 +227,8 @@ classdef CompassBiped
                 % Hip mass
                 [ mhx, mhy ] = GetVel(CB, X, 'Hip');
 
-                xdot=(CB.m*m1x+CB.m*m2x+CB.mh*mhx)/(CB.m+CB.m+CB.mh);
-                ydot=(CB.m*m1y+CB.m*m2y+CB.mh*mhy)/(CB.m+CB.m+CB.mh);
+                xdot=(CB.m*m1x+CB.m*m2x+CB.mh*mhx)/(2*CB.m+CB.mh);
+                ydot=(CB.m*m1y+CB.m*m2y+CB.mh*mhy)/(2*CB.m+CB.mh);
             end
         end
         
@@ -241,17 +241,19 @@ classdef CompassBiped
             [Xdot] = Derivative(CB, 0, X);
             q1=X(1); q2=X(2);
             q1dot=X(3); q2dot=X(4);
-            q1dot2=Xdot(3); % q2dot2=Xdot(4);
+            q1dot2=Xdot(3); q2dot2=Xdot(4);
             
             % xdot, ydot, xdot2 and ydot2 will be set to 0 since the
             % support foot is assumed to be stationary. If the GRF
             % becomes negative then this assumption is invalid
             
             F=zeros(2,1);
-            Coef1=(CB.m*CB.a-2*CB.m-CB.mh)*CB.L;
-            Coef2=CB.m*CB.a*CB.L;
-            F(1)=Coef1*cos(q1)*q1dot2+Coef2*cos(q2)-Coef1*sin(q1)*q1dot^2-Coef2*sin(q2)*q2dot^2;
-            F(2)=Coef1*sin(q1)*q1dot2+Coef2*sin(q2)-Coef1*cos(q1)*q1dot^2-Coef2*cos(q2)*q2dot^2+(2*CB.m+CB.mh)*CB.g;
+            Coef1=(CB.a*CB.m-2*CB.m-CB.mh)*CB.L;
+            Coef2=CB.a*CB.m*CB.L;
+            F(1)=-Coef1*sin(q1)*q1dot^2 - Coef2*sin(q2)*q2dot^2 + ...
+                  Coef1*cos(q1)*q1dot2 + Coef2*cos(q2)*q2dot2;
+            F(2)= Coef1*cos(q1)*q1dot^2 + Coef2*cos(q2)*q2dot^2 + ...
+                  Coef1*sin(q1)*q1dot2 + Coef2*sin(q2)*q2dot2 + (2*CB.m+CB.mh)*CB.g;
         end
         
         function [Length] = GetStepLength(CB, X)
@@ -276,50 +278,55 @@ classdef CompassBiped
             [m1x, m1y]=CB.GetPos(X, 'm1'); %#ok<ASGLU>
             [mhx, mhy]=CB.GetPos(X, 'Hip'); %#ok<ASGLU>
             [m2x, m2y]=CB.GetPos(X, 'm2'); %#ok<ASGLU>
-            PE = CB.m*CB.g*m1y + CB.mh*CB.g*mhy + CB.m*CB.g*m2y;
+            PE = CB.g*(CB.m*(m1y + m2y) + CB.mh*mhy);
         end
         
-        function [Minv, N, G, U] = GetSystemMat(CB, X)
+        function [Minv, N, G, Eu] = GetSystemMat(CB, X)
             sS=sin(X(1)); sNS=sin(X(2));
             sSNS=sin(X(1)-X(2)); cSNS=cos(X(1)-X(2));
             theta1t=X(3)/CB.omegaND;
             theta2t=X(4)/CB.omegaND;
 
-            % M=[   CB.M1   -cSNS ;
-            %     -cSNS    CB.M2  ];
+            % M=[      CB.M1       -CB.aalpha*cSNS ;
+            %     -CB.aalpha*cSNS        CB.M2  ];
             
-            Mdet=CB.M1*CB.M2-cSNS^2;
-            Minv=[   CB.M2   cSNS ;
-                     cSNS   CB.M1  ];
+            Mdet=CB.M1*CB.M2-CB.aalpha^2*cSNS^2;
+            Minv=[       CB.M2       CB.aalpha*cSNS ;
+                     CB.aalpha*cSNS       CB.M1  ];
             Minv=Minv/Mdet;
 
-            N=[      CB.C1      -sSNS*theta2t ;
-                sSNS*theta1t      CB.C2      ];
+            N=[CB.C1gag+CB.C2gag, CB.C2gag-CB.aalpha*sSNS*theta2t;
+               -CB.C2gag+CB.aalpha*sSNS*theta1t, CB.C2gag];
 
-            G=[ -(3+2*CB.alphaND)*sS ;
-                       sNS        ];
+            G=[-(2*CB.alpha-CB.aalpha+1)*sS;
+                       CB.aalpha*sNS       ];
 
-            U=CB.Ek*CB.GetTorques();
+            Eu=CB.Ek*[1 -1; 0 1]*CB.GetTorques();
         end
     
         function [U] = GetTorques(CB)
-            U=[ CB.Torques(1)-CB.Torques(2);
+            U=[ CB.Torques(1);
                 CB.Torques(2)];
         end
         
         % %%%%%% % Derivative % %%%%%% %
         function [Xdot] = Derivative(CB, t, X) %#ok<INUSL>
+            % Derivative uses normal coordinates
+            % Translate first to nondimensional
             Xdot=zeros(4,1);
-            theta1t=X(3)/CB.omegaND;
-            theta2t=X(4)/CB.omegaND;
+            theta1t=X(3)/CB.omega;
+            theta2t=X(4)/CB.omega;
 
             % Musculo-Skeletal System
-            [Minv, N, G, U] = CB.GetSystemMat(X);
-            x_dot2t=Minv*(U-N*[theta1t; theta2t]-G);
-            x_dot2=CB.omegaND^2*x_dot2t;
+            % M*quu+N*qu+G=Eu
+            [Minv, N, G, Eu] = CB.GetSystemMat(X);
+            quu=Minv*(Eu-N*[theta1t; theta2t]-G);
+            
+            % Return to normal coordinates
+            qtt=CB.omega^2*quu;
 
             Xdot(1)=X(3); Xdot(2)=X(4);
-            Xdot(3)=x_dot2(1); Xdot(4)=x_dot2(2);
+            Xdot(3)=qtt(1); Xdot(4)=qtt(2);
         end
         
         % %%%%%% % Calculate Impact % %%%%%% %
