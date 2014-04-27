@@ -34,10 +34,12 @@ classdef CompassBiped
         % Nondimensional Parameters
         alpha=0; aalpha=0;
         omega=0; Igag=0;
-        M1=0; M2=0;
         C1gag=0; C2gag=0;
         Ek=0;
-
+        
+        % Matrix elements
+        M1=0; M2=0; P1=0; P2=0;
+        
         % Support Leg position
         xS=0; yS=0;
         
@@ -47,7 +49,14 @@ classdef CompassBiped
         % Control torques
         Torques=[0;0]; % Ankle; Hip
         
-        NumEvents=2; % num. of simulation events
+        % Runtime variables
+        last_t = 0; % Last time since impact
+        curSpeed = 0; % Current walking speed
+        
+        stDim=4; % state dimension
+        nEvents=2; % num. of simulation events
+        % 1 - Foot contact
+        % 2 - Robot falling
         
         % %%%%%% % Render parameters % %%%%%% %
         m_radius=0.015*3;
@@ -145,6 +154,9 @@ classdef CompassBiped
             CB.M1=(CB.a-2+2/CB.a)*CB.aalpha+CB.Igag+1;
             CB.M2=CB.a*CB.aalpha+CB.Igag;
             CB.Ek=1/LMg;
+            
+            CB.P1 = CB.m*CB.L^2*(CB.a^2-CB.a)+CB.I;
+            CB.P2 = (CB.mh+2*CB.m(1-CB.a))*CB.L^2;
         end
         
         % %%%%%% % Get position % %%%%%% %
@@ -334,13 +346,20 @@ classdef CompassBiped
             cSNS=cos(Xb(1)-Xb(2));
             
             % Calculate Impact
-            P=[            1-4*CB.Igag                  0      ;
-                -(3+4*CB.alphaND)*cSNS-4*CB.Igag  1-4*CB.Igag  ];
+            % P*q_before = Q*q_after
+            P=[      CB.P1           0    ;
+                CB.P2*cSNS+CB.P1   CB.P1  ];
 
-            Q=[    2*cSNS          -2*CB.M2    ;
-                2*cSNS-2*CB.M1  2*cSNS-2*CB.M2 ];
+            Q1 = -CB.a*CB.L^2*CB.m*cSNS;
+            M1d = CB.M1*CB.L^2*CB.m;
+            M2d = CB.M2*CB.L^2*CB.m;
+            Q=[   Q1     M2d   ;
+                Q1+M1d  Q1+M2d ];
 
             Xdotnew=pinv(Q)*P*[Xb(3); Xb(4)];
+            % Coordiantes are switched at impact,
+            % angular velocities are already switched when
+            % impact is calculated
             Xa=[Xb(2), Xb(1), Xdotnew(1), Xdotnew(2)];
         end
         
@@ -352,12 +371,43 @@ classdef CompassBiped
             
             [xNS, yNS]=CB.GetPos(X,'NS');
         
-            % Check for foot contact / detachment
+            % Check for foot contact
             value(1)=yNS-Floor.Surf(xNS);
             
             % Check for robot "falling"
             [HipPosx,HipPosy]=CB.GetPos(X,'Hip'); %#ok<ASGLU>
             value(2)=HipPosy-0.7*CB.L;
+        end
+        
+        % %%%%%% % Events % %%%%%% %
+        function [CB,Xa] = HandleEvent(CB, evID, Xb, t)
+            switch evID
+                case 1
+                    % Leg hit the ground
+                    % Calculate Impact
+                    Xa=CB.CalcImpact(Xb);
+
+                    % Update support foot
+                    if CB.Support==CB.Left
+                        CB.Support=CB.Right;
+                    else
+                        if CB.Support==CB.Right
+                        CB.Support=CB.Left;
+                        end
+                    end
+                    
+                    % Update support foot position
+                    [xNS, yNS]=CB.GetPos(X,'NS');
+                    CB.yS=yNS;
+                    CB.xS=xNS;
+        
+                    % Compute velocity
+                    dT = t-CB.last_t;
+                    CB.curSpeed = CB.GetStepLength(Xb)/dT;
+                    CB.last_t = t;
+                case 2
+                    % Robot fell, do nothing
+            end
         end
         
         function CB = SetTorques(CB,T)
