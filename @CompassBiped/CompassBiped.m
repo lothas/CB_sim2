@@ -156,7 +156,7 @@ classdef CompassBiped
             CB.Ek=1/LMg;
             
             CB.P1 = CB.m*CB.L^2*(CB.a^2-CB.a)+CB.I;
-            CB.P2 = (CB.mh+2*CB.m(1-CB.a))*CB.L^2;
+            CB.P2 = (CB.mh+2*CB.m*(1-CB.a))*CB.L^2;
         end
         
         % %%%%%% % Get position % %%%%%% %
@@ -296,8 +296,8 @@ classdef CompassBiped
         function [Minv, N, G, Eu] = GetSystemMat(CB, X)
             sS=sin(X(1)); sNS=sin(X(2));
             sSNS=sin(X(1)-X(2)); cSNS=cos(X(1)-X(2));
-            theta1t=X(3)/CB.omegaND;
-            theta2t=X(4)/CB.omegaND;
+            theta1t=X(3)/CB.omega;
+            theta2t=X(4)/CB.omega;
 
             % M=[      CB.M1       -CB.aalpha*cSNS ;
             %     -CB.aalpha*cSNS        CB.M2  ];
@@ -365,9 +365,9 @@ classdef CompassBiped
         
         % %%%%%% % Events % %%%%%% %
         function [value isterminal direction] = Events(CB, X, Floor)
-            value=ones(CB.NumEvents,1);
-            isterminal=ones(CB.NumEvents,1);
-            direction=-ones(CB.NumEvents,1);
+            value=ones(CB.nEvents,1);
+            isterminal=ones(CB.nEvents,1);
+            direction=-ones(CB.nEvents,1);
             
             [xNS, yNS]=CB.GetPos(X,'NS');
         
@@ -397,7 +397,7 @@ classdef CompassBiped
                     end
                     
                     % Update support foot position
-                    [xNS, yNS]=CB.GetPos(X,'NS');
+                    [xNS, yNS]=CB.GetPos(Xb,'NS');
                     CB.yS=yNS;
                     CB.xS=xNS;
         
