@@ -23,10 +23,10 @@ classdef Terrain < handle
         start_slope=0;
         end_slope=0;
         
-        end_x=0;
-        end_y=0;
         start_x=0;
         start_y=0;
+        end_x=0;
+        end_y=0;
         
         % Render parameters
         FloorStep=0.05;
@@ -118,12 +118,6 @@ classdef Terrain < handle
             Te=Te.SetEndConditions();
         end
         
-        function [Te] = SetVertLines(Te,NLines)
-            Te.VertLines=NLines;
-            Te.FloorVLx=zeros(1,NLines);
-            Te.FloorVL=zeros(1,NLines);
-        end
-        
         function [y, Trans] = Surf(Te,x)
             if length(x)>1
                 ID1 = find(x>=Te.start_x,1,'first');
@@ -134,18 +128,18 @@ classdef Terrain < handle
                 if isempty(ID2)
                     ID2 = length(x);
                 end
-                [y1, ~] = Te.Surfh{Te.Type}(x(1:ID1-1));
-                [y2, ~] = Te.Surfh{Te.Type}(x(ID1:ID2-1));
-                [y3, ~] = Te.Surfh{Te.Type}(x(ID2:end));
+                [y1, ~] = Te.Surfh{Te.Type+1}(x(1:ID1-1));
+                [y2, ~] = Te.Surfh{Te.Type+1}(x(ID1:ID2-1));
+                [y3, ~] = Te.Surfh{Te.Type+1}(x(ID2:end));
                 y = [y1,y2,y3];
                 Trans=[];
             else
-                [y,Trans] = Te.Surfh{Te.Type}(x);
+                [y,Trans] = Te.Surfh{Te.Type+1}(x);
             end
         end
 
         function [alpha]=SurfSlope(Te,x)
-            alpha = Te.SurfSlopeh{Te.Type}(x);
+            alpha = Te.SurfSlopeh{Te.Type+1}(x);
         end
         
 % %%%%%%%%%%%% Type 0 - inclined plane %%%%%%%%%%%%
@@ -154,11 +148,11 @@ classdef Terrain < handle
             Trans=[cos(alpha), -sin(alpha);
                    sin(alpha), cos(alpha)];
                
-            y=Te.start_y+x*tand(Te.end_slope);
+            y=Te.start_y+x*tand(Te.start_slope);
         end
 
         function [alpha]=SurfSlope0(Te,x) %#ok<INUSD>
-            alpha=Te.end_slope*pi/180;
+            alpha=Te.start_slope*pi/180;
         end
         
 % %%%%%%%%%%%% Type 1 - sinusoidal %%%%%%%%%%%%
