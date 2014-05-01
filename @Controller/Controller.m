@@ -6,66 +6,83 @@ classdef Controller
     
     properties
         % LIF parameters
-        P_reset=0;
-        P_th=1;
+        P_reset = 0;
+        P_th = 1;
         
-        P_LegE=0.65; % timed leg extension
+        P_LegE = 0.65; % timed leg extension
 
         % Oscillator's frequency
-        omega=1.106512566;
-        omega0=1.106512566;
+        omega = 1.106512566;
+        omega0 = 1.106512566;
         
         % Initial phase for oscillator:
-        P_0=0;
+        P_0 = 0;
         
-        NumEvents=0;
+        stDim = 1; % state dimension
+        nEvents = 2; % num. of simulation events
         
         % Controller Output
-        NumTorques=4;   % Half applied at the ankle, half at the hip
-        NumActJoints=2; % Active joints:
-                        %    1 - Just hip actuation
-                        %    2 - Ankle and Hip actuation
+        nPulses = 0; % Overall number of pulses
+        nJoints = 0; % number of actuated joints
+        OutM = 0;    % Output matrix (multiplies Switch vector)
         
-        NTorque=0;      % Output torque in N
-        NTorque0=0;     % Base output torque in N
-        NOffset=0;      % Defines beginning of pulse as % of neuron period
-        NDuration=0;    % Pulse duration as % of neuron period
+        Amp = 0;     % Pulse amplitude in N
+        Amp0 = 0;    % Base pulse amplitude in N
+        Offset = 0;  % Defines beginning of pulse as % of neuron period
+        Duration = 0;% Pulse duration as % of neuron period
         
-        NSwitch=0;
-        tSon=0;
-        tSoff=0;
+        Switch = 0;  % 0 when off, Amp when pulse is active
+        pSoff = 0;   % Phase at which to turn off external inputs
         
         % Adaptation
-        Adaptive=1;
+        FBType = 1;  % 0 - no feedback
+                     % 1 - single gain for omega and each joint
+                     % 2 - individual gains for each pulse
         
-        kOmega_up=0.4579;
-        kOmega_down=0.9;
-        kTorques_up=0;
-        kTorques_down=0;
+        % Gains
+        kOmega_u = 0.4579;
+        kOmega_d = 0.9;
+        kTorques_u = 0;
+        kTorques_d = 0;
     end
     
     methods
         % %%%%%% % Class constructor % %%%%%% %
         function [NC] = Controller(varargin)
             % Set torque parameters
-            NC.NTorque0=[-13.6255 -4.6281 13.6255 0];
-            NC.NTorque=NC.NTorque0;
+            NC.nPulses = 4;
+            NC.Amp0=[-13.6255 -4.6281 13.6255 0];
+            NC.Amp=NC.Amp;
             
-            NC.NOffset=[0 0 0 0];
+            NC.Offset=[0 0 0 0];
             
-            NC.NDuration=[0.1 0.4 0.1 0];
+            NC.Duration=[0.1 0.4 0.1 0];
             
-            NC.NSwitch=zeros(1,NC.NumTorques);
-            NC.tSon=zeros(1,NC.NumTorques);
-            NC.tSoff=zeros(1,NC.NumTorques);
+            NC.Switch=zeros(1,NC.nPulses);
+            NC.pSoff=zeros(1,NC.nPulses);
             
             % Set adaptation parameters
-            NC.kTorques_up=[95 -443 95 0];
-            NC.kTorques_down=[80 -295 80 0];
+            NC.kTorques_u=[95 -443 95 0];
+            NC.kTorques_d=[80 -295 80 0];
             
-            NC.NumEvents=1+NC.NumTorques*2+1;
+            NC.nEvents=1+NC.nPulses*2+1;
         end
         
+        function [NC] = ClearTorques(NC)
+            NC.nPulses = 0;
+            NC.nJoints = 0;
+            NC.OutM = [];
+            NC.Amp0 = [];
+            NC.Amp = [];
+            NC.Offset = [];
+            NC.Duration = [];
+            NC.Switch = [];
+            NC.pSoff = [];
+            if NC.FBType == 2
+                NC.kTorques_u = [];
+                NC.kTorques_d = [];
+            end
+        end
         function [Torques] = NeurOutput(NC)
             Torques=zeros(2,1); % [ Ankle; Hip ]
             

@@ -3,11 +3,20 @@ close all
 
 % Simulation objects
 Mod = CompassBiped();
-% Con = Controller();
+Con = Controller();
 Env = Terrain();
 
+% Set up the compass biped model
 % Mod = Mod.Set('damp',5,'yS',2.5);
+
+% Set up the terrain
 Env = Env.Set('Type','inc','start_slope',-1);
+
+% Set up the controller
+Con = Con.Set('omega0',1.106512566,'P_LegE',0.65,'FBType',0);
+Con = Con.ClearTorques();
+Con = Con.AddPulse('joint',1,'amp',1,'offset',1,'dur',1);
+Con = Con.AddPulse('joint',1,'amp',1,'offset',1,'dur',1);
 
 % Simulation parameters
 tstep = 0.003;
