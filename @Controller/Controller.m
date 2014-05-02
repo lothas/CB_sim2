@@ -23,7 +23,6 @@ classdef Controller
         
         % Controller Output
         nPulses = 0; % Overall number of pulses
-        nJoints = 0; % number of actuated joints
         OutM = 0;    % Output matrix (multiplies Switch vector)
         
         Amp = 0;     % Pulse amplitude in N
@@ -35,7 +34,7 @@ classdef Controller
         pSoff = 0;   % Phase at which to turn off external inputs
         
         % Adaptation
-        FBType = 1;  % 0 - no feedback
+        FBType = 2;  % 0 - no feedback
                      % 1 - single gain for omega and each joint
                      % 2 - individual gains for each pulse
         
@@ -70,7 +69,6 @@ classdef Controller
         
         function [NC] = ClearTorques(NC)
             NC.nPulses = 0;
-            NC.nJoints = 0;
             NC.OutM = [];
             NC.Amp0 = [];
             NC.Amp = [];
@@ -82,6 +80,7 @@ classdef Controller
                 NC.kTorques_u = [];
                 NC.kTorques_d = [];
             end
+            NC.nEvents = 2;
         end
         function [Torques] = NeurOutput(NC)
             Torques=zeros(2,1); % [ Ankle; Hip ]
@@ -129,54 +128,42 @@ classdef Controller
         end
         
         % %%%%%% % Events % %%%%%% %
-        function [value isterminal direction] = Events(NC, t, X)
-            value=ones(NC.NumEvents,1);
-            isterminal=ones(NC.NumEvents,1);
-            direction=-ones(NC.NumEvents,1);
+        function [value, isterminal, direction] = Events(NC, X)
+            value = ones(NC.nEvents,1);
+            isterminal = ones(NC.nEvents,1);
+            direction = -ones(NC.nEvents,1);
             
             % Check for firing neuron
-            value(1)=NC.P_th-X(5);
+            value(1) = NC.P_th - X;
 
             % Check for switching on signal
-            value(2:1+NC.NumTorques)=NC.tSon-t;
-            value(2+NC.NumTorques:1+2*NC.NumTorques)=NC.tSoff-t;
+            value(2:1+NC.nPulses) = NC.Offset/NC.omega - X;
+            value(2+NC.nPulses:1+2*NC.nPulses) = ...
+                (NC.Offset+NC.Duration)/NC.omega - X;
             
             % Check for leg extension signal (for clearance)
-            value(end)=NC.P_LegE-X(5);
+            value(end) = NC.P_LegE - X;
         end
         
-        function [NC] = HandleEvents(NC, EvID, curTime)
-            % EvID is a vector of length NumEvents, each item set to 1 if
-            % event occurred (default is 0)
-            if EvID(1)==1
-                % Neuron fired
-                % Set timers to turn on the torques
-                NC.tSon=curTime+NC.NOffset/NC.omega;
-                % Set timers to turn off the torques
-                NC.tSoff=NC.tSon+NC.NDuration/NC.omega;
-                
-                for i=1:NC.NumTorques
-                    if NC.NOffset(i)==0;
-                        % Turn on signal now
-                        NC.NSwitch(i)=1;
-                    end
-                end                        
-            end
-            for i=2:1+NC.NumTorques
-                if EvID(i)==1
+        function [NC] = HandleEvent(NC, EvID)
+            switch EvID
+                case 1
+                    % Neuron fired
+                    for i=1:NC.nPulses
+                        if NC.Offset(i)==0;
+                            % Turn on signal now
+                            NC.Switch(i) = NC.Amp(i);
+                        end
+                    end                        
+                case num2cell(2:1+NC.nPulses)
                     % Switch on signal
-                    NC.NSwitch(i-1)=1;
-                end
-            end
-            for i=2+NC.NumTorques:1+2*NC.NumTorques
-                if EvID(i)==1
+                    NC.Switch(EvID-1) = NC.Amp(EvID-1);
+                case num2cell(2+NC.nPulses:1+2*NC.nPulses)
                     % Switch off signal
-                    NC.NSwitch(i-(1+NC.NumTorques))=0;
-                end
-            end
-            if EvID(end)==1
-                % Extend the leg
-                % This is done from the simulation file
+                    NC.NSwitch(EvID-(1+NC.nPulses)) = 0;
+                case 1+2*NC.nPulses+1
+                    % Extend the leg
+                    % This is done from the simulation file
             end
         end
         

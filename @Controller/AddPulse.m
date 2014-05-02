@@ -42,6 +42,11 @@ else
                 error(['Set failed: ',key,' property not found']);
         end
     end
+    
+    % Update number of pulses
+    NC.nPulses = PulID;
+    NC.nEvents = 2 + 2*PulID;
+    NC.Switch(PulID) = 0;
 
 end
 

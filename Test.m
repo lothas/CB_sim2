@@ -6,6 +6,16 @@ Mod = CompassBiped();
 Con = Controller();
 Env = Terrain();
 
+% Set states
+stDim = Mod.stDim + Con.stDim;
+ModCo = 1:Mod.stDim; % Model coord. indices
+ConCo = Mod.stDim+1:stDim; % Contr. coord. indices
+
+% Set events
+nEvents = Mod.nEvents + Con.nEvents;
+ModEv = 1:Mod.nEvents; % Model events indices
+ConEv = Mod.nEvents+1:nEvents; % Contr. events indices
+
 % Set up the compass biped model
 % Mod = Mod.Set('damp',5,'yS',2.5);
 
@@ -13,15 +23,15 @@ Env = Terrain();
 Env = Env.Set('Type','inc','start_slope',-1);
 
 % Set up the controller
-Con = Con.Set('omega0',1.106512566,'P_LegE',0.65,'FBType',0);
-Con = Con.ClearTorques();
-Con = Con.AddPulse('joint',1,'amp',1,'offset',1,'dur',1);
-Con = Con.AddPulse('joint',1,'amp',1,'offset',1,'dur',1);
+% Con = Con.ClearTorques();
+% Con = Con.Set('omega0',1.106512566,'P_LegE',0.65,'FBType',0);
+% Con = Con.AddPulse('joint',1,'amp',1,'offset',1,'dur',1);
+% Con = Con.AddPulse('joint',1,'amp',1,'offset',1,'dur',1);
 
 % Simulation parameters
 tstep = 0.003;
 tspan = 0:tstep:10;
-IC = [0.13, -0.1, -0.4, -0.25];
+IC = [0.13, -0.1, -0.4, -0.25, 0]';
 
 % Render parameters
 Fig = 0; Once = 1; AR = 1;
@@ -36,17 +46,32 @@ Mod.LegShift = Mod.Clearance;
 
 % Simulate
 options=odeset('MaxStep',tstep/10,'RelTol',.5e-7,'AbsTol',.5e-8, 'OutputFcn', @Render, 'Events', @Events);
-[TTemp,XTemp,TE,YE,IE]=ode45(@Mod.Derivative,tspan,IC,options);
+[TTemp,XTemp,TE,YE,IE]=ode45(@Derivative,tspan,IC,options);
 
 while TTemp(end)<tspan(end) && StopSim == 0
     % Deal with it
-    [Mod,Xa] = Mod.HandleEvent(IE,XTemp(:,end),TTemp(end));
+    Xa = XTemp(end,:);
+    for ev = 1:length(IE)
+        % Is it a model event?
+        ModEvID = find(IE(ev) == ModEv,1,'first');
+        if ~isempty(ModEvID)
+            [Mod,Xa(ModCo)] = Mod.HandleEvents(ModEvID, ...
+                                    XTemp(end,ModCo),TTemp(end));
+        end
+        
+        % Is it a controller event?
+        ConEvID = find(IE(ev) == ConEv,1,'first');
+        if ~isempty(ConEvID)
+            [Con,Xa(ConCo)] = Con.HandleEvents(ConEvID, ...
+                                    XTemp(end,ConCo),TTemp(end));
+        end
+    end
     
     % Set new initial conditions
     IC = Xa;
     
     % Continue simulation
-    [TTemp,XTemp,TE,YE,IE]=ode45(@Mod.Derivative,tspan,IC,options);
+    [TTemp,XTemp,TE,YE,IE]=ode45(@Derivative,tspan,IC,options);
 end
 
     function status = Render(t,X,flag)
@@ -118,11 +143,23 @@ end
         
     end
 
-    function [value isterminal direction] = Events(t, X)
-        [mv mit md] = Mod.Events(X, Env);
-        value = mv;
-        isterminal = mit;
-        direction = md;
+    function [Xt] = Derivative(t,X)
+        Xt = zeros(stDim,1);
+        Xt(ModCo) = Mod.Derivative(t,X(ModCo));
+        Xt(ConCo) = Con.Derivative(t,X(ConCo));
+    end
+
+    function [value, isterminal, direction] = Events(t, X) %#ok<INUSL>
+        value = zeros(nEvents,1);
+        isterminal = ones(nEvents,1);
+        direction = zeros(nEvents,1);
+        
+        % Call model event function
+        [value(ModEv), isterminal(ModEv), direction(ModEv)] = ...
+            Mod.Events(X(ModCo), Env);
+        % Call controller event function
+        [value(ConEv), isterminal(ConEv), direction(ConEv)] = ...
+            Con.Events(X(ConCo));
     end
 
     function StopButtonCb(hObject, eventdata, handles) %#ok<INUSD>

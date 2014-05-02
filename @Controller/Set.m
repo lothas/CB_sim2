@@ -28,8 +28,6 @@ else
                 NC.omega = value;
                 
             % Controller Output
-            case 'nJoints'
-                NC.nJoints = value;  % number of actuated joints
             case 'nPulses'
                 NC.nPulses = value;  % Overall number of pulses
             case 'Amp0'
