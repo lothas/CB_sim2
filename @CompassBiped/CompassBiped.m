@@ -16,7 +16,7 @@ classdef CompassBiped
         
         L=1; % leg length
         a=0.5; % leg center of mass
-        I=0; %1/3*1^2*3; % leg moment of inertia
+        I=1/3*3*1^2; % leg moment of inertia
         
         LegShift=0; % leg shift var. for clearance
         Clearance=0.03; % clearance
@@ -351,13 +351,13 @@ classdef CompassBiped
                 CB.P2*cSNS+CB.P1   CB.P1  ];
 
             Q1 = -CB.a*CB.L^2*CB.m*cSNS;
-            M1d = CB.M1*CB.L^2*CB.m;
-            M2d = CB.M2*CB.L^2*CB.m;
+            M1d = CB.M1*CB.L^2*CB.mh;
+            M2d = CB.M2*CB.L^2*CB.mh;
             Q=[   Q1     M2d   ;
                 Q1+M1d  Q1+M2d ];
 
             Xdotnew=pinv(Q)*P*[Xb(3); Xb(4)];
-            % Coordiantes are switched at impact,
+            % Coordinates are switched at impact,
             % angular velocities are already switched when
             % impact is calculated
             Xa=[Xb(2), Xb(1), Xdotnew(1), Xdotnew(2)];
