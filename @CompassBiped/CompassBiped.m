@@ -364,7 +364,7 @@ classdef CompassBiped
         end
         
         % %%%%%% % Events % %%%%%% %
-        function [value isterminal direction] = Events(CB, X, Floor)
+        function [value, isterminal, direction] = Events(CB, X, Floor)
             value=ones(CB.nEvents,1);
             isterminal=ones(CB.nEvents,1);
             direction=-ones(CB.nEvents,1);
@@ -407,6 +407,7 @@ classdef CompassBiped
                     CB.last_t = t;
                 case 2
                     % Robot fell, do nothing
+                    Xa = Xb;
             end
         end
         

@@ -51,13 +51,14 @@ classdef Controller
             % Set torque parameters
             NC.nPulses = 4;
             NC.Amp0=[-13.6255 -4.6281 13.6255 0];
-            NC.Amp=NC.Amp;
+            NC.Amp=NC.Amp0;
+            NC.OutM = [1 1 0 0; 0 0 1 1];
             
             NC.Offset=[0 0 0 0];
             
             NC.Duration=[0.1 0.4 0.1 0];
             
-            NC.Switch=zeros(1,NC.nPulses);
+            NC.Switch=zeros(NC.nPulses,1);
             NC.pSoff=zeros(1,NC.nPulses);
             
             % Set adaptation parameters
@@ -83,23 +84,7 @@ classdef Controller
             NC.nEvents = 2;
         end
         function [Torques] = NeurOutput(NC)
-            Torques=zeros(2,1); % [ Ankle; Hip ]
-            
-            switch NC.NumActJoints
-                case 1
-                    for i=1:NC.NumTorques
-                        % Hip torque
-                        Torques(2)=Torques(2)+NC.NSwitch(i)*NC.NTorque(i);
-                    end
-                case 2
-                    half=NC.NumTorques/2;
-                    for i=1:half
-                        % Ankle torque
-                        Torques(1)=Torques(1)+NC.NSwitch(i)*NC.NTorque(i);
-                        % Hip torque
-                        Torques(2)=Torques(2)+NC.NSwitch(half+i)*NC.NTorque(half+i);
-                    end
-            end
+            Torques = NC.OutM*NC.Switch;
         end
 
         function [NC] = Adaptation(NC, X)
@@ -136,16 +121,17 @@ classdef Controller
             % Check for firing neuron
             value(1) = NC.P_th - X;
 
-            % Check for switching on signal
-            value(2:1+NC.nPulses) = NC.Offset/NC.omega - X;
-            value(2+NC.nPulses:1+2*NC.nPulses) = ...
-                (NC.Offset+NC.Duration)/NC.omega - X;
-            
             % Check for leg extension signal (for clearance)
-            value(end) = NC.P_LegE - X;
+            value(2) = NC.P_LegE - X;
+            
+            % Check for switching on signal
+            value(3:2+NC.nPulses) = NC.Offset/NC.omega - X;
+            value(3+NC.nPulses:2+2*NC.nPulses) = ...
+                (NC.Offset+NC.Duration)/NC.omega - X;
         end
         
-        function [NC] = HandleEvent(NC, EvID)
+        function [NC,Xa] = HandleEvent(NC, EvID, Xb)
+            Xa = Xb;
             switch EvID
                 case 1
                     % Neuron fired
@@ -154,17 +140,33 @@ classdef Controller
                             % Turn on signal now
                             NC.Switch(i) = NC.Amp(i);
                         end
-                    end                        
-                case num2cell(2:1+NC.nPulses)
-                    % Switch on signal
-                    NC.Switch(EvID-1) = NC.Amp(EvID-1);
-                case num2cell(2+NC.nPulses:1+2*NC.nPulses)
-                    % Switch off signal
-                    NC.NSwitch(EvID-(1+NC.nPulses)) = 0;
-                case 1+2*NC.nPulses+1
+                    end
+                    Xa = NC.P_reset; % reset phase
+                case 2
                     % Extend the leg
                     % This is done from the simulation file
+                case num2cell(3:2+NC.nPulses)
+                    % Switch on signal
+                    NC.Switch(EvID-2) = NC.Amp(EvID-2);
+                case num2cell(3+NC.nPulses:2+2*NC.nPulses)
+                    % Switch off signal
+                    NC.Switch(EvID-(2+NC.nPulses)) = 0;
             end
+        end
+        
+        function [NC, Xa] = HandleExtFB(NC, Xa)
+            % This function is called when the leg hits the ground
+            if NC.FBType > 0
+                % Perform adaptation based on terrain slope
+            end
+            
+            % if something else
+            % Do a phase reset
+            
+            % if some other thing
+            % Bring the angular velocities to a certain value
+            % or add a constant value to the angular velocities
+            % or start an "impulse" pulse
         end
         
         function [NC] = LoadParameters(NC,ControlParams)

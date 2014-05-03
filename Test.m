@@ -6,6 +6,18 @@ Mod = CompassBiped();
 Con = Controller();
 Env = Terrain();
 
+% Set up the compass biped model
+% Mod = Mod.Set('damp',5,'yS',2.5);
+
+% Set up the terrain
+Env = Env.Set('Type','inc','start_slope',0);
+
+% Set up the controller
+Con = Con.ClearTorques();
+Con = Con.Set('omega0',1.2666,'P_LegE',0.5973,'FBType',0);
+Con = Con.AddPulse('joint',1,'amp',-7.3842,'offset',0.1268,'dur',0.07227);
+Con = Con.AddPulse('joint',2,'amp',5.1913,'offset',0.1665,'dur',0.0537);
+
 % Set states
 stDim = Mod.stDim + Con.stDim;
 ModCo = 1:Mod.stDim; % Model coord. indices
@@ -16,22 +28,12 @@ nEvents = Mod.nEvents + Con.nEvents;
 ModEv = 1:Mod.nEvents; % Model events indices
 ConEv = Mod.nEvents+1:nEvents; % Contr. events indices
 
-% Set up the compass biped model
-% Mod = Mod.Set('damp',5,'yS',2.5);
-
-% Set up the terrain
-Env = Env.Set('Type','inc','start_slope',-1);
-
-% Set up the controller
-% Con = Con.ClearTorques();
-% Con = Con.Set('omega0',1.106512566,'P_LegE',0.65,'FBType',0);
-% Con = Con.AddPulse('joint',1,'amp',1,'offset',1,'dur',1);
-% Con = Con.AddPulse('joint',1,'amp',1,'offset',1,'dur',1);
-
 % Simulation parameters
-tstep = 0.003;
-tspan = 0:tstep:10;
-IC = [0.13, -0.1, -0.4, -0.25, 0]';
+tstep = 0.01;
+tend = 10;
+tspan = 0:tstep:tend;
+% IC = [0.13, -0.1, -0.4, -0.25, 0];
+IC = [0., 0., 0., 0., 0.];
 
 % Render parameters
 Fig = 0; Once = 1; AR = 1;
@@ -42,7 +44,7 @@ FlMin = -2; FlMax = 2;
 
 % Initialize simulation
 StopSim = 0;
-Mod.LegShift = Mod.Clearance;
+% Mod.LegShift = Mod.Clearance;
 
 % Simulate
 options=odeset('MaxStep',tstep/10,'RelTol',.5e-7,'AbsTol',.5e-8, 'OutputFcn', @Render, 'Events', @Events);
@@ -55,15 +57,28 @@ while TTemp(end)<tspan(end) && StopSim == 0
         % Is it a model event?
         ModEvID = find(IE(ev) == ModEv,1,'first');
         if ~isempty(ModEvID)
-            [Mod,Xa(ModCo)] = Mod.HandleEvents(ModEvID, ...
+            [Mod,Xa(ModCo)] = Mod.HandleEvent(ModEvID, ...
                                     XTemp(end,ModCo),TTemp(end));
+            
+            % Handle event interactions
+            if ModEvID == 1
+                % Ground contact
+                [Con, Xa] = Con.HandleExtFB(Xa);
+            end
         end
         
         % Is it a controller event?
         ConEvID = find(IE(ev) == ConEv,1,'first');
         if ~isempty(ConEvID)
-            [Con,Xa(ConCo)] = Con.HandleEvents(ConEvID, ...
-                                    XTemp(end,ConCo),TTemp(end));
+            [Con,Xa(ConCo)] = Con.HandleEvent(ConEvID, XTemp(end,ConCo));
+            
+            % Handle event interactions
+            switch ConEvID
+                case 1 % Neuron fired
+                    Mod.LegShift = Mod.Clearance;
+                case 2 % Leg extension
+                    Mod.LegShift = 0;
+            end 
         end
     end
     
@@ -71,6 +86,7 @@ while TTemp(end)<tspan(end) && StopSim == 0
     IC = Xa;
     
     % Continue simulation
+    tspan = TTemp(end):tstep:tend;
     [TTemp,XTemp,TE,YE,IE]=ode45(@Derivative,tspan,IC,options);
 end
 
@@ -144,9 +160,10 @@ end
     end
 
     function [Xt] = Derivative(t,X)
-        Xt = zeros(stDim,1);
-        Xt(ModCo) = Mod.Derivative(t,X(ModCo));
-        Xt(ConCo) = Con.Derivative(t,X(ConCo));
+        Mod.Torques=Con.NeurOutput();
+        
+        Xt = [Mod.Derivative(t,X(ModCo));
+        	  Con.Derivative(t,X(ConCo))];
     end
 
     function [value, isterminal, direction] = Events(t, X) %#ok<INUSL>

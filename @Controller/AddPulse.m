@@ -46,7 +46,7 @@ else
     % Update number of pulses
     NC.nPulses = PulID;
     NC.nEvents = 2 + 2*PulID;
-    NC.Switch(PulID) = 0;
+    NC.Switch(PulID,1) = 0;
 
 end
 
