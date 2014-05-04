@@ -83,28 +83,34 @@ classdef Controller
             end
             NC.nEvents = 2;
         end
+        
         function [Torques] = NeurOutput(NC)
             Torques = NC.OutM*NC.Switch;
         end
 
+        function [per] = GetPeriod(NC)
+            per = (NC.P_th-NC.P_reset)/NC.omega;
+        end
+        
         function [NC] = Adaptation(NC, X)
-            if NC.Adaptive==0
-                % NO FEEDBACK
-                NC.omega=NC.omega0;
-                NC.NTorque=NC.NTorque0;
-            end
-                
-            if NC.Adaptive==1
-                Phi=(X(1)+X(2))/2;
-
-                if Phi<0
-                    NC.omega=NC.omega0+NC.kOmega_down*Phi;
-                    NC.NTorque=NC.NTorque0+NC.kTorques_down*Phi;
-                else
-                    NC.omega=NC.omega0+NC.kOmega_up*Phi;
-                    NC.NTorque=NC.NTorque0+NC.kTorques_up*Phi;
-                end
-            end
+            %%% Still have to re-write this function
+%             if NC.Adaptive==0
+%                 % NO FEEDBACK
+%                 NC.omega=NC.omega0;
+%                 NC.NTorque=NC.NTorque0;
+%             end
+%                 
+%             if NC.Adaptive==1
+%                 Phi=(X(1)+X(2))/2;
+% 
+%                 if Phi<0
+%                     NC.omega=NC.omega0+NC.kOmega_down*Phi;
+%                     NC.NTorque=NC.NTorque0+NC.kTorques_down*Phi;
+%                 else
+%                     NC.omega=NC.omega0+NC.kOmega_up*Phi;
+%                     NC.NTorque=NC.NTorque0+NC.kTorques_up*Phi;
+%                 end
+%             end
         end
         
         % %%%%%% % Derivative % %%%%%% %
@@ -158,6 +164,7 @@ classdef Controller
             % This function is called when the leg hits the ground
             if NC.FBType > 0
                 % Perform adaptation based on terrain slope
+                NC = NC.Adaptation(Xa);
             end
             
             % if something else
