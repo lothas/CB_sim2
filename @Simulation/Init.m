@@ -36,15 +36,17 @@ function [ sim ] = Init( sim )
         sim.HeightMax = sim.COMy0+4/sim.AR*sim.Mod.L;
 
         % Init torque display params
-        sim.nOuts = size(sim.Con.OutM,1);
-        % Set number of steps so a whole cycle of the oscillator
-        % will be included
-        sim.nTsteps = ceil(sim.Con.GetPeriod()/sim.tstep);
-        sim.Ttime = linspace(sim.FlMax*0.8,sim.FlMax*0.95,sim.nTsteps);
-        sim.Thold = zeros(sim.nOuts,sim.nTsteps);
-        sim.Tbase = (sim.HeightMax+sim.HeightMin)/2;
-        sim.Tscale = 0.1*(sim.HeightMax-sim.HeightMin)/max(abs(sim.Con.Amp0));
-        sim.hTorques = zeros(sim.nOuts,1);
+        sim.nOuts = length(sim.Con.Amp0);
+        if sim.nOuts>0
+            % Set number of steps so a whole cycle of the oscillator
+            % will be included
+            sim.nTsteps = ceil(sim.Con.GetPeriod()/sim.tstep);
+            sim.Ttime = linspace(sim.FlMax*0.8,sim.FlMax*0.95,sim.nTsteps);
+            sim.Thold = zeros(sim.nOuts,sim.nTsteps);
+            sim.Tbase = (sim.HeightMax+sim.HeightMin)/2;
+            sim.Tscale = 0.1*(sim.HeightMax-sim.HeightMin)/max(abs(sim.Con.Amp0));
+            sim.hTorques = zeros(sim.nOuts,1);
+        end
     end
     
     sim.Mod.curSpeed = 'Computing...';

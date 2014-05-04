@@ -15,11 +15,19 @@ Sim.Env = Sim.Env.Set('Type','inc','start_slope',0);
 % Sim.Con = Sim.Con.AddPulse('joint',1,'amp',-7.3842,'offset',0.1268,'dur',0.07227);
 % Sim.Con = Sim.Con.AddPulse('joint',2,'amp',5.1913,'offset',0.1665,'dur',0.0537);
 
+% Let's try an impulsive controller
+Sim.Con = Sim.Con.ClearTorques();
+Sim.Con = Sim.Con.Set('omega0',0.8);
+Sim.Con.FBImpulse = 2;
+theta_dot = [-0.50, -0.42];
+Sim.Con.AngVelImp = theta_dot;
+
 % Simulation parameters
-Sim = Sim.SetTime(0,0.05,'inf');
+Sim = Sim.SetTime(0,0.03,'inf');
 % Sim.IC = [0.13, -0.1, -0.4, -0.25, 0];
 % Sim.IC = [0., 0., 0., 0., 0.];
-Sim.IC = [0.1393442, -0.1393442, -0.5933174, -0.4680616, 0.8759402];
+% Sim.IC = [0.1393442, -0.1393442, -0.5933174, -0.4680616, 0.8759402];
+Sim.IC = [0.1393442, -0.1393442, theta_dot, 0.7759402];
 
 % Set internal parameters (state dimensions, events, etc)
 Sim = Sim.Init();

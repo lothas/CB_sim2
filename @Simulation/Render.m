@@ -66,12 +66,14 @@ function status = Render(sim,t,X,flag)
             sprintf(sim.TimeStr,t,X(sim.ConCo),...
                 sim.Env.SurfSlope(sim.Mod.xS)*180/pi,sim.Mod.curSpeed));
         % Update torque display
-        sim.Thold(:,1:end-1) = sim.Thold(:,2:end);
-%             sim.Thold(:,end) = sim.Con.NeurOutput();
-        sim.Thold(:,end) = sim.Mod.GetTorques();
-        for to = 1:sim.nOuts
-            set(sim.hTorques(to),...
-                'YData',sim.Tbase + sim.Thold(to,:)*sim.Tscale);
+        if sim.nOuts>0
+            sim.Thold(:,1:end-1) = sim.Thold(:,2:end);
+    %             sim.Thold(:,end) = sim.Con.NeurOutput();
+            sim.Thold(:,end) = sim.Mod.Torques;
+            for to = 1:sim.nOuts
+                set(sim.hTorques(to),...
+                    'YData',sim.Tbase + sim.Thold(to,:)*sim.Tscale);
+            end
         end
     end
     status = sim.StopSim;

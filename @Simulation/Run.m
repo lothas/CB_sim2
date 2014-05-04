@@ -41,7 +41,8 @@ function [ X, T ] = Run( sim )
                 % Handle event interactions
                 if ModEvID == 1
                     % Ground contact
-                    [sim.Con, Xa] = sim.Con.HandleExtFB(Xa);
+                    [sim.Con, Xa(sim.ModCo), Xa(sim.ConCo)] = ...
+                        sim.Con.HandleExtFB(Xa(sim.ModCo),Xa(sim.ConCo));
                     
                     % Count step
                     sim.StepsTaken = sim.StepsTaken+1;

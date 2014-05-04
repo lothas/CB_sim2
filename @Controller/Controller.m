@@ -17,26 +17,36 @@ classdef Controller
         
         % Initial phase for oscillator:
         P_0 = 0;
-        
+                
         stDim = 1; % state dimension
         nEvents = 2; % num. of simulation events
         
         % Controller Output
         nPulses = 0; % Overall number of pulses
-        OutM = 0;    % Output matrix (multiplies Switch vector)
+        OutM;        % Output matrix (multiplies Switch vector)
         
         Amp = 0;     % Pulse amplitude in N
         Amp0 = 0;    % Base pulse amplitude in N
         Offset = 0;  % Defines beginning of pulse as % of neuron period
         Duration = 0;% Pulse duration as % of neuron period
         
-        Switch = 0;  % 0 when off, Amp when pulse is active
+        Switch;      % 0 when off, Amp when pulse is active
         pSoff = 0;   % Phase at which to turn off external inputs
         
-        % Adaptation
+        % Feedback
         FBType = 2;  % 0 - no feedback
                      % 1 - single gain for omega and each joint
                      % 2 - individual gains for each pulse
+                     
+        % Phase reset
+        ExtP_reset = []; % set to a certain phase to use phase reset
+                         % on foot contact
+                         
+        % Angular velocity impulses
+        FBImpulse = 0; % 0 - no feedback
+                       % 1 - add a constant value
+                       % 2 - set ang. vel. to certain value
+        AngVelImp = [];
         
         % Gains
         kOmega_u = 0.4579;
@@ -70,12 +80,12 @@ classdef Controller
         
         function [NC] = ClearTorques(NC)
             NC.nPulses = 0;
-            NC.OutM = [];
+            NC.OutM = 0;
             NC.Amp0 = [];
             NC.Amp = [];
             NC.Offset = [];
             NC.Duration = [];
-            NC.Switch = [];
+            NC.Switch = [0,0]';
             NC.pSoff = [];
             if NC.FBType == 2
                 NC.kTorques_u = [];
@@ -93,29 +103,25 @@ classdef Controller
         end
         
         function [NC] = Adaptation(NC, X)
-            %%% Still have to re-write this function
-%             if NC.Adaptive==0
-%                 % NO FEEDBACK
-%                 NC.omega=NC.omega0;
-%                 NC.NTorque=NC.NTorque0;
-%             end
-%                 
-%             if NC.Adaptive==1
-%                 Phi=(X(1)+X(2))/2;
-% 
-%                 if Phi<0
-%                     NC.omega=NC.omega0+NC.kOmega_down*Phi;
-%                     NC.NTorque=NC.NTorque0+NC.kTorques_down*Phi;
-%                 else
-%                     NC.omega=NC.omega0+NC.kOmega_up*Phi;
-%                     NC.NTorque=NC.NTorque0+NC.kTorques_up*Phi;
-%                 end
-%             end
+            if NC.FBType == 0
+                % NO FEEDBACK
+                NC.omega = NC.omega0;
+                NC.Amp = NC.Amp0;
+            else
+                Phi = (X(1)+X(2))/2;
+                
+                NC.omega = NC.omega0 + ...
+                    min(0,Phi)*NC.kOmega_d + ...    % Phi<0
+                    max(0,Phi)*NC.kOmega_u;         % Phi>0
+                NC.Amp = NC.Amp0 + ...
+                    min(0,Phi)*NC.kTorques_d + ...  % Phi<0
+                    max(0,Phi)*NC.kTorques_u;       % Phi>0
+            end
         end
         
         % %%%%%% % Derivative % %%%%%% %
         function [Xdot] = Derivative(NC, t, X) %#ok<INUSD,MANUSL>
-            Xdot=NC.omega;
+            Xdot = NC.omega;
         end
         
         % %%%%%% % Events % %%%%%% %
@@ -160,20 +166,31 @@ classdef Controller
             end
         end
         
-        function [NC, Xa] = HandleExtFB(NC, Xa)
+        function [NC, Xmod, Xcon] = HandleExtFB(NC, Xmod, Xcon)
             % This function is called when the leg hits the ground
             if NC.FBType > 0
                 % Perform adaptation based on terrain slope
-                NC = NC.Adaptation(Xa);
+                NC = NC.Adaptation(Xmod);
             end
             
-            % if something else
-            % Do a phase reset
+            if ~isempty(NC.ExtP_reset)
+                % Perform a phase reset
+                Xcon = NC.ExtP_reset;
+                
+                % Check if any event happens at ExtP_reset
+                [value, it, dir] = NC.Events(NC, Xcon); %#ok<NASGU,ASGLU>
+                EvIDs = find(value == 0);
+                for ev = 1:EvIDs
+                    [NC,Xcon] = NC.HandleEvent(EvIDs(ev),Xcon);
+                end
+            end
             
-            % if some other thing
-            % Bring the angular velocities to a certain value
-            % or add a constant value to the angular velocities
-            % or start an "impulse" pulse
+            switch NC.FBImpulse
+                case 1 % 1 - add a constant value
+                    Xmod(3:4) = Xmod(3:4) + NC.AngVelImp;
+                case 2 % 2 - set ang. vel. to certain value
+                    Xmod(3:4) = NC.AngVelImp;
+            end
         end
         
         function [NC] = LoadParameters(NC,ControlParams)

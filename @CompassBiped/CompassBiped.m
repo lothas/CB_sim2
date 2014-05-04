@@ -313,14 +313,9 @@ classdef CompassBiped
             G=[-(2*CB.alpha-CB.aalpha+1)*sS;
                        CB.aalpha*sNS       ];
 
-            Eu=CB.Ek*[1 -1; 0 1]*CB.GetTorques();
+            Eu=CB.Ek*[1 -1; 0 1]*CB.Torques;
         end
-    
-        function [U] = GetTorques(CB)
-            U=[ CB.Torques(1);
-                CB.Torques(2)];
-        end
-        
+            
         % %%%%%% % Derivative % %%%%%% %
         function [Xdot] = Derivative(CB, t, X) %#ok<INUSL>
             % Derivative uses normal coordinates
