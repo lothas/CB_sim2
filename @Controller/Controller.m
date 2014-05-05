@@ -178,7 +178,7 @@ classdef Controller
                 Xcon = NC.ExtP_reset;
                 
                 % Check if any event happens at ExtP_reset
-                [value, it, dir] = NC.Events(NC, Xcon); %#ok<NASGU,ASGLU>
+                [value, it, dir] = NC.Events(Xcon); %#ok<NASGU,ASGLU>
                 EvIDs = find(value == 0);
                 for ev = 1:EvIDs
                     [NC,Xcon] = NC.HandleEvent(EvIDs(ev),Xcon);

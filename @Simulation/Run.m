@@ -75,6 +75,10 @@ function [ X, T ] = Run( sim )
 
         % Continue simulation
         tspan = TTemp(end):sim.tstep:sim.tend;
+        if length(tspan)<2
+            % Can happen at the end of tspan
+            break;
+        end
         [TTemp,XTemp,TE,YE,IE] = ...
             ode45(@sim.Derivative,tspan,sim.IC,options); %#ok<ASGLU>
         
