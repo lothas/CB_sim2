@@ -47,10 +47,19 @@ function [ sim ] = Init( sim )
             sim.Tscale = 0.1*(sim.HeightMax-sim.HeightMin)/max(abs(sim.Con.Amp0));
             sim.hTorques = zeros(sim.nOuts,1);
         end
+        
+        sim.Mod.curSpeed = 'Computing...';
     end
     
-    sim.Mod.curSpeed = 'Computing...';
     sim.StepsTaken = 0;
+    sim.MinSlope = 0;
+    sim.MaxSlope = 0;
+    sim.ICstore = zeros(sim.stDim, sim.nICsStored);
+    sim.stepsSS = zeros(1,sim.nICsStored-1);
+    
+    % Init sim.End result
+    sim.End.Type = 0;
+    sim.End.Text = 'Reached end of tspan';
     
     % Adapt CPG (if adaptive)
     sim.Con = sim.Con.Adaptation([0 2*sim.Env.SurfSlope(sim.Mod.xS) 0 0 0]);

@@ -1,4 +1,4 @@
-function [ X, T ] = Run( sim )
+function [ SimOut ] = Run( sim )
 % Run the simulation until an event occurs
 % Handle the event and keep running
     X = [];
@@ -24,11 +24,24 @@ function [ X, T ] = Run( sim )
     end
     
     % Save state and time
+    SuppPos = [ones(length(TTemp),1)*sim.Mod.xS, ...
+               ones(length(TTemp),1)*sim.Mod.yS];
     X = [X; XTemp];
     T = [T; TTemp];
+    Torques = [];
+    
+    if sim.nOuts>0
+        % Save torques
+        TorquesTemp = zeros(sim.nOuts,length(TTemp));
+        for j=1:length(TTemp)
+            TorquesTemp(:,j) = sim.Con.NeurOutput();
+        end
+        Torques = TorquesTemp;
+    end
 
     while Cond1 && sim.StopSim == 0
         % Deal with it
+        StoreIC = 0;
         Xa = XTemp(end,:);
         for ev = 1:length(IE)
             % Is it a model event?
@@ -39,18 +52,25 @@ function [ X, T ] = Run( sim )
                         XTemp(end,sim.ModCo),TTemp(end));
 
                 % Handle event interactions
-                if ModEvID == 1
-                    % Ground contact
+                if ModEvID == 1 % Ground contact
+                    StoreIC = 1; % Store the initial conditions right after impact
+                    
                     [sim.Con, Xa(sim.ModCo), Xa(sim.ConCo)] = ...
                         sim.Con.HandleExtFB(Xa(sim.ModCo),Xa(sim.ConCo));
                     
-                    % Count step
-                    sim.StepsTaken = sim.StepsTaken+1;
+                    sim = sim.UpdateStats(TTemp,XTemp);
                     
                     if ~ischar(sim.Mod.curSpeed)
                         sim.TimeStr = ['t = %.2f s\nOsc.=%.3f\n',...
                          'Slope = %.2f ',char(176)','\nSpeed = %.3f m/s'];
                     end
+                end
+                
+                if ModEvID == 2 % Robot fell down (hip height too low)
+                    sim.End.Type = 1;
+                    sim.End.Text = 'Robot fell down (hip height too low)';
+                    sim.StopSim = 1;
+                    break;
                 end
             end
 
@@ -72,6 +92,15 @@ function [ X, T ] = Run( sim )
 
         % Set new initial conditions
         sim.IC = Xa;
+        if StoreIC
+            sim.ICstore(:,2:end) = sim.ICstore(:,1:end-1);
+            sim.ICstore(:,1) = sim.IC';
+            sim = sim.CheckConvergence();
+        end
+        
+        if sim.StopSim
+            break;
+        end
 
         % Continue simulation
         tspan = TTemp(end):sim.tstep:sim.tend;
@@ -90,9 +119,30 @@ function [ X, T ] = Run( sim )
         end
         
         % Save state and time
+        SuppPos = [SuppPos;
+                   ones(length(TTemp),1)*sim.Mod.xS, ...
+                   ones(length(TTemp),1)*sim.Mod.yS]; %#ok<AGROW>
         X = [X; XTemp]; %#ok<AGROW>
         T = [T; TTemp]; %#ok<AGROW>
+        
+        if sim.nOuts>0
+            % Save torques
+            TorquesTemp = zeros(sim.nOuts,length(TTemp));
+            for j=1:length(TTemp)
+                TorquesTemp(:,j) = sim.Con.NeurOutput();
+            end
+            Torques = [Torques; TorquesTemp]; %#ok<AGROW>
+        end
     end
-
+    
+    % Prepare simulation output
+    SimOut.X = X;
+    SimOut.T = T;
+    SimOut.SuppPos = SuppPos;
+    SimOut.Torques = Torques;
+    SimOut.nSteps = sim.StepsTaken;
+    SimOut.End = sim.End;
+    SimOut.StepsSS = sim.stepsSS;
+    SimOut.MaxSlope = [sim.MinSlope, sim.MaxSlope];
 end
 

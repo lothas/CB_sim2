@@ -1,8 +1,9 @@
-function [X,T] = AlexSim()
+function [SimOut] = AlexSim()
 close all
 
 Sim = Simulation();
-Sim.Graphics = 0;
+Sim.Graphics = 1;
+Sim.EndCond = 2;
 
 % Set up the compass biped model
 Sim.Mod = Sim.Mod.Set('damp',0,'I',0);
@@ -23,7 +24,7 @@ Sim.Con.ExtP_reset = phi_0;
 Sim.Con.AngVelImp = theta_dot;
 
 % Simulation parameters
-Sim = Sim.SetTime(0,0.03,60);
+Sim = Sim.SetTime(0,0.05,60);
 % Sim.IC = [0.13, -0.1, -0.4, -0.25, 0];
 % Sim.IC = [0., 0., 0., 0., 0.];
 % Sim.IC = [0.1393442, -0.1393442, -0.5933174, -0.4680616, 0.8759402];
@@ -37,5 +38,8 @@ Sim.Mod.LegShift = Sim.Mod.Clearance;
 Sim.Con.HandleEvent(1, Sim.IC(Sim.ConCo));
 
 % Simulate
-[X,T] = Sim.Run();
+[SimOut] = Sim.Run();
+
+% Do some plots
+SimOut
 end
