@@ -29,8 +29,6 @@ function [ sim ] = CheckConvergence( sim )
         sim.tstep = sim.tstep_small;
     end
     
-    sim.stepsSS
-    Converge
     sim.stepsSS = sim.stepsSS + Converge;
     
     % If the sim is set to stop after convergence:
@@ -39,9 +37,15 @@ function [ sim ] = CheckConvergence( sim )
         Increasing = find(Converge == 1, 1, 'first');
         if ~isempty(Period)
             if Period(1)<=Increasing
-                sim.End.Type = 4;
-                sim.End.Text = ['Reached steady state limit cycle of period ', ...
+                % shortest period reached the required num. of steps
+                sim.Out.Type = 5;
+                sim.Out.Text = ['Reached steady state limit cycle of period ', ...
                     num2str(Period(1)),' after ',num2str(sim.StepsTaken),' steps'];
+                
+                % Prepare data for Poincare computation
+                sim.IClimCyc = sim.ICstore(:,1);
+                sim.Period = Period(1);
+                
                 sim.StopSim = 1;
             % else, if a lower period is still converging keep going
             end

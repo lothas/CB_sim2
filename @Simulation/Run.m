@@ -1,4 +1,4 @@
-function [ SimOut ] = Run( sim )
+function [ sim ] = Run( sim )
 % Run the simulation until an event occurs
 % Handle the event and keep running
     X = [];
@@ -17,10 +17,10 @@ function [ SimOut ] = Run( sim )
         ode45(@sim.Derivative,tspan,sim.IC,options); %#ok<ASGLU>
     
     if sim.infTime == 1
-        Cond1 = true;
+        TimeCond = true;
         sim.tend = sim.tend + TTemp(end)-tspan(1);
     else
-        Cond1 = TTemp(end)<sim.tend;
+        TimeCond = TTemp(end)<sim.tend;
     end
     
     % Save state and time
@@ -39,7 +39,7 @@ function [ SimOut ] = Run( sim )
         Torques = TorquesTemp;
     end
 
-    while Cond1 && sim.StopSim == 0
+    while TimeCond && sim.StopSim == 0
         % Deal with it
         StoreIC = 0;
         Xa = XTemp(end,:);
@@ -67,8 +67,8 @@ function [ SimOut ] = Run( sim )
                 end
                 
                 if ModEvID == 2 % Robot fell down (hip height too low)
-                    sim.End.Type = 1;
-                    sim.End.Text = 'Robot fell down (hip height too low)';
+                    sim.Out.Type = 1;
+                    sim.Out.Text = 'Robot fell down (hip height too low)';
                     sim.StopSim = 1;
                     break;
                 end
@@ -112,10 +112,10 @@ function [ SimOut ] = Run( sim )
             ode45(@sim.Derivative,tspan,sim.IC,options); %#ok<ASGLU>
         
         if sim.infTime == 1
-            Cond1 = true;
+            TimeCond = true;
             sim.tend = sim.tend + TTemp(end)-tspan(1);
         else
-            Cond1 = TTemp(end)<sim.tend;
+            TimeCond = TTemp(end)<sim.tend;
         end
         
         % Save state and time
@@ -136,13 +136,12 @@ function [ SimOut ] = Run( sim )
     end
     
     % Prepare simulation output
-    SimOut.X = X;
-    SimOut.T = T;
-    SimOut.SuppPos = SuppPos;
-    SimOut.Torques = Torques;
-    SimOut.nSteps = sim.StepsTaken;
-    SimOut.End = sim.End;
-    SimOut.StepsSS = sim.stepsSS;
-    SimOut.MaxSlope = [sim.MinSlope, sim.MaxSlope];
+    sim.Out.X = X;
+    sim.Out.T = T;
+    sim.Out.SuppPos = SuppPos;
+    sim.Out.Torques = Torques;
+    sim.Out.nSteps = sim.StepsTaken;
+    sim.Out.StepsSS = sim.stepsSS;
+    sim.Out.MaxSlope = [sim.MinSlope, sim.MaxSlope];
 end
 

@@ -52,14 +52,15 @@ function [ sim ] = Init( sim )
     end
     
     sim.StepsTaken = 0;
+    sim.Steps2Slope = [];
     sim.MinSlope = 0;
     sim.MaxSlope = 0;
     sim.ICstore = zeros(sim.stDim, sim.nICsStored);
     sim.stepsSS = zeros(1,sim.nICsStored-1);
     
     % Init sim.End result
-    sim.End.Type = 0;
-    sim.End.Text = 'Reached end of tspan';
+    sim.Out.Type = 0;
+    sim.Out.Text = 'Reached end of tspan';
     
     % Adapt CPG (if adaptive)
     sim.Con = sim.Con.Adaptation([0 2*sim.Env.SurfSlope(sim.Mod.xS) 0 0 0]);

@@ -1,5 +1,5 @@
-classdef Simulation < handle
-    % Version 0.1 - 04/05/2014
+classdef Simulation < handle 
+    % Version 0.2 - 10/05/2014
     % This simulation integrates a system over time until
     % an event occurs, then it performs some calculations
     % and continues integrating until the next event or
@@ -22,19 +22,24 @@ classdef Simulation < handle
         tstart; tend; tspan;
         
         % Performance tracking / Statistics
-        End;
+        Out; % output holder
         EndCond = 0;
         % Set EndCond to run the sim until:
         % 0 - the end of time
         % [1,numsteps] - numsteps are taken on end_slope
         % 2 - the system converges to a limit cycle
         
-        CurSpeed; StepsTaken;
+        CurSpeed; StepsTaken; Steps2Slope;
         MaxSlope; MinSlope;
         ICstore; nICsStored = 10;
         minDiff = 8e-7; % Min. difference for LC convergence
         stepsReq = 15; % Steps of minDiff required for convergence
         stepsSS; % Steps taken since minDiff
+        
+        % Poincare map calculation parameters
+        IClimCyc; Period;
+        PMeps = 1e-4; PMFull = 0;
+        PMeigs; PMeigVs;
                 
         % Rendering params
         Graphics = 1;
@@ -69,6 +74,28 @@ classdef Simulation < handle
                     sim.Con = Controller();
                     sim.Env = Terrain();
             end            
+        end
+        
+        function sim = SetEndCond(sim, value)
+            L = length(value);
+            if L<1
+                error('Invalid input for EndCond');
+            end
+            
+            if value(1) == 1
+                Error = ['When setting EndCond to 1,',...
+                           'a value for num. steps is also needed',...
+                           '\nPlease use sim.EndCond = [1,nsteps]'];
+                if L<2
+                    error(Error);
+                else
+                    if ~isnumeric(value(2)) || value(2)<1
+                        error(Error);
+                    end
+                end
+            end
+            
+            sim.EndCond = value;
         end
         
         function sim = SetTime(sim,tstart,tstep,tend)

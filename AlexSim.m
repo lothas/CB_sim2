@@ -1,4 +1,4 @@
-function [SimOut] = AlexSim()
+function [Sim] = AlexSim()
 close all
 
 Sim = Simulation();
@@ -17,7 +17,7 @@ Sim.Con = Sim.Con.ClearTorques();
 Sim.Con = Sim.Con.Set('omega0', 1.3333,'P_LegE',0.61); % 1/T;T =0.8895
 Sim.Con.FBImpulse = 2;
 theta_dot = [ -0.4640, -0.5330 ];
-alpha = 0.1013;
+alpha = 0.100952073;
 thetta = [start_slope+alpha,start_slope-alpha];
 phi_0 = 0.7759402;
 Sim.Con.ExtP_reset = phi_0;
@@ -38,8 +38,11 @@ Sim.Mod.LegShift = Sim.Mod.Clearance;
 Sim.Con.HandleEvent(1, Sim.IC(Sim.ConCo));
 
 % Simulate
-[SimOut] = Sim.Run();
+Sim = Sim.Run();
+
+% Calculate eigenvalues
+[EigVal,EigVec] = Sim.Poincare();
 
 % Do some plots
-SimOut
+disp(EigVal);
 end
