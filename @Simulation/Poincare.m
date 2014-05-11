@@ -20,7 +20,7 @@ for d = Coords
 end
 
 % Run the simulations
-PMsim = sim;
+PMsim = copy(sim);
 PMsim.EndCond = [1,sim.Period];
 for d = Coords
     PMsim.IC = dIC(:,d);
