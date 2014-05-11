@@ -12,6 +12,12 @@ Sim.Mod = Sim.Mod.Set('damp',0,'I',0);
 start_slope = 0;
 Sim.Env = Sim.Env.Set('Type','inc','start_slope',start_slope);
 
+% Set up the controller
+% Sim.Con = Sim.Con.ClearTorques();
+% Sim.Con = Sim.Con.Set('omega0',1.2666,'P_LegE',0.5973,'FBType',0);
+% Sim.Con = Sim.Con.AddPulse('joint',1,'amp',-7.3842,'offset',0.1268,'dur',0.07227);
+% Sim.Con = Sim.Con.AddPulse('joint',2,'amp',5.1913,'offset',0.1665,'dur',0.0537);
+
 % Let's try an impulsive controller
 Sim.Con = Sim.Con.ClearTorques();
 Sim.Con = Sim.Con.Set('omega0', 1.3333,'P_LegE',0.61); % 1/T;T =0.8895
