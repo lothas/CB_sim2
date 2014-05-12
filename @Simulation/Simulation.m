@@ -1,4 +1,4 @@
-classdef Simulation < handle 
+classdef Simulation < handle & matlab.mixin.Copyable
     % Version 0.2 - 10/05/2014
     % This simulation integrates a system over time until
     % an event occurs, then it performs some calculations
