@@ -15,7 +15,8 @@ if rem(nParams,1)~=0 || nargin<1
 else
     % Get ready to add a new pulse
     PulID = NC.nPulses + 1;
-    
+    PulseParams = cell(6,1);
+        
     for p = 1:nParams
         key = varargin{2*p-1};
         value = varargin{2*p};
@@ -23,30 +24,56 @@ else
             error('Set failed: property value must be numeric');
         end
         
-        switch key
+        switch lower(key)
             case 'joint'
-                NC.OutM(value,PulID) = 1;    
+                PulseParams{1} = value;
             case 'amp'
-                NC.Amp0(PulID) = value;
-                NC.Amp(PulID) = value;
+                PulseParams{2} = value;
             case 'offset'
-                NC.Offset(PulID) = value;
+                PulseParams{3} = value;
             case 'dur'
-                NC.Duration(PulID) = value;
+                PulseParams{4} = value;
             case 'k_u'
-                NC.kTorques_u(PulID) = value;
+                PulseParams{5} = value;
             case 'k_d'
-                NC.kTorques_d(PulID) = value;
+                PulseParams{6} = value;
 
             otherwise
                 error(['Set failed: ',key,' property not found']);
         end
     end
     
-    % Update number of pulses
-    NC.nPulses = PulID;
-    NC.nEvents = 2 + 2*PulID;
-    NC.Switch(PulID,1) = 0;
+    % Check if all the required parameters where input
+    if NC.FBType == 2
+        Missing = find(cellfun('isempty',PulseParams)==1);
+    else
+        Missing = find(cellfun('isempty',PulseParams(1:4))==1);
+    end
+    
+    if isempty(Missing)
+        % Add the new pulse
+        % Is it an externally triggered pulse?
+        if ~isnumeric(PulseParams{3}) % should be 'ext'
+            % Add external pulse
+            NC.ExtPulses = [NC.ExtPulses, PulID];
+            PulseParams{3} = 2; % will never be reached
+        end
+        
+        NC.OutM(PulseParams{1},PulID) = 1;
+        NC.Amp0(PulID) = PulseParams{2};
+        NC.Amp(PulID) = PulseParams{2};
+        NC.Offset(PulID) = PulseParams{3};
+        NC.Duration(PulID) = PulseParams{4};
+        NC.kTorques_u(PulID) = PulseParams{5};
+        NC.kTorques_d(PulID) = PulseParams{6};
 
+        % Update number of pulses
+        NC.nPulses = PulID;
+        NC.nEvents = 2 + 2*PulID;
+        NC.Switch(PulID,1) = 0;
+    else
+        Keys = {'Joint', 'Amp', 'Offset', 'Dur', 'k_u', 'k_d'};
+        error(['No value provided for ',Keys{Missing},' parameter(s)']);
+    end
 end
 
