@@ -32,6 +32,7 @@ classdef Controller
         
         Switch;      % 0 when off, Amp when pulse is active
         pSoff = 0;   % Phase at which to turn off external inputs
+        ExtPulses;   % External pulses IDs
         
         % Feedback
         FBType = 2;  % 0 - no feedback
@@ -92,6 +93,7 @@ classdef Controller
                 NC.kTorques_d = [];
             end
             NC.nEvents = 2;
+            NC.ExtPulses = [];
         end
         
         function [Torques] = NeurOutput(NC)
@@ -100,6 +102,10 @@ classdef Controller
 
         function [per] = GetPeriod(NC)
             per = (NC.P_th-NC.P_reset)/NC.omega;
+        end
+        
+        function [Xperc] = GetPhasePerc(NC,X)
+            Xperc = (X-NC.P_reset)/(NC.P_th-NC.P_reset);
         end
         
         function [NC] = Adaptation(NC, X)
@@ -136,10 +142,11 @@ classdef Controller
             % Check for leg extension signal (for clearance)
             value(2) = NC.P_LegE - X;
             
-            % Check for switching on signal
-            value(3:2+NC.nPulses) = NC.Offset/NC.omega - X;
+            % Check for switching on/off signal
+            Xperc = NC.GetPhasePerc(X);
+            value(3:2+NC.nPulses) = NC.Offset - Xperc;
             value(3+NC.nPulses:2+2*NC.nPulses) = ...
-                (NC.Offset+NC.Duration)/NC.omega - X;
+                NC.Offset + NC.Duration - Xperc;
         end
         
         function [NC,Xa] = HandleEvent(NC, EvID, Xb)
@@ -162,7 +169,12 @@ classdef Controller
                     NC.Switch(EvID-2) = NC.Amp(EvID-2);
                 case num2cell(3+NC.nPulses:2+2*NC.nPulses)
                     % Switch off signal
-                    NC.Switch(EvID-(2+NC.nPulses)) = 0;
+                    PulseID = EvID-(2+NC.nPulses);
+                    NC.Switch(PulseID) = 0;
+                    if any(PulseID == NC.ExtPulses)
+                        % Set offset back to 200%
+                        NC.Offset(PulseID) = 2;
+                    end
             end
         end
         
@@ -189,8 +201,13 @@ classdef Controller
                 case 1 % 1 - add a constant value
                     Xmod(3:4) = Xmod(3:4) + NC.AngVelImp;
                 case 2 % 2 - set ang. vel. to certain value
+%                     delta = NC.AngVelImp - Xmod(3:4)
                     Xmod(3:4) = NC.AngVelImp;
             end
+            
+            % Activate external pulses
+            NC.Switch(NC.ExtPulses) = NC.Amp(NC.ExtPulses);
+            NC.Offset(NC.ExtPulses) = NC.GetPhasePerc(Xcon);
         end
         
         function [NC] = LoadParameters(NC,ControlParams)

@@ -45,7 +45,6 @@ function [ sim ] = Init( sim )
             sim.Thold = zeros(sim.nOuts,sim.nTsteps);
             sim.Tbase = (sim.HeightMax+sim.HeightMin)/2;
             sim.Tscale = 0.1*(sim.HeightMax-sim.HeightMin)/max(abs(sim.Con.Amp0));
-            sim.hTorques = zeros(sim.nOuts,1);
         end
         
         sim.Mod.curSpeed = 'Computing...';

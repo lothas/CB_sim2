@@ -32,9 +32,9 @@ function [ sim ] = Run( sim )
     
     if sim.nOuts>0
         % Save torques
-        TorquesTemp = zeros(sim.nOuts,length(TTemp));
+        TorquesTemp = zeros(length(TTemp),sim.nOuts);
         for j=1:length(TTemp)
-            TorquesTemp(:,j) = sim.Con.NeurOutput();
+            TorquesTemp(j,:) = sim.Con.NeurOutput()';
         end
         Torques = TorquesTemp;
     end
@@ -134,9 +134,9 @@ function [ sim ] = Run( sim )
         
         if sim.nOuts>0
             % Save torques
-            TorquesTemp = zeros(sim.nOuts,length(TTemp));
+            TorquesTemp = zeros(length(TTemp),sim.nOuts);
             for j=1:length(TTemp)
-                TorquesTemp(:,j) = sim.Con.NeurOutput();
+                TorquesTemp(j,:) = sim.Con.NeurOutput()';
             end
             Torques = [Torques; TorquesTemp]; %#ok<AGROW>
         end

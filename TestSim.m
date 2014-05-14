@@ -1,9 +1,9 @@
 function [Sim] = TestSim()
-close all
+% close all
 
 Sim = Simulation();
 Sim.Graphics = 1;
-Sim.EndCond = 2;
+Sim.EndCond = 2; % Run until converge
 
 % Set up the compass biped model
 Sim.Mod = Sim.Mod.Set('damp',0,'I',0);
@@ -19,15 +19,33 @@ Sim.Env = Sim.Env.Set('Type','inc','start_slope',start_slope);
 % Sim.Con = Sim.Con.AddPulse('joint',2,'amp',5.1913,'offset',0.1665,'dur',0.0537);
 
 % Let's try an impulsive controller
+% Sim.Con = Sim.Con.ClearTorques();
+% Sim.Con = Sim.Con.Set('omega0', 1.3333,'P_LegE',0.61); % 1/T;T =0.8895
+% Sim.Con.FBImpulse = 1; % impulsive open loop
+% theta_dot = [ -0.4640, -0.5330 ];
+% delta = [-0.019877882616433  -0.126797754378412];
+% alpha = 0.100952073;
+% thetta = [start_slope+alpha,start_slope-alpha];
+% phi_0 = 0.7759402;
+% Sim.Con.ExtP_reset = phi_0;
+% Sim.Con.AngVelImp = delta;
+
+% Let's try a quasi-impulsive controller
 Sim.Con = Sim.Con.ClearTorques();
-Sim.Con = Sim.Con.Set('omega0', 1.3333,'P_LegE',0.61); % 1/T;T =0.8895
-Sim.Con.FBImpulse = 2;
-theta_dot = [ -0.4640, -0.5330 ];
-alpha = 0.100952073;
+Sim.Con.FBType = 0;
+T = 0.779875183484506; omega = 1/T;
+Sim.Con = Sim.Con.Set('omega0', omega,'P_LegE',0.61); % 1/T;T =0.8895
+alpha = 0.08777523036753;
 thetta = [start_slope+alpha,start_slope-alpha];
+theta_dot = [ -0.386077676960781, -0.359050627940161 ];
+delta = [-0.019877882616433  -0.126797754378412];
+delta_joint = [delta(1)+delta(2) delta(2)];
+duration = 0.05;
+amp = delta_joint/duration;
+Sim.Con = Sim.Con.AddPulse('joint',1,'amp',amp(1),'offset','ext','dur',duration);
+Sim.Con = Sim.Con.AddPulse('joint',2,'amp',amp(2),'offset','ext','dur',duration);
 phi_0 = 0.7759402;
 Sim.Con.ExtP_reset = phi_0;
-Sim.Con.AngVelImp = theta_dot;
 
 % Simulation parameters
 Sim = Sim.SetTime(0,0.05,60);
@@ -41,7 +59,8 @@ Sim = Sim.Init();
 
 % Some more simulation initialization
 Sim.Mod.LegShift = Sim.Mod.Clearance;
-Sim.Con.HandleEvent(1, Sim.IC(Sim.ConCo));
+% Sim.Con = Sim.Con.HandleEvent(1, Sim.IC(Sim.ConCo));
+Sim.Con = Sim.Con.HandleExtFB([thetta, theta_dot],phi_0);
 
 % Simulate
 Sim = Sim.Run();
