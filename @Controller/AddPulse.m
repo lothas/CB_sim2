@@ -20,9 +20,6 @@ else
     for p = 1:nParams
         key = varargin{2*p-1};
         value = varargin{2*p};
-        if ~isnumeric(value)
-            error('Set failed: property value must be numeric');
-        end
         
         switch lower(key)
             case 'joint'
@@ -59,13 +56,19 @@ else
             PulseParams{3} = 2; % will never be reached
         end
         
+        if any(cellfun(@isnumeric,PulseParams([1,2,4:end]))==0)
+            error('Set failed: property value must be numeric');
+        end
+        
         NC.OutM(PulseParams{1},PulID) = 1;
         NC.Amp0(PulID) = PulseParams{2};
         NC.Amp(PulID) = PulseParams{2};
         NC.Offset(PulID) = PulseParams{3};
         NC.Duration(PulID) = PulseParams{4};
-        NC.kTorques_u(PulID) = PulseParams{5};
-        NC.kTorques_d(PulID) = PulseParams{6};
+        if NC.FBType == 2
+            NC.kTorques_u(PulID) = PulseParams{5};
+            NC.kTorques_d(PulID) = PulseParams{6};
+        end
 
         % Update number of pulses
         NC.nPulses = PulID;

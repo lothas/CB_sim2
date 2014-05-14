@@ -33,6 +33,7 @@ function status = Render(sim,t,X,flag)
                 sim.Once = 0;
 
                 % Render torque plots
+                sim.hTorques = zeros(sim.nOuts,1);                
                 for to = 1:sim.nOuts
                     sim.hTorques(to) = line(sim.Ttime,...
                         sim.Tbase+sim.Thold(to,:)*sim.Tscale,...

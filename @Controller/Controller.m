@@ -201,11 +201,12 @@ classdef Controller
                 case 1 % 1 - add a constant value
                     Xmod(3:4) = Xmod(3:4) + NC.AngVelImp;
                 case 2 % 2 - set ang. vel. to certain value
+%                     delta = NC.AngVelImp - Xmod(3:4)
                     Xmod(3:4) = NC.AngVelImp;
             end
             
             % Activate external pulses
-            NC.Switch(NC.ExtPulses) = 1;
+            NC.Switch(NC.ExtPulses) = NC.Amp(NC.ExtPulses);
             NC.Offset(NC.ExtPulses) = NC.GetPhasePerc(Xcon);
         end
         
