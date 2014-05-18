@@ -144,7 +144,9 @@ classdef Simulation < handle & matlab.mixin.Copyable
 
         function StopButtonCb(sim, hObject, eventdata, handles) %#ok<INUSD>
             if sim.StopSim == 0
-                sim.StopSim=1;
+                sim.StopSim = 1;
+                sim.Out.Type = -1;
+                sim.Out.Text = 'Simulation stopped by user';
                 set(hObject,'String','Close Window');
             else
                 close(sim.Fig)

@@ -208,6 +208,10 @@ classdef Controller
             % Activate external pulses
             NC.Switch(NC.ExtPulses) = NC.Amp(NC.ExtPulses);
             NC.Offset(NC.ExtPulses) = NC.GetPhasePerc(Xcon);
+            % Set the torque to get turned off after the neuron fires if
+            % the off event is larger than 100% of osc. period
+            Overflow = NC.Offset(NC.ExtPulses)+NC.Duration(NC.ExtPulses)>1;
+            NC.Offset(NC.ExtPulses) = NC.Offset(NC.ExtPulses) - Overflow;
         end
         
         function [NC] = LoadParameters(NC,ControlParams)

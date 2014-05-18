@@ -66,8 +66,13 @@ Sim.Con = Sim.Con.HandleExtFB([thetta, theta_dot],phi_0);
 Sim = Sim.Run();
 
 % Calculate eigenvalues
-[EigVal,EigVec] = Sim.Poincare();
+if Sim.Out.Type == 5
+    [EigVal,EigVec] = Sim.Poincare();
+    % Do some plots
+    disp(EigVal);
+else
+    EigVal = 2*ones(4,1);
+    disp(Sim.Out.Text);
+end
 
-% Do some plots
-disp(EigVal);
 end
