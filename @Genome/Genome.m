@@ -16,6 +16,9 @@ classdef Genome
             switch nargin
                 case 1
                     Ge = Ge.SetKeys(varargin{1});
+                case 2
+                    Ge.KeyLength = varargin{2};
+                    Ge = Ge.SetKeys(varargin{1});
             end
             
             % KeyLengths can be set here or from the outside
@@ -27,7 +30,7 @@ classdef Genome
             % They are used to provide extra information about
             % how to decode a key, e.g. where to put every
             % initial condition given
-            Ge.KeyExtra.IC = [-1,1,2,3,4];
+            Ge.KeyExtra.IC = [1,-1,2,3,4];
             % Here ^ 4 values should be provided for an IC vector
             % with 5 coordinates (the first value is substractred
             % from the first IC)
@@ -39,9 +42,9 @@ classdef Genome
             for k = 1:size(Keys, 2)
                 if isfield(Ge.KeyLength,Keys{1,k})
                     Ge.Length = Ge.Length + ...
-                        Ge.KeyLength.(Keys{1,k})*Keys{2,k};
+                        Ge.KeyLength.(Keys{1,k})*Keys{2,k}(1);
                 else
-                    Ge.Length = Ge.Length + Keys{2,k};
+                    Ge.Length = Ge.Length + Keys{2,k}(1);
                 end
             end
         end

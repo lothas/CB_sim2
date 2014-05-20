@@ -28,6 +28,11 @@ classdef Terrain < handle
         end_x=0;
         end_y=0;
         
+        % Set keys
+        SetKeys = {'Type','sinAmp','sinFreq','parK',...
+            'start_slope','end_slope','start_x','end_x',...
+            'FloorStep','VertLines','FloorColor','LineWidth'};
+        
         % Render parameters
         FloorStep=0.05;
         VertLines=10;

@@ -30,18 +30,68 @@ for k = 1:size(Ge.Keys,2)
             end
             
         %% %%%%%%%%%% Controller keys %%%%%%%%%% %%
+        case Sim.Con.SetKeys
+            Sim.Con = Sim.Con.Set(Ge.Keys{1,k},Genes(SeqPos:SeqPos+Ge.Keys{2,k}(1)-1));
+        case 'Pulses'
+            % For pulses Ge.Keys{2,k} is a 2 item vector
+            % 1st item is the number of pulses for a joint
+            % 2nd item is the joint number
+            for p = 1:Ge.Keys{2,k}(1)
+                P0 = SeqPos+(p-1)*Ge.KeyLength.pulse;
+                if Sim.Con.FBType == 2
+                    Sim.Con = Sim.Con.AddPulse(...
+                        'joint',Ge.Keys{2,k}(2),...
+                        'amp',Genes(P0),...
+                        'offset',Genes(P0+1),...
+                        'dur',Genes(P0+2),...
+                        'k_u',Genes(P0+3),...
+                        'k_d',Genes(P0+4));
+                else
+                    Sim.Con = Sim.Con.AddPulse(...
+                        'joint',Ge.Keys{2,k}(2),...
+                        'amp',Genes(P0),...
+                        'offset',Genes(P0+1),...
+                        'dur',Genes(P0+2));
+                end
+            end
+        case 'ExtPulses'
+            % For pulses Ge.Keys{2,k} is a 2 item vector
+            % 1st item is the joint number
+            % 2nd item is the number of pulses for that joint
+            for p = 1:Ge.Keys{2,k}(1)
+                P0 = SeqPos+(p-1)*Ge.KeyLength.pulse;
+                if Sim.Con.FBType == 2
+                    Sim.Con = Sim.Con.AddPulse(...
+                        'joint',Ge.Keys{2,k}(2),...
+                        'amp',Genes(P0),...
+                        'offset','ext',...
+                        'dur',Genes(P0+1),...
+                        'k_u',Genes(P0+2),...
+                        'k_d',Genes(P0+3));
+                else
+                    Sim.Con = Sim.Con.AddPulse(...
+                        'joint',Ge.Keys{2,k}(2),...
+                        'amp',Genes(P0),...
+                        'offset','ext',...
+                        'dur',Genes(P0+1));
+                end
+            end
         
         %% %%%%%%%%%% Model keys %%%%%%%%%% %%
+        case Sim.Mod.SetKeys
+            Sim.Mod = Sim.Mod.Set(Ge.Keys{1,k},Genes(SeqPos:SeqPos+Ge.Keys{2,k}(1)-1));
         
         %% %%%%%%%%%% Environment keys %%%%%%%%%% %%
+        case Sim.Env.SetKeys
+            Sim.Env = Sim.Env.Set(Ge.Keys{1,k},Genes(SeqPos:SeqPos+Ge.Keys{2,k}(1)-1));
     end
     
     % Move the sequence reading position
     if isfield(Ge.KeyLength,Ge.Keys{1,k})
         SeqPos = SeqPos + ...
-            Ge.KeyLength.(Ge.Keys{1,k})*Ge.Keys{2,k};
+            Ge.KeyLength.(Ge.Keys{1,k})*Ge.Keys{2,k}(1);
     else
-        SeqPos = SeqPos + Ge.Keys{2,k};
+        SeqPos = SeqPos + Ge.Keys{2,k}(1);
     end
 end
 

@@ -54,6 +54,11 @@ classdef Controller
         kOmega_d = 0.9;
         kTorques_u = 0;
         kTorques_d = 0;
+        
+        % Set keys
+        SetKeys = {'P_reset','P_th','P_0','P_LegE','omega0',...
+                   'nPulses','Amp0','Offset','Duration','pSoff','AngVelImp',...
+                   'FBType','kOmega_u','kOmega_d','kTorques_u','kTorques_d'};
     end
     
     methods

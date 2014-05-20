@@ -39,6 +39,12 @@ else
                 NC.Duration = value; % Pulse duration as % of neuron period
             case 'pSoff'
                 NC.pSoff = value;    % Phase at which to turn off external inputs
+                
+            % Impulsive output
+            case 'AngVelImp'
+                NC.AngVelImp = value;
+                % Sets the ang. velocities to value if FBImpulse = 2
+                % or to ang. vel. + value if FBImpulse = 1
 
             % Adaptation
             case 'FBType'

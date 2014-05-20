@@ -58,6 +58,12 @@ classdef CompassBiped
         % 1 - Foot contact
         % 2 - Robot falling
         
+        % Set keys
+        SetKeys = {'m','mh','L','a','I','Clearance',...
+            'g','damp','dampNS','dampS','xS','yS','Support',...
+            'm_radius','m_color','mh_radius','mh_color',...
+            'leg_width','leg_color','CircRes','LinkRes','LineWidth'};
+                
         % %%%%%% % Render parameters % %%%%%% %
         m_radius=0.015*3;
         m_color=[0.2,0.6,0.8];
