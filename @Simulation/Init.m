@@ -36,8 +36,8 @@ function [ sim ] = Init( sim )
         sim.HeightMax = sim.COMy0+4/sim.AR*sim.Mod.L;
 
         % Init torque display params
-        sim.nOuts = length(sim.Con.Amp0);
-        if sim.nOuts>0
+        sim.nOuts = length(sim.Con.NeurOutput());
+        if sim.Con.nPulses>0
             % Set number of steps so a whole cycle of the oscillator
             % will be included
             sim.nTsteps = ceil(sim.Con.GetPeriod()/sim.tstep);

@@ -9,6 +9,7 @@ classdef Genome
         KeyLength
         KeyExtra
         Length
+        Range % Min/Max range for each gene
     end
     
     methods
@@ -19,12 +20,17 @@ classdef Genome
                 case 2
                     Ge.KeyLength = varargin{2};
                     Ge = Ge.SetKeys(varargin{1});
+                case 3
+                    Ge.KeyLength = varargin{2};
+                    Ge = Ge.SetKeys(varargin{1});
+                    Ge = Ge.SetRange(varargin{3});
             end
             
             % KeyLengths can be set here or from the outside
             % They are used to define the number of genes for a
             % specific key
-            Ge.KeyLength.pulse = 3;
+            Ge.KeyLength.Pulses = 3;
+            Ge.KeyLength.ExtPulses = 2;
             
             % KeyExtras can be set here or from the outside
             % They are used to provide extra information about
@@ -40,12 +46,31 @@ classdef Genome
             Ge.Keys = Keys;
             Ge.Length = 0;
             for k = 1:size(Keys, 2)
-                if isfield(Ge.KeyLength,Keys{1,k})
-                    Ge.Length = Ge.Length + ...
-                        Ge.KeyLength.(Keys{1,k})*Keys{2,k}(1);
-                else
-                    Ge.Length = Ge.Length + Keys{2,k}(1);
+                Ge.Length = Ge.AdvSeq(Ge.Length,k);
+            end
+        end
+        
+        function Ge = SetRange(Ge, Range)
+            Ge.Range = zeros(2,Ge.Length);
+            SeqPos = 1; % Position along the genome sequence
+            for r = 1:size(Range, 2)
+                thisRange = cell2mat(Range(:,r));
+                if isfield(Ge.KeyLength,Ge.Keys{1,r})
+                    k = Ge.Keys{2,r}(1);
+                    thisRange = repmat(thisRange,1,k);
                 end
+                tRL = size(thisRange,2);
+                Ge.Range(:,SeqPos:SeqPos+tRL-1) = thisRange;
+                SeqPos = SeqPos+tRL;
+            end
+        end
+        
+        function SeqPos = AdvSeq(Ge,SeqPos,k)
+            if isfield(Ge.KeyLength,Ge.Keys{1,k})
+                SeqPos = SeqPos + ...
+                    Ge.KeyLength.(Ge.Keys{1,k})*Ge.Keys{2,k}(1);
+            else
+                SeqPos = SeqPos + Ge.Keys{2,k}(1);
             end
         end
     end

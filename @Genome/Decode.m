@@ -4,9 +4,9 @@ function [ Sim ] = Decode( Ge, Sim, Genes )
 %   genome keys in order to update the properties of a simulaiton
 %   (including the Model, Environment, Controller, initial conditions, etc)
 
-if length(Genes)~=Ge.Length
-    error(['Decode failed. Genes provided: ',num2str(length(Genes)),...
-        '. Genes required: ',num2str(Ge.Length)]);
+if ~Ge.CheckGenome(Genes)
+    error('ERROR: Invalid sequence');
+%     return;
 end
 
 SeqPos = 1; % Position along the genome sequence
@@ -37,7 +37,7 @@ for k = 1:size(Ge.Keys,2)
             % 1st item is the number of pulses for a joint
             % 2nd item is the joint number
             for p = 1:Ge.Keys{2,k}(1)
-                P0 = SeqPos+(p-1)*Ge.KeyLength.pulse;
+                P0 = SeqPos+(p-1)*Ge.KeyLength.Pulses;
                 if Sim.Con.FBType == 2
                     Sim.Con = Sim.Con.AddPulse(...
                         'joint',Ge.Keys{2,k}(2),...
@@ -59,7 +59,7 @@ for k = 1:size(Ge.Keys,2)
             % 1st item is the joint number
             % 2nd item is the number of pulses for that joint
             for p = 1:Ge.Keys{2,k}(1)
-                P0 = SeqPos+(p-1)*Ge.KeyLength.pulse;
+                P0 = SeqPos+(p-1)*Ge.KeyLength.ExtPulses;
                 if Sim.Con.FBType == 2
                     Sim.Con = Sim.Con.AddPulse(...
                         'joint',Ge.Keys{2,k}(2),...
@@ -87,12 +87,7 @@ for k = 1:size(Ge.Keys,2)
     end
     
     % Move the sequence reading position
-    if isfield(Ge.KeyLength,Ge.Keys{1,k})
-        SeqPos = SeqPos + ...
-            Ge.KeyLength.(Ge.Keys{1,k})*Ge.Keys{2,k}(1);
-    else
-        SeqPos = SeqPos + Ge.Keys{2,k}(1);
-    end
+    SeqPos = Ge.AdvSeq(SeqPos,k);
 end
 
 

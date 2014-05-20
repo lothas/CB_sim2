@@ -1,7 +1,7 @@
 function [Sim] = TestGen()
 % close all
 
-GenType = 3;
+GenType = 2;
 
 Sim = Simulation();
 Sim.Graphics = 1;
@@ -22,6 +22,8 @@ switch GenType
     case 1 % Event triggered controller
         Keys = {'IC','omega0','P_LegE','ExtPulses','ExtPulses';...
                    4,       1,       1,      [1,1],      [1,2]};
+        Range = {[0,-2,-2,0], 0.5, 0.55, [-20, 0.01], [-20, 0.01]; % Min
+                 [0.79,2,2,0.99], 2, 0.85, [20, 0.99], [20, 0.99]}; % Max
                
         T = 0.779875183484506; alpha = 0.08777523036753; phi_0 = 0.7759402;
         theta_dot = [ -0.386077676960781, -0.359050627940161 ];
@@ -35,6 +37,8 @@ switch GenType
     case 2 % Pulses controller
         Keys = {'omega0','P_LegE','Pulses','Pulses';...
                        1,       1,   [1,1],   [1,2]};
+        Range = {0.5, 0.55, [-20, 0, 0.01], [-20, 0, 0.01]; % Min
+                   2, 0.85, [20, 0.99, 0.99], [20, 0.99, 0.99]}; % Max
                    
         %            omega  P_LegE         Pulses ankle             Pulses hip  
         Sequence = [1.2666, 0.5973, -7.3842, 0.1268, 0.07227, 5.1913, 0.1665, 0.0537];
@@ -42,6 +46,8 @@ switch GenType
     case 3 % Impulsive controller
         Keys = {'IC','omega0','P_LegE','AngVelImp';...
                    4,       1,       1,          2};
+        Range = {[0,-2,-2,0], 0.5, 0.55, [-2 -2]; % Min
+                 [0.79,2,2,0.99], 2, 0.85, [2, 2]}; % Max
                
         alpha = 0.100952073; phi_0 = 0.7759402;
         theta_dot = [ -0.4640, -0.5330 ]; delta = [-0.019877882616433  -0.126797754378412];
@@ -52,7 +58,7 @@ switch GenType
         Sim.Con.ExtP_reset = phi_0;
 end
 KeyLength.Pulses = 3; KeyLength.ExtPulses = 2;
-Gen = Genome(Keys, KeyLength);
+Gen = Genome(Keys, KeyLength, Range);
 Sim = Gen.Decode(Sim, Sequence);
 
 % Simulation parameters
