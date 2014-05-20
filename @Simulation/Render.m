@@ -33,12 +33,14 @@ function status = Render(sim,t,X,flag)
                 sim.Once = 0;
 
                 % Render torque plots
-                sim.hTorques = zeros(sim.nOuts,1);                
-                for to = 1:sim.nOuts
-                    sim.hTorques(to) = line(sim.Ttime,...
-                        sim.Tbase+sim.Thold(to,:)*sim.Tscale,...
-                        'parent',sim.tCOM,'Color',sim.Colors{to},...
-                        'LineWidth',2);
+                if sim.Con.nPulses>0
+                    sim.hTorques = zeros(sim.nOuts,1);                
+                    for to = 1:sim.nOuts
+                        sim.hTorques(to) = line(sim.Ttime,...
+                            sim.Tbase+sim.Thold(to,:)*sim.Tscale,...
+                            'parent',sim.tCOM,'Color',sim.Colors{to},...
+                            'LineWidth',2);
+                    end
                 end
             end
     end
@@ -67,7 +69,7 @@ function status = Render(sim,t,X,flag)
             sprintf(sim.TimeStr,t,X(sim.ConCo),...
                 sim.Env.SurfSlope(sim.Mod.xS)*180/pi,sim.Mod.curSpeed));
         % Update torque display
-        if sim.nOuts>0
+        if sim.Con.nPulses>0
             sim.Thold(:,1:end-1) = sim.Thold(:,2:end);
     %             sim.Thold(:,end) = sim.Con.NeurOutput();
             sim.Thold(:,end) = sim.Mod.Torques;
