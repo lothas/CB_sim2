@@ -5,11 +5,19 @@ classdef Genome
     %   simulation properties (Model, Controller, etc)
     
     properties
+        % Sequence decoding parameters
         Keys
         KeyLength
         KeyExtra
         Length
+        
+        % Sequence range
         Range % Min/Max range for each gene
+        
+        % Mutation parameters
+        MutProb = 0.5;      % Probability that a single gene will mutate
+        MutDelta = 0.1;     % Max strength of mutation as percentage of range
+        MutType = 'uni';    % Type of mutation: uniform or normal
     end
     
     methods
