@@ -4,6 +4,7 @@ classdef MOOGA
     % model using multi-objective optimization
     
     properties
+        Gen; % Genome
     end
     
     methods
@@ -11,7 +12,11 @@ classdef MOOGA
         function GA = MOOGA(varargin)
             switch nargin
                 otherwise
-                    GA;
+                    Keys = {'Height','Weight','Age';
+                                   1,       1,    1};
+                    Range = {0, 0, 0;
+                             1, 1, 1};
+                    GA.Gen = Genome(Keys, Range);
             end            
         end
     end

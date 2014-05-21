@@ -33,14 +33,14 @@ function [MutSeq,Res] = Mutate(Ge,Seq)
             % The sequence didn't mutate at all
             Res(s) = -1;
         else
-            [MutSeq(s,:),thisRes] = ...
+            [thisRes,MutSeq(s,:)] = ...
                 Ge.CheckGenome(MutSeq(s,:));
             Res(s) = thisRes{1};
         end
 
         while Res(s) == 0
             % Mutation failed, try again
-            [MutSeq(s,:),Res] = Ge.Mutate(Seq(s,:));
+            [MutSeq(s,:),Res(s)] = Ge.Mutate(Seq(s,:));
         end
     end
 end

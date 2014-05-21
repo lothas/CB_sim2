@@ -274,53 +274,6 @@ function GA_Stage1(redo)
     disp('Preparing Data Analysis');
     DataAnalysis(1);
 
-function [TopIDs] = GetTopIDs(Fit,TopPop)
-    % Divide population into pareto fronts
-    Fronts=Pareto(Fit');
-    f=1;
-    IDindex=1;
-    TopIDs=zeros(Population,1);
-    while IDindex<=TopPop
-        % Take IDs from pareto fronts until TopPop is reached
-        res=length(Fronts{f});
-        TopIDs(IDindex:IDindex+res-1)=Fronts{f}(randperm(res));
-        IDindex=IDindex+res;
-        f=f+1;
-    end
-    
-    if f==2 && IDindex>TopPop
-        % The first pareto front filled TopPop
-        IDindex2 = 1;
-        FitIndex = 1;
-        NumFits = size(Fit,1);
-        if min(Fit(1,TopIDs(1:IDindex-1)))>0.95
-            % Don't select genomes by height fitness
-            Fit0 = 2;
-        else
-            Fit0 = 1;
-        end
-        
-        TopTopIDs = zeros(TopPop,1);
-        while IDindex2<=TopPop
-            % Select the highest genomes for each fitness
-            ThisID = find(Fit(FitIndex,:)==max(Fit(FitIndex,TopIDs(1:IDindex-IDindex2))),1,'first');            
-            TopTopIDs(IDindex2) = ThisID;
-            % Remove it from TopIDs
-            TopIDs(TopIDs==ThisID) = [];
-            
-            IDindex2 = IDindex2+1;
-            FitIndex = FitIndex+1;
-            if FitIndex > NumFits
-                FitIndex = Fit0;
-            end
-        end
-        
-        TopIDs = TopTopIDs;
-    end
-    
-    TopIDs=TopIDs(1:TopPop);
-end
-
 function [Prob] = GenProb(Base,cur_gen,last_gen,num_no_change)
     Prob = 0.01 + Base * (1-(cur_gen-last_gen)/Generations) + min(0.08*min(num_no_change,10),0.89-Base);
 end

@@ -26,8 +26,8 @@ classdef Genome
                 case 1
                     Ge = Ge.SetKeys(varargin{1});
                 case 2
-                    Ge.KeyLength = varargin{2};
                     Ge = Ge.SetKeys(varargin{1});
+                    Ge = Ge.SetRange(varargin{2});
                 case 3
                     Ge.KeyLength = varargin{2};
                     Ge = Ge.SetKeys(varargin{1});
