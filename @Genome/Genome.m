@@ -5,11 +5,23 @@ classdef Genome
     %   simulation properties (Model, Controller, etc)
     
     properties
+        % Sequence decoding parameters
         Keys
         KeyLength
         KeyExtra
         Length
+<<<<<<< HEAD
         Range % Min/Max range for each gene
+=======
+        
+        % Sequence range
+        Range % Min/Max range for each gene
+        
+        % Mutation parameters
+        MutProb = 0.5;      % Probability that a single gene will mutate
+        MutDelta = 0.1;     % Max strength of mutation as percentage of range
+        MutType = 'uni';    % Type of mutation: uniform or normal
+>>>>>>> origin/master
     end
     
     methods
@@ -18,11 +30,17 @@ classdef Genome
                 case 1
                     Ge = Ge.SetKeys(varargin{1});
                 case 2
-                    Ge.KeyLength = varargin{2};
                     Ge = Ge.SetKeys(varargin{1});
+                    Ge = Ge.SetRange(varargin{2});
                 case 3
                     Ge.KeyLength = varargin{2};
                     Ge = Ge.SetKeys(varargin{1});
+<<<<<<< HEAD
+                case 3
+                    Ge.KeyLength = varargin{2};
+                    Ge = Ge.SetKeys(varargin{1});
+=======
+>>>>>>> origin/master
                     Ge = Ge.SetRange(varargin{3});
             end
             

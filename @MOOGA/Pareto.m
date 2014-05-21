@@ -6,48 +6,45 @@ function [Fronts] = Pareto(GA, Data)
 %   find a second pareto front and so forth until all elements are
 %   accounted for
 
-% Version 0.4 - 11/05/2014
-
-if length(Data)<1
-    nI = 5; nJ = 100;
+% Version 0.5 - 21/05/2014
+if nargin<2
+    nI = 5; nJ = 500;
     % Run sample code
     % Build sample data
-    x = zeros(nI*nJ,3);
+    Data = zeros(nI*nJ,3);
     for i = 1:nI
         r = 10*i;
         for j = 1:nJ
             phi = pi*rand();
             th = pi*rand();
-            x(nJ*(i-1)+j,:) = [...
+            Data(nJ*(i-1)+j,:) = [...
                 r*cos(phi)*cos(th), ...
                 r*cos(phi)*sin(th), ...
                 r*sin(phi)];
         end
     end
-    x = abs(x);
+    Data = abs(Data);
     
     % Plot sample data before running algorithm
     figure()
-    plot3(x(:,1),x(:,2),x(:,3),'+');
+    plot3(Data(:,1),Data(:,2),Data(:,3),'+');
     
     % Save data to origx
-    origx = x;
+    origx = Data;
 end
 
 % Round off to 3 decimal places
 % x = round(x*1000)/1000;
 
 % Start separating layers
-% Get number of samples and objectives
-data = size(x,1);
 % Give unique ID to each sample
-x = [x (1:data)'];
+Data = [Data (1:size(Data,1))'];
 
 NFronts = 1;
 Fronts = {};
 out = [];
 % Sort by first objective
-SortedData = sortrows(x,-1);
+SortedData = sortrows(Data,-1);
 
 while 1
     % Drop samples that are "dominated"
@@ -60,16 +57,13 @@ while 1
     
     while i < Nd
         j = i+1;
-        while j <= Nd
-            if SortedData(j,1:end-1) <= SortedData(i,1:end-1)
-                % Sample j is dominated by sample i
-                SortedData(j,:)=[];
-                Nd = Nd-1;
-            else
-                % Check next sample
-                j = j+1;
-            end
-        end
+        
+        % Find dominated values efficiently :)
+        IDs = j-1 + find(all(SortedData(j:Nd,2:end-1) <= ...
+                        repmat(SortedData(i,2:end-1),Nd-j+1,1),2)==1);
+        SortedData(IDs,:) = [];
+        Nd = size(SortedData,1);
+        
         i = i+1;
     end
     
@@ -79,11 +73,11 @@ while 1
     NFronts = NFronts+1;
     
     % Restore samples to original data - samples already on fronts
-    SortedData = x; SortedData(out,:) = [];
+    SortedData = Data; SortedData(out,:) = [];
     SortedData = sortrows(SortedData,-1);
 end
 
-if length(Data)<1
+if nargin<2
     % Run sample code
     close all
     N=length(Fronts);
@@ -94,11 +88,11 @@ if length(Data)<1
         if length(Fronts{i})<3
             continue;
         end
-        x = origx(Fronts{i},1);
+        Data = origx(Fronts{i},1);
         y = origx(Fronts{i},2);
         z = origx(Fronts{i},3);
-        tri = delaunay(x,y);
-        trisurf(tri, x, y, z,'FaceColor',[1-i/N; i/2/N; i/N]);
+        tri = delaunay(Data,y);
+        trisurf(tri, Data, y, z,'FaceColor',[1-i/N; i/2/N; i/N]);
     end
 end
 
