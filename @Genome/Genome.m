@@ -8,6 +8,7 @@ classdef Genome
         % Sequence decoding parameters
         Keys
         KeyLength
+        Segments
         KeyExtra
         Length
         
@@ -53,9 +54,8 @@ classdef Genome
         function Ge = SetKeys(Ge, Keys)
             Ge.Keys = Keys;
             Ge.Length = 0;
-            for k = 1:size(Keys, 2)
-                Ge.Length = Ge.AdvSeq(Ge.Length,k);
-            end
+            Ge = Ge.SetSegments();
+            Ge.Length = sum(Ge.Segments);
         end
         
         function Ge = SetRange(Ge, Range)
@@ -73,13 +73,21 @@ classdef Genome
             end
         end
         
-        function SeqPos = AdvSeq(Ge,SeqPos,k)
-            if isfield(Ge.KeyLength,Ge.Keys{1,k})
-                SeqPos = SeqPos + ...
-                    Ge.KeyLength.(Ge.Keys{1,k})*Ge.Keys{2,k}(1);
-            else
-                SeqPos = SeqPos + Ge.Keys{2,k}(1);
+        function Ge = SetSegments(Ge)
+            NKeys = size(Ge.Keys, 2);
+            Ge.Segments = zeros(1,NKeys);
+            for k = 1:NKeys
+                if isfield(Ge.KeyLength,Ge.Keys{1,k})
+                    Ge.Segments(k) = ...
+                        Ge.KeyLength.(Ge.Keys{1,k})*Ge.Keys{2,k}(1);
+                else
+                    Ge.Segments(k) = Ge.Keys{2,k}(1);
+                end
             end
+        end
+        
+        function SeqPos = AdvSeq(Ge,SeqPos,k)
+            SeqPos = SeqPos + Ge.Segments(k);
         end
     end
     

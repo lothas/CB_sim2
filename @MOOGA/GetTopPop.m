@@ -24,12 +24,12 @@ function [ TopIDs ] = GetTopPop( GA, Fit, N )
     if f==2 && IDindex>N
         % The first pareto front had more than N individuals
         % Select the best genomes from each fitness
-        NumFits = size(Fit,1);
+        NumFits = size(Fit,2);
 %         if min(Fit(1,TopIDs(1:IDindex-1)))>0.95
 %             % Don't select genomes by height fitness (Fit(1))
 %             Fit0 = 2;
 %         else
-%             Fit0 = 1;
+            Fit0 = 1;
 %         end
         
         IDindex2 = 1;
@@ -37,7 +37,7 @@ function [ TopIDs ] = GetTopPop( GA, Fit, N )
         TopTopIDs = zeros(N,1);
         while IDindex2<=N
             % Select the highest genomes for each fitness
-            ThisID = find(Fit(FitIndex,:)==max(Fit(FitIndex,TopIDs(1:IDindex-IDindex2))),1,'first');            
+            ThisID = find(Fit(:,FitIndex)==max(Fit(TopIDs(1:IDindex-IDindex2),FitIndex)),1,'first');      
             TopTopIDs(IDindex2) = ThisID;
             % Remove it from TopIDs
             TopIDs(TopIDs==ThisID) = [];

@@ -1,11 +1,12 @@
 function [  ] = TestGA(  )
 GA = MOOGA();
-NPop = 500;
+NPop = 2500;
 TopPop = NPop/5;
 NGen = 20;
 
 Pop = GA.Gen.RandSeq(NPop);
 plot3(Pop(:,1),Pop(:,2),Pop(:,3),'o')
+    axis([0 1 0 1 0 1])
 view(35,35)
 grid
 title('Initial population');
@@ -33,6 +34,7 @@ for g = 1:NGen
     Pop = NewPop;
     cla
     plot3(Pop(:,1),Pop(:,2),Pop(:,3),'o')
+    axis([0 1 0 1 0 1])
     title(['Generation ',num2str(g)]);    
 end
 
