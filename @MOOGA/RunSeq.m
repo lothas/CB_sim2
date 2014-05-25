@@ -1,6 +1,5 @@
 function RunSeq( GA, varargin )
 %RUNSEQ Runs a simulation with the selected genome
-GA.Progress=GA.Progress-1;
 switch nargin 
     case 2
         Generation = GA.Progress;

@@ -64,76 +64,13 @@ function GA_Stage1(redo)
             % disp(EndText);
             ThisFit=zeros(1,NumObj);
             ThisFit(1:3)=Fitness(T,X,Torques,tend);
-            
-            % Make sure the controller walks forward
-            if ThisFit(2)<0
-                % Change the sign of all torques
-                for i=1:NumTorques
-                    Genome(3*i)=-Genome(3*i);
-                end
-                
-                % Update results
-                Genes(:,p,g)=Genome;
-                ThisFit(2)=-ThisFit(2);
-            end
-           
+                      
             Fit(:,p,g)=ThisFit;
         end
         
         StartG=TopPop+1;
         
         if g<Generations
-            % Select top TopPop fit controllers
-            TopIDs = GetTopIDs(Fit(:,:,g),TopPop);
-%             disp(sort(TopIDs)');
-            
-            % Copy top genomes to next generation
-            Genes(:,1:TopPop,g+1)=Genes(:,TopIDs,g);
-            Fit(:,1:TopPop,g+1)=Fit(:,TopIDs,g);
-           
-            % Add a mutated copy of top genomes
-            for i=1:TopPop
-                MutGene = Genes(:,i,g+1);
-                Genes(:,TopPop+i,g+1)=Mutate(MutGene,GenesMin,GenesMax,GenProb(SingMutProb,g,g0,gcounter));
-            end
-
-            % Pair top controllers randomly
-            Pairs=zeros(NumPairs,2);
-            NewPop=2*TopPop+1;
-            TopIDs_copy=TopIDs;
-            for p=1:NumPairs
-                pick=ceil(rand(1)*length(TopIDs_copy));
-                Pairs(p,1)=TopIDs_copy(pick);
-
-                % Remove pick from top IDs
-                TopIDs_copy(pick)=[];
-
-                pick=ceil(rand(1)*length(TopIDs_copy));
-                Pairs(p,2)=TopIDs_copy(pick);
-
-                % Remove pick from top IDs
-                TopIDs_copy(pick)=[];
-
-                % Crossover and mutate genes
-                for of=1:NumOffs
-                    Offspring=CrossOver(Genes(:,Pairs(p,1),g),Genes(:,Pairs(p,2),g));
-                    
-                    if rand(1)<=MutProb
-                        Genes(:,NewPop,g+1)=Mutate(Offspring,GenesMin,GenesMax,GenProb(SingMutProb,g,g0,gcounter));
-                        % the Mutate function checks the genome after mutation
-                    else
-                        Genes(:,NewPop,g+1)=Offspring;
-                    end 
-                    
-                    NewPop=NewPop+1;
-                end
-                
-                if NewPop>Population
-                    % Stop reproducing if population is full
-                    break
-                end
-            end
-
             % Add 1 random new individual
             Genes(:,end,g+1)=RandomGenome(GenesMin,GenesMax);
             
@@ -234,28 +171,3 @@ function [fit] = Fitness(T,X,Torques,tend)
     end
 end
 
-function [Points] = EnergyFitness(T,X,Torques,Hip0,Hip1,Weight,MinDist)
-    % Calculate absolute control effort
-    ControlEffort=trapz(T,abs((Torques(1,:)+Torques(2,:)).*X(:,5)'))+trapz(T,abs(Torques(2,:).*X(:,6)'));
-%     ControlEffort=trapz(T,abs(Torques(1,:).*X(:,5)'))+trapz(T,abs(Torques(2,:).*(X(:,6)'-X(:,5)')));
-    
-    % Calculate difference in potential energy
-    dPotentialE=Weight*9.81*(Hip1(2)-Hip0(2));
-    
-    % Calculate distance travelled
-    DistanceTravelled=abs(Hip1(1)-Hip0(1));
-    
-    if DistanceTravelled>MinDist
-        % Calculate Cost Of Transport
-        COT=(ControlEffort-dPotentialE)/(Weight*DistanceTravelled);
-
-        % Low COT (as low as 0) is best so points are given by
-        Points=1/(1+5*COT);
-        % COT of 0 gives 1
-        % COT of 0.03 gives 0.869
-        % COT of 0.12 gives 0.625
-        % COT of 0.3 gives 0.4
-    else
-        Points=0;
-    end
-end

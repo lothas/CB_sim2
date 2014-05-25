@@ -1,6 +1,6 @@
 function [  ] = TestGA(  )
 GA = MOOGA(10,500);
-GA.FileIn = 'TestGA_05_25_16_12.mat';
+% GA.FileIn = 'TestGA_05_25_16_32.mat';
 GA.FileOut = ['TestGA_',datestr(now,'mm_dd_hh_MM'),'.mat'];
 GA.Graphics = 0;
 GenType = 2;
@@ -49,10 +49,10 @@ GA.Sim.Con = GA.Sim.Con.HandleExtFB(GA.Sim.IC(GA.Sim.ModCo),...
                                     GA.Sim.IC(GA.Sim.ConCo));
                                 
 % Fitness functions
-GA.NFit = 2;
+GA.NFit = 3;
 GA.FitFcn = {@GA.HeightFit;
-             @GA.VelFit};
-%              @GA.NrgEffFit};
+             @GA.VelFit;
+             @GA.NrgEffFit};
 
 GA = GA.InitGen();
 GA = GA.Run();  

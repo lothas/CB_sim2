@@ -132,6 +132,44 @@ classdef MOOGA
                 fit = min(MaxDist(1),LocalMaxDist)/GlobalMaxDist;
             end
         end
+        
+        function [fit] = NrgEffFit(GA,Sim) %#ok<INUSL>
+            X = Sim.Out.X;
+            T = Sim.Out.T;
+            Torques = Sim.Out.Torques;
+            Hip0 = zeros(2,1); Hip1 = zeros(2,1);
+            [Hip0(1), Hip0(2)] = Sim.Mod.GetPos(X(1,Sim.ModCo),'Hip');
+            [Hip1(1), Hip1(2)] = Sim.Mod.GetPos(X(end,Sim.ModCo),'Hip');
+            Weight = Sim.Mod.GetWeight();
+            
+            % Calculate distance travelled
+            DistanceTravelled = abs(Hip1(1)-Hip0(1));
+            
+            if DistanceTravelled<3*Sim.Mod.L
+                fit = 0;
+            else
+                % Calculate absolute control effort
+                StTrq = Torques(:,1)-Torques(:,2);
+                StAngVel = X(:,Sim.ModCo(3));
+                SwTrq = Torques(:,2);
+                SwAngVel = X(:,Sim.ModCo(4));
+                ControlEffort = trapz(T,abs(StTrq.*StAngVel)) + ...
+                                trapz(T,abs(SwTrq.*SwAngVel));
+
+                % Calculate difference in potential energy
+                dPotentialE = Weight*9.81*(Hip1(2)-Hip0(2));
+
+                % Calculate Cost Of Transport
+                COT=(ControlEffort-dPotentialE)/(Weight*DistanceTravelled);
+
+                % Low COT (as low as 0) is best so points are given by
+                fit=1/(1+5*COT);
+                % COT of 0 gives 1
+                % COT of 0.03 gives 0.869
+                % COT of 0.12 gives 0.625
+                % COT of 0.3 gives 0.4
+            end
+        end
     end
         
 end

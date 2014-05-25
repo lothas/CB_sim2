@@ -4,6 +4,7 @@ function [ sim ] = Init( sim )
     sim.stDim = sim.Mod.stDim + sim.Con.stDim; % state dimension
     sim.ModCo = 1:sim.Mod.stDim; % Model coord. indices
     sim.ConCo = sim.Mod.stDim+1:sim.stDim; % Contr. coord. indices
+    sim.nOuts = length(sim.Con.NeurOutput());
 
     % Set events
     sim.nEvents = sim.Mod.nEvents + sim.Con.nEvents;
@@ -36,7 +37,6 @@ function [ sim ] = Init( sim )
         sim.HeightMax = sim.COMy0+4/sim.AR*sim.Mod.L;
 
         % Init torque display params
-        sim.nOuts = length(sim.Con.NeurOutput());
         if sim.Con.nPulses>0
             % Set number of steps so a whole cycle of the oscillator
             % will be included
