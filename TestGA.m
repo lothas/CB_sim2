@@ -1,13 +1,25 @@
 function [  ] = TestGA(  )
-GA = MOOGA(5,50);
-GA.FileOut = 'TestGA.mat';
+GA = MOOGA(10,500);
+GA.FileIn = 'TestGA_05_25_16_12.mat';
+GA.FileOut = ['TestGA_',datestr(now,'mm_dd_hh_MM'),'.mat'];
+GA.Graphics = 0;
+GenType = 2;
 
 % Set up the genome
-% Pulses controller (only 1 pulse to hip)
-Keys = {'omega0','P_LegE','Pulses';...
-               1,       1,   [1,2]};
-Range = {0.5, 0.55, [-20, 0, 0.01]; % Min
-           2, 0.85, [20, 0.99, 0.99]}; % Max
+switch GenType
+    case 1
+        % Pulses controller (only 1 pulse to hip)
+        Keys = {'omega0','P_LegE','Pulses';...
+                       1,       1,   [1,2]};
+        Range = {0.5, 0.55, [-20, 0, 0.01]; % Min
+                   2, 0.85, [20, 0.99, 0.99]}; % Max
+    case 2
+        % Controller with push-off, swing pulse + limited ankle pulse
+        Keys = {'omega0','P_LegE','ExtPulses','Pulses','Pulses';...
+                       1,       1,      [1,1],   [1,1],   [1,2]};
+        Range = {0.5, 0.55, [-30, 0.005], [-2, 0, 0.01], [0, 0, 0.01]; % Min
+                   2, 0.85, [0, 0.005], [2, 0.99, 0.99], [20, 0.99, 0.99]}; % Max
+end
 GA.Gen = Genome(Keys, Range);
 
 % Set up the simulation

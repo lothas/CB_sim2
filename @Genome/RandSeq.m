@@ -29,7 +29,7 @@ function [ Seq ] = RandSeq(Ge,N,dist)
     
     for s = 1:N
         % Check if the seq is valid
-        Res = Ge.CheckGenome(Seq(s,:));
+        [Res,Seq(s,:)] = Ge.CheckGenome(Seq(s,:));
         while Res{1} == 0
             % Create new random genome
             switch dist
@@ -42,7 +42,7 @@ function [ Seq ] = RandSeq(Ge,N,dist)
 
             % Make sure the genome is within range
             Seq(s,:) = max(min(Seq(s,:),Ge.Range(2,:)),Ge.Range(1,:));
-            Res = Ge.CheckGenome(Seq(s,:));
+            [Res,Seq(s,:)] = Ge.CheckGenome(Seq(s,:));
         end
     end
 end

@@ -61,7 +61,7 @@ Gen = Genome(Keys, Range);
 Sim = Gen.Decode(Sim, Sequence);
 
 % Simulation parameters
-Sim = Sim.SetTime(0,0.05,10);
+Sim = Sim.SetTime(0,0.05,60);
 
 % Set internal parameters (state dimensions, events, etc)
 Sim = Sim.Init();

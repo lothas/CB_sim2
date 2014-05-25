@@ -97,8 +97,8 @@ classdef MOOGA
             end
             fit = trapz(T,Points);
             % Normalize fit
-            fit = fit/trapz(linspace(0,Sim.Out.Tend,Nt),...
-                            ones(size(T)));
+            fit = min(fit/trapz(linspace(0,Sim.Out.Tend-2*Sim.tstep_normal,Nt),...
+                            ones(size(T))),1);
         end
         
         function fit = VelFit(GA,Sim) %#ok<INUSL>

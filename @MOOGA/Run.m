@@ -7,7 +7,11 @@ function [ GA ] = Run( GA )
 if GA.Sim.Graphics == 1
     GA.Sim.Fig = figure();
 end
-        
+
+if matlabpool('size')==0
+    matlabpool open 7 % Work in parallel to finish faster
+end
+    
 Sim = GA.Sim;
 Gen = GA.Gen;
 NFit = GA.NFit;
@@ -15,7 +19,7 @@ FitFcn = GA.FitFcn;
 for g = GA.Progress:GA.Generations    
     gSeqs = GA.Seqs(:,:,g);
     gFit = GA.Fit(:,:,g);
-    for i = 1:GA.Population
+    parfor i = 1:GA.Population
         if any(gFit(i,:)~=0)
             continue;
         end
@@ -38,7 +42,12 @@ for g = GA.Progress:GA.Generations
                 '@(varargin)GA.VelFit(varargin{:})')
                 % Switch direction if the model walks backwards
                 if thisFit(f)<0
-                    gSeqs(i,:) = Gen.SwitchDir(gSeqs(i,:));
+                    revSeq = Gen.SwitchDir(gSeqs(i,:));
+                    [Res,revSeq] = Gen.CheckGenome(revSeq);
+                    if Res{1}
+                        gSeqs(i,:) = revSeq;
+                        thisFit(f) = -thisFit(f);
+                    end
                 end                    
             end
         end        
@@ -47,40 +56,41 @@ for g = GA.Progress:GA.Generations
     GA.Fit(:,:,g) = gFit;
     GA.Seqs(:,:,g) = gSeqs;
     
-    % Finished running tests, create new generation
-    TopIDs = GA.GetTopPop(GA.Fittest(1)); % fitness = genes
-    
-    % Transfer top IDs to new population
-    GA.Seqs(1:GA.Fittest(1),:,GA.Progress+1) = ...
-        GA.Seqs(TopIDs,:,GA.Progress);
-    
-    % Add a mutated copy of top IDs
-    GA.Seqs(GA.Fittest(1)+1:GA.Fittest(1)+GA.Fittest(2),:,GA.Progress+1) = ...
-        GA.Gen.Mutate(GA.Seqs(1:GA.Fittest(2),:,GA.Progress+1));
-    
-    % Add children (by pairs)
-    for c = 1:ceil(GA.Fittest(3)/2)
-        % Select 2 parents randomly
-        IDs = randsample(1:GA.Fittest(1),2);
-        Child = GA.Fittest(1)+GA.Fittest(2) + 2*c-1;
-        if Child == GA.Population
-            Children = ...
+    if g<GA.Generations
+        % Finished running tests, create new generation
+        TopIDs = GA.GetTopPop(GA.Fittest(1)); % fitness = genes
+
+        % Transfer top IDs to new population
+        GA.Seqs(1:GA.Fittest(1),:,GA.Progress+1) = ...
+            GA.Seqs(TopIDs,:,GA.Progress);
+
+        % Add a mutated copy of top IDs
+        GA.Seqs(GA.Fittest(1)+1:GA.Fittest(1)+GA.Fittest(2),:,GA.Progress+1) = ...
+            GA.Gen.Mutate(GA.Seqs(1:GA.Fittest(2),:,GA.Progress+1));
+
+        % Add children (by pairs)
+        Child = GA.Fittest(1)+GA.Fittest(2)+1;
+        while Child<=GA.Population
+            % Select 2 parents randomly
+            IDs = randsample(1:GA.Fittest(1),2);
+            [Children, Res] = ...
                 GA.Gen.Crossover(GA.Seqs(IDs(1),:,GA.Progress+1),...
                                  GA.Seqs(IDs(2),:,GA.Progress+1));
-            GA.Seqs(Child,:,GA.Progress+1) = Children(1,:);
-        else
-            GA.Seqs(Child:Child+1,:,GA.Progress+1) = ...
-                GA.Gen.Crossover(GA.Seqs(IDs(1),:,GA.Progress+1),...
-                                 GA.Seqs(IDs(2),:,GA.Progress+1));
+            for c = 1:2
+                if Res{c,1} ~= 0 && Child <= GA.Population
+                    GA.Seqs(Child,:,GA.Progress+1) = Children(c,:);
+                    Child = Child+1;
+                end
+            end
         end
+
+        % Finished processing generation
+        GA.Progress = g+1;
     end
-    
-    % Finished processing generation
-    GA.Progress = g+1;
     
     % Display top results
     TopFit = GA.Fit(TopIDs,:,g);
-    disp(max(TopFit));
+    disp(['Generation ',num2str(g),' results: ',num2str(max(TopFit))]);
     
     if ~isempty(GA.FileOut)
         % Save progress to file
