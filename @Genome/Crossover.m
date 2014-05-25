@@ -3,7 +3,7 @@ function [ BabySeqs, Res ] = Crossover( Ge, Seq1, Seq2, Method )
 %   Crossover uses a 2-point crossover to mix the given sequences
 %   and create two new ones, which are checked before being returned
     if nargin<4
-        Method = '2point';
+        Method = Ge.COType;
     end
     
     N = length(Seq1);

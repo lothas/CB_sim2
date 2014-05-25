@@ -43,7 +43,7 @@ classdef Simulation < handle & matlab.mixin.Copyable
                 
         % Rendering params
         Graphics = 1;
-        Fig = 0; Once; StopSim;
+        Fig = 0; Once = 1; StopSim;
         FigWidth; FigHeight; AR;
         % Environment display
         FlMin; FlMax; HeightMin; HeightMax;

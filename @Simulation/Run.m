@@ -90,6 +90,44 @@ function [ sim ] = Run( sim )
             end
         end
 
+        % Check ground clearance
+        [xNS,yNS] = sim.Mod.GetPos(Xa(sim.ModCo),'NS');
+        if yNS-sim.Env.Surf(xNS)<-1e-4*sim.Mod.L
+            if sim.Mod.LegShift>0
+                % Robot hit the ground before extending the leg
+                sim.Out.Type = 3;
+                sim.Out.Text = 'Robot hit the ground before extending the leg';
+                sim.StopSim = 1;
+            else
+                if ~any(IE == 1)
+                    % Call impact handlers
+                    [sim.Mod,Xa(sim.ModCo)] = ...
+                        sim.Mod.HandleEvent(1, Xa(sim.ModCo),TTemp(end));
+
+                    % Handle event interactions
+                    if ModEvID == 1 % Ground contact
+                        StoreIC = 1; % Store the initial conditions right after impact
+
+                        [sim.Con, Xa(sim.ModCo), Xa(sim.ConCo)] = ...
+                            sim.Con.HandleExtFB(Xa(sim.ModCo),Xa(sim.ConCo));
+
+                        sim = sim.UpdateStats(TTemp,XTemp);
+
+                        if ~ischar(sim.Mod.curSpeed)
+                            sim.TimeStr = ['t = %.2f s\nOsc.=%.3f\n',...
+                             'Slope = %.2f ',char(176)','\nSpeed = %.3f m/s'];
+                        end
+                    end
+                else
+                    % Robot fell down
+                    sim.Out.Type = 1;
+                    sim.Out.Text = 'Robot fell down (leg pierced floor)';
+                    sim.StopSim = 1;
+                    break;
+                end
+            end
+        end
+        
         % Set new initial conditions
         sim.IC = Xa;
         if StoreIC
@@ -145,6 +183,7 @@ function [ sim ] = Run( sim )
     % Prepare simulation output
     sim.Out.X = X;
     sim.Out.T = T;
+    sim.Out.Tend = sim.tend;
     sim.Out.SuppPos = SuppPos;
     sim.Out.Torques = Torques;
     sim.Out.nSteps = sim.StepsTaken;

@@ -57,12 +57,11 @@ switch GenType
         Sim.Con.FBImpulse = 1;
         Sim.Con.ExtP_reset = phi_0;
 end
-KeyLength.Pulses = 3; KeyLength.ExtPulses = 2;
-Gen = Genome(Keys, KeyLength, Range);
+Gen = Genome(Keys, Range);
 Sim = Gen.Decode(Sim, Sequence);
 
 % Simulation parameters
-Sim = Sim.SetTime(0,0.05,60);
+Sim = Sim.SetTime(0,0.05,10);
 
 % Set internal parameters (state dimensions, events, etc)
 Sim = Sim.Init();

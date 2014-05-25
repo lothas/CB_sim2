@@ -86,12 +86,12 @@ classdef Controller
         
         function [NC] = ClearTorques(NC)
             NC.nPulses = 0;
-            NC.OutM = 0;
+            NC.OutM = [0,0]';
             NC.Amp0 = [];
             NC.Amp = [];
             NC.Offset = [];
             NC.Duration = [];
-            NC.Switch = [0,0]';
+            NC.Switch = 0;
             NC.pSoff = [];
             if NC.FBType == 2
                 NC.kTorques_u = [];

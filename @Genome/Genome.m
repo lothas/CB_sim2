@@ -15,6 +15,9 @@ classdef Genome
         % Sequence range
         Range % Min/Max range for each gene
         
+        % Crossover parameters
+        COType = '2point';
+        
         % Mutation parameters
         MutProb = 0.5;      % Probability that a single gene will mutate
         MutDelta = 0.1;     % Max strength of mutation as percentage of range
@@ -22,19 +25,7 @@ classdef Genome
     end
     
     methods
-        function Ge = Genome(varargin)
-            switch nargin
-                case 1
-                    Ge = Ge.SetKeys(varargin{1});
-                case 2
-                    Ge = Ge.SetKeys(varargin{1});
-                    Ge = Ge.SetRange(varargin{2});
-                case 3
-                    Ge.KeyLength = varargin{2};
-                    Ge = Ge.SetKeys(varargin{1});
-                    Ge = Ge.SetRange(varargin{3});
-            end
-            
+        function Ge = Genome(varargin)            
             % KeyLengths can be set here or from the outside
             % They are used to define the number of genes for a
             % specific key
@@ -49,6 +40,18 @@ classdef Genome
             % Here ^ 4 values should be provided for an IC vector
             % with 5 coordinates (the first value is substractred
             % from the first IC)
+            
+            switch nargin
+                case 1
+                    Ge = Ge.SetKeys(varargin{1});
+                case 2
+                    Ge = Ge.SetKeys(varargin{1});
+                    Ge = Ge.SetRange(varargin{2});
+                case 3
+                    Ge.KeyLength = varargin{2};
+                    Ge = Ge.SetKeys(varargin{1});
+                    Ge = Ge.SetRange(varargin{3});
+            end
         end
         
         function Ge = SetKeys(Ge, Keys)
@@ -88,6 +91,23 @@ classdef Genome
         
         function SeqPos = AdvSeq(Ge,SeqPos,k)
             SeqPos = SeqPos + Ge.Segments(k);
+        end
+        
+        function Seq = SwitchDir(Ge,Seq)
+            for k = 1:size(Ge.Keys,2)
+                % Go over each key
+                switch Ge.Keys{1,k}
+                    case {'Pulses','ExtPulses'}
+                        for g = 1:Ge.Keys{2,k}(1)
+                            Gene = Ge.Segments(k) + ...
+                                (g-1)*Ge.KeyLength.(Ge.Keys{1,k});
+                            Seq(Gene) = -Seq(Gene);
+                        end
+                    case 'AngVelImp'
+                        Seq(Ge.Segments(k):Ge.Segments(k+1)-1) = ...
+                            -Seq(Ge.Segments(k):Ge.Segments(k+1)-1);
+                end
+            end
         end
     end
     

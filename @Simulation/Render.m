@@ -6,7 +6,11 @@ function status = Render(sim,t,X,flag)
 
             if sim.Once
                 % Open new figure
-                sim.Fig = figure();
+                if sim.Fig
+                    figure(sim.Fig);
+                else
+                    sim.Fig = figure();
+                end
 
                 % Make window larger
                 set(sim.Fig,'Position', [100 100 sim.FigWidth sim.FigHeight]);
