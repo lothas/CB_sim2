@@ -106,6 +106,8 @@ classdef MOOGA
             T = Sim.Out.T;
             Nt = length(T);
             L = Sim.Mod.L;
+            Sim.Mod.xS = Sim.Out.SuppPos(1,1);
+            Sim.Mod.yS = Sim.Out.SuppPos(1,2);
             
             % Find the farthest point that the robot reached
             MaxDist = [0,0];
@@ -133,12 +135,16 @@ classdef MOOGA
             end
         end
         
-        function [fit] = NrgEffFit(GA,Sim) %#ok<INUSL>
+        function [fit] = NrgEffFit(GA,Sim) %#ok<MANU>
             X = Sim.Out.X;
             T = Sim.Out.T;
             Torques = Sim.Out.Torques;
             Hip0 = zeros(2,1); Hip1 = zeros(2,1);
+            Sim.Mod.xS = Sim.Out.SuppPos(1,1);
+            Sim.Mod.yS = Sim.Out.SuppPos(1,2);
             [Hip0(1), Hip0(2)] = Sim.Mod.GetPos(X(1,Sim.ModCo),'Hip');
+            Sim.Mod.xS = Sim.Out.SuppPos(end,1);
+            Sim.Mod.yS = Sim.Out.SuppPos(end,2);
             [Hip1(1), Hip1(2)] = Sim.Mod.GetPos(X(end,Sim.ModCo),'Hip');
             Weight = Sim.Mod.GetWeight();
             

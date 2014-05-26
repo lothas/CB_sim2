@@ -1,8 +1,9 @@
 function [  ] = TestGA(  )
-GA = MOOGA(10,500);
-% GA.FileIn = 'TestGA_05_25_16_32.mat';
+GA = MOOGA(20,1000);
+% GA.FileIn = 'TestGA_05_26_01_24.mat';
 GA.FileOut = ['TestGA_',datestr(now,'mm_dd_hh_MM'),'.mat'];
 GA.Graphics = 0;
+% GA.ReDo = 1;
 GenType = 2;
 
 % Set up the genome

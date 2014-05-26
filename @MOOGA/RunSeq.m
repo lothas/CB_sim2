@@ -43,5 +43,12 @@ else
     disp(Sim.Out.Text);
 end
 
+% Calculate the genome's fitness
+thisFit = zeros(1,GA.NFit);
+for f = 1:GA.NFit
+    thisFit(f) = GA.FitFcn{f}(Sim);
+end
+disp(['Genome ',num2str(ID),' results: ',num2str(thisFit)]);
+
 end
 
