@@ -1,7 +1,7 @@
 function [Sim] = TestGen()
 % close all
 
-GenType = 2;
+GenType = 4;
 
 Sim = Simulation();
 Sim.Graphics = 1;
@@ -55,6 +55,19 @@ switch GenType
         %                  Init Cond         omega  P_LegE  AngVelImp
         Sequence = [alpha, theta_dot, phi_0, 1.3333,  0.61,   delta];
         Sim.Con.FBImpulse = 1;
+        Sim.Con.ExtP_reset = phi_0;
+    case 4 % Impulsive controller CL
+        Keys = {'IC','omega0','P_LegE','AngVelImp';...
+                   4,       1,       1,          2};
+        Range = {[0,-2,-2,0], 0.5, 0.55, [-2 -2]; % Min
+                 [0.79,2,2,0.99], 2, 0.85, [2, 2]}; % Max
+               
+        alpha = 0.100952073; phi_0 = 0.7759402;
+        theta_dot = [ -0.4640, -0.5330 ];
+        
+        %                  Init Cond         omega  P_LegE  AngVelImp
+        Sequence = [alpha, theta_dot, phi_0, 1.3333,  0.61,   theta_dot];
+        Sim.Con.FBImpulse = 2;
         Sim.Con.ExtP_reset = phi_0;
 end
 Gen = Genome(Keys, Range);
