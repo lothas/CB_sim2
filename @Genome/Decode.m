@@ -7,8 +7,11 @@ function [ Sim ] = Decode( Ge, Sim, Seq )
 Res = Ge.CheckGenome(Seq);
 if Res{1} == 0
     disp(Res{2});
-    error('ERROR: Invalid sequence');
+    % Instead of throwing an error, let's get a random sequence and
+    % continue running
+%     error('ERROR: Invalid sequence');
 %     return;
+    Seq = Ge.RandSeq();
 end
 
 SeqPos = 1; % Position along the genome sequence
@@ -33,7 +36,7 @@ for k = 1:size(Ge.Keys,2)
             
         %% %%%%%%%%%% Controller keys %%%%%%%%%% %%
         case Sim.Con.SetKeys
-            Sim.Con = Sim.Con.Set(Ge.Keys{1,k},Seq(SeqPos:SeqPos+Ge.Keys{2,k}(1)-1));
+            Sim.Con = Sim.Con.Set(Ge.Keys{1,k},Seq(SeqPos:SeqPos+Ge.Segments(k)-1));
         case 'Pulses'
             % For pulses Ge.Keys{2,k} is a 2 item vector
             % 1st item is the number of pulses for a joint
@@ -81,11 +84,11 @@ for k = 1:size(Ge.Keys,2)
         
         %% %%%%%%%%%% Model keys %%%%%%%%%% %%
         case Sim.Mod.SetKeys
-            Sim.Mod = Sim.Mod.Set(Ge.Keys{1,k},Seq(SeqPos:SeqPos+Ge.Keys{2,k}(1)-1));
+            Sim.Mod = Sim.Mod.Set(Ge.Keys{1,k},Seq(SeqPos:SeqPos+Ge.Segments(k)-1));
         
         %% %%%%%%%%%% Environment keys %%%%%%%%%% %%
         case Sim.Env.SetKeys
-            Sim.Env = Sim.Env.Set(Ge.Keys{1,k},Seq(SeqPos:SeqPos+Ge.Keys{2,k}(1)-1));
+            Sim.Env = Sim.Env.Set(Ge.Keys{1,k},Seq(SeqPos:SeqPos+Ge.Segments(k)-1));
     end
     
     % Move the sequence reading position

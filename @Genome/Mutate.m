@@ -32,15 +32,15 @@ function [MutSeq,Res] = Mutate(Ge,Seq,Try)
     % Check the mutated sequences
     Res = cell(NS,2);
     for s = 1:NS
-        if MutSeq(s,:) == Seq(s,:)
+        [thisRes,MutSeq(s,:)] = ...
+            Ge.CheckGenome(MutSeq(s,:));
+        if all(MutSeq(s,:) == Seq(s,:)) && thisRes{1} ~= 0
             % The sequence didn't mutate at all
             Res(s,:) = {-1,'Sequence left unchanged'};
         else
-            [thisRes,MutSeq(s,:)] = ...
-                Ge.CheckGenome(MutSeq(s,:));
             Res(s,:) = thisRes;
         end
-
+        
         if Res{s,1} == 0
             if Try<=10
                 % Mutation failed, try again
@@ -50,5 +50,15 @@ function [MutSeq,Res] = Mutate(Ge,Seq,Try)
                 MutSeq(s,:) = Seq(s,:);
             end
         end
+        
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        if strcmp(Res{s,2},'Sequence outside allowed genome range')
+            [thisRes,~] = ...
+                Ge.CheckGenome(MutSeq(s,:));
+            if strcmp(thisRes{2},'Sequence outside allowed genome range')
+                disp('gotcha! - "mutate"')
+            end
+        end
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     end
 end

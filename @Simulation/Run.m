@@ -139,6 +139,20 @@ function [ sim ] = Run( sim )
                 % Simulation converged, calculate walking period
                 StepTimes = T(diff(SuppPos(:,1))~=0);
                 Periods = diff(StepTimes);
+                
+                % There seems to be a problem calculating
+                % the step period sometimes so we'll try
+                % another "back-up" way
+                if isempty(Periods)
+                    % run the simulation for one step
+                    psim = copy(sim);
+                    psim.EndCond = [1,sim.Period(1)];
+                    psim.IC = sim.IClimCyc;
+                    psim = psim.Init();
+                    psim = psim.Run();
+                    Periods = psim.Out.T(end) - psim.Out.T(1);
+                end
+                
                 sim.Period = [sim.Period, Periods(end)];
             end                
         end
@@ -183,7 +197,11 @@ function [ sim ] = Run( sim )
     % Prepare simulation output
     sim.Out.X = X;
     sim.Out.T = T;
-    sim.Out.Tend = sim.tend;
+    if ~isempty(sim.Period)
+        sim.Out.Tend = T(end);
+    else
+        sim.Out.Tend = sim.tend;
+    end
     sim.Out.SuppPos = SuppPos;
     sim.Out.Torques = Torques;
     sim.Out.nSteps = sim.StepsTaken;

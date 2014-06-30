@@ -11,6 +11,10 @@ Sim.Mod = Sim.Mod.Set('damp',0,'I',0);
 % Set up the terrain
 start_slope = 0;
 Sim.Env = Sim.Env.Set('Type','inc','start_slope',start_slope);
+% leadway = 5;
+% parK = 0.01;
+% Sim.Env = ...
+%     Sim.Env.Set('Type','inf','start_slope',0,'parK',parK,'start_x',leadway);
 
 % Set up the controller
 % Sim.Con = Sim.Con.ClearTorques();

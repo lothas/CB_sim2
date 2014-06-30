@@ -19,11 +19,11 @@ classdef MOOGA
         Fit;        % Genome fitnesses
         
         % Additional genes optimized by previous MOOGA
-        BaseGen;    
+        BaseGen;
         BaseSeq;
         
         % Optimization progress
-        Progress = 1;   % Last generation calculated
+        Progress = 0;   % Last generation calculated
         ReDo = 0;       % Start optimization from generation 1
         
         % Fitness functions
@@ -68,14 +68,13 @@ classdef MOOGA
                              1, 1, 1};
                     GA.Gen = Genome(Keys, Range);
                     GA.GenerationFcn = @GA.Test;
-                    GA = GA.InitSim();
                     GA = GA.InitGen();
                     GA = GA.Run();
             end            
         end
         
         %% %%%%%%%%%%%%% Built-in fitness functions %%%%%%%%%%%%% %%
-        function fit = HeightFit(GA,Sim) %#ok<INUSL>
+        function fit = HeightFit(GA,Sim) %#ok<MANU>
             X = Sim.Out.X;
             T = Sim.Out.T;
             Nt = length(T);
@@ -101,7 +100,7 @@ classdef MOOGA
                             ones(size(T))),1);
         end
         
-        function fit = VelFit(GA,Sim) %#ok<INUSL>
+        function fit = VelFit(GA,Sim) %#ok<MANU>
             X = Sim.Out.X;
             T = Sim.Out.T;
             Nt = length(T);
@@ -175,6 +174,61 @@ classdef MOOGA
                 % COT of 0.12 gives 0.625
                 % COT of 0.3 gives 0.4
             end
+        end
+        
+        function [fit] = EigenFit(GA,Sim) %#ok<MANU>
+            if isempty(Sim.Period)
+                fit = 0;
+            else
+                % Calculate numerical poincare
+                [EigVal,~] = Sim.Poincare();
+                fit = 1-max(abs(EigVal));
+                if any(abs(EigVal))>1
+                    disp('ERROR: eigenvalues larger than 1!')
+                    disp(Period);
+                    disp(EigVal);
+                end
+            end
+        end
+        
+        function [SlopeSim] = SetSimSlope(GA,Sim,vfit,UD)
+            leadway = min(max(0.8/vfit,2),5);
+            parK = min(max(0.025*vfit,0.005),0.03);
+
+            SlopeSim = copy(Sim);
+            SlopeSim.Env = ...
+                SlopeSim.Env.Set('Type','inf','start_slope',0,...
+                                 'parK',UD*parK,'start_x',leadway);
+        end
+        
+        function [fit] = UphillFitRun(GA,Sim)
+            vfit = VelFit(GA,Sim);
+            if vfit>0.3
+                SlopeSim = SetSimSlope(GA,Sim,vfit,1);
+                SlopeSim = SlopeSim.Run();
+                [fit] = UphillFit(GA,SlopeSim);
+            else
+                fit = 0;
+            end       
+        end
+        
+        function [fit] = UphillFit(GA,Sim) %#ok<MANU>
+            fit = Sim.MaxSlope;
+        end
+        
+        function [fit] = DownhillFitRun(GA,Sim)
+            vfit = VelFit(GA,Sim);
+            if vfit>0.3
+                SlopeSim = SetSimSlope(GA,Sim,vfit,-1);
+                SlopeSim = SlopeSim.Run();
+                [fit] = DownhillFit(GA,SlopeSim);
+            else
+                fit = 0;
+            end
+        end
+                
+        function [fit] = DownhillFit(GA,Sim) %#ok<MANU>
+            fit = -Sim.MinSlope;
         end
     end
         

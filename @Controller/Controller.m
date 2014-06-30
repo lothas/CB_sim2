@@ -37,7 +37,8 @@ classdef Controller
         % Feedback
         FBType = 2;  % 0 - no feedback
                      % 1 - single gain for omega and each joint
-                     % 2 - individual gains for each pulse
+                     % 2 - individual gains for each pulse (not
+                     % implemented?)
                      
         % Phase reset
         ExtP_reset = []; % set to a certain phase to use phase reset
@@ -50,8 +51,8 @@ classdef Controller
         AngVelImp = [];
         
         % Gains
-        kOmega_u = 0.4579;
-        kOmega_d = 0.9;
+        kOmega_u = 0.0;
+        kOmega_d = 0.0;
         kTorques_u = 0;
         kTorques_d = 0;
         
@@ -78,8 +79,10 @@ classdef Controller
             NC.pSoff=zeros(1,NC.nPulses);
             
             % Set adaptation parameters
-            NC.kTorques_u=[95 -443 95 0];
-            NC.kTorques_d=[80 -295 80 0];
+            NC.kOmega_u = 0; %0.4579;
+            NC.kOmega_d = 0; %0.9;
+            NC.kTorques_u= 0; %[95 -443 95 0];
+            NC.kTorques_d= 0; %[80 -295 80 0];
             
             NC.nEvents=1+NC.nPulses*2+1;
         end
@@ -217,41 +220,6 @@ classdef Controller
             % the off event is larger than 100% of osc. period
             Overflow = NC.Offset(NC.ExtPulses)+NC.Duration(NC.ExtPulses)>1;
             NC.Offset(NC.ExtPulses) = NC.Offset(NC.ExtPulses) - Overflow;
-        end
-        
-        function [NC] = LoadParameters(NC,ControlParams)
-            % Set CPG Parameters according to ControlParams input
-            % ControlParams should include:
-            % [ Omega,  leg extend phase, 
-            %   Torque 1 strength, offset, duration,
-            %   Torque 2 strength, offset, duration,
-            %   ...
-            %   Torque n strength, offset, duration]
-            
-            NC.NumTorques=(length(ControlParams)-2)/3;
-            NC.NumEvents=1+NC.NumTorques*2+1;
-
-            NC.omega0=ControlParams(1);
-            NC.kOmega_up=0;
-            NC.kOmega_down=0;
-
-            NC.P_LegE=ControlParams(2);
-            
-            NC.NSwitch=zeros(1,NC.NumTorques);
-            
-            NC.NTorque0=zeros(1,NC.NumTorques);
-            NC.NOffset=NC.NTorque0;
-            NC.NDuration=NC.NTorque0;
-            NC.kTorques_up=NC.NTorque0;
-            NC.kTorques_down=NC.NTorque0;
-            for i=1:NC.NumTorques
-                NC.NTorque0(i)=ControlParams(3*i);
-                NC.NTorque(i)=NC.NTorque0(i);
-                NC.NOffset(i)=ControlParams(3*i+1);
-                NC.NDuration(i)=ControlParams(3*i+2);
-                NC.kTorques_up(i)=0;
-                NC.kTorques_down(i)=0;
-            end
         end
         
         function PlotTorques(NC)

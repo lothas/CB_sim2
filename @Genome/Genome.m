@@ -94,12 +94,13 @@ classdef Genome
         end
         
         function Seq = SwitchDir(Ge,Seq)
+            SeqPos = 1;
             for k = 1:size(Ge.Keys,2)
                 % Go over each key
                 switch Ge.Keys{1,k}
                     case {'Pulses','ExtPulses'}
                         for g = 1:Ge.Keys{2,k}(1)
-                            Gene = Ge.Segments(k) + ...
+                            Gene = SeqPos + ...
                                 (g-1)*Ge.KeyLength.(Ge.Keys{1,k});
                             Seq(Gene) = -Seq(Gene);
                         end
@@ -107,6 +108,7 @@ classdef Genome
                         Seq(Ge.Segments(k):Ge.Segments(k+1)-1) = ...
                             -Seq(Ge.Segments(k):Ge.Segments(k+1)-1);
                 end
+                SeqPos = SeqPos + Ge.Segments(k);
             end
         end
     end
