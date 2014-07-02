@@ -183,22 +183,30 @@ classdef MOOGA
                 % Calculate numerical poincare
                 [EigVal,~] = Sim.Poincare();
                 fit = 1-max(abs(EigVal));
-                if any(abs(EigVal))>1
-                    disp('ERROR: eigenvalues larger than 1!')
-                    disp(Period);
-                    disp(EigVal);
+                if fit<0
+                    fit = 0;
+%                     disp(Gen.seq2str(gSeqs(i,:)));
+%                     disp('ERROR: eigenvalues larger than 1!')
+%                     disp(Sim.Period);
+%                     disp(EigVal);
                 end
             end
         end
         
-        function [SlopeSim] = SetSimSlope(GA,Sim,vfit,UD)
+        function [SlopeSim] = SetSimSlope(GA,Sim,vfit,UD) %#ok<MANU>
             leadway = min(max(0.8/vfit,2),5);
             parK = min(max(0.025*vfit,0.005),0.03);
 
-            SlopeSim = copy(Sim);
+            SlopeSim = deepcopy(Sim);
             SlopeSim.Env = ...
                 SlopeSim.Env.Set('Type','inf','start_slope',0,...
                                  'parK',UD*parK,'start_x',leadway);
+            SlopeSim.Con.FBType = 2;
+            if ~isempty(SlopeSim.IClimCyc)
+                SlopeSim.IC = SlopeSim.IClimCyc;
+            else
+                SlopeSim.IC = 0*Sim.IC;
+            end
         end
         
         function [fit] = UphillFitRun(GA,Sim)

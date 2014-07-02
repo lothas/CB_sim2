@@ -21,8 +21,21 @@ Sim = GA.Sim;
 Gen = GA.Gen;
 NFit = GA.NFit;
 FitFcn = GA.FitFcn;
+lastTime = [0 0];
 for g = GA.Progress+1:GA.Generations
-    disp(['Running generation ',int2str(g),' of ',int2str(GA.Generations)]);
+    startTime = now();
+    if all(lastTime == 0)
+        disp(['Running generation ',int2str(g),' of ',int2str(GA.Generations),...
+        '   -   Start: ',datestr(startTime,'HH:MM')]);
+    else
+        if lastTime(2) == 0
+            ETA = addtodate(startTime,ceil(lastTime(1)),'second');
+        else
+            ETA = addtodate(startTime,ceil(2*lastTime(1)-lastTime(2)),'second');
+        end
+        disp(['Running generation ',int2str(g),' of ',int2str(GA.Generations),...
+        '   -   Start: ',datestr(startTime,'HH:MM'),' - ETA: ',datestr(ETA,'HH:MM')]);
+    end    
     inner_tic = tic;
     
     gSeqs = GA.Seqs(:,:,g);
@@ -33,7 +46,7 @@ for g = GA.Progress+1:GA.Generations
         end
         
         % Set-up the simulation
-        wSim = copy(Sim);
+        wSim = deepcopy(Sim);
         wSim = Gen.Decode(wSim,gSeqs(i,:)); %#ok<PFBNS>
         wSim = wSim.Init();
         
@@ -77,6 +90,8 @@ for g = GA.Progress+1:GA.Generations
     else
         disp(['Time to run this generation: ',num2str(seconds,'%.2f'),'"',10])
     end
+    lastTime(2) = lastTime(1);
+    lastTime(1) = t_diff;
     
     % Finished processing generation
     GA.Progress = g;
@@ -88,6 +103,8 @@ for g = GA.Progress+1:GA.Generations
         % Transfer top IDs to new population
         GA.Seqs(1:GA.Fittest(1),:,g+1) = ...
             GA.Seqs(TopIDs,:,g);
+        GA.Fit(1:GA.Fittest(1),:,g+1) = ...
+            GA.Fit(TopIDs,:,g);
 
         % Add a mutated copy of top IDs
         GA.Seqs(GA.Fittest(1)+1:GA.Fittest(1)+GA.Fittest(2),:,g+1) = ...
@@ -117,7 +134,7 @@ for g = GA.Progress+1:GA.Generations
     
     if isa(GA.GenerationFcn,'function_handle')
         % Call external function
-        GA.GenerationFcn();
+        GA = GA.GenerationFcn(GA);
     end
 end
 

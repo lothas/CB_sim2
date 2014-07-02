@@ -111,6 +111,22 @@ classdef Genome
                 SeqPos = SeqPos + Ge.Segments(k);
             end
         end
+        
+        function [seqStr] = seq2str(Ge, seq, precision) %#ok<MANU>
+            if nargin<3
+                precision = 6;
+            end
+            cut = floor(50/precision);
+            seqStr = ['seq = [',num2str(seq(1),precision)];
+            for g = 2:length(seq)
+                if mod(g,cut) == 0
+                    seqStr = [seqStr,',...',10,num2str(seq(g),precision)]; %#ok<AGROW>
+                else
+                    seqStr = [seqStr,', ',num2str(seq(g),precision)]; %#ok<AGROW>
+                end
+            end
+            seqStr = [seqStr,'];'];
+        end
     end
     
 end

@@ -78,6 +78,15 @@ classdef Simulation < handle & matlab.mixin.Copyable
             end            
         end
         
+        % Make a deep copy of a handle object.
+        function SimDC = deepcopy(sim)
+            % Instantiate new object of the same class.
+            SimDC = copy(sim);
+            SimDC.Mod = copy(sim.Mod);
+            SimDC.Con = copy(sim.Con);
+            SimDC.Env = copy(sim.Env);
+        end
+        
         function sim = SetEndCond(sim, value)
             L = length(value);
             if L<1

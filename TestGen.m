@@ -1,7 +1,7 @@
 function [Sim] = TestGen()
 % close all
 
-GenType = 3;
+GenType = 5;
 
 Sim = Simulation();
 Sim.Graphics = 1;
@@ -69,12 +69,20 @@ switch GenType
         Sequence = [alpha, theta_dot, phi_0, 1.3333,  0.61,   theta_dot];
         Sim.Con.FBImpulse = 2;
         Sim.Con.ExtP_reset = phi_0;
+    case 5 % Genetic Algorithm
+        Keys = {'omega0','P_LegE','ExtPulses','Pulses','Pulses';
+                       1,       1,      [1,1],   [1,1],   [1,2]};
+        Range = {0.5, 0.55, [-30, 0.005], [-2, 0, 0.01], [-20, 0, 0.01]; % Min
+                   2, 0.85, [30, 0.005], [2, 0.99, 0.99], [20, 0.99, 0.99]}; % Max
+        Sequence = [1.38444, 0.787437, 3.05554, 0.005, -1.65765, 0.463841, 0.0461248,...
+                    15.4709, 0.0228823, 0.0860777];
+        Sim.PMFull = 1;
 end
 Gen = Genome(Keys, Range);
 Sim = Gen.Decode(Sim, Sequence);
 
 % Simulation parameters
-Sim = Sim.SetTime(0,0.05,60);
+Sim = Sim.SetTime(0,0.09,60);
 
 % Set internal parameters (state dimensions, events, etc)
 Sim = Sim.Init();

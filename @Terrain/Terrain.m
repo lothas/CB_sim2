@@ -1,4 +1,4 @@
-classdef Terrain < handle
+classdef Terrain < handle & matlab.mixin.Copyable
     % Version 0.3 - 24/04/2014
     
     % Different terrains: inclined plane, sinusoidal

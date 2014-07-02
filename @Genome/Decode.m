@@ -6,7 +6,7 @@ function [ Sim ] = Decode( Ge, Sim, Seq )
 
 Res = Ge.CheckGenome(Seq);
 if Res{1} == 0
-    disp(Res{2});
+%     disp(Res{2});
     % Instead of throwing an error, let's get a random sequence and
     % continue running
 %     error('ERROR: Invalid sequence');

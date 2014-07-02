@@ -1,4 +1,4 @@
-classdef CompassBiped
+classdef CompassBiped < handle & matlab.mixin.Copyable
     % Version 0.5 - 25/04/2014
     
     % A compass biped. Two kneeless legs connected at the hip.
@@ -376,6 +376,8 @@ classdef CompassBiped
             value(1)=yNS-Floor.Surf(xNS);
             
             % Check for robot "falling"
+            % use angle from vertical to floor (instead from g)
+            X(1:2) = X(1:2) - Floor.SurfSlope((CB.xS+xNS)/2);
             [HipPosx,HipPosy]=CB.GetPos(X,'Hip'); %#ok<ASGLU>
             value(2)=HipPosy-0.7*CB.L;
         end

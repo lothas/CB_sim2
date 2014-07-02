@@ -1,4 +1,4 @@
-classdef Controller
+classdef Controller < handle & matlab.mixin.Copyable
     % Version 0.4 - 28/04/2014
     
     % 4 Leaky Integrate and Fire oscillators.
