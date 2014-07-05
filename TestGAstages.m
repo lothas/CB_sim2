@@ -6,8 +6,8 @@ function [  ] = TestGAstages(  )
 nStages = 4;
 GA = cell(nStages,1);
 GAstages = [20, 1000;
-            30, 250;
-            50, 50;
+            25, 5000;
+            50, 250;
             50, 250];
 
 time_stamp = datestr(now,'mm_dd_hh_MM');
@@ -18,7 +18,7 @@ for s = 1:nStages
     GA{s}.Graphics = Graphics;
 end
 GA{1}.FileIn = 'TestGA1_06_25_18_38.mat';
-GA{2}.FileIn = 'TestGA2_06_25_18_38.mat';
+GA{2}.FileIn = 'GA_07_04_06_46.mat';
 % GA{3}.FileIn = 'TestGA3_06_23_16_00.mat';
 
 % GA.ReDo = 1;

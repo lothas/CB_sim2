@@ -28,7 +28,11 @@ function [ sim ] = Init( sim )
         sim.FigWidth = scrsz(3)-250;
         sim.FigHeight = scrsz(4)-250;
         sim.AR = sim.FigWidth/sim.FigHeight;
-        [sim.COMx0,sim.COMy0] = sim.Mod.GetPos(sim.IC(sim.ModCo),'COM');
+        if isempty(sim.IC)
+            [sim.COMx0,sim.COMy0] = sim.Mod.GetPos(zeros(1,sim.Mod.stDim),'COM');
+        else
+            [sim.COMx0,sim.COMy0] = sim.Mod.GetPos(sim.IC(sim.ModCo),'COM');
+        end
         
         % Init world size params
         sim.FlMin = sim.COMx0-1.25*sim.AR*sim.Mod.L;

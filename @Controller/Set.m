@@ -37,8 +37,6 @@ else
                 NC.Offset = value;   % Defines beginning of pulse as % of neuron period
             case 'Duration'
                 NC.Duration = value; % Pulse duration as % of neuron period
-            case 'pSoff'
-                NC.pSoff = value;    % Phase at which to turn off external inputs
                 
             % Impulsive output
             case 'AngVelImp'

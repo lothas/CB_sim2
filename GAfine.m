@@ -1,8 +1,9 @@
 function [  ] = GAfine(  )
 % Run MOOGA to further fine tune the sequences found in stages
+% close all; clear all; clear classes;
 
-GA = MOOGA(15,3000);
-% GA.FileIn = 'GA_07_02_16_45.mat';
+GA = MOOGA(25,5000);
+GA.FileIn = 'GA_07_04_04_32.mat';
 % GA.FileOut = GA.FileIn;
 GA.FileOut = ['GA_',datestr(now,'mm_dd_hh_MM'),'.mat'];
 GA.Graphics = 0;
@@ -16,7 +17,11 @@ Keys = {'omega0','P_LegE','ExtPulses','Pulses','Pulses',...
     'kOmega_u','kOmega_d','kTorques_u','kTorques_d';...
                1,       1,      [1,1],   [1,1],   [1,2],...
              1,         1,           1,           1};
-Range = {0.5, 0.55, [-30, 0.005], [-2, 0, 0.01], [-20, 0, 0.01],...
+Range = {0.5, 0.55, [-200, 0.005], [-40, 0, 0.01], [-200, 0, 0.01],...
+    -200, -200, [-400,-200,-400], [-400,-200,-400]; % Min
+           2, 0.85, [200, 0.005], [40, 0.99, 0.99], [200, 0.99, 0.99],...
+     200,  200, [400,200,400], [400,200,400]}; % Max
+Range1 = {0.5, 0.55, [-30, 0.005], [-2, 0, 0.01], [-20, 0, 0.01],...
     -200, -200, [-200,-50,-200], [-200,-50,-200]; % Min
            2, 0.85, [30, 0.005], [2, 0.99, 0.99], [20, 0.99, 0.99],...
      200,  200, [200,50,200], [200,50,200]}; % Max
@@ -24,8 +29,12 @@ Range2 = {0.5, 0.55, [-200, 0.005], [-40, 0, 0.01], [-200, 0, 0.01],...
     -200, -200, [-400,-200,-400], [-400,-200,-400]; % Min
            2, 0.85, [200, 0.005], [40, 0.99, 0.99], [200, 0.99, 0.99],...
      200,  200, [400,200,400], [400,200,400]}; % Max
+Range3 = {0.5, 0.55, [-400, 0.005], [-100, 0, 0.01], [-400, 0, 0.01],...
+    -200, -200, [-800,-400,-800], [-800,-400,-800]; % Min
+           2, 0.85, [400, 0.005], [100, 0.99, 0.99], [400, 0.99, 0.99],...
+     200,  200, [800,400,800], [800,400,800]}; % Max
 
-GA.Gen = Genome(Keys, Range2);
+GA.Gen = Genome(Keys, Range3);
 KeyLength = GA.Gen.KeyLength;
 KeyLength.kTorques_u = 3;
 KeyLength.kTorques_d = 3;
@@ -37,7 +46,6 @@ Range1 = GA.Gen.Range;
 GA.Sim = Simulation();
 GA.Sim.Graphics = GA.Graphics;
 GA.Sim.EndCond = 2; % Run until converge (or fall)
-GA.Sim = GA.Sim.Init();
 
 % Set up the compass biped model
 GA.Sim.Mod = GA.Sim.Mod.Set('damp',0,'I',0);
@@ -52,13 +60,14 @@ GA.Sim.Con.FBType = 0;
 GA.Sim.IC = [start_slope, start_slope, 0, 0, 0];
 
 % Simulation parameters
-GA.Sim = GA.Sim.SetTime(0,0.15,30);
+GA.Sim = GA.Sim.SetTime(0,0.15,40);
 
 % Some more simulation initialization
 GA.Sim.Mod.LegShift = GA.Sim.Mod.Clearance;
 % Sim.Con = Sim.Con.HandleEvent(1, Sim.IC(Sim.ConCo));
 GA.Sim.Con = GA.Sim.Con.HandleExtFB(GA.Sim.IC(GA.Sim.ModCo),...
                                           GA.Sim.IC(GA.Sim.ConCo));
+GA.Sim = GA.Sim.Init();
                                 
 % Fitness functions
 GA.NFit = 5;
@@ -101,7 +110,7 @@ GA = GA.InitGen();
 
     function GA = GenFcn(GA)
         % Interpolate range
-        i = min(GA.Progress,5)/5;
+        i = min(GA.Progress,10)/10;
         Range = i*Range2 + (1-i)*Range1;
         GA.Gen.Range = Range;
     end

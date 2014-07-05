@@ -193,30 +193,50 @@ classdef MOOGA
             end
         end
         
-        function [SlopeSim] = SetSimSlope(GA,Sim,vfit,UD) %#ok<MANU>
-            leadway = min(max(0.8/vfit,2),5);
-            parK = min(max(0.025*vfit,0.005),0.03);
+        function [Sim] = SetSimSlope(GA,Sim,vfit,UD) %#ok<MANU>
+%             leadway = min(max(vfit/3,2),5);
+            parK = min(max(0.06/vfit,0.005),0.03);
+            leadway = 1;
 
-            SlopeSim = deepcopy(Sim);
-            SlopeSim.Env = ...
-                SlopeSim.Env.Set('Type','inf','start_slope',0,...
+%             if ~isempty(Sim.IClimCyc)
+%                 Sim.IC = Sim.IClimCyc;
+%                 leadway = 1;
+%             else
+%                 Sim.IC = 0*Sim.IC;
+%             end
+            Sim.IC = Sim.ICstore(:,1);
+            Sim.Env = ...
+                Sim.Env.Set('Type','inf','start_slope',0,...
                                  'parK',UD*parK,'start_x',leadway);
-            SlopeSim.Con.FBType = 2;
-            if ~isempty(SlopeSim.IClimCyc)
-                SlopeSim.IC = SlopeSim.IClimCyc;
-            else
-                SlopeSim.IC = 0*Sim.IC;
-            end
+            Sim.Con.FBType = 2;
+            Sim.Mod.LegShift = Sim.Mod.Clearance;
+            Sim = Sim.SetTime(0,0.05,'inf');
+            Sim.Init();
         end
         
         function [fit] = UphillFitRun(GA,Sim)
-            vfit = VelFit(GA,Sim);
-            if vfit>0.3
-                SlopeSim = SetSimSlope(GA,Sim,vfit,1);
-                SlopeSim = SlopeSim.Run();
-                [fit] = UphillFit(GA,SlopeSim);
-            else
+            SlopeSim = deepcopy(Sim);
+            
+            % Calculate distance travelled
+            Hip0 = zeros(2,1); Hip1 = zeros(2,1);
+            SlopeSim.Mod.xS = SlopeSim.Out.SuppPos(1,1);
+            SlopeSim.Mod.yS = SlopeSim.Out.SuppPos(1,2);
+            [Hip0(1), Hip0(2)] = SlopeSim.Mod.GetPos(...
+                SlopeSim.Out.X(1,SlopeSim.ModCo),'Hip');
+            SlopeSim.Mod.xS = SlopeSim.Out.SuppPos(end,1);
+            SlopeSim.Mod.yS = SlopeSim.Out.SuppPos(end,2);
+            [Hip1(1), Hip1(2)] = SlopeSim.Mod.GetPos(...
+                SlopeSim.Out.X(end,SlopeSim.ModCo),'Hip');
+            DistanceTravelled = abs(Hip1(1)-Hip0(1));
+            SlopeSim.Mod.xS = 0; SlopeSim.Mod.yS = 0;
+            
+            if DistanceTravelled<3*SlopeSim.Mod.L
                 fit = 0;
+            else
+                SlopeSim = SetSimSlope(GA,SlopeSim,DistanceTravelled,1);
+                SlopeSim.Con = SlopeSim.Con.Reset();
+                SlopeSim = SlopeSim.Run();
+                fit = UphillFit(GA,SlopeSim);
             end       
         end
         
@@ -225,13 +245,28 @@ classdef MOOGA
         end
         
         function [fit] = DownhillFitRun(GA,Sim)
-            vfit = VelFit(GA,Sim);
-            if vfit>0.3
-                SlopeSim = SetSimSlope(GA,Sim,vfit,-1);
-                SlopeSim = SlopeSim.Run();
-                [fit] = DownhillFit(GA,SlopeSim);
-            else
+            SlopeSim = deepcopy(Sim);
+            
+            % Calculate distance travelled
+            Hip0 = zeros(2,1); Hip1 = zeros(2,1);
+            SlopeSim.Mod.xS = SlopeSim.Out.SuppPos(1,1);
+            SlopeSim.Mod.yS = SlopeSim.Out.SuppPos(1,2);
+            [Hip0(1), Hip0(2)] = SlopeSim.Mod.GetPos(...
+                SlopeSim.Out.X(1,SlopeSim.ModCo),'Hip');
+            SlopeSim.Mod.xS = SlopeSim.Out.SuppPos(end,1);
+            SlopeSim.Mod.yS = SlopeSim.Out.SuppPos(end,2);
+            [Hip1(1), Hip1(2)] = SlopeSim.Mod.GetPos(...
+                SlopeSim.Out.X(end,SlopeSim.ModCo),'Hip');
+            DistanceTravelled = abs(Hip1(1)-Hip0(1));
+            SlopeSim.Mod.xS = 0; SlopeSim.Mod.yS = 0;
+            
+            if DistanceTravelled<3*SlopeSim.Mod.L
                 fit = 0;
+            else
+                SlopeSim = SetSimSlope(GA,SlopeSim,DistanceTravelled,-1);
+                SlopeSim.Con = SlopeSim.Con.Reset();
+                SlopeSim = SlopeSim.Run();
+                fit = DownhillFit(GA,SlopeSim);
             end
         end
                 

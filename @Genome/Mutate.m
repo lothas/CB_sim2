@@ -42,23 +42,30 @@ function [MutSeq,Res] = Mutate(Ge,Seq,Try)
         end
         
         if Res{s,1} == 0
-            if Try<=10
-                % Mutation failed, try again
-                [MutSeq(s,:),Res(s,:)] = Ge.Mutate(Seq(s,:),Try+1);
-            else
-                % Stop trying and return original sequence
-                MutSeq(s,:) = Seq(s,:);
+            switch Try
+                case {1,2,3,4,5,6,7}
+                    % Mutation failed, try again
+                    [MutSeq(s,:),Res(s,:)] = Ge.Mutate(Seq(s,:),Try+1);                    
+                case 8
+                    % display the problematic sequence
+                    disp(Ge.seq2str(Seq(s,:)))
+                case 9
+                    % Try bounding the original sequence
+                    disp('Mutate bounded')
+                    BoundSeq = max(min(Seq(s,:),Ge.Range(2,:)),Ge.Range(1,:));
+                    [MutSeq(s,:),Res(s,:)] = Ge.Mutate(BoundSeq,Try+1);
+                case 10
+                    % Stop trying and return original sequence
+                    MutSeq(s,:) = Seq(s,:);
+                    
+                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                    [thisRes,~] = ...
+                        Ge.CheckGenome(MutSeq(s,:));
+                    if thisRes{1}~=1
+                        disp(['Mutate: ',thisRes{2}])
+                    end
+                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             end
         end
-        
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        if strcmp(Res{s,2},'Sequence outside allowed genome range')
-            [thisRes,~] = ...
-                Ge.CheckGenome(MutSeq(s,:));
-            if strcmp(thisRes{2},'Sequence outside allowed genome range')
-                disp('gotcha! - "mutate"')
-            end
-        end
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     end
 end

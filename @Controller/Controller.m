@@ -31,7 +31,6 @@ classdef Controller < handle & matlab.mixin.Copyable
         Duration = 0;% Pulse duration as % of neuron period
         
         Switch;      % 0 when off, Amp when pulse is active
-        pSoff = 0;   % Phase at which to turn off external inputs
         ExtPulses;   % External pulses IDs
         
         % Feedback
@@ -58,7 +57,7 @@ classdef Controller < handle & matlab.mixin.Copyable
         
         % Set keys
         SetKeys = {'P_reset','P_th','P_0','P_LegE','omega0',...
-                   'nPulses','Amp0','Offset','Duration','pSoff','AngVelImp',...
+                   'nPulses','Amp0','Offset','Duration','AngVelImp',...
                    'FBType','kOmega_u','kOmega_d','kTorques_u','kTorques_d'};
     end
     
@@ -76,7 +75,6 @@ classdef Controller < handle & matlab.mixin.Copyable
             NC.Duration=[0.1 0.4 0.1 0];
             
             NC.Switch=zeros(NC.nPulses,1);
-            NC.pSoff=zeros(1,NC.nPulses);
             
             % Set adaptation parameters
             NC.kOmega_u = 0; %0.4579;
@@ -95,13 +93,16 @@ classdef Controller < handle & matlab.mixin.Copyable
             NC.Offset = [];
             NC.Duration = [];
             NC.Switch = 0;
-            NC.pSoff = [];
             if NC.FBType == 2
                 NC.kTorques_u = [];
                 NC.kTorques_d = [];
             end
             NC.nEvents = 2;
             NC.ExtPulses = [];
+        end
+        
+        function NC = Reset(NC)
+            NC.Switch = 0*NC.Switch;
         end
         
         function [Torques] = NeurOutput(NC)
