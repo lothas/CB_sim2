@@ -58,6 +58,12 @@ function status = Render(sim,t,X,flag)
             end
     end
     
+    if ishandle(sim.tCOM)==0
+        sim.Once = 1;
+        status = Render(sim,t,X,flag);
+        return
+    end
+    
     if ~isempty(X)
         if sim.Follow
             [COMx,~]=sim.Mod.GetPos(X(sim.ModCo),'COM');

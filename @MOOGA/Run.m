@@ -8,8 +8,8 @@ if GA.Sim.Graphics == 1
     GA.Sim.Fig = figure();
 end
 
-if matlabpool('size')==0
-    matlabpool open 7 % Work in parallel to finish faster
+if isempty(gcp('nocreate'))
+    parpool(7) % Work in parallel to finish faster
 end
 
 % Decode base genome if provided
@@ -56,9 +56,24 @@ for g = GA.Progress+1:GA.Generations
         
         % Calculate the genome's fitness
         thisFit = zeros(1,NFit);
+        thisOuts = cell(1,NFit);
         for f = 1:NFit
-            thisFit(f) = FitFcn{f}(wSim); %#ok<PFBNS>
+            % Preprocessing for ZMPFit
+            if strcmp(func2str(FitFcn{f}),...
+                '@(varargin)GA.ZMPFit(varargin{:})')
+                % Prepare all the required vectors
+                % (torques, state, etc) and put them in wSim.Out
+                
+                % ZMP Fit should be the last one as it uses the
+                % output from all previous fitness functions
+                
+                
+            end
             
+            % Call the fitness function
+            [thisFit(f),thisOuts{f}] = FitFcn{f}(wSim); %#ok<PFBNS>
+            
+            % Postprocessing for VelFit
             if strcmp(func2str(FitFcn{f}),...
                 '@(varargin)GA.VelFit(varargin{:})')
                 % Switch direction if the model walks backwards

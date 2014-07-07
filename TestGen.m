@@ -4,7 +4,7 @@ function [Sim] = TestGen()
 GenType = 5;
 
 Sim = Simulation();
-Sim.Graphics = 1;
+Sim.Graphics = 0;
 Sim.EndCond = 2; % Run until converge
 
 % Set up the compass biped model

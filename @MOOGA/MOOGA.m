@@ -74,7 +74,7 @@ classdef MOOGA
         end
         
         %% %%%%%%%%%%%%% Built-in fitness functions %%%%%%%%%%%%% %%
-        function fit = HeightFit(GA,Sim) %#ok<MANU>
+        function [fit, out] = HeightFit(GA,Sim) %#ok<INUSL>
             X = Sim.Out.X;
             T = Sim.Out.T;
             Nt = length(T);
@@ -98,9 +98,10 @@ classdef MOOGA
             % Normalize fit
             fit = min(fit/trapz(linspace(0,Sim.Out.Tend-2*Sim.tstep_normal,Nt),...
                             ones(size(T))),1);
+            out = [];
         end
         
-        function fit = VelFit(GA,Sim) %#ok<MANU>
+        function [fit,out] = VelFit(GA,Sim) %#ok<INUSL>
             X = Sim.Out.X;
             T = Sim.Out.T;
             Nt = length(T);
@@ -132,9 +133,10 @@ classdef MOOGA
             else
                 fit = min(MaxDist(1),LocalMaxDist)/GlobalMaxDist;
             end
+            out = Sim.Out;
         end
         
-        function [fit] = NrgEffFit(GA,Sim) %#ok<MANU>
+        function [fit,out] = NrgEffFit(GA,Sim) %#ok<INUSL>
             X = Sim.Out.X;
             T = Sim.Out.T;
             Torques = Sim.Out.Torques;
@@ -173,10 +175,11 @@ classdef MOOGA
                 % COT of 0.03 gives 0.869
                 % COT of 0.12 gives 0.625
                 % COT of 0.3 gives 0.4
+                out = [];
             end
         end
         
-        function [fit] = EigenFit(GA,Sim) %#ok<MANU>
+        function [fit,out] = EigenFit(GA,Sim) %#ok<INUSL>
             if isempty(Sim.Period)
                 fit = 0;
             else
@@ -191,9 +194,10 @@ classdef MOOGA
 %                     disp(EigVal);
                 end
             end
+            out = [];
         end
         
-        function [Sim] = SetSimSlope(GA,Sim,vfit,UD) %#ok<MANU>
+        function [Sim] = SetSimSlope(GA,Sim,vfit,UD) %#ok<INUSL>
 %             leadway = min(max(vfit/3,2),5);
             parK = min(max(0.06/vfit,0.005),0.03);
             leadway = 1;
@@ -214,7 +218,7 @@ classdef MOOGA
             Sim.Init();
         end
         
-        function [fit] = UphillFitRun(GA,Sim)
+        function [fit,out] = UphillFitRun(GA,Sim)
             SlopeSim = deepcopy(Sim);
             
             % Calculate distance travelled
@@ -237,14 +241,16 @@ classdef MOOGA
                 SlopeSim.Con = SlopeSim.Con.Reset();
                 SlopeSim = SlopeSim.Run();
                 fit = UphillFit(GA,SlopeSim);
-            end       
+            end
+            out = SlopeSim.Out;
         end
         
-        function [fit] = UphillFit(GA,Sim) %#ok<MANU>
+        function [fit,out] = UphillFit(GA,Sim) %#ok<INUSL>
             fit = Sim.MaxSlope;
+            out = [];
         end
         
-        function [fit] = DownhillFitRun(GA,Sim)
+        function [fit,out] = DownhillFitRun(GA,Sim)
             SlopeSim = deepcopy(Sim);
             
             % Calculate distance travelled
@@ -268,10 +274,62 @@ classdef MOOGA
                 SlopeSim = SlopeSim.Run();
                 fit = DownhillFit(GA,SlopeSim);
             end
+            out = SlopeSim.Out;
         end
                 
-        function [fit] = DownhillFit(GA,Sim) %#ok<MANU>
+        function [fit,out] = DownhillFit(GA,Sim) %#ok<INUSL>
             fit = -Sim.MinSlope;
+            out = [];
+        end
+        
+        function [fit,out] = ZMPFit(GA,Sim) %#ok<INUSL>
+            X = Sim.Out.X;
+            T = Sim.Out.T;
+            NT = length(T);
+            SuppPos = Sim.Out.SuppPos;
+            Torques = Sim.Out.Torques;
+            
+            % Remove "push-off" torques
+            stepTime = find(diff(SuppPos(:,1))~=0);
+            stepTime = [1; stepTime; NT];
+            pulseEnd = zeros(length(stepTime),1);
+            % Push-off parameters
+            PushOff = 1;
+            POdur = Sim.Con.Duration(PushOff);
+            POamp = Sim.Con.Amp(PushOff);
+            
+            for s = 1:length(stepTime)-1
+                thisT = T(stepTime(s):stepTime(s+1)-1);
+                pulseEnd(s) = stepTime(s)-1 + ...
+                    find(thisT>=thisT(1)+POdur,1,'first');
+                
+                POids = stepTime(s)-1+find(Torques(stepTime(s):pulseEnd(s))~=0);
+                Torques(POids) = Torques(POids)-POamp;
+            end
+            
+            % Process the data
+            GRF = zeros(NT,2);
+            ZMP = zeros(NT,1);
+            for t=1:NT
+                thisX = X(t,Sim.ModCo);
+                GRF(t,:) = Sim.Mod.GetGRF(thisX)';
+                ZMP(t) = Torques(t,1)/GRF(t,2); % Ankle torque/GRFy
+            end
+            
+            ZMPfront = max(ZMP);
+            ZMPback = min(ZMP);
+            % Max foot size
+            MaxFront = 0.4; % 40cm (ankle to toes)
+            MaxBack = 0.1; % 10cm (ankle to heel)
+            if abs(ZMPfront)/MaxFront>abs(ZMPback)/MaxBack
+                fit = max((MaxFront-abs(ZMPfront))/MaxFront,0);
+            else
+                fit = max((MaxBack-abs(ZMPback))/MaxBack,0);
+            end
+            % Make the fitness function nonlinear
+            % so going to 0 won't be so important
+            fit = cos(pi/2*(1-fit)^2)^2;
+            out = [];
         end
     end
         

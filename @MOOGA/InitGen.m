@@ -20,13 +20,13 @@ if exist('In','var') == 1
     if In.GA.Population == GA.Population
         if GA.ReDo
             % Copy the last generation's seq. into new GA
-            GA.Seqs(:,:,1) = In.GA.Seqs(:,:,In.GA.Progress+1);
+            GA.Seqs(:,:,1) = In.GA.Seqs(:,:,In.GA.Progress);
         else
             % Copy all the progress into new GA
-            GA.Seqs(:,:,1:In.GA.Progress+1) = ...
-                In.GA.Seqs(:,:,1:In.GA.Progress+1);
-            GA.Fit(:,:,1:In.GA.Progress+1) = ...
-                In.GA.Fit(:,:,1:In.GA.Progress+1);
+            GA.Seqs(:,:,1:In.GA.Progress) = ...
+                In.GA.Seqs(:,:,1:In.GA.Progress);
+            GA.Fit(:,:,1:In.GA.Progress) = ...
+                In.GA.Fit(:,:,1:In.GA.Progress);
             GA.Progress = In.GA.Progress;
         end
     else
