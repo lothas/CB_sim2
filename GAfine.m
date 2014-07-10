@@ -2,13 +2,14 @@ function [  ] = GAfine(  )
 % Run MOOGA to further fine tune the sequences found in stages
 % close all; clear all; clear classes;
 
-GA = MOOGA(25,5000);
+GA = MOOGA(25,2500);
 GA.FileIn = 'GA_07_04_04_32.mat';
+% GA.FileIn = 'GA_07_09_16_33.mat';
 % GA.FileOut = GA.FileIn;
 GA.FileOut = ['GA_',datestr(now,'mm_dd_hh_MM'),'.mat'];
 GA.Graphics = 0;
 
-% GA.ReDo = 1;
+GA.ReDo = 1;
 
 % Set up the genome
 % Controller with push-off, swing pulse + limited ankle pulse
@@ -33,13 +34,15 @@ Range3 = {0.5, 0.55, [-400, 0.005], [-100, 0, 0.01], [-400, 0, 0.01],...
     -200, -200, [-800,-400,-800], [-800,-400,-800]; % Min
            2, 0.85, [400, 0.005], [100, 0.99, 0.99], [400, 0.99, 0.99],...
      200,  200, [800,400,800], [800,400,800]}; % Max
+MutDelta0 = 0.1;
+MutDelta1 = 0.01;
 
 GA.Gen = Genome(Keys, Range3);
 KeyLength = GA.Gen.KeyLength;
 KeyLength.kTorques_u = 3;
 KeyLength.kTorques_d = 3;
 Range2 = GA.Gen.Range;
-GA.Gen = Genome(Keys, KeyLength, Range);
+GA.Gen = Genome(Keys, KeyLength, Range3);
 Range1 = GA.Gen.Range;
 
 % Set up the simulations
@@ -70,12 +73,13 @@ GA.Sim.Con = GA.Sim.Con.HandleExtFB(GA.Sim.IC(GA.Sim.ModCo),...
 GA.Sim = GA.Sim.Init();
                                 
 % Fitness functions
-GA.NFit = 5;
+GA.NFit = 6;
 GA.FitFcn = {@GA.VelFit;
              @GA.NrgEffFit;
              @GA.EigenFit;
              @GA.UphillFitRun;
-             @GA.DownhillFitRun};
+             @GA.DownhillFitRun;
+             @GA.ZMPFit};
 
 GA = GA.InitGen();
 % Add the best guesses from previous runs
@@ -108,11 +112,22 @@ GA = GA.InitGen();
 %                          repmat([-163.33421,-47.58048,154.71160],10,1),...
 %                          DownGains];
 
+% Also add the best genes from TestGAStages
+GAS = load('TestGA3_07_08_15_53');
+GA.Seqs(end-99:end,:,1) = repmat(GAS.GA.BaseSeq,100,1);
+GA.Seqs(end-99:end,11:18,1) = GAS.GA.Seqs(GAS.GA.GetTopPop(100),:,end);
+
+% Update MOOGA parameters after each generation
     function GA = GenFcn(GA)
+        % Increase allowed genome range
         % Interpolate range
-        i = min(GA.Progress,10)/10;
-        Range = i*Range2 + (1-i)*Range1;
-        GA.Gen.Range = Range;
+%         i = min(GA.Progress,10)/10;
+%         Range = i*Range2 + (1-i)*Range1;
+%         GA.Gen.Range = Range;
+        
+        % Reduce mutation range
+        j = min(GA.Progress,30)/30;
+        GA.Gen.MutDelta = (1-j)*MutDelta0 + MutDelta1*j;
     end
 GA.GenerationFcn = @GenFcn;
 

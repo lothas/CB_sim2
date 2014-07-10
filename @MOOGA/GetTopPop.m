@@ -1,4 +1,4 @@
-function [ TopIDs ] = GetTopPop( GA, N )
+function [ TopIDs, Weights ] = GetTopPop( GA, N )
 %GETTOPPOP Receives a population's fitness and returns the N top IDs
 %   GetTopPop divides the given genomes into Pareto fronts based
 %   on their fitness. It then selects the top N genomes from the
@@ -9,16 +9,19 @@ function [ TopIDs ] = GetTopPop( GA, N )
         FitID = [GA.Fit(:,:,GA.Progress), (1:GA.Population)'];
         Sorted = sortrows(FitID,-1);
         TopIDs = Sorted(1:N,2);
+        Weights = ones(N,1);
     else
         % Divide population into pareto fronts
         Fronts = GA.Pareto(GA.Fit(:,:,GA.Progress));
         f = 1;
         IDindex = 1;
         TopIDs = zeros(GA.Population,1);
+        Weights = zeros(GA.Population,1);
         while IDindex<=N
             % Take IDs from pareto fronts until TopPop is reached
             res = length(Fronts{f});
             TopIDs(IDindex:IDindex+res-1) = Fronts{f}(randperm(res));
+            Weights(IDindex:IDindex+res-1) = repmat(f,res,1);
             % Fronts are randomly permutated to remove biases
             IDindex = IDindex+res;
             f = f+1;
@@ -56,7 +59,10 @@ function [ TopIDs ] = GetTopPop( GA, N )
             TopIDs = TopTopIDs;
         end
 
-        TopIDs=TopIDs(1:N);
+        TopIDs = TopIDs(1:N);
+        % Invert the weights (first fronts get higher weight)
+        Weights = f-Weights;
+        Weights = Weights(1:N);
     end
 end
 

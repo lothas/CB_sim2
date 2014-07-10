@@ -38,6 +38,7 @@ classdef Controller < handle & matlab.mixin.Copyable
                      % 1 - single gain for omega and each joint
                      % 2 - individual gains for each pulse (not
                      % implemented?)
+        lastPhi = 0;
                      
         % Phase reset
         ExtP_reset = []; % set to a certain phase to use phase reset
@@ -124,6 +125,13 @@ classdef Controller < handle & matlab.mixin.Copyable
                 NC.Amp = NC.Amp0;
             else
                 Phi = (X(1)+X(2))/2;
+                if abs(Phi-NC.lastPhi)>0.1
+                    % Don't apply changes when the slope
+                    % varies too abruptly
+                    % (usually happens when the robot falls)
+                    return
+                end
+                NC.lastPhi = Phi;
                 
                 NC.omega = NC.omega0 + ...
                     min(0,Phi)*NC.kOmega_d + ...    % Phi<0

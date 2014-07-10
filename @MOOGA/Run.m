@@ -41,6 +41,7 @@ for g = GA.Progress+1:GA.Generations
     gSeqs = GA.Seqs(:,:,g);
     gFit = GA.Fit(:,:,g);
     parfor i = 1:GA.Population
+%     for i = 1:GA.Population
         if any(gFit(i,:)~=0)
             continue;
         end
@@ -60,14 +61,25 @@ for g = GA.Progress+1:GA.Generations
         for f = 1:NFit
             % Preprocessing for ZMPFit
             if strcmp(func2str(FitFcn{f}),...
-                '@(varargin)GA.ZMPFit(varargin{:})')
+                '@(varargin)ThisGA.ZMPFit(varargin{:})')
                 % Prepare all the required vectors
                 % (torques, state, etc) and put them in wSim.Out
                 
                 % ZMP Fit should be the last one as it uses the
                 % output from all previous fitness functions
-                
-                
+                Outs = find(~cellfun(@isempty,thisOuts));
+                X = []; T = 0;
+                SuppPos = []; Torques = [];
+                for o = 1:length(Outs)
+                    X = [X;thisOuts{Outs(o)}.X];
+                    T = [T;thisOuts{Outs(o)}.T+T(end)];
+                    SuppPos = [SuppPos;thisOuts{Outs(o)}.SuppPos];
+                    Torques = [Torques;thisOuts{Outs(o)}.Torques];
+                end
+                wSim.Out.X = X;
+                wSim.Out.T = T(2:end);
+                wSim.Out.SuppPos = SuppPos;
+                wSim.Out.Torques = Torques;
             end
             
             % Call the fitness function
@@ -75,7 +87,7 @@ for g = GA.Progress+1:GA.Generations
             
             % Postprocessing for VelFit
             if strcmp(func2str(FitFcn{f}),...
-                '@(varargin)GA.VelFit(varargin{:})')
+                '@(varargin)ThisGA.VelFit(varargin{:})')
                 % Switch direction if the model walks backwards
                 if thisFit(f)<0
                     revSeq = Gen.SwitchDir(gSeqs(i,:));
@@ -113,7 +125,7 @@ for g = GA.Progress+1:GA.Generations
     
     if g<GA.Generations
         % Finished running tests, create new generation
-        TopIDs = GA.GetTopPop(GA.Fittest(1)); % fitness = genes
+        [TopIDs,Weights] = GA.GetTopPop(GA.Fittest(1)); % fitness = genes
 
         % Transfer top IDs to new population
         GA.Seqs(1:GA.Fittest(1),:,g+1) = ...
@@ -129,7 +141,15 @@ for g = GA.Progress+1:GA.Generations
         Child = GA.Fittest(1)+GA.Fittest(2)+1;
         while Child<=GA.Population
             % Select 2 parents randomly
-            IDs = randsample(1:GA.Fittest(1),2);
+            if GA.WeightedPairing
+                IDs = randsample(1:GA.Fittest(1),2,'true',Weights);
+                if IDs(1) == IDs(2)
+                    continue
+                end
+            else
+                IDs = randsample(1:GA.Fittest(1),2);
+            end
+            
             [Children, Res] = ...
                 GA.Gen.Crossover(GA.Seqs(IDs(1),:,g+1),...
                                  GA.Seqs(IDs(2),:,g+1));

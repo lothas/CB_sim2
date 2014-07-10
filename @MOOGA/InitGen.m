@@ -27,7 +27,7 @@ if exist('In','var') == 1
                 In.GA.Seqs(:,:,1:In.GA.Progress);
             GA.Fit(:,:,1:In.GA.Progress) = ...
                 In.GA.Fit(:,:,1:In.GA.Progress);
-            GA.Progress = In.GA.Progress;
+            GA.Progress = In.GA.Progress-1;
         end
     else
         if In.GA.Population > GA.Population

@@ -379,7 +379,7 @@ classdef CompassBiped < handle & matlab.mixin.Copyable
             % use angle from vertical to floor (instead from g)
             X(1:2) = X(1:2) - Floor.SurfSlope((CB.xS+xNS)/2);
             [HipPosx,HipPosy]=CB.GetPos(X,'Hip'); %#ok<ASGLU>
-            value(2)=HipPosy-0.7*CB.L;
+            value(2)=HipPosy-CB.yS-0.7*CB.L;
         end
         
         % %%%%%% % Events % %%%%%% %

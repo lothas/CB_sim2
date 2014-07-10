@@ -8,6 +8,9 @@ classdef MOOGA
         Generations;
         Population;
         Fittest;
+        WeightedPairing = 1; % Individuals have higher chances of
+                             % "mating" when they belong to higher
+                             % pareto fronts
         
         % Objects
         Gen;        % Genome
@@ -74,7 +77,7 @@ classdef MOOGA
         end
         
         %% %%%%%%%%%%%%% Built-in fitness functions %%%%%%%%%%%%% %%
-        function [fit, out] = HeightFit(GA,Sim) %#ok<INUSL>
+        function [fit,out] = HeightFit(GA,Sim) %#ok<INUSL>
             X = Sim.Out.X;
             T = Sim.Out.T;
             Nt = length(T);
@@ -175,8 +178,8 @@ classdef MOOGA
                 % COT of 0.03 gives 0.869
                 % COT of 0.12 gives 0.625
                 % COT of 0.3 gives 0.4
-                out = [];
             end
+            out = [];
         end
         
         function [fit,out] = EigenFit(GA,Sim) %#ok<INUSL>
@@ -215,7 +218,10 @@ classdef MOOGA
             Sim.Con.FBType = 2;
             Sim.Mod.LegShift = Sim.Mod.Clearance;
             Sim = Sim.SetTime(0,0.05,'inf');
-            Sim.Init();
+            Sim.Con = Sim.Con.Reset();
+            Sim.Con = Sim.Con.HandleExtFB(Sim.IC(Sim.ModCo),...
+                                          Sim.IC(Sim.ConCo));
+            Sim = Sim.Init();
         end
         
         function [fit,out] = UphillFitRun(GA,Sim)
@@ -238,7 +244,6 @@ classdef MOOGA
                 fit = 0;
             else
                 SlopeSim = SetSimSlope(GA,SlopeSim,DistanceTravelled,1);
-                SlopeSim.Con = SlopeSim.Con.Reset();
                 SlopeSim = SlopeSim.Run();
                 fit = UphillFit(GA,SlopeSim);
             end
@@ -295,16 +300,22 @@ classdef MOOGA
             pulseEnd = zeros(length(stepTime),1);
             % Push-off parameters
             PushOff = 1;
-            POdur = Sim.Con.Duration(PushOff);
-            POamp = Sim.Con.Amp(PushOff);
             
             for s = 1:length(stepTime)-1
-                thisT = T(stepTime(s):stepTime(s+1)-1);
-                pulseEnd(s) = stepTime(s)-1 + ...
-                    find(thisT>=thisT(1)+POdur,1,'first');
+                thisT = T(stepTime(s)+1:stepTime(s+1));
                 
-                POids = stepTime(s)-1+find(Torques(stepTime(s):pulseEnd(s))~=0);
-                Torques(POids) = Torques(POids)-POamp;
+                % Update push-off parameters
+                Sim.Con = Sim.Con.HandleExtFB(X(stepTime(s)+1,Sim.ModCo),...
+                                              X(stepTime(s)+1,Sim.ConCo));
+                POdur = Sim.Con.Duration(PushOff)/Sim.Con.omega;
+                POamp = Sim.Con.Amp(PushOff);
+            
+                next = find(thisT>=thisT(1)+POdur,1,'first');
+                if ~isempty(next)
+                    pulseEnd(s) = stepTime(s) + next;
+                    POids = stepTime(s)+find(Torques(stepTime(s)+1:pulseEnd(s))~=0);
+                    Torques(POids) = Torques(POids)-POamp;
+                end
             end
             
             % Process the data
@@ -322,9 +333,9 @@ classdef MOOGA
             MaxFront = 0.4; % 40cm (ankle to toes)
             MaxBack = 0.1; % 10cm (ankle to heel)
             if abs(ZMPfront)/MaxFront>abs(ZMPback)/MaxBack
-                fit = max((MaxFront-abs(ZMPfront))/MaxFront,0);
+                fit = max(1-abs(ZMPfront)/MaxFront,0);
             else
-                fit = max((MaxBack-abs(ZMPback))/MaxBack,0);
+                fit = max(1-abs(ZMPback)/MaxBack,0);
             end
             % Make the fitness function nonlinear
             % so going to 0 won't be so important

@@ -18,7 +18,7 @@ for s = 1:nStages
 end
 GA{1}.FileIn = 'TestGA3_07_05_17_54.mat';
 GA{2}.FileIn = 'GA_07_04_06_46.mat';
-GA{3}.FileIn = 'TestGA3_07_05_13_16.mat';
+GA{3}.FileIn = 'TestGA3_07_05_17_54.mat';
 
 % GA.ReDo = 1;
 GenType = 3;
@@ -90,7 +90,7 @@ for s = 1:nStages
     GA{s}.Sim.IC = [start_slope, start_slope, 0, 0, 0];
 
     % Simulation parameters
-    GA{s}.Sim = GA{s}.Sim.SetTime(0,0.15,30);
+    GA{s}.Sim = GA{s}.Sim.SetTime(0,0.15,40);
 
     % Some more simulation initialization
     GA{s}.Sim.Mod.LegShift = GA{s}.Sim.Mod.Clearance;
@@ -126,9 +126,10 @@ ThisGA = GA{end};
 % ThisGA.NFit = 1;
 % ThisGA.FitFcn = {@ThisGA.DownhillFit};
 % ThisGA.Sim.Con.FBType = 1;
-ThisGA.NFit = 2;
+ThisGA.NFit = 3;
 ThisGA.FitFcn = {@ThisGA.UphillFitRun;
-                 @ThisGA.DownhillFitRun};
+                 @ThisGA.DownhillFitRun;
+                 @ThisGA.ZMPFit};
 ThisGA.Sim.Con.FBType = 2;
 GA{end} = ThisGA;
 
