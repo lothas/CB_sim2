@@ -4,6 +4,9 @@ function [ Sim ] = Decode( Ge, Sim, Seq )
 %   genome keys in order to update the properties of a simulaiton
 %   (including the Model, Environment, Controller, initial conditions, etc)
 
+<<<<<<< HEAD
+if ~Ge.CheckGenome(Genes)
+=======
 Res = Ge.CheckGenome(Seq);
 if Res{1} == 0
 %     disp(Res{2});
