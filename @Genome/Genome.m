@@ -11,9 +11,6 @@ classdef Genome
         Segments
         KeyExtra
         Length
-<<<<<<< HEAD
-        Range % Min/Max range for each gene
-=======
         
         % Sequence range
         Range % Min/Max range for each gene
@@ -25,10 +22,9 @@ classdef Genome
         MutProb = 0.5;      % Probability that a single gene will mutate
         MutDelta = 0.1;     % Max strength of mutation as percentage of range
         MutType = 'uni';    % Type of mutation: uniform or normal
->>>>>>> origin/master
     end
     
-    methods         
+    methods
         function Ge = Genome(varargin)            
             % KeyLengths can be set here or from the outside
             % They are used to define the number of genes for a
