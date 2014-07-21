@@ -56,6 +56,9 @@ classdef Controller < handle & matlab.mixin.Copyable
         kTorques_u = 0;
         kTorques_d = 0;
         
+        % Saturation
+        MinSat; MaxSat;
+        
         % Set keys
         SetKeys = {'P_reset','P_th','P_0','P_LegE','omega0',...
                    'nPulses','Amp0','Offset','Duration','AngVelImp',...
@@ -140,6 +143,10 @@ classdef Controller < handle & matlab.mixin.Copyable
                     min(0,Phi)*NC.kTorques_d + ...  % Phi<0
                     max(0,Phi)*NC.kTorques_u;       % Phi>0
             end
+            % Apply saturation
+            if ~isempty(NC.MinSat)
+                NC.Amp = min(max(NC.Amp,NC.MinSat),NC.MaxSat);
+            end
         end
         
         % %%%%%% % Derivative % %%%%%% %
@@ -209,7 +216,7 @@ classdef Controller < handle & matlab.mixin.Copyable
                 % Check if any event happens at ExtP_reset
                 [value, it, dir] = NC.Events(Xcon); %#ok<NASGU,ASGLU>
                 EvIDs = find(value == 0);
-                for ev = 1:EvIDs
+                for ev = 1:length(EvIDs)
                     [NC,Xcon] = NC.HandleEvent(EvIDs(ev),Xcon);
                 end
             end

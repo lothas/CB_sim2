@@ -2,33 +2,32 @@ function [  ] = GAZMP(  )
 % Run MOOGA to further find good results with low ZMP (underactuated)
 % close all; clear all; clear classes;
 
-GA = MOOGA(30,3000);
-% GA.FileIn = 'GA_07_04_04_32.mat';
-% GA.FileIn = 'GA_07_09_16_33.mat';
+GA = MOOGA(50,5000);
+% GA.FileIn = 'GA_07_13_01_19.mat';
 % GA.FileOut = GA.FileIn;
 GA.FileOut = ['GA_',datestr(now,'mm_dd_hh_MM'),'.mat'];
 GA.Graphics = 0;
 
-GA.ReDo = 1;
+% GA.ReDo = 1;
 
 % Set up the genome
 % Controller with push-off + double swing pulse
 % and feedback
-Keys = {'omega0','P_LegE','ExtPulses','Pulses',...
+Keys = {'omega0','P_LegE','ExtPulses','Pulses','Pulses',...
     'kOmega_u','kOmega_d','kTorques_u','kTorques_d';...
-               1,       1,      [1,1],   [2,2],...
+               1,       1,      [1,1],   [1,1],   [2,2],...
              1,         1,           1,           1};
-Range = {0.5, 0.55, [-800, 0.005], [-400, 0, 0.01],...
-    -200, -200, [-800,-800,-800], [-800,-800,-800]; % Min
-           2, 0.85, [800, 0.005], [400, 0.99, 0.99],...
-     200,  200, [800,800,800], [800,800,800]}; % Max
+Range = {0.5, 0.55, [-800, 0.005], [-40, 0, 0.01], [-400, 0, 0.01],...
+       -10, -10, [-1000,80,-1200,-1200], [-1000,80,-1200,-1200]; % Min
+           2, 0.85, [0, 0.005], [40, 0.99, 0.99], [400, 0.99, 0.99],...
+        10,  10, [1000,80,1200,1200], [1000,80,1200,1200]}; % Max
 MutDelta0 = 0.1;
 MutDelta1 = 0.01;
 
 GA.Gen = Genome(Keys, Range);
 KeyLength = GA.Gen.KeyLength;
-KeyLength.kTorques_u = 3;
-KeyLength.kTorques_d = 3;
+KeyLength.kTorques_u = 4;
+KeyLength.kTorques_d = 4;
 GA.Gen = Genome(Keys, KeyLength, Range);
 
 % Set up the simulations
@@ -59,13 +58,13 @@ GA.Sim.Con = GA.Sim.Con.HandleExtFB(GA.Sim.IC(GA.Sim.ModCo),...
 GA.Sim = GA.Sim.Init();
                                 
 % Fitness functions
-GA.NFit = 5;
 GA.FitFcn = {@GA.VelFit;
              @GA.NrgEffFit;
              @GA.EigenFit;
              @GA.UphillFitRun;
-             @GA.DownhillFitRun}; %;
-             %@GA.ZMPFit};
+             @GA.DownhillFitRun;
+             @GA.ZMPFit};
+GA.NFit = length(GA.FitFcn);
 
 GA = GA.InitGen();
 % Add the best guesses from previous runs

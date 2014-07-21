@@ -61,7 +61,7 @@ for g = GA.Progress+1:GA.Generations
         for f = 1:NFit
             % Preprocessing for ZMPFit
             if strcmp(func2str(FitFcn{f}),...
-                '@(varargin)ThisGA.ZMPFit(varargin{:})')
+                '@(varargin)ThisGA.ZMPFit(varargin{:})') %#ok<PFBNS>
                 % Prepare all the required vectors
                 % (torques, state, etc) and put them in wSim.Out
                 
@@ -83,7 +83,7 @@ for g = GA.Progress+1:GA.Generations
             end
             
             % Call the fitness function
-            [thisFit(f),thisOuts{f}] = FitFcn{f}(wSim); %#ok<PFBNS>
+            [thisFit(f),thisOuts{f}] = FitFcn{f}(wSim);
             
             % Postprocessing for VelFit
             if strcmp(func2str(FitFcn{f}),...

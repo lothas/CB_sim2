@@ -282,7 +282,7 @@ classdef CompassBiped < handle & matlab.mixin.Copyable
         end
         
         function [Weight] = GetWeight(CB)
-            Weight=(2*CB.m+CB.mh)*CB.g;
+            Weight = (2*CB.m + CB.mh)*CB.g;
         end
         
         function [KE] = GetKineticEnergy(CB, X)

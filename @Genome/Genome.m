@@ -112,7 +112,7 @@ classdef Genome
             end
         end
         
-        function [seqStr] = seq2str(Ge, seq, precision) %#ok<MANU>
+        function [seqStr] = seq2str(Ge, seq, precision) %#ok<INUSL>
             if nargin<3
                 precision = 6;
             end

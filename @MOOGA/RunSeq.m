@@ -24,7 +24,7 @@ Sim.Graphics = 1;
 Sim.EndCond = 2; % Run until converge
 
 Sim = GA.Gen.Decode(Sim, GA.Seqs(ID,:,Generation));
-disp(num2str(GA.Seqs(ID,:,Generation)',5));
+disp(GA.Gen.seq2str(GA.Seqs(ID,:,Generation)));
 % Simulation parameters
 Sim = Sim.SetTime(0,0.09,tend);
 
@@ -42,11 +42,10 @@ Sim = Sim.Run();
 
 % Calculate eigenvalues
 if Sim.Out.Type == 5
-    [EigVal,EigVec] = Sim.Poincare();
+    [EigVal,~] = Sim.Poincare();
     % Do some plots
     disp(EigVal);
 else
-    EigVal = 2*ones(4,1);
     disp(Sim.Out.Text);
 end
 
@@ -66,10 +65,10 @@ for f = 1:GA.NFit
         X = []; T = 0;
         SuppPos = []; Torques = [];
         for o = 1:length(Outs)
-            X = [X;thisOuts{Outs(o)}.X];
-            T = [T;thisOuts{Outs(o)}.T+T(end)];
-            SuppPos = [SuppPos;thisOuts{Outs(o)}.SuppPos];
-            Torques = [Torques;thisOuts{Outs(o)}.Torques];
+            X = [X;thisOuts{Outs(o)}.X]; %#ok<AGROW>
+            T = [T;thisOuts{Outs(o)}.T+T(end)]; %#ok<AGROW>
+            SuppPos = [SuppPos;thisOuts{Outs(o)}.SuppPos]; %#ok<AGROW>
+            Torques = [Torques;thisOuts{Outs(o)}.Torques]; %#ok<AGROW>
         end
         Sim.Out.X = X;
         Sim.Out.T = T(2:end);

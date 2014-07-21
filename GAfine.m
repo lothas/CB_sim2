@@ -2,48 +2,41 @@ function [  ] = GAfine(  )
 % Run MOOGA to further fine tune the sequences found in stages
 % close all; clear all; clear classes;
 
-GA = MOOGA(25,2500);
-GA.FileIn = 'GA_07_04_04_32.mat';
+GA = MOOGA(50,5000);
+% GA.FileIn = 'GA_07_04_04_32.mat';
 % GA.FileIn = 'GA_07_09_16_33.mat';
 % GA.FileOut = GA.FileIn;
 GA.FileOut = ['GA_',datestr(now,'mm_dd_hh_MM'),'.mat'];
 GA.Graphics = 0;
 
-GA.ReDo = 1;
+% GA.ReDo = 1;
 
 % Set up the genome
 % Controller with push-off, swing pulse + limited ankle pulse
 % and feedback
+NAnkleT = 3;
+NHipT = 3;
+MaxAnkleT = 50;
+MaxHipT = 50;
+MaxTO = 2000; % Max toe off "impulse"
 Keys = {'omega0','P_LegE','ExtPulses','Pulses','Pulses',...
     'kOmega_u','kOmega_d','kTorques_u','kTorques_d';...
-               1,       1,      [1,1],   [1,1],   [1,2],...
+               1,       1,      [1,1],   [NAnkleT,1],   [NHipT,2],...
              1,         1,           1,           1};
-Range = {0.5, 0.55, [-200, 0.005], [-40, 0, 0.01], [-200, 0, 0.01],...
-    -200, -200, [-400,-200,-400], [-400,-200,-400]; % Min
-           2, 0.85, [200, 0.005], [40, 0.99, 0.99], [200, 0.99, 0.99],...
-     200,  200, [400,200,400], [400,200,400]}; % Max
-Range1 = {0.5, 0.55, [-30, 0.005], [-2, 0, 0.01], [-20, 0, 0.01],...
-    -200, -200, [-200,-50,-200], [-200,-50,-200]; % Min
-           2, 0.85, [30, 0.005], [2, 0.99, 0.99], [20, 0.99, 0.99],...
-     200,  200, [200,50,200], [200,50,200]}; % Max
-Range2 = {0.5, 0.55, [-200, 0.005], [-40, 0, 0.01], [-200, 0, 0.01],...
-    -200, -200, [-400,-200,-400], [-400,-200,-400]; % Min
-           2, 0.85, [200, 0.005], [40, 0.99, 0.99], [200, 0.99, 0.99],...
-     200,  200, [400,200,400], [400,200,400]}; % Max
-Range3 = {0.5, 0.55, [-400, 0.005], [-100, 0, 0.01], [-400, 0, 0.01],...
-    -200, -200, [-800,-400,-800], [-800,-400,-800]; % Min
-           2, 0.85, [400, 0.005], [100, 0.99, 0.99], [400, 0.99, 0.99],...
-     200,  200, [800,400,800], [800,400,800]}; % Max
+TorqueFBMin = [-1200,-150*ones(1,NAnkleT),-300*ones(1,NHipT)];
+TorqueFBMax = -TorqueFBMin;
+Range = {0.5, 0.55, [-MaxTO, 0.005], [-MaxAnkleT, 0, 0.01], [-MaxHipT, 0, 0.01],...
+    -200, -200, TorqueFBMin, TorqueFBMin; % Min
+           2, 0.85, [0000, 0.005], [MaxAnkleT, 0.99, 0.99], [MaxHipT, 0.99, 0.99],...
+     200,  200, TorqueFBMax, TorqueFBMax}; % Max
 MutDelta0 = 0.1;
 MutDelta1 = 0.01;
 
-GA.Gen = Genome(Keys, Range3);
+GA.Gen = Genome(Keys, Range);
 KeyLength = GA.Gen.KeyLength;
-KeyLength.kTorques_u = 3;
-KeyLength.kTorques_d = 3;
-Range2 = GA.Gen.Range;
-GA.Gen = Genome(Keys, KeyLength, Range3);
-Range1 = GA.Gen.Range;
+KeyLength.kTorques_u = length(TorqueFBMin);
+KeyLength.kTorques_d = length(TorqueFBMin);
+GA.Gen = Genome(Keys, KeyLength, Range);
 
 % Set up the simulations
 GA.Sim = Simulation();
@@ -60,9 +53,11 @@ GA.Sim.Env = GA.Sim.Env.Set('Type','inc','start_slope',start_slope);
 % Initialize the controller
 GA.Sim.Con = GA.Sim.Con.ClearTorques();
 GA.Sim.Con.FBType = 0;
-GA.Sim.IC = [start_slope, start_slope, 0, 0, 0];
+GA.Sim.Con.MinSat = [-MaxTO,-MaxAnkleT*ones(1,NAnkleT),-MaxHipT*ones(1,NHipT)];
+GA.Sim.Con.MaxSat = [0,MaxAnkleT*ones(1,NAnkleT),MaxHipT*ones(1,NHipT)];
 
 % Simulation parameters
+GA.Sim.IC = [start_slope, start_slope, 0, 0, 0];
 GA.Sim = GA.Sim.SetTime(0,0.15,40);
 
 % Some more simulation initialization
@@ -70,7 +65,6 @@ GA.Sim.Mod.LegShift = GA.Sim.Mod.Clearance;
 % Sim.Con = Sim.Con.HandleEvent(1, Sim.IC(Sim.ConCo));
 GA.Sim.Con = GA.Sim.Con.HandleExtFB(GA.Sim.IC(GA.Sim.ModCo),...
                                           GA.Sim.IC(GA.Sim.ConCo));
-GA.Sim = GA.Sim.Init();
                                 
 % Fitness functions
 GA.NFit = 6;
@@ -82,6 +76,7 @@ GA.FitFcn = {@GA.VelFit;
              @GA.ZMPFit};
 
 GA = GA.InitGen();
+
 % Add the best guesses from previous runs
 % GA.Seqs(1:10,1:10,1) = ...
 %     [1.32491,0.66107,-0.01570,0.005,-1.98446,0.01223,0.76611,7.56098,0.06446,0.10987;
@@ -113,9 +108,9 @@ GA = GA.InitGen();
 %                          DownGains];
 
 % Also add the best genes from TestGAStages
-GAS = load('TestGA3_07_08_15_53');
-GA.Seqs(end-99:end,:,1) = repmat(GAS.GA.BaseSeq,100,1);
-GA.Seqs(end-99:end,11:18,1) = GAS.GA.Seqs(GAS.GA.GetTopPop(100),:,end);
+% GAS = load('TestGA3_07_08_15_53');
+% GA.Seqs(end-99:end,:,1) = repmat(GAS.GA.BaseSeq,100,1);
+% GA.Seqs(end-99:end,11:18,1) = GAS.GA.Seqs(GAS.GA.GetTopPop(100),:,end);
 
 % Update MOOGA parameters after each generation
     function GA = GenFcn(GA)
