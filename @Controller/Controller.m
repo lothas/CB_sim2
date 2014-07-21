@@ -1,4 +1,4 @@
-classdef Controller
+classdef Controller < handle & matlab.mixin.Copyable
     % Version 0.4 - 28/04/2014
     
     % 4 Leaky Integrate and Fire oscillators.
@@ -31,13 +31,14 @@ classdef Controller
         Duration = 0;% Pulse duration as % of neuron period
         
         Switch;      % 0 when off, Amp when pulse is active
-        pSoff = 0;   % Phase at which to turn off external inputs
         ExtPulses;   % External pulses IDs
         
         % Feedback
         FBType = 2;  % 0 - no feedback
                      % 1 - single gain for omega and each joint
-                     % 2 - individual gains for each pulse
+                     % 2 - individual gains for each pulse (not
+                     % implemented?)
+        lastPhi = 0;
                      
         % Phase reset
         ExtP_reset = []; % set to a certain phase to use phase reset
@@ -50,14 +51,17 @@ classdef Controller
         AngVelImp = [];
         
         % Gains
-        kOmega_u = 0.4579;
-        kOmega_d = 0.9;
+        kOmega_u = 0.0;
+        kOmega_d = 0.0;
         kTorques_u = 0;
         kTorques_d = 0;
         
+        % Saturation
+        MinSat; MaxSat;
+        
         % Set keys
         SetKeys = {'P_reset','P_th','P_0','P_LegE','omega0',...
-                   'nPulses','Amp0','Offset','Duration','pSoff','AngVelImp',...
+                   'nPulses','Amp0','Offset','Duration','AngVelImp',...
                    'FBType','kOmega_u','kOmega_d','kTorques_u','kTorques_d'};
     end
     
@@ -75,30 +79,34 @@ classdef Controller
             NC.Duration=[0.1 0.4 0.1 0];
             
             NC.Switch=zeros(NC.nPulses,1);
-            NC.pSoff=zeros(1,NC.nPulses);
             
             % Set adaptation parameters
-            NC.kTorques_u=[95 -443 95 0];
-            NC.kTorques_d=[80 -295 80 0];
+            NC.kOmega_u = 0; %0.4579;
+            NC.kOmega_d = 0; %0.9;
+            NC.kTorques_u= 0; %[95 -443 95 0];
+            NC.kTorques_d= 0; %[80 -295 80 0];
             
             NC.nEvents=1+NC.nPulses*2+1;
         end
         
         function [NC] = ClearTorques(NC)
             NC.nPulses = 0;
-            NC.OutM = 0;
+            NC.OutM = [0,0]';
             NC.Amp0 = [];
             NC.Amp = [];
             NC.Offset = [];
             NC.Duration = [];
-            NC.Switch = [0,0]';
-            NC.pSoff = [];
+            NC.Switch = 0;
             if NC.FBType == 2
                 NC.kTorques_u = [];
                 NC.kTorques_d = [];
             end
             NC.nEvents = 2;
             NC.ExtPulses = [];
+        end
+        
+        function NC = Reset(NC)
+            NC.Switch = 0*NC.Switch;
         end
         
         function [Torques] = NeurOutput(NC)
@@ -120,6 +128,13 @@ classdef Controller
                 NC.Amp = NC.Amp0;
             else
                 Phi = (X(1)+X(2))/2;
+                if abs(Phi-NC.lastPhi)>0.1
+                    % Don't apply changes when the slope
+                    % varies too abruptly
+                    % (usually happens when the robot falls)
+                    return
+                end
+                NC.lastPhi = Phi;
                 
                 NC.omega = NC.omega0 + ...
                     min(0,Phi)*NC.kOmega_d + ...    % Phi<0
@@ -127,6 +142,10 @@ classdef Controller
                 NC.Amp = NC.Amp0 + ...
                     min(0,Phi)*NC.kTorques_d + ...  % Phi<0
                     max(0,Phi)*NC.kTorques_u;       % Phi>0
+            end
+            % Apply saturation
+            if ~isempty(NC.MinSat)
+                NC.Amp = min(max(NC.Amp,NC.MinSat),NC.MaxSat);
             end
         end
         
@@ -197,7 +216,7 @@ classdef Controller
                 % Check if any event happens at ExtP_reset
                 [value, it, dir] = NC.Events(Xcon); %#ok<NASGU,ASGLU>
                 EvIDs = find(value == 0);
-                for ev = 1:EvIDs
+                for ev = 1:length(EvIDs)
                     [NC,Xcon] = NC.HandleEvent(EvIDs(ev),Xcon);
                 end
             end
@@ -217,41 +236,6 @@ classdef Controller
             % the off event is larger than 100% of osc. period
             Overflow = NC.Offset(NC.ExtPulses)+NC.Duration(NC.ExtPulses)>1;
             NC.Offset(NC.ExtPulses) = NC.Offset(NC.ExtPulses) - Overflow;
-        end
-        
-        function [NC] = LoadParameters(NC,ControlParams)
-            % Set CPG Parameters according to ControlParams input
-            % ControlParams should include:
-            % [ Omega,  leg extend phase, 
-            %   Torque 1 strength, offset, duration,
-            %   Torque 2 strength, offset, duration,
-            %   ...
-            %   Torque n strength, offset, duration]
-            
-            NC.NumTorques=(length(ControlParams)-2)/3;
-            NC.NumEvents=1+NC.NumTorques*2+1;
-
-            NC.omega0=ControlParams(1);
-            NC.kOmega_up=0;
-            NC.kOmega_down=0;
-
-            NC.P_LegE=ControlParams(2);
-            
-            NC.NSwitch=zeros(1,NC.NumTorques);
-            
-            NC.NTorque0=zeros(1,NC.NumTorques);
-            NC.NOffset=NC.NTorque0;
-            NC.NDuration=NC.NTorque0;
-            NC.kTorques_up=NC.NTorque0;
-            NC.kTorques_down=NC.NTorque0;
-            for i=1:NC.NumTorques
-                NC.NTorque0(i)=ControlParams(3*i);
-                NC.NTorque(i)=NC.NTorque0(i);
-                NC.NOffset(i)=ControlParams(3*i+1);
-                NC.NDuration(i)=ControlParams(3*i+2);
-                NC.kTorques_up(i)=0;
-                NC.kTorques_down(i)=0;
-            end
         end
         
         function PlotTorques(NC)

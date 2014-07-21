@@ -1,10 +1,13 @@
-function [MutSeq,Res] = Mutate(Ge,Seq)
+function [MutSeq,Res] = Mutate(Ge,Seq,Try)
 %MUTATE Creates mutations of the sequences provided
 %   Mutate takes a number of sequences and adds mutations
 %   as specified by the Genome object parameters:
 %   MutProb: single gene mutation probability
 %   MutDelta: Max strength of mutation as % of allowed range
 %   MutType: Distribute mutation strength as uniform or normal distribution
+    if nargin<3
+        Try = 1;
+    end
 
     [NS,NG] = size(Seq);
     if NG~=Ge.Length
@@ -27,20 +30,42 @@ function [MutSeq,Res] = Mutate(Ge,Seq)
     MutSeq = Seq + doMutate.*Mutations;
 
     % Check the mutated sequences
-    Res = ones(NS,1);
+    Res = cell(NS,2);
     for s = 1:NS
-        if MutSeq(s,:) == Seq(s,:)
+        [thisRes,MutSeq(s,:)] = ...
+            Ge.CheckGenome(MutSeq(s,:));
+        if all(MutSeq(s,:) == Seq(s,:)) && thisRes{1} ~= 0
             % The sequence didn't mutate at all
-            Res(s) = -1;
+            Res(s,:) = {-1,'Sequence left unchanged'};
         else
-            [thisRes,MutSeq(s,:)] = ...
-                Ge.CheckGenome(MutSeq(s,:));
-            Res(s) = thisRes{1};
+            Res(s,:) = thisRes;
         end
-
-        while Res(s) == 0
-            % Mutation failed, try again
-            [MutSeq(s,:),Res(s)] = Ge.Mutate(Seq(s,:));
+        
+        if Res{s,1} == 0
+            switch Try
+                case {1,2,3,4,5,6,7}
+                    % Mutation failed, try again
+                    [MutSeq(s,:),Res(s,:)] = Ge.Mutate(Seq(s,:),Try+1);                    
+                case 8
+                    % display the problematic sequence
+                    disp(Ge.seq2str(Seq(s,:)))
+                case 9
+                    % Try bounding the original sequence
+                    disp('Mutate bounded')
+                    BoundSeq = max(min(Seq(s,:),Ge.Range(2,:)),Ge.Range(1,:));
+                    [MutSeq(s,:),Res(s,:)] = Ge.Mutate(BoundSeq,Try+1);
+                case 10
+                    % Stop trying and return original sequence
+                    MutSeq(s,:) = Seq(s,:);
+                    
+                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                    [thisRes,~] = ...
+                        Ge.CheckGenome(MutSeq(s,:));
+                    if thisRes{1}~=1
+                        disp(['Mutate: ',thisRes{2}])
+                    end
+                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            end
         end
     end
 end

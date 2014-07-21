@@ -90,6 +90,44 @@ function [ sim ] = Run( sim )
             end
         end
 
+        % Check ground clearance
+        [xNS,yNS] = sim.Mod.GetPos(Xa(sim.ModCo),'NS');
+        if yNS-sim.Env.Surf(xNS)<-1e-4*sim.Mod.L
+            if sim.Mod.LegShift>0
+                % Robot hit the ground before extending the leg
+                sim.Out.Type = 3;
+                sim.Out.Text = 'Robot hit the ground before extending the leg';
+                sim.StopSim = 1;
+            else
+                if ~any(IE == 1)
+                    % Call impact handlers
+                    [sim.Mod,Xa(sim.ModCo)] = ...
+                        sim.Mod.HandleEvent(1, Xa(sim.ModCo),TTemp(end));
+
+                    % Handle event interactions
+                    if ModEvID == 1 % Ground contact
+                        StoreIC = 1; % Store the initial conditions right after impact
+
+                        [sim.Con, Xa(sim.ModCo), Xa(sim.ConCo)] = ...
+                            sim.Con.HandleExtFB(Xa(sim.ModCo),Xa(sim.ConCo));
+
+                        sim = sim.UpdateStats(TTemp,XTemp);
+
+                        if ~ischar(sim.Mod.curSpeed)
+                            sim.TimeStr = ['t = %.2f s\nOsc.=%.3f\n',...
+                             'Slope = %.2f ',char(176)','\nSpeed = %.3f m/s'];
+                        end
+                    end
+                else
+                    % Robot fell down
+                    sim.Out.Type = 1;
+                    sim.Out.Text = 'Robot fell down (leg pierced floor)';
+                    sim.StopSim = 1;
+                    break;
+                end
+            end
+        end
+        
         % Set new initial conditions
         sim.IC = Xa;
         if StoreIC
@@ -101,6 +139,20 @@ function [ sim ] = Run( sim )
                 % Simulation converged, calculate walking period
                 StepTimes = T(diff(SuppPos(:,1))~=0);
                 Periods = diff(StepTimes);
+                
+                % There seems to be a problem calculating
+                % the step period sometimes so we'll try
+                % another "back-up" way
+                if isempty(Periods)
+                    % run the simulation for one step
+                    psim = copy(sim);
+                    psim.EndCond = [1,sim.Period(1)];
+                    psim.IC = sim.IClimCyc;
+                    psim = psim.Init();
+                    psim = psim.Run();
+                    Periods = psim.Out.T(end) - psim.Out.T(1);
+                end
+                
                 sim.Period = [sim.Period, Periods(end)];
             end                
         end
@@ -145,6 +197,11 @@ function [ sim ] = Run( sim )
     % Prepare simulation output
     sim.Out.X = X;
     sim.Out.T = T;
+    if ~isempty(sim.Period)
+        sim.Out.Tend = T(end);
+    else
+        sim.Out.Tend = sim.tend;
+    end
     sim.Out.SuppPos = SuppPos;
     sim.Out.Torques = Torques;
     sim.Out.nSteps = sim.StepsTaken;

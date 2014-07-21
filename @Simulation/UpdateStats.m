@@ -35,12 +35,12 @@ if sim.Mod.LegShift>0
 end
 
 % Check slope that the robot is walking on
-slope = sim.Env.SurfSlope(sim.Mod.xS);
+slope = sim.Env.SurfSlope(sim.Mod.xS)*180/pi;
 if abs(slope-sim.Env.end_slope)<0.0001 && isempty(sim.Steps2Slope)
     if sim.Env.start_slope == sim.Env.end_slope
         sim.Steps2Slope = sim.StepsTaken - 1;
     else
-        sim.Steps2Slope = sim.StepsTaken;
+        sim.Steps2Slope = sim.StepsTaken - 1;
     end
 end
 

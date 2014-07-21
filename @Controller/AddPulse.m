@@ -68,6 +68,9 @@ else
         if NC.FBType == 2
             NC.kTorques_u(PulID) = PulseParams{5};
             NC.kTorques_d(PulID) = PulseParams{6};
+        else
+            NC.kTorques_u(PulID) = 0;
+            NC.kTorques_d(PulID) = 0;
         end
 
         % Update number of pulses

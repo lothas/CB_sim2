@@ -6,7 +6,11 @@ function status = Render(sim,t,X,flag)
 
             if sim.Once
                 % Open new figure
-                sim.Fig = figure();
+                if sim.Fig
+                    figure(sim.Fig);
+                else
+                    sim.Fig = figure();
+                end
 
                 % Make window larger
                 set(sim.Fig,'Position', [100 100 sim.FigWidth sim.FigHeight]);
@@ -22,7 +26,16 @@ function status = Render(sim,t,X,flag)
                     'HorizontalAlignment','left',...
                     'FontSize',12,...
                     'Units','normalized',...
-                    'Position', [0.88 0.76 0.1 0.12],...
+                    'Position', [0.88 0.76 0.08 0.12],...
+                    'backgroundcolor',get(gca,'color')); 
+                
+                % Initialize convergence display
+                sim.hConv = uicontrol('Style', 'text',...
+                    'String', sprintf(sim.ConvStr,1,'-'),...
+                    'HorizontalAlignment','left',...
+                    'FontSize',12,...
+                    'Units','normalized',...
+                    'Position', [0.88 0.7 0.08 0.06],...
                     'backgroundcolor',get(gca,'color')); 
 
                 % Add a 'Stop simulation' button
@@ -43,6 +56,12 @@ function status = Render(sim,t,X,flag)
                     end
                 end
             end
+    end
+    
+    if ishandle(sim.tCOM)==0
+        sim.Once = 1;
+        status = Render(sim,t,X,flag);
+        return
     end
     
     if ~isempty(X)
@@ -66,15 +85,28 @@ function status = Render(sim,t,X,flag)
         sim.Env = sim.Env.Render(sim.FlMin,sim.FlMax);
         % Update time display
         set(sim.hTime,'string',...
-            sprintf(sim.TimeStr,t,X(sim.ConCo),...
+            sprintf(sim.TimeStr,t(1),X(sim.ConCo),...
                 sim.Env.SurfSlope(sim.Mod.xS)*180/pi,sim.Mod.curSpeed));
+        % Update convergence display
+        Period = find(sim.stepsSS>0,1,'first');
+        if ~isempty(Period)
+            diff = norm(sim.ICstore(:,1) - sim.ICstore(:,1+Period));
+            set(sim.hConv,'string',...
+                sprintf(sim.ConvStr,diff,int2str(Period)),...
+                    'backgroundcolor',[0.5 1 0.5]);
+        else
+            diff = norm(sim.ICstore(:,1) - sim.ICstore(:,2));
+            set(sim.hConv,'string',...
+                sprintf(sim.ConvStr,diff,'-'),...
+                    'backgroundcolor',get(gca,'color'));
+        end
         % Update torque display
         if sim.Con.nPulses>0
             sim.Thold(:,1:end-1) = sim.Thold(:,2:end);
-    %             sim.Thold(:,end) = sim.Con.NeurOutput();
             sim.Thold(:,end) = sim.Mod.Torques;
             for to = 1:sim.nOuts
                 set(sim.hTorques(to),...
+                    'XData',sim.Ttime,...
                     'YData',sim.Tbase + sim.Thold(to,:)*sim.Tscale);
             end
         end

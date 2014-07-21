@@ -24,9 +24,15 @@ PMsim = copy(sim);
 PMsim.EndCond = [1,sim.Period(1)];
 for d = Coords
     PMsim.IC = dIC(:,d);
-    PMsim.Init();
+    PMsim = PMsim.Init();
     PMsim = PMsim.Run();
 
+    if PMsim.Out.Type ~= 4
+        % Robot didn't complete the step
+        EigVal = 2*ones(Ncoord,1);
+        EigVec = eye(Ncoord);
+        return;
+    end
     dICp(:,d) = PMsim.ICstore(:,1);
 end
 

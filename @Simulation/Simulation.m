@@ -43,7 +43,7 @@ classdef Simulation < handle & matlab.mixin.Copyable
                 
         % Rendering params
         Graphics = 1;
-        Fig = 0; Once; StopSim;
+        Fig = 0; Once = 1; StopSim;
         FigWidth; FigHeight; AR;
         % Environment display
         FlMin; FlMax; HeightMin; HeightMax;
@@ -54,6 +54,8 @@ classdef Simulation < handle & matlab.mixin.Copyable
         % Time display
         hTime; TimeStr = ['t = %.2f s\nOsc.=%.3f\n',...
                          'Slope = %.2f ',char(176)','\nSpeed = %s'];
+        % Convergence display
+        hConv; ConvStr = 'Diff = %.2e\nPeriod = %s';
         % Torques display
         nOuts; nTsteps;
         Ttime; Thold; Tbase; Tscale;
@@ -74,6 +76,15 @@ classdef Simulation < handle & matlab.mixin.Copyable
                     sim.Con = Controller();
                     sim.Env = Terrain();
             end            
+        end
+        
+        % Make a deep copy of a handle object.
+        function SimDC = deepcopy(sim)
+            % Instantiate new object of the same class.
+            SimDC = copy(sim);
+            SimDC.Mod = copy(sim.Mod);
+            SimDC.Con = copy(sim.Con);
+            SimDC.Env = copy(sim.Env);
         end
         
         function sim = SetEndCond(sim, value)

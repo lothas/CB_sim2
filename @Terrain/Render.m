@@ -1,13 +1,9 @@
 % %%%%%%%%%%%% Rendering function %%%%%%%%%%%%
 function [Te]=Render(Te,Min,Max)
     FloorX=Min:Te.FloorStep:Max;
-    FN=length(FloorX);
-    FloorY=zeros(1,FN);
     VLStep=(Max-Min)/(Te.VertLines);
 
-    for f=1:FN
-        FloorY(f)=Te.Surf(FloorX(f));
-    end
+    FloorY=Te.Surf(FloorX);
 
     if Te.FloorLine==0 || ishandle(Te.FloorLine)==0
         % Draw horizontal line

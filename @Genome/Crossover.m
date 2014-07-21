@@ -3,7 +3,7 @@ function [ BabySeqs, Res ] = Crossover( Ge, Seq1, Seq2, Method )
 %   Crossover uses a 2-point crossover to mix the given sequences
 %   and create two new ones, which are checked before being returned
     if nargin<4
-        Method = '2point';
+        Method = Ge.COType;
     end
     
     N = length(Seq1);
@@ -33,10 +33,8 @@ function [ BabySeqs, Res ] = Crossover( Ge, Seq1, Seq2, Method )
         otherwise
             error(['Crossover method ',Method,' unknown']);
     end
-    
     BabySeqs = repmat(Seq1,2,1).*Bits+repmat(Seq2,2,1).*~Bits;
-    Res = cell(2,2);
-    [Res(1,:), BabySeqs(1,:)] = Ge.CheckGenome(BabySeqs(1,:));
-    [Res(2,:), BabySeqs(2,:)] = Ge.CheckGenome(BabySeqs(2,:));
+    % Mutate the kids MUAHAHAHAAAAA!!!
+    [BabySeqs,Res] = Ge.Mutate(BabySeqs);
 end
 

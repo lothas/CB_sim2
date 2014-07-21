@@ -12,6 +12,7 @@ function [ Seq ] = RandSeq(Ge,N,dist)
     NGenes = size(Ge.Range,2);
     Seq = zeros(N,NGenes);
     
+    % Generate N random genomes
     for gen = 1:NGenes
         switch dist
             case {'uni','uniform'}
@@ -27,11 +28,14 @@ function [ Seq ] = RandSeq(Ge,N,dist)
         Seq(:,gen) = max(min(Seq(:,gen),Ge.Range(2,gen)),Ge.Range(1,gen));
     end
     
+    % Verify the genomes
     for s = 1:N
         % Check if the seq is valid
-        Res = Ge.CheckGenome(Seq(s,:));
+        [Res,Seq(s,:)] = Ge.CheckGenome(Seq(s,:));
+        count = 0;
         while Res{1} == 0
-            % Create new random genome
+            % If invalid:
+            % Replace with single random genome
             switch dist
                 case {'uni','uniform'}
                     Seq(s,:) = Ge.Range(1,:)+rand(1,NGenes).*(Ge.Range(2,:)-Ge.Range(1,:));
@@ -42,7 +46,11 @@ function [ Seq ] = RandSeq(Ge,N,dist)
 
             % Make sure the genome is within range
             Seq(s,:) = max(min(Seq(s,:),Ge.Range(2,:)),Ge.Range(1,:));
-            Res = Ge.CheckGenome(Seq(s,:));
+            [Res,Seq(s,:)] = Ge.CheckGenome(Seq(s,:));
+            
+            if count>100
+                disp('bug!')
+            end
         end
     end
 end

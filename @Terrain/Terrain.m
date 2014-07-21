@@ -1,4 +1,4 @@
-classdef Terrain < handle
+classdef Terrain < handle & matlab.mixin.Copyable
     % Version 0.3 - 24/04/2014
     
     % Different terrains: inclined plane, sinusoidal
@@ -43,10 +43,6 @@ classdef Terrain < handle
         FloorVL=zeros(1,10);
         
         LineWidth=1;
-        
-        % Function handles
-        Surfh;
-        SurfSlopeh;
     end
     
     methods
@@ -86,9 +82,6 @@ classdef Terrain < handle
             
             % Set init and end points
             Te=SetEndConditions(Te);
-            Te.Surfh = {@Te.Surf0, @Te.Surf1, @Te.Surf2, @Te.Surf3};
-            Te.SurfSlopeh = {@Te.SurfSlope0, @Te.SurfSlope1,...
-                            @Te.SurfSlope2, @Te.SurfSlope3};
         end
         
         function [Te] = SetEndConditions(Te)
@@ -133,18 +126,51 @@ classdef Terrain < handle
                 if isempty(ID2)
                     ID2 = length(x);
                 end
-                [y1, ~] = Te.Surfh{Te.Type+1}(x(1:ID1-1));
-                [y2, ~] = Te.Surfh{Te.Type+1}(x(ID1:ID2-1));
-                [y3, ~] = Te.Surfh{Te.Type+1}(x(ID2:end));
+                switch Te.Type
+                    case 0
+                        [y1, ~] = Te.Surf0(x(1:ID1-1));
+                        [y2, ~] = Te.Surf0(x(ID1:ID2-1));
+                        [y3, ~] = Te.Surf0(x(ID2:end));
+                    case 1
+                        [y1, ~] = Te.Surf1(x(1:ID1-1));
+                        [y2, ~] = Te.Surf1(x(ID1:ID2-1));
+                        [y3, ~] = Te.Surf1(x(ID2:end));
+                    case 2
+                        [y1, ~] = Te.Surf2(x(1:ID1-1));
+                        [y2, ~] = Te.Surf2(x(ID1:ID2-1));
+                        [y3, ~] = Te.Surf2(x(ID2:end));
+                    case 3
+                        [y1, ~] = Te.Surf3(x(1:ID1-1));
+                        [y2, ~] = Te.Surf3(x(ID1:ID2-1));
+                        [y3, ~] = Te.Surf3(x(ID2:end));
+                end
                 y = [y1,y2,y3];
                 Trans=[];
             else
-                [y,Trans] = Te.Surfh{Te.Type+1}(x);
+                switch Te.Type
+                    case 0
+                        [y,Trans] = Te.Surf0(x);
+                    case 1
+                        [y,Trans] = Te.Surf1(x);
+                    case 2
+                        [y,Trans] = Te.Surf2(x);
+                    case 3
+                        [y,Trans] = Te.Surf3(x);
+                end
             end
         end
 
         function [alpha]=SurfSlope(Te,x)
-            alpha = Te.SurfSlopeh{Te.Type+1}(x);
+            switch Te.Type
+                case 0
+                    alpha = Te.SurfSlope0(x);
+                case 1
+                    alpha = Te.SurfSlope1(x);
+                case 2
+                    alpha = Te.SurfSlope2(x);
+                case 3
+                    alpha = Te.SurfSlope3(x);
+            end
         end
         
 % %%%%%%%%%%%% Type 0 - inclined plane %%%%%%%%%%%%

@@ -8,13 +8,15 @@ function [Fronts] = Pareto(GA, Data)
 
 % Version 0.5 - 21/05/2014
 if nargin<2
-    nI = 5; nJ = 500;
+    nI = 5; nJ = 1000;
     % Run sample code
     % Build sample data
     Data = zeros(nI*nJ,3);
     for i = 1:nI
-        r = 10*i;
+%         r = 10*i;
         for j = 1:nJ
+%             r = 10*i+rand();
+            r = randsample(2:2:10,1);
             phi = pi*rand();
             th = pi*rand();
             Data(nJ*(i-1)+j,:) = [...
@@ -35,6 +37,12 @@ end
 
 % Round off to 3 decimal places
 % x = round(x*1000)/1000;
+
+if size(Data,2) == 1
+    Data = sort(Data,1,'descend');
+    Fronts = num2cell(Data);
+    return;
+end
 
 % Start separating layers
 % Give unique ID to each sample
