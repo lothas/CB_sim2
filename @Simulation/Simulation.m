@@ -163,6 +163,47 @@ classdef Simulation < handle & matlab.mixin.Copyable
                 close(sim.Fig)
             end
         end  % StopButtonCallback
+        
+        function [varargout] = GetCleanPulses(sim)
+            T = sim.Out.T;
+            NT = length(T);
+            X = sim.Out.X;
+            Torques = sim.Out.Torques;
+            Impulses = zeros(size(sim.Out.Torques,1),1);
+            
+            % Remove "push-off" torques
+            stepTime = find(diff(sim.Out.SuppPos(:,1))~=0);
+            stepTime = [1; stepTime; NT];
+            pulseEnd = zeros(length(stepTime),1);
+            % Push-off parameters
+            PushOff = 1;
+
+            for s = 1:length(stepTime)-1
+                thisT = T(stepTime(s)+1:stepTime(s+1));
+
+                % Update push-off parameters
+                sim.Con = sim.Con.HandleExtFB(X(stepTime(s)+1,sim.ModCo),...
+                                              X(stepTime(s)+1,sim.ConCo));
+                POdur = sim.Con.Duration(PushOff)/sim.Con.omega;
+                POamp = sim.Con.Amp(PushOff);
+
+                next = find(thisT>=thisT(1)+POdur,1,'first');
+                if ~isempty(next)
+                    pulseEnd(s) = stepTime(s) + next;
+                    POids = stepTime(s)-1+find(Torques(stepTime(s):pulseEnd(s))~=0);
+                    Torques(POids,1) = Torques(POids,1)-POamp;
+                    Impulses(POids) = Impulses(POids)+POamp;
+                end
+            end
+            
+            switch nargout
+                case 1
+                    varargout{1} = Torques;
+                case 2
+                    varargout{1} = Torques;
+                    varargout{2} = Impulses;
+            end
+        end
     end
 end
 

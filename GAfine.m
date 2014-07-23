@@ -74,6 +74,7 @@ GA.FitFcn = {@GA.VelFit;
              @GA.UphillFitRun;
              @GA.DownhillFitRun;
              @GA.ZMPFit};
+GA.Sim.PMFull = 1; % Run poincare map on all 5 coords
 
 GA = GA.InitGen();
 

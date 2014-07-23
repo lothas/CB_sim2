@@ -25,6 +25,9 @@ PMsim.EndCond = [1,sim.Period(1)];
 for d = Coords
     PMsim.IC = dIC(:,d);
     PMsim = PMsim.Init();
+    PMsim.Con = PMsim.Con.Reset();
+    PMsim.Con = PMsim.Con.HandleExtFB(...
+        PMsim.IC(PMsim.ModCo),PMsim.IC(PMsim.ConCo));
     PMsim = PMsim.Run();
 
     if PMsim.Out.Type ~= 4

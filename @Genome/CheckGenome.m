@@ -1,15 +1,6 @@
 function [ Result, Seq ] = CheckGenome( Ge, Seq )
 % Checks a gene sequence to verify that it satisfies
 % all the min/max conditions
-<<<<<<< HEAD
-    Result = 1;
-    
-    % Check that it's the correct length
-    if length(Seq)~=Ge.Length
-        Result = 0;
-        disp(['Decode failed. Genes provided: ',num2str(length(Seq)),...
-            '. Genes required: ',num2str(Ge.Length)]);
-=======
     Result = {1,''};
     
     % Check that it's the correct length
@@ -17,19 +8,13 @@ function [ Result, Seq ] = CheckGenome( Ge, Seq )
         Result = {0;
             ['Decode failed. Genes provided: ',num2str(length(Seq)),...
             '. Genes required: ',num2str(Ge.Length)]};
->>>>>>> origin/master
         return;
     end
     
     % Check that it's between the max and min range
     if any(Seq<Ge.Range(1,:) | Seq>Ge.Range(2,:))
-<<<<<<< HEAD
-        Result = 0;
-        disp('Sequence outside allowed genome range');
-=======
         Result = {0;
         	'Sequence outside allowed genome range'};
->>>>>>> origin/master
         return;
     end
 
@@ -50,11 +35,7 @@ function [ Result, Seq ] = CheckGenome( Ge, Seq )
                         % so that End will be slightly smaller than 1
                         Seq(SeqPos0+1) = Seq(SeqPos0+1)/(End*1.001);
                         Seq(SeqPos0+2) = Seq(SeqPos0+2)/(End*1.001);
-<<<<<<< HEAD
-                        disp('Pulse shortened');
-=======
                         Result{2} = 'Pulse shortened';
->>>>>>> origin/master
                     end
                     
                     Torque = Torque + ...
@@ -78,11 +59,7 @@ function [ Result, Seq ] = CheckGenome( Ge, Seq )
                         Seq(SeqPos0) = Seq(SeqPos0)/factor;
                         SeqPos0 = SeqPos0 + Ge.KeyLength.Pulses;
                     end
-<<<<<<< HEAD
-                    disp(['Compound torque reduced by factor of ',num2str(factor)]);
-=======
                     Result{2} = ['Compound torque reduced by factor of ',num2str(factor)];
->>>>>>> origin/master
                 end
             case 'ExtPulses'
                 NPulses = Ge.Keys{2,k}(1);
@@ -108,12 +85,8 @@ function [ Result, Seq ] = CheckGenome( Ge, Seq )
                         Seq(SeqPos0) = Seq(SeqPos0)/factor;
                         SeqPos0 = SeqPos0 + Ge.KeyLength.ExtPulses;
                     end
-<<<<<<< HEAD
-                    disp(['Compound event triggered torque reduced by factor of ',num2str(factor)]);
-=======
                     Result{2} = ['Compound event triggered torque reduced',...
                         'by factor of ',num2str(factor)];
->>>>>>> origin/master
                 end
         end
         

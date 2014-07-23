@@ -10,10 +10,9 @@ function status = Render(sim,t,X,flag)
                     figure(sim.Fig);
                 else
                     sim.Fig = figure();
+                    % Make window larger
+                    set(sim.Fig,'Position', [100 100 sim.FigWidth sim.FigHeight]);
                 end
-
-                % Make window larger
-                set(sim.Fig,'Position', [100 100 sim.FigWidth sim.FigHeight]);
                 set(gca,'LooseInset',get(gca,'TightInset')*2)
 
                 % Initialize COM tranform for "follow" mode

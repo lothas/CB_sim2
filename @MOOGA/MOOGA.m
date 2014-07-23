@@ -75,6 +75,44 @@ classdef MOOGA
                     GA = GA.Run();
             end            
         end
+        
+        function out = Find(GA,varargin)
+            out = [];
+            switch nargin
+                case 2
+                    Reqs = varargin{1};
+                    
+                    [R,C] = size(Reqs);
+                    if R>1
+                        % Only some conditions provided as pairs:
+                        % [Fitness number, Minimum required]
+                        Reqs = zeros(GA.NFit,1);
+                        for r = 1:R
+                            Reqs(varargin{1}(r,1)) = varargin{1}(r,2);
+                        end
+                    else
+                        if length(Reqs)~=GA.NFit
+                            disp('Number of fitness values is incorrect');
+                            return;
+                        end
+                    end
+                    
+                    % Find results that fit the requirements
+                    Conds = ones(GA.Population,1);
+                    for f = 1:GA.NFit
+                        Conds = Conds & ...
+                            GA.Fit(:,f,GA.Progress)>=Reqs(f);
+                    end
+                        
+                    Fits = find(Conds);
+                    if length(Fits)>10
+                        disp([int2str(length(Fits)),...
+                            ' results fit the requirements']);
+                    else
+                        out = [Fits, GA.Fit(Fits,:,GA.Progress)];
+                    end
+            end
+        end
     end
     
     methods(Static)
@@ -301,32 +339,7 @@ classdef MOOGA
                 X = Sim.Out.X;
                 T = Sim.Out.T;
                 NT = length(T);
-                SuppPos = Sim.Out.SuppPos;
-                Torques = Sim.Out.Torques;
-
-                % Remove "push-off" torques
-                stepTime = find(diff(SuppPos(:,1))~=0);
-                stepTime = [1; stepTime; NT];
-                pulseEnd = zeros(length(stepTime),1);
-                % Push-off parameters
-                PushOff = 1;
-
-                for s = 1:length(stepTime)-1
-                    thisT = T(stepTime(s)+1:stepTime(s+1));
-
-                    % Update push-off parameters
-                    Sim.Con = Sim.Con.HandleExtFB(X(stepTime(s)+1,Sim.ModCo),...
-                                                  X(stepTime(s)+1,Sim.ConCo));
-                    POdur = Sim.Con.Duration(PushOff)/Sim.Con.omega;
-                    POamp = Sim.Con.Amp(PushOff);
-
-                    next = find(thisT>=thisT(1)+POdur,1,'first');
-                    if ~isempty(next)
-                        pulseEnd(s) = stepTime(s) + next;
-                        POids = stepTime(s)+find(Torques(stepTime(s)+1:pulseEnd(s))~=0);
-                        Torques(POids) = Torques(POids)-POamp;
-                    end
-                end
+                Torques = Sim.GetCleanPulses();
 
                 % Process the data
                 GRF = zeros(NT,2);
