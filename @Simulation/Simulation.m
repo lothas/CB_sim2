@@ -177,7 +177,15 @@ classdef Simulation < handle & matlab.mixin.Copyable
             pulseEnd = zeros(length(stepTime),1);
             % Push-off parameters
             PushOff = 1;
-
+            
+            % Save lastPhi (otherwise the slope adaptation gets discarded)
+            Temp = sim.Con.lastPhi;
+            sim.Con.lastPhi = sim.Env.SurfSlope(sim.Out.SuppPos(stepTime(1),1));
+            
+            % Maximum torque applied as a pulse
+            maxPls = max(max(abs(sim.Con.MinSat(2:end)),...
+                             abs(sim.Con.MaxSat(2:end))));
+                         
             for s = 1:length(stepTime)-1
                 thisT = T(stepTime(s)+1:stepTime(s+1));
 
@@ -190,11 +198,14 @@ classdef Simulation < handle & matlab.mixin.Copyable
                 next = find(thisT>=thisT(1)+POdur,1,'first');
                 if ~isempty(next)
                     pulseEnd(s) = stepTime(s) + next;
-                    POids = stepTime(s)-1+find(Torques(stepTime(s):pulseEnd(s))~=0);
+                    POids = stepTime(s)-1 + ...
+                        find(abs(Torques(stepTime(s):pulseEnd(s),1))>...
+                             abs(POamp)-maxPls);
                     Torques(POids,1) = Torques(POids,1)-POamp;
                     Impulses(POids) = Impulses(POids)+POamp;
                 end
             end
+            sim.Con.lastPhi = Temp;
             
             switch nargout
                 case 1

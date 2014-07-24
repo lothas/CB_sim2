@@ -105,18 +105,16 @@ function [ sim ] = Run( sim )
                         sim.Mod.HandleEvent(1, Xa(sim.ModCo),TTemp(end));
 
                     % Handle event interactions
-                    if ModEvID == 1 % Ground contact
-                        StoreIC = 1; % Store the initial conditions right after impact
+                    StoreIC = 1; % Store the initial conditions right after impact
 
-                        [sim.Con, Xa(sim.ModCo), Xa(sim.ConCo)] = ...
-                            sim.Con.HandleExtFB(Xa(sim.ModCo),Xa(sim.ConCo));
+                    [sim.Con, Xa(sim.ModCo), Xa(sim.ConCo)] = ...
+                        sim.Con.HandleExtFB(Xa(sim.ModCo),Xa(sim.ConCo));
 
-                        sim = sim.UpdateStats(TTemp,XTemp);
+                    sim = sim.UpdateStats(TTemp,XTemp);
 
-                        if ~ischar(sim.Mod.curSpeed)
-                            sim.TimeStr = ['t = %.2f s\nOsc.=%.3f\n',...
-                             'Slope = %.2f ',char(176)','\nSpeed = %.3f m/s'];
-                        end
+                    if ~ischar(sim.Mod.curSpeed)
+                        sim.TimeStr = ['t = %.2f s\nOsc.=%.3f\n',...
+                         'Slope = %.2f ',char(176)','\nSpeed = %.3f m/s'];
                     end
                 else
                     % Robot fell down

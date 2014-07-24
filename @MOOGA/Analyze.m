@@ -20,10 +20,14 @@ end
 
 Filename = ['Gen',int2str(ID),'.mat'];
 if exist(Filename,'file') == 2
-    Data = load(Filename);
-    Out = Data.Out;
+    In = load(Filename);
+    Out = In.Data;
     start_slope = Out.Slopes(end);
-    d_slope = Out.Slopes(end)-Out.Slopes(end-1);
+    if length(Out.Slopes(end))<2
+        d_slope = 1;
+    else
+        d_slope = Out.Slopes(end)-Out.Slopes(end-1);
+    end
 else
     % Initialize output
     Out.Slopes = []; % Slopes
@@ -50,65 +54,90 @@ end
 Sim.PMFull = 1; % Run poincare map on all 5 coords
 
 Sim = GA.Gen.Decode(Sim, GA.Seqs(ID,:,Generation));
+
+MaxTries = 3;
+base_d = 1;
 while 1
-    % Run simulation
-    Asim = WalkOnSlope(Sim,Out,start_slope,start_slope+d_slope);
-        
-    if Asim.Out.Type == 5
-        % Simulation converged
-        Out = SavePerformance(Asim,start_slope+d_slope,Out);
-        
-        % Keep going to next slope
-        if d_slope == 0
-            d_slope = 1;
+    Tries = 0;
+    while Tries<MaxTries
+        % Run simulation
+        Asim = WalkOnSlope(Sim,Out,start_slope,start_slope+d_slope);
+
+        if Asim.Out.Type == 5
+            % Simulation converged
+            Out = SavePerformance(Asim,start_slope+d_slope,Out);
+
+            % Keep going to next slope
+            if d_slope == 0
+                d_slope = base_d;
+            else
+                d_slope = d_slope/abs(d_slope)*base_d;
+                start_slope = start_slope+d_slope;
+            end
+            break
         else
-            start_slope = start_slope+d_slope;
+            % Try running from 0 to the required slope
+            Asim = WalkOnSlope(Sim,Out,0,start_slope+d_slope);
+
+            if Asim.Out.Type == 5
+                % Simulation converged
+                Out = SavePerformance(Asim,start_slope+d_slope,Out);
+
+                % Keep going to next slope
+                if d_slope == 0
+                    d_slope = base_d;
+                else
+                    d_slope = d_slope/abs(d_slope)*base_d;
+                    start_slope = start_slope+d_slope;
+                end
+                break
+            else
+                % Simulation failed to converge
+                % Try the next slope
+                if d_slope>0
+                    d_slope = d_slope+1;
+                else
+                    d_slope = d_slope-1;
+                end
+                Tries = Tries + 1;
+            end
         end
-    else
-%         if Asim.Out.Type == 0
-%             % Simulation timed-out before converging
-%             % Keep going to next slope
-%             if d_slope == 0
-%                 d_slope = 2;
-%             else
-%                 start_slope = start_slope+d_slope;
-%             end
-%         end
+    end
+    
+    if Tries == MaxTries
         % Simulation failed to converge, start checking negative slopes
-        if d_slope == 1
+        if d_slope > 0
             start_slope = 0;
-            d_slope = -1;
+            d_slope = -base_d;
         else
             break;
         end
     end
 end
 
-save(Filename,'Out');
-
     function sim = WalkOnSlope(sim_in, Data, start_s, end_s)
         sim = deepcopy(sim_in);
         disp(['Processing data on ',num2str(end_s),' degrees slope']);
         % Simulation parameters
-        sim = sim.SetTime(0,0.03,200);
+        sim = sim.SetTime(0,0.03,100);
         sim.EndCond = 2; % Run until converge
 
         % Some more simulation initialization
         sim.Mod.LegShift = sim.Mod.Clearance;
         sim.Con.FBType = 2;
         sim.Con = sim.Con.Reset();
+        sim = sim.Init();
+        sim.Env = sim.Env.Set('Type','finite','start_slope',start_s,...
+                              'start_x',~start_s*5,'end_slope',end_s);
         if start_s == 0
             sim.IC = 0*sim.IC;
             sim.Con = sim.Con.HandleEvent(1, sim.IC(sim.ConCo));
-            leadway = 5;
+%             sim.Con = sim.Con.HandleExtFB(sim.IC(sim.ModCo),sim.IC(sim.ConCo));
         else
             sim.IC = Data.IC(:,Data.Slopes == start_s);
+            sim.Con.lastPhi = start_s*pi/180;
             sim.Con = sim.Con.HandleExtFB(sim.IC(sim.ModCo),sim.IC(sim.ConCo));
-            leadway = 1;
         end
-        sim.Env = sim.Env.Set('Type','finite','start_slope',start_s,...
-                              'start_x',leadway,'end_slope',end_s);
-        sim = sim.Init();
 
         % Simulate
         sim = sim.Run();

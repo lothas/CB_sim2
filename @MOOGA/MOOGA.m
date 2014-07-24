@@ -81,36 +81,40 @@ classdef MOOGA
             switch nargin
                 case 2
                     Reqs = varargin{1};
+                    Gnrtn = GA.Progress;
+                case 3
+                    Reqs = varargin{1};
+                    Gnrtn = varargin{2};
+            end
                     
-                    [R,C] = size(Reqs);
-                    if R>1
-                        % Only some conditions provided as pairs:
-                        % [Fitness number, Minimum required]
-                        Reqs = zeros(GA.NFit,1);
-                        for r = 1:R
-                            Reqs(varargin{1}(r,1)) = varargin{1}(r,2);
-                        end
-                    else
-                        if length(Reqs)~=GA.NFit
-                            disp('Number of fitness values is incorrect');
-                            return;
-                        end
-                    end
-                    
-                    % Find results that fit the requirements
-                    Conds = ones(GA.Population,1);
-                    for f = 1:GA.NFit
-                        Conds = Conds & ...
-                            GA.Fit(:,f,GA.Progress)>=Reqs(f);
-                    end
-                        
-                    Fits = find(Conds);
-                    if length(Fits)>10
-                        disp([int2str(length(Fits)),...
-                            ' results fit the requirements']);
-                    else
-                        out = [Fits, GA.Fit(Fits,:,GA.Progress)];
-                    end
+            [R,~] = size(Reqs);
+            if R>1
+                % Only some conditions provided as pairs:
+                % [Fitness number, Minimum required]
+                Reqs = zeros(GA.NFit,1);
+                for r = 1:R
+                    Reqs(varargin{1}(r,1)) = varargin{1}(r,2);
+                end
+            else
+                if length(Reqs)~=GA.NFit
+                    disp('Number of fitness values is incorrect');
+                    return;
+                end
+            end
+
+            % Find results that fit the requirements
+            Conds = ones(GA.Population,1);
+            for f = 1:GA.NFit
+                Conds = Conds & ...
+                    GA.Fit(:,f,Gnrtn)>=Reqs(f);
+            end
+
+            Fits = find(Conds);
+            if length(Fits)>10
+                disp([int2str(length(Fits)),...
+                    ' results fit the requirements']);
+            else
+                out = [Fits, GA.Fit(Fits,:,Gnrtn)];
             end
         end
     end

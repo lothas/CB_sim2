@@ -2,10 +2,23 @@ function [  ] = GAfine(  )
 % Run MOOGA to further fine tune the sequences found in stages
 % close all; clear all; clear classes;
 
-GA = MOOGA(50,5000);
-% GA.FileIn = 'GA_07_04_04_32.mat';
-% GA.FileIn = 'GA_07_09_16_33.mat';
+% % Prepare input file
+% In1 = load('GA_07_23_17_09');
+% In2 = load('GA_07_19_00_57');
+% GA = In1.GA;
+% GA.Seqs = [GA.Seqs(:,:,GA.Progress); In2.GA.Seqs(:,:,In2.GA.Progress)];
+% GA.Fit = [GA.Fit(:,:,GA.Progress); In2.GA.Fit(:,:,In2.GA.Progress)];
+% GA.Progress = 1;
+% save('GA_combined_in','GA');
+
+clear GA
+GA = MOOGA(50,2500);
+% GA.Fittest = [1000,1000,4000];
+GA.Fittest = [400,400,1700];
+% GA.FileIn = 'GA_combined_in.mat';
+GA.FileIn = 'GA_07_24_13_57.mat';
 % GA.FileOut = GA.FileIn;
+
 GA.FileOut = ['GA_',datestr(now,'mm_dd_hh_MM'),'.mat'];
 GA.Graphics = 0;
 
@@ -62,9 +75,9 @@ GA.Sim = GA.Sim.SetTime(0,0.15,40);
 
 % Some more simulation initialization
 GA.Sim.Mod.LegShift = GA.Sim.Mod.Clearance;
-% Sim.Con = Sim.Con.HandleEvent(1, Sim.IC(Sim.ConCo));
-GA.Sim.Con = GA.Sim.Con.HandleExtFB(GA.Sim.IC(GA.Sim.ModCo),...
-                                          GA.Sim.IC(GA.Sim.ConCo));
+GA.Sim.Con = GA.Sim.Con.HandleEvent(1, Sim.IC(Sim.ConCo));
+% GA.Sim.Con = GA.Sim.Con.HandleExtFB(GA.Sim.IC(GA.Sim.ModCo),...
+%                                           GA.Sim.IC(GA.Sim.ConCo));
                                 
 % Fitness functions
 GA.NFit = 6;

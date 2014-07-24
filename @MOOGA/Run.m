@@ -52,7 +52,6 @@ for g = GA.Progress+1:GA.Generations
         wSim = wSim.Init();
         
         % Run the simulation
-        cla % clear previous render
         wSim = wSim.Run();
         
         % Calculate the genome's fitness

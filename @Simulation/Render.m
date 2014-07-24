@@ -8,12 +8,19 @@ function status = Render(sim,t,X,flag)
                 % Open new figure
                 if sim.Fig
                     figure(sim.Fig);
+                    if isempty(findobj(gcf,'Type','uicontrol'))
+                        % Make window larger
+                        set(sim.Fig,'Position', [100 100,...
+                            sim.FigWidth sim.FigHeight]);
+                    end
                 else
                     sim.Fig = figure();
                     % Make window larger
-                    set(sim.Fig,'Position', [100 100 sim.FigWidth sim.FigHeight]);
+                    set(sim.Fig,'Position', [100 100,...
+                        sim.FigWidth sim.FigHeight]);
                 end
                 set(gca,'LooseInset',get(gca,'TightInset')*2)
+                cla % clear previous render
 
                 % Initialize COM tranform for "follow" mode
                 sim.tCOM = hgtransform('Parent',gca);
