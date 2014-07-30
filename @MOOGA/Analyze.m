@@ -47,7 +47,7 @@ end
 
 % Run simulation starting from slope 0 and then increasing/decreasing slope
 Sim = deepcopy(GA.Sim);
-Sim.Graphics = 0;
+Sim.Graphics = 1;
 if Sim.Graphics == 1
     Sim.Fig = figure();
 end
@@ -65,6 +65,9 @@ while 1
 
         if Asim.Out.Type == 5
             % Simulation converged
+            fprintf(' - ');
+            cprintf('*green','OK!\n')
+            
             Out = SavePerformance(Asim,start_slope+d_slope,Out);
 
             % Keep going to next slope
@@ -76,11 +79,17 @@ while 1
             end
             break
         else
+            fprintf(' - ');
+            cprintf('*red','FAILED!\n')
+            
             % Try running from 0 to the required slope
             Asim = WalkOnSlope(Sim,Out,0,start_slope+d_slope);
 
             if Asim.Out.Type == 5
                 % Simulation converged
+                fprintf(' - ');
+                cprintf('*green','OK!\n')
+            
                 Out = SavePerformance(Asim,start_slope+d_slope,Out);
 
                 % Keep going to next slope
@@ -93,11 +102,14 @@ while 1
                 break
             else
                 % Simulation failed to converge
+                fprintf(' - ');
+                cprintf('*red','FAILED!\n')
+                
                 % Try the next slope
                 if d_slope>0
-                    d_slope = d_slope+1;
+                    d_slope = d_slope+base_d;
                 else
-                    d_slope = d_slope-1;
+                    d_slope = d_slope-base_d;
                 end
                 Tries = Tries + 1;
             end
@@ -117,26 +129,34 @@ end
 
     function sim = WalkOnSlope(sim_in, Data, start_s, end_s)
         sim = deepcopy(sim_in);
-        disp(['Processing data on ',num2str(end_s),' degrees slope']);
+        fprintf('Processing data on %.2f degrees slope',end_s);
+        
         % Simulation parameters
-        sim = sim.SetTime(0,0.03,100);
+        sim = sim.SetTime(0,0.03,75);
         sim.EndCond = 2; % Run until converge
 
         % Some more simulation initialization
         sim.Mod.LegShift = sim.Mod.Clearance;
         sim.Con.FBType = 2;
-        sim.Con = sim.Con.Reset();
         sim = sim.Init();
         sim.Env = sim.Env.Set('Type','finite','start_slope',start_s,...
-                              'start_x',~start_s*5,'end_slope',end_s);
+                              'start_x',~start_s*5,'end_slope',end_s,'parK',0.03);
+
         if start_s == 0
             sim.IC = 0*sim.IC;
+        else
+            sim.IC = Data.IC(:,Data.Slopes == start_s);
+        end
+        
+        sim.Con = sim.Con.Reset(sim.IC(sim.ConCo));
+        if start_s == 0
             sim.Con = sim.Con.HandleEvent(1, sim.IC(sim.ConCo));
 %             sim.Con = sim.Con.HandleExtFB(sim.IC(sim.ModCo),sim.IC(sim.ConCo));
         else
             sim.IC = Data.IC(:,Data.Slopes == start_s);
             sim.Con.lastPhi = start_s*pi/180;
-            sim.Con = sim.Con.HandleExtFB(sim.IC(sim.ModCo),sim.IC(sim.ConCo));
+            sim.Con = sim.Con.HandleExtFB(sim.IC(sim.ModCo),...
+                sim.IC(sim.ConCo),sim.Env.SurfSlope(sim.Mod.xS));
         end
 
         % Simulate
@@ -157,9 +177,10 @@ end
         sim.EndCond = [1,sim.Period(1)]; % Run until converge
         sim = sim.Init();
         sim.Mod.LegShift = sim.Mod.Clearance;
-        sim.Con = sim.Con.Reset();
         sim.IC = sim.IClimCyc;
-        sim.Con = sim.Con.HandleExtFB(sim.IC(sim.ModCo),sim.IC(sim.ConCo));
+        sim.Con = sim.Con.Reset(sim.IC(sim.ConCo));
+        sim.Con = sim.Con.HandleExtFB(sim.IC(sim.ModCo),...
+                sim.IC(sim.ConCo),sim.Env.SurfSlope(sim.Mod.xS));
     
         sim = sim.Run();
         

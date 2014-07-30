@@ -3,6 +3,8 @@ function [ sim ] = Run( sim )
 % Handle the event and keep running
     X = [];
     T = [];
+    Torques = [];
+    Slopes = [];
     
     if sim.Graphics == 1
         options=odeset('MaxStep',sim.tstep/10,'RelTol',.5e-7,'AbsTol',.5e-8,...
@@ -28,15 +30,17 @@ function [ sim ] = Run( sim )
                ones(length(TTemp),1)*sim.Mod.yS];
     X = [X; XTemp];
     T = [T; TTemp];
-    Torques = [];
     
     if sim.nOuts>0
-        % Save torques
-        TorquesTemp = zeros(length(TTemp),sim.nOuts);
-        for j=1:length(TTemp)
-            TorquesTemp(j,:) = sim.Con.NeurOutput()';
-        end
-        Torques = TorquesTemp;
+        % Save torques & slope
+%         TorquesTemp = zeros(length(TTemp),sim.nOuts);
+%         for j=1:length(TTemp)
+%             TorquesTemp(j,:) = sim.Con.NeurOutput()';
+%         end
+        ThisTorques = sim.Con.NeurOutput()';
+        ThisSlope = sim.Env.SurfSlope(sim.Mod.xS);
+        Torques = repmat(ThisTorques,length(TTemp),sim.nOuts);
+        Slopes = repmat(ThisSlope,length(TTemp),1);
     end
 
     while TimeCond && sim.StopSim == 0
@@ -56,7 +60,8 @@ function [ sim ] = Run( sim )
                     StoreIC = 1; % Store the initial conditions right after impact
                     
                     [sim.Con, Xa(sim.ModCo), Xa(sim.ConCo)] = ...
-                        sim.Con.HandleExtFB(Xa(sim.ModCo),Xa(sim.ConCo));
+                        sim.Con.HandleExtFB(Xa(sim.ModCo),...
+                        Xa(sim.ConCo),sim.Env.SurfSlope(sim.Mod.xS));
                     
                     sim = sim.UpdateStats(TTemp,XTemp);
                     
@@ -108,7 +113,8 @@ function [ sim ] = Run( sim )
                     StoreIC = 1; % Store the initial conditions right after impact
 
                     [sim.Con, Xa(sim.ModCo), Xa(sim.ConCo)] = ...
-                        sim.Con.HandleExtFB(Xa(sim.ModCo),Xa(sim.ConCo));
+                        sim.Con.HandleExtFB(Xa(sim.ModCo),...
+                            Xa(sim.ConCo),sim.Env.SurfSlope(sim.Mod.xS));
 
                     sim = sim.UpdateStats(TTemp,XTemp);
 
@@ -183,12 +189,20 @@ function [ sim ] = Run( sim )
         T = [T; TTemp]; %#ok<AGROW>
         
         if sim.nOuts>0
-            % Save torques
-            TorquesTemp = zeros(length(TTemp),sim.nOuts);
-            for j=1:length(TTemp)
-                TorquesTemp(j,:) = sim.Con.NeurOutput()';
-            end
-            Torques = [Torques; TorquesTemp]; %#ok<AGROW>
+            % Save torques & slope
+            ThisTorques = sim.Con.NeurOutput()';
+            ThisSlope = sim.Env.SurfSlope(sim.Mod.xS);
+            Torques = [Torques; %#ok<AGROW>
+                       repmat(ThisTorques,length(TTemp),sim.nOuts)];
+            Slopes = [Slopes; %#ok<AGROW>
+                      repmat(ThisSlope,length(TTemp),1)];
+        
+%             % Save torques
+%             TorquesTemp = zeros(length(TTemp),sim.nOuts);
+%             for j=1:length(TTemp)
+%                 TorquesTemp(j,:) = sim.Con.NeurOutput()';
+%             end
+%             Torques = [Torques; TorquesTemp]; %#ok<AGROW>
         end
     end
     
@@ -202,6 +216,7 @@ function [ sim ] = Run( sim )
     end
     sim.Out.SuppPos = SuppPos;
     sim.Out.Torques = Torques;
+    sim.Out.Slopes = Slopes;
     sim.Out.nSteps = sim.StepsTaken;
     sim.Out.StepsSS = sim.stepsSS;
     sim.Out.MaxSlope = [sim.MinSlope, sim.MaxSlope];

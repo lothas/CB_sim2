@@ -53,7 +53,7 @@ classdef MOOGA
                     TopPop = floor(GA.Population/5);
                     GA.Fittest = [TopPop,... % Fittest copy
                                   TopPop,... % Mutated fittest copy
-                                  GA.Population-2*TopPop]; % Fittest children
+                                  ceil(0.025*GA.Population)]; % New random genomes
                 case 3
                     GA.Generations = varargin{1};
                     GA.Population = varargin{2};
@@ -76,9 +76,17 @@ classdef MOOGA
             end            
         end
         
-        function out = Find(GA,varargin)
-            out = [];
+        function varargaout = Find(GA,varargin)
             switch nargin
+                case 1
+                    Max = cell(2,GA.NFit);
+                    for f=1:GA.NFit
+                        FitStr = strsplit(func2str(GA.FitFcn{f}),{'.','('});
+                        Max{1,f} = FitStr{3};
+                    end
+                    Max(2,:) = num2cell(max(GA.Fit(:,:,GA.Progress)));
+                    disp(Max)
+                    return
                 case 2
                     Reqs = varargin{1};
                     Gnrtn = GA.Progress;
@@ -113,8 +121,19 @@ classdef MOOGA
             if length(Fits)>10
                 disp([int2str(length(Fits)),...
                     ' results fit the requirements']);
+                return
             else
+                if isempty(Fits)
+                    disp('No matches found');
+                    return
+                end
                 out = [Fits, GA.Fit(Fits,:,Gnrtn)];
+                switch nargout
+                    case 0
+                        disp(num2str(out,'%.3f'));
+                    case 1
+                        varargaout = out;
+                end
             end
         end
     end
@@ -248,7 +267,7 @@ classdef MOOGA
         
         function [Sim] = SetSimSlope(Sim,vfit,UD)
 %             leadway = min(max(vfit/3,2),5);
-            parK = min(max(0.015/vfit,0.01),0.04);
+            parK = min(max(0.005/vfit,0.003),0.01);
             leadway = 1;
 
 %             if ~isempty(Sim.IClimCyc)
@@ -263,10 +282,10 @@ classdef MOOGA
                                  'parK',UD*parK,'start_x',leadway);
             Sim.Con.FBType = 2;
             Sim.Mod.LegShift = Sim.Mod.Clearance;
-            Sim = Sim.SetTime(0,0.1,120);
-            Sim.Con = Sim.Con.Reset();
+            Sim = Sim.SetTime(0,0.1,180);
+            Sim.Con = Sim.Con.Reset(Sim.IC(Sim.ConCo));
             Sim.Con = Sim.Con.HandleExtFB(Sim.IC(Sim.ModCo),...
-                                          Sim.IC(Sim.ConCo));
+                Sim.IC(Sim.ConCo),Sim.Env.SurfSlope(Sim.Mod.xS));
             Sim = Sim.Init();
         end
         
@@ -323,7 +342,7 @@ classdef MOOGA
             else
                 V = DistanceTravelled/SlopeSim.Out.T(end);
                 SlopeSim = MOOGA.SetSimSlope(SlopeSim,V,-1);
-                SlopeSim.Con = SlopeSim.Con.Reset();
+                SlopeSim.Con = SlopeSim.Con.Reset(SlopeSim.IC(SlopeSim.ConCo));
                 SlopeSim = SlopeSim.Run();
                 fit = MOOGA.DownhillFit(SlopeSim);
             end
@@ -366,7 +385,7 @@ classdef MOOGA
                 end
                 % Make the fitness function nonlinear
                 % so going to 0 won't be so important
-                fit = cos(pi/2*(1-fit)^2)^2;
+%                 fit = cos(pi/2*(1-fit)^2)^2;
                 out = [];
             end
         end

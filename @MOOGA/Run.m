@@ -59,8 +59,7 @@ for g = GA.Progress+1:GA.Generations
         thisOuts = cell(1,NFit);
         for f = 1:NFit
             % Preprocessing for ZMPFit
-            if strcmp(func2str(FitFcn{f}),...
-                '@(varargin)ThisGA.ZMPFit(varargin{:})') %#ok<PFBNS>
+            if ~isempty(strfind(func2str(FitFcn{f}),'ZMPFit')) %#ok<PFBNS>
                 % Prepare all the required vectors
                 % (torques, state, etc) and put them in wSim.Out
                 
@@ -68,25 +67,27 @@ for g = GA.Progress+1:GA.Generations
                 % output from all previous fitness functions
                 Outs = find(~cellfun(@isempty,thisOuts));
                 X = []; T = 0;
-                SuppPos = []; Torques = [];
+                SuppPos = []; Torques = []; Slopes = [];
                 for o = 1:length(Outs)
                     X = [X;thisOuts{Outs(o)}.X];
                     T = [T;thisOuts{Outs(o)}.T+T(end)];
                     SuppPos = [SuppPos;thisOuts{Outs(o)}.SuppPos];
                     Torques = [Torques;thisOuts{Outs(o)}.Torques];
+                    Slopes = [Slopes;thisOuts{Outs(o)}.Slopes];
                 end
                 wSim.Out.X = X;
                 wSim.Out.T = T(2:end);
                 wSim.Out.SuppPos = SuppPos;
                 wSim.Out.Torques = Torques;
+                wSim.Out.Slopes = Slopes;
+                wSim.Con.FBType = 2;
             end
             
             % Call the fitness function
             [thisFit(f),thisOuts{f}] = FitFcn{f}(wSim);
             
             % Postprocessing for VelFit
-            if strcmp(func2str(FitFcn{f}),...
-                '@(varargin)ThisGA.VelFit(varargin{:})')
+            if ~isempty(strfind(func2str(FitFcn{f}),'VelFit'))
                 % Switch direction if the model walks backwards
                 if thisFit(f)<0
                     revSeq = Gen.SwitchDir(gSeqs(i,:));
@@ -97,6 +98,14 @@ for g = GA.Progress+1:GA.Generations
                         thisFit(f) = -thisFit(f);
                     end
                 end                    
+            end
+            
+            % Postprocesing for ZMPFit
+            if ~isempty(strfind(func2str(FitFcn{f}),'ZMPFit'))
+                % Update the fitness based on the uphill (4) and
+                % downhill (5) fitness
+                thisFit(f) = 7.5*thisFit(f)*...
+                    (1-cosd(max(thisFit(4),thisFit(5))));
             end
         end        
         gFit(i,:) = thisFit;
@@ -138,7 +147,7 @@ for g = GA.Progress+1:GA.Generations
 
         % Add children (by pairs)
         Child = GA.Fittest(1)+GA.Fittest(2)+1;
-        while Child<=GA.Population
+        while Child<=GA.Population-GA.Fittest(3)
             % Select 2 parents randomly
             if GA.WeightedPairing
                 IDs = randsample(1:GA.Fittest(1),2,'true',Weights);
@@ -159,6 +168,10 @@ for g = GA.Progress+1:GA.Generations
                 end
             end
         end
+        
+        % Add random children
+        GA.Seqs(GA.Population-GA.Fittest(3)+1:GA.Population,:,g+1) = ...
+           GA.Gen.RandSeq(GA.Fittest(3)); 
     end
         
     if ~isempty(GA.FileOut)

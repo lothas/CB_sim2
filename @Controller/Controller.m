@@ -105,8 +105,17 @@ classdef Controller < handle & matlab.mixin.Copyable
             NC.ExtPulses = [];
         end
         
-        function NC = Reset(NC)
-            NC.Switch = 0*NC.Switch;
+        function NC = Reset(NC,Phase)
+            if nargin<2
+                NC.Switch = 0*NC.Switch;
+            else
+                % Find which Torques should be active
+                Start = NC.Offset;
+                End = Start + NC.Duration;
+                [Xperc] = NC.GetPhasePerc(Phase);
+                On = Xperc >= Start & Xperc < End;
+                NC.Switch = (NC.Amp.*On)';
+            end 
         end
         
         function [Torques] = NeurOutput(NC)
@@ -121,13 +130,12 @@ classdef Controller < handle & matlab.mixin.Copyable
             Xperc = (X-NC.P_reset)/(NC.P_th-NC.P_reset);
         end
         
-        function [NC] = Adaptation(NC, X)
+        function [NC] = Adaptation(NC, Phi)
             if NC.FBType == 0
                 % NO FEEDBACK
                 NC.omega = NC.omega0;
                 NC.Amp = NC.Amp0;
             else
-                Phi = (X(1)+X(2))/2;
                 if abs(Phi-NC.lastPhi)>0.1
                     % Don't apply changes when the slope
                     % varies too abruptly
@@ -150,7 +158,7 @@ classdef Controller < handle & matlab.mixin.Copyable
         end
         
         % %%%%%% % Derivative % %%%%%% %
-        function [Xdot] = Derivative(NC, t, X) %#ok<INUSD,MANUSL>
+        function [Xdot] = Derivative(NC, t, X) %#ok<INUSD>
             Xdot = NC.omega;
         end
         
@@ -202,11 +210,11 @@ classdef Controller < handle & matlab.mixin.Copyable
             end
         end
         
-        function [NC, Xmod, Xcon] = HandleExtFB(NC, Xmod, Xcon)
+        function [NC, Xmod, Xcon] = HandleExtFB(NC, Xmod, Xcon, Slope)
             % This function is called when the leg hits the ground
             if NC.FBType > 0
                 % Perform adaptation based on terrain slope
-                NC = NC.Adaptation(Xmod);
+                NC = NC.Adaptation(Slope);
             end
             
             if ~isempty(NC.ExtP_reset)

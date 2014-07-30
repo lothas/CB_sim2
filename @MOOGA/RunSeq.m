@@ -33,9 +33,10 @@ Sim = Sim.Init();
 
 % Some more simulation initialization
 Sim.Mod.LegShift = Sim.Mod.Clearance;
-% Sim.Con = Sim.Con.HandleEvent(1, Sim.IC(Sim.ConCo));
+Sim.Con = Sim.Con.HandleEvent(1, Sim.IC(Sim.ConCo));
 Sim.Con.FBType = 0;
-% Sim.Con = Sim.Con.HandleExtFB(Sim.IC(Sim.ModCo),Sim.IC(Sim.ConCo));
+Sim.Con = Sim.Con.HandleExtFB(Sim.IC(Sim.ModCo),...
+                Sim.IC(Sim.ConCo),Sim.Env.SurfSlope(Sim.Mod.xS));
 
 % Simulate
 Sim = Sim.Run();
@@ -63,17 +64,19 @@ for f = 1:GA.NFit
         % output from all previous fitness functions
         Outs = find(~cellfun(@isempty,thisOuts));
         X = []; T = 0;
-        SuppPos = []; Torques = [];
+        SuppPos = []; Torques = []; Slopes = [];
         for o = 1:length(Outs)
             X = [X;thisOuts{Outs(o)}.X]; %#ok<AGROW>
             T = [T;thisOuts{Outs(o)}.T+T(end)]; %#ok<AGROW>
             SuppPos = [SuppPos;thisOuts{Outs(o)}.SuppPos]; %#ok<AGROW>
             Torques = [Torques;thisOuts{Outs(o)}.Torques]; %#ok<AGROW>
+            Slopes = [Slopes;thisOuts{Outs(o)}.Slopes]; %#ok<AGROW>
         end
         Sim.Out.X = X;
         Sim.Out.T = T(2:end);
         Sim.Out.SuppPos = SuppPos;
         Sim.Out.Torques = Torques;
+        Sim.Out.Slopes = Slopes;
         Sim.Con.FBType = 2;
     end
     

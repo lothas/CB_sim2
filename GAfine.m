@@ -11,12 +11,11 @@ function [  ] = GAfine(  )
 % GA.Progress = 1;
 % save('GA_combined_in','GA');
 
-clear GA
-GA = MOOGA(50,2500);
-% GA.Fittest = [1000,1000,4000];
-GA.Fittest = [400,400,1700];
+evalin('caller','clear GA');
+GA = MOOGA(50,10000);
+GA.Fittest = [1900,1900,200];
 % GA.FileIn = 'GA_combined_in.mat';
-GA.FileIn = 'GA_07_24_13_57.mat';
+% GA.FileIn = 'GA_07_29_10_30.mat';
 % GA.FileOut = GA.FileIn;
 
 GA.FileOut = ['GA_',datestr(now,'mm_dd_hh_MM'),'.mat'];
@@ -27,21 +26,32 @@ GA.Graphics = 0;
 % Set up the genome
 % Controller with push-off, swing pulse + limited ankle pulse
 % and feedback
-NAnkleT = 3;
-NHipT = 3;
-MaxAnkleT = 50;
+NAnkleT = 0;
+NHipT = 5;
+MaxAnkleT = 10;
 MaxHipT = 50;
 MaxTO = 2000; % Max toe off "impulse"
-Keys = {'omega0','P_LegE','ExtPulses','Pulses','Pulses',...
-    'kOmega_u','kOmega_d','kTorques_u','kTorques_d';...
-               1,       1,      [1,1],   [NAnkleT,1],   [NHipT,2],...
-             1,         1,           1,           1};
-TorqueFBMin = [-1200,-150*ones(1,NAnkleT),-300*ones(1,NHipT)];
+TorqueFBMin = [-2000,-50*ones(1,NAnkleT),-300*ones(1,NHipT)];
 TorqueFBMax = -TorqueFBMin;
-Range = {0.5, 0.55, [-MaxTO, 0.005], [-MaxAnkleT, 0, 0.01], [-MaxHipT, 0, 0.01],...
-    -200, -200, TorqueFBMin, TorqueFBMin; % Min
+if NAnkleT>0
+    Keys = {'omega0','P_LegE','ExtPulses','Pulses','Pulses',...
+        'kOmega_u','kOmega_d','kTorques_u','kTorques_d';...
+                   1,       1,      [1,1],   [NAnkleT,1],   [NHipT,2],...
+                 1,         1,           1,           1};
+    Range = {0.5, 0.55, [-MaxTO, 0.005], [-MaxAnkleT, 0, 0.01], [-MaxHipT, 0, 0.01],...
+    -10, -10, TorqueFBMin, TorqueFBMin; % Min
            2, 0.85, [0000, 0.005], [MaxAnkleT, 0.99, 0.99], [MaxHipT, 0.99, 0.99],...
-     200,  200, TorqueFBMax, TorqueFBMax}; % Max
+     10,  10, TorqueFBMax, TorqueFBMax}; % Max
+else
+    Keys = {'omega0','P_LegE','ExtPulses','Pulses',...
+    'kOmega_u','kOmega_d','kTorques_u','kTorques_d';...
+               1,       1,      [1,1],   [NHipT,2],...
+             1,         1,           1,           1};
+    Range = {0.5, 0.55, [-MaxTO, 0.005], [-MaxHipT, 0, 0.01],...
+    -10, -10, TorqueFBMin, TorqueFBMin; % Min
+           2, 0.85, [0000, 0.005], [MaxHipT, 0.99, 0.99],...
+     10,  10, TorqueFBMax, TorqueFBMax}; % Max
+end
 MutDelta0 = 0.1;
 MutDelta1 = 0.01;
 
@@ -75,18 +85,18 @@ GA.Sim = GA.Sim.SetTime(0,0.15,40);
 
 % Some more simulation initialization
 GA.Sim.Mod.LegShift = GA.Sim.Mod.Clearance;
-GA.Sim.Con = GA.Sim.Con.HandleEvent(1, Sim.IC(Sim.ConCo));
+GA.Sim.Con = GA.Sim.Con.HandleEvent(1, GA.Sim.IC(GA.Sim.ConCo));
 % GA.Sim.Con = GA.Sim.Con.HandleExtFB(GA.Sim.IC(GA.Sim.ModCo),...
 %                                           GA.Sim.IC(GA.Sim.ConCo));
                                 
 % Fitness functions
-GA.NFit = 6;
 GA.FitFcn = {@GA.VelFit;
              @GA.NrgEffFit;
              @GA.EigenFit;
              @GA.UphillFitRun;
-             @GA.DownhillFitRun;
-             @GA.ZMPFit};
+             @GA.DownhillFitRun};
+             %@GA.ZMPFit};
+GA.NFit = length(GA.FitFcn);
 GA.Sim.PMFull = 1; % Run poincare map on all 5 coords
 
 GA = GA.InitGen();

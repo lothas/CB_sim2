@@ -22,12 +22,13 @@ end
 % Run the simulations
 PMsim = copy(sim);
 PMsim.EndCond = [1,sim.Period(1)];
+Slope = PMsim.Env.SurfSlope(PMsim.Mod.xS);
 for d = Coords
     PMsim.IC = dIC(:,d);
     PMsim = PMsim.Init();
-    PMsim.Con = PMsim.Con.Reset();
-    PMsim.Con = PMsim.Con.HandleExtFB(...
-        PMsim.IC(PMsim.ModCo),PMsim.IC(PMsim.ConCo));
+    PMsim.Con = PMsim.Con.Reset(PMsim.IC(PMsim.ConCo));
+    PMsim.Con = PMsim.Con.HandleExtFB(PMsim.IC(PMsim.ModCo),...
+        PMsim.IC(PMsim.ConCo),Slope);
     PMsim = PMsim.Run();
 
     if PMsim.Out.Type ~= 4
