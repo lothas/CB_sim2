@@ -48,10 +48,11 @@ function [MutSeq,Res] = Mutate(Ge,Seq,Try)
                     [MutSeq(s,:),Res(s,:)] = Ge.Mutate(Seq(s,:),Try+1);                    
                 case 8
                     % display the problematic sequence
-                    disp(Ge.seq2str(Seq(s,:)))
+%                     disp(Ge.seq2str(Seq(s,:)))
+                    [MutSeq(s,:),Res(s,:)] = Ge.Mutate(Seq(s,:),Try+1);
                 case 9
                     % Try bounding the original sequence
-                    disp('Mutate bounded')
+%                     disp('Mutate bounded')
                     BoundSeq = max(min(Seq(s,:),Ge.Range(2,:)),Ge.Range(1,:));
                     [MutSeq(s,:),Res(s,:)] = Ge.Mutate(BoundSeq,Try+1);
                 case 10

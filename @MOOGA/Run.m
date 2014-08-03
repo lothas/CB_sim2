@@ -66,20 +66,9 @@ for g = GA.Progress+1:GA.Generations
                 % ZMP Fit should be the last one as it uses the
                 % output from all previous fitness functions
                 Outs = find(~cellfun(@isempty,thisOuts));
-                X = []; T = 0;
-                SuppPos = []; Torques = []; Slopes = [];
                 for o = 1:length(Outs)
-                    X = [X;thisOuts{Outs(o)}.X];
-                    T = [T;thisOuts{Outs(o)}.T+T(end)];
-                    SuppPos = [SuppPos;thisOuts{Outs(o)}.SuppPos];
-                    Torques = [Torques;thisOuts{Outs(o)}.Torques];
-                    Slopes = [Slopes;thisOuts{Outs(o)}.Slopes];
+                    wSim.Out = wSim.JoinOuts(thisOuts{Outs(o)});
                 end
-                wSim.Out.X = X;
-                wSim.Out.T = T(2:end);
-                wSim.Out.SuppPos = SuppPos;
-                wSim.Out.Torques = Torques;
-                wSim.Out.Slopes = Slopes;
                 wSim.Con.FBType = 2;
             end
             

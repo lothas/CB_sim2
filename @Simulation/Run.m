@@ -2,7 +2,7 @@ function [ sim ] = Run( sim )
 % Run the simulation until an event occurs
 % Handle the event and keep running
     X = [];
-    T = [];
+    sim.Out.T = [];
     Torques = [];
     Slopes = [];
     
@@ -29,7 +29,7 @@ function [ sim ] = Run( sim )
     SuppPos = [ones(length(TTemp),1)*sim.Mod.xS, ...
                ones(length(TTemp),1)*sim.Mod.yS];
     X = [X; XTemp];
-    T = [T; TTemp];
+    sim.Out.T = [sim.Out.T; TTemp];
     
     if sim.nOuts>0
         % Save torques & slope
@@ -96,41 +96,41 @@ function [ sim ] = Run( sim )
         end
 
         % Check ground clearance
-        [xNS,yNS] = sim.Mod.GetPos(Xa(sim.ModCo),'NS');
-        if yNS-sim.Env.Surf(xNS)<-1e-4*sim.Mod.L
-            if sim.Mod.LegShift>0
-                % Robot hit the ground before extending the leg
-                sim.Out.Type = 3;
-                sim.Out.Text = 'Robot hit the ground before extending the leg';
-                sim.StopSim = 1;
-            else
-                if ~any(IE == 1)
-                    % Call impact handlers
-                    [sim.Mod,Xa(sim.ModCo)] = ...
-                        sim.Mod.HandleEvent(1, Xa(sim.ModCo),TTemp(end));
-
-                    % Handle event interactions
-                    StoreIC = 1; % Store the initial conditions right after impact
-
-                    [sim.Con, Xa(sim.ModCo), Xa(sim.ConCo)] = ...
-                        sim.Con.HandleExtFB(Xa(sim.ModCo),...
-                            Xa(sim.ConCo),sim.Env.SurfSlope(sim.Mod.xS));
-
-                    sim = sim.UpdateStats(TTemp,XTemp);
-
-                    if ~ischar(sim.Mod.curSpeed)
-                        sim.TimeStr = ['t = %.2f s\nOsc.=%.3f\n',...
-                         'Slope = %.2f ',char(176)','\nSpeed = %.3f m/s'];
-                    end
-                else
-                    % Robot fell down
-                    sim.Out.Type = 1;
-                    sim.Out.Text = 'Robot fell down (leg pierced floor)';
-                    sim.StopSim = 1;
-                    break;
-                end
-            end
-        end
+%         [xNS,yNS] = sim.Mod.GetPos(Xa(sim.ModCo),'NS');
+%         if yNS-sim.Env.Surf(xNS)<-1e-4*sim.Mod.L
+%             if sim.Mod.LegShift>0
+%                 % Robot hit the ground before extending the leg
+%                 sim.Out.Type = 3;
+%                 sim.Out.Text = 'Robot hit the ground before extending the leg';
+%                 sim.StopSim = 1;
+%             else
+%                 if ~any(IE == 1)
+%                     % Call impact handlers
+%                     [sim.Mod,Xa(sim.ModCo)] = ...
+%                         sim.Mod.HandleEvent(1, Xa(sim.ModCo),TTemp(end));
+% 
+%                     % Handle event interactions
+%                     StoreIC = 1; % Store the initial conditions right after impact
+% 
+%                     [sim.Con, Xa(sim.ModCo), Xa(sim.ConCo)] = ...
+%                         sim.Con.HandleExtFB(Xa(sim.ModCo),...
+%                             Xa(sim.ConCo),sim.Env.SurfSlope(sim.Mod.xS));
+% 
+%                     sim = sim.UpdateStats(TTemp,XTemp);
+% 
+%                     if ~ischar(sim.Mod.curSpeed)
+%                         sim.TimeStr = ['t = %.2f s\nOsc.=%.3f\n',...
+%                          'Slope = %.2f ',char(176)','\nSpeed = %.3f m/s'];
+%                     end
+%                 else
+%                     % Robot fell down
+%                     sim.Out.Type = 1;
+%                     sim.Out.Text = 'Robot fell down (leg pierced floor)';
+%                     sim.StopSim = 1;
+%                     break;
+%                 end
+%             end
+%         end
         
         % Set new initial conditions
         sim.IC = Xa;
@@ -141,7 +141,7 @@ function [ sim ] = Run( sim )
             
             if sim.Out.Type == 5
                 % Simulation converged, calculate walking period
-                StepTimes = T(diff(SuppPos(:,1))~=0);
+                StepTimes = sim.Out.T(diff(SuppPos(:,1))~=0);
                 Periods = diff(StepTimes);
                 
                 % There seems to be a problem calculating
@@ -186,7 +186,7 @@ function [ sim ] = Run( sim )
                    ones(length(TTemp),1)*sim.Mod.xS, ...
                    ones(length(TTemp),1)*sim.Mod.yS]; %#ok<AGROW>
         X = [X; XTemp]; %#ok<AGROW>
-        T = [T; TTemp]; %#ok<AGROW>
+        sim.Out.T = [sim.Out.T; TTemp];
         
         if sim.nOuts>0
             % Save torques & slope
@@ -208,9 +208,8 @@ function [ sim ] = Run( sim )
     
     % Prepare simulation output
     sim.Out.X = X;
-    sim.Out.T = T;
     if ~isempty(sim.Period)
-        sim.Out.Tend = T(end);
+        sim.Out.Tend = sim.Out.T(end);
     else
         sim.Out.Tend = sim.tend;
     end

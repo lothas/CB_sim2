@@ -96,6 +96,8 @@ classdef Terrain < handle & matlab.mixin.Copyable
             end
             
             if Te.incline==0
+                Te.start_x=0;
+                Te.start_y=0;
                 Te.end_x=0;
                 Te.end_y=0;
             else

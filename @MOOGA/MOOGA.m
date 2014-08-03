@@ -256,26 +256,15 @@ classdef MOOGA
                 fit = 1-max(abs(EigVal));
                 if fit<0
                     fit = 0;
-%                     disp(Gen.seq2str(gSeqs(i,:)));
-%                     disp('ERROR: eigenvalues larger than 1!')
-%                     disp(Sim.Period);
-%                     disp(EigVal);
                 end
             end
             out = [];
         end
         
         function [Sim] = SetSimSlope(Sim,vfit,UD)
-%             leadway = min(max(vfit/3,2),5);
             parK = min(max(0.005/vfit,0.003),0.01);
             leadway = 1;
 
-%             if ~isempty(Sim.IClimCyc)
-%                 Sim.IC = Sim.IClimCyc;
-%                 leadway = 1;
-%             else
-%                 Sim.IC = 0*Sim.IC;
-%             end
             Sim.IC = Sim.ICstore(:,1);
             Sim.Env = ...
                 Sim.Env.Set('Type','inf','start_slope',0,...
@@ -292,17 +281,7 @@ classdef MOOGA
         function [fit,out] = UphillFitRun(Sim)
             SlopeSim = deepcopy(Sim);
             
-            % Calculate distance travelled
-            Hip0 = zeros(2,1); Hip1 = zeros(2,1);
-            SlopeSim.Mod.xS = SlopeSim.Out.SuppPos(1,1);
-            SlopeSim.Mod.yS = SlopeSim.Out.SuppPos(1,2);
-            [Hip0(1), Hip0(2)] = SlopeSim.Mod.GetPos(...
-                SlopeSim.Out.X(1,SlopeSim.ModCo),'Hip');
-            SlopeSim.Mod.xS = SlopeSim.Out.SuppPos(end,1);
-            SlopeSim.Mod.yS = SlopeSim.Out.SuppPos(end,2);
-            [Hip1(1), Hip1(2)] = SlopeSim.Mod.GetPos(...
-                SlopeSim.Out.X(end,SlopeSim.ModCo),'Hip');
-            DistanceTravelled = abs(Hip1(1)-Hip0(1));
+            DistanceTravelled = Sim.Out.SuppPos(end,1);
             SlopeSim.Mod.xS = 0; SlopeSim.Mod.yS = 0;
             
             if DistanceTravelled<3*SlopeSim.Mod.L
@@ -324,17 +303,7 @@ classdef MOOGA
         function [fit,out] = DownhillFitRun(Sim)
             SlopeSim = deepcopy(Sim);
             
-            % Calculate distance travelled
-            Hip0 = zeros(2,1); Hip1 = zeros(2,1);
-            SlopeSim.Mod.xS = SlopeSim.Out.SuppPos(1,1);
-            SlopeSim.Mod.yS = SlopeSim.Out.SuppPos(1,2);
-            [Hip0(1), Hip0(2)] = SlopeSim.Mod.GetPos(...
-                SlopeSim.Out.X(1,SlopeSim.ModCo),'Hip');
-            SlopeSim.Mod.xS = SlopeSim.Out.SuppPos(end,1);
-            SlopeSim.Mod.yS = SlopeSim.Out.SuppPos(end,2);
-            [Hip1(1), Hip1(2)] = SlopeSim.Mod.GetPos(...
-                SlopeSim.Out.X(end,SlopeSim.ModCo),'Hip');
-            DistanceTravelled = abs(Hip1(1)-Hip0(1));
+            DistanceTravelled = Sim.Out.SuppPos(end,1);
             SlopeSim.Mod.xS = 0; SlopeSim.Mod.yS = 0;
             
             if DistanceTravelled<3*SlopeSim.Mod.L
@@ -388,6 +357,47 @@ classdef MOOGA
 %                 fit = cos(pi/2*(1-fit)^2)^2;
                 out = [];
             end
+        end
+        
+        function [fit,out] = SlopeFit(Sim,dir)
+            % Start running up/downwards at intervals and check that the
+            % simulation converges on each slope before moving forward
+            
+            Slope = 0;
+            dSlope = dir*2;
+            SlSim = deepcopy(Sim);
+            SlSim.doGoNoGo = 2;
+            SlSim.GNGThresh = [10,10];
+            if isempty(SlSim.IClimCyc)
+                SlSim.IClimCyc = 0*SlSim.IC;
+                Leadway = 3;
+            else
+                Leadway = 0;
+            end
+            out = [];
+            while 1
+                SlSim = SlSim.WalkOnSlope(Slope,Slope+dSlope,Leadway,40);
+                % Save part of the output
+                i = find(dir*SlSim.Out.Slopes*58>=dir*(Slope+dSlope),...
+                    1,'first');
+                out = SlSim.JoinOuts(out,i);
+                
+                if SlSim.Out.Type == 6
+                   % Simulation GO
+                   Slope = Slope+dSlope;
+                else
+                    break;
+                end
+            end
+            fit = abs(Slope);
+        end
+        
+        function [fit,out] = UpSlopeFit(Sim)
+            [fit,out] = MOOGA.SlopeFit(Sim,1);
+        end
+        
+        function [fit,out] = DownSlopeFit(Sim)
+            [fit,out] = MOOGA.SlopeFit(Sim,-1);
         end
     end
         

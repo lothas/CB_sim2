@@ -11,11 +11,12 @@ function [  ] = GAfine(  )
 % GA.Progress = 1;
 % save('GA_combined_in','GA');
 
-evalin('caller','clear GA');
-GA = MOOGA(50,10000);
+GA = MOOGA(30,10000);
 GA.Fittest = [1900,1900,200];
+% GA = MOOGA(50,1500);
+% GA.Fittest = [250,250,10];
 % GA.FileIn = 'GA_combined_in.mat';
-% GA.FileIn = 'GA_07_29_10_30.mat';
+GA.FileIn = 'GA_08_02_22_10.mat';
 % GA.FileOut = GA.FileIn;
 
 GA.FileOut = ['GA_',datestr(now,'mm_dd_hh_MM'),'.mat'];
@@ -26,7 +27,7 @@ GA.Graphics = 0;
 % Set up the genome
 % Controller with push-off, swing pulse + limited ankle pulse
 % and feedback
-NAnkleT = 0;
+NAnkleT = 1;
 NHipT = 5;
 MaxAnkleT = 10;
 MaxHipT = 50;
@@ -93,9 +94,9 @@ GA.Sim.Con = GA.Sim.Con.HandleEvent(1, GA.Sim.IC(GA.Sim.ConCo));
 GA.FitFcn = {@GA.VelFit;
              @GA.NrgEffFit;
              @GA.EigenFit;
-             @GA.UphillFitRun;
-             @GA.DownhillFitRun};
-             %@GA.ZMPFit};
+             @GA.UpSlopeFit; % @GA.UphillFitRun;
+             @GA.DownSlopeFit; % @GA.DownhillFitRun};
+             @GA.ZMPFit};
 GA.NFit = length(GA.FitFcn);
 GA.Sim.PMFull = 1; % Run poincare map on all 5 coords
 

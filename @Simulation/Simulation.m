@@ -40,6 +40,11 @@ classdef Simulation < handle & matlab.mixin.Copyable
         IClimCyc; Period;
         PMeps = 1e-4; PMFull = 0;
         PMeigs; PMeigVs;
+        % Check convergence progression
+        doGoNoGo = 1; % 0 - OFF, 1 - Extend, 2 - Cut
+        GNGThresh = [4,4]; % required steps for go/no-go order
+        minMaxDiff = [1,0];
+        ConvProgr = [0,0];
                 
         % Rendering params
         Graphics = 1;
@@ -131,6 +136,7 @@ classdef Simulation < handle & matlab.mixin.Copyable
                     sim.tend = 10;
                 end
             end
+            sim.Out.Tend = sim.tend;
         end
         
         function [Xt] = Derivative(sim,t,X)
@@ -197,15 +203,25 @@ classdef Simulation < handle & matlab.mixin.Copyable
                 POdur = 0.999*sim.Con.Duration(PushOff)/sim.Con.omega;
                 POamp = sim.Con.Amp(PushOff);
 
-                next = find(thisT>=thisT(1)+POdur,1,'first');
-                if ~isempty(next)
-                    pulseEnd(s) = stepTime(s) + next;
+                if length(thisT)>1
+                    next = find(thisT>=thisT(1)+POdur,1,'first');
+                    if ~isempty(next)
+                        pulseEnd(s) = stepTime(s) + next;
+                        POids = stepTime(s) + ...
+                            find(abs(Torques(stepTime(s)+1:pulseEnd(s),1))>...
+                                 abs(POamp)-maxPls);
+                        Torques(POids,1) = Torques(POids,1)-POamp;
+                        Impulses(POids) = Impulses(POids)+POamp;
+                    end
+                else
+                    pulseEnd(s) = stepTime(s) + 1;
                     POids = stepTime(s) + ...
                         find(abs(Torques(stepTime(s)+1:pulseEnd(s),1))>...
                              abs(POamp)-maxPls);
                     Torques(POids,1) = Torques(POids,1)-POamp;
                     Impulses(POids) = Impulses(POids)+POamp;
                 end
+                    
             end
             sim.Con.lastPhi = Temp;
             
@@ -215,6 +231,27 @@ classdef Simulation < handle & matlab.mixin.Copyable
                 case 2
                     varargout{1} = Torques;
                     varargout{2} = Impulses;
+            end
+        end
+        
+        function out = JoinOuts(sim,ext_out,last_i)
+            if nargin<3
+                last_i = length(sim.Out.T);
+            end
+            
+            out = sim.Out;
+            if isempty(ext_out) || length(ext_out.T)<1
+                out.X = out.X(1:last_i,:);
+                out.T = out.T(1:last_i,:);
+                out.SuppPos = out.SuppPos(1:last_i,:);
+                out.Torques = out.Torques(1:last_i,:);
+                out.Slopes = out.Slopes(1:last_i,:);
+            else
+                out.X = [ext_out.X;out.X(1:last_i,:)];
+                out.T = [ext_out.T;ext_out.T(end)+out.T(1:last_i,:)];
+                out.SuppPos = [ext_out.SuppPos;out.SuppPos(1:last_i,:)];
+                out.Torques = [ext_out.Torques;out.Torques(1:last_i,:)];
+                out.Slopes = [ext_out.Slopes;out.Slopes(1:last_i,:)];
             end
         end
     end
