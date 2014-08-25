@@ -22,6 +22,16 @@ Gen = GA.Gen;
 NFit = GA.NFit;
 FitFcn = GA.FitFcn;
 lastTime = [0 0];
+for i=1:GA.NFit
+    ThisName = MOOGA.GetFitFcnName(GA.FitFcn{i});
+    if strfind(ThisName,'Up')
+        UpID = i;
+    end
+    if strfind(ThisName,'Down')
+        DownID = i;
+    end
+end
+
 for g = GA.Progress+1:GA.Generations
     startTime = now();
     if all(lastTime == 0)
@@ -94,7 +104,7 @@ for g = GA.Progress+1:GA.Generations
                 % Update the fitness based on the uphill (4) and
                 % downhill (5) fitness
                 thisFit(f) = 7.5*thisFit(f)*...
-                    (1-cosd(max(thisFit(4),thisFit(5))));
+                    (1-cosd(max(thisFit(UpID),thisFit(DownID))));
             end
         end        
         gFit(i,:) = thisFit;

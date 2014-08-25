@@ -313,7 +313,7 @@ classdef CompassBiped < handle & matlab.mixin.Copyable
                      CB.aalpha*cSNS       CB.M1  ];
             Minv=Minv/Mdet;
 
-            N=[CB.C1gag+CB.C2gag, CB.C2gag-CB.aalpha*sSNS*theta2t;
+            N=[CB.C1gag+CB.C2gag, -CB.C2gag-CB.aalpha*sSNS*theta2t;
                -CB.C2gag+CB.aalpha*sSNS*theta1t, CB.C2gag];
 
             G=[-(2*CB.alpha-CB.aalpha+1)*sS;
@@ -354,6 +354,9 @@ classdef CompassBiped < handle & matlab.mixin.Copyable
             Q1 = -CB.a*CB.L^2*CB.m*cSNS;
             M1d = CB.M1*CB.L^2*CB.mh;
             M2d = CB.M2*CB.L^2*CB.mh;
+            % M2d = CB.m*CB.L^2*CB.a^2+CB.I;
+            % M1d = CB.L^2*(CB.m*CB.a^2-2*CB.m*CB.a+CB.mh+2*CB.m)+CB.I;
+            
             Q=[   Q1     M2d   ;
                 Q1+M1d  Q1+M2d ];
 

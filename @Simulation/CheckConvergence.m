@@ -60,7 +60,7 @@ function [ sim ] = CheckConvergence( sim )
                 sim.minMaxDiff(2) = thisminMax(2);
                 
                 if sim.ConvProgr(1) >= sim.GNGThresh(1)
-                    if sim.doGoNoGo == 1
+                    if sim.doGoNoGo == 1 && sim.infTime == 0
                         % Extend the simulation by 2 step periods
                         sim.tend = min(sim.tend + 2/sim.Con.omega,...
                                        3*sim.Out.Tend); % Don't extend forever

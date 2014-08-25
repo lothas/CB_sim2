@@ -246,36 +246,48 @@ classdef Controller < handle & matlab.mixin.Copyable
             NC.Offset(NC.ExtPulses) = NC.Offset(NC.ExtPulses) - Overflow;
         end
         
-        function PlotTorques(NC)
-            NumSteps=1000;
-            TorqueSig=zeros(NC.NumTorques,NumSteps);
+        function PlotTorques(NC,tstep,mux)
+            if nargin<3
+                [Time,TorqueSig]=NC.GetTorqueSig();
+            else
+                [Time,TorqueSig]=NC.GetTorqueSig(tstep,mux);
+            end
 
-            Phase=linspace(0,1,NumSteps);
-            for p=1:NumSteps
-                for t=1:NC.NumTorques
-                    if Phase(p)>=NC.NOffset(t) && Phase(p)<NC.NOffset(t)+NC.NDuration(t)
-                        TorqueSig(t,p)=NC.NTorque(t);
-                    end
-                end
-            end        
-
-            plot(Phase,TorqueSig);
+            plot(Time,TorqueSig);
         end
         
-        function [Time,TorqueSig]=GetTorqueSig(NC,tstep)
-            Time=0:tstep:1/NC.omega0+tstep;
-            NumSteps=length(Time);
+        function [Time,TorqueSig]=GetTorqueSig(NC,tstep,mux)
+            % Check number of inputs to method
+            if nargin<2
+                tstep = 0.01;
+            end
+            if nargin<3
+                mux = 1;
+            end
             
-            Phase=linspace(0,1,NumSteps);
-            TorqueSig=zeros(NC.NumTorques,NumSteps);
+            % Prepare empty variables
+            Phase = (0:tstep:1)';
+            Np = length(Phase);
+            Time = Phase/NC.omega;
+            if mux
+                TorqueSig = zeros(Np,size(NC.OutM,1));
+            else
+                TorqueSig = zeros(Np,size(NC.OutM,2));
+            end
             
-            for p=1:NumSteps
-                for t=1:NC.NumTorques
-                    if Phase(p)>=NC.NOffset(t) && Phase(p)<NC.NOffset(t)+NC.NDuration(t)
-                        TorqueSig(t,p)=NC.NTorque(t);
-                    end
+            % Build torque signals
+            for p = 1:NC.nPulses
+                pStart = NC.Offset(p);
+                pEnd = pStart + NC.Duration(p);
+                if mux
+                    j = find(NC.OutM(:,p)==1,1,'first');
+                    TorqueSig(:,j) = TorqueSig(:,j) + ...
+                        NC.Amp(p)*(Phase >= pStart & Phase < pEnd);
+                else
+                    TorqueSig(:,p) = ...
+                        NC.Amp(p)*(Phase >= pStart & Phase < pEnd);
                 end
-            end        
+            end
         end
     end
 end

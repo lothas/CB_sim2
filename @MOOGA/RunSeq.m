@@ -1,7 +1,7 @@
 function RunSeq( GA, varargin )
 %RUNSEQ Runs a simulation with the selected genome
 
-tend = 'inf';
+tend = 45;
 switch nargin 
     case 2
         Generation = GA.Progress;
@@ -19,7 +19,7 @@ switch nargin
         ID = randsample(TopIDs,1);
 end
 
-% GA.FitFcn{end+1} = @GA.ZMPFit;
+% GA.FitFcn{end+1} = @MOOGA.ZMPFit;
 % GA.NFit = length(GA.FitFcn);
 
 Sim = deepcopy(GA.Sim);
@@ -44,22 +44,12 @@ Sim.Con = Sim.Con.HandleExtFB(Sim.IC(Sim.ModCo),...
 % Simulate
 Sim = Sim.Run();
 
-% Calculate eigenvalues
-if Sim.Out.Type == 5
-    [EigVal,~] = Sim.Poincare();
-    % Do some plots
-    disp(EigVal);
-else
-    disp(Sim.Out.Text);
-end
-
 % Calculate the genome's fitness
 thisFit = zeros(1,GA.NFit);
 thisOuts = cell(1,GA.NFit);
 for f = 1:GA.NFit
     % Preprocessing for ZMPFit
-    if strcmp(func2str(GA.FitFcn{f}),...
-        '@(varargin)GA.ZMPFit(varargin{:})')
+    if ~isempty(strfind(func2str(GA.FitFcn{f}),'ZMPFit'))
         % Prepare all the required vectors
         % (torques, state, etc) and put them in wSim.Out
 
@@ -72,7 +62,28 @@ for f = 1:GA.NFit
         Sim.Con.FBType = 2;
     end
     
-    [thisFit(f),thisOuts{f}] = GA.FitFcn{f}(Sim);
+    try
+        [thisFit(f),thisOuts{f}] = GA.FitFcn{f}(Sim);
+    catch
+        FuncName = MOOGA.GetFitFcnName(GA.FitFcn{f});
+        switch FuncName
+            case 'VelFit'
+                [thisFit(f),thisOuts{f}] = MOOGA.VelFit(Sim);
+            case 'NrgEffFit'
+                [thisFit(f),thisOuts{f}] = MOOGA.NrgEffFit(Sim);
+            case 'EigenFit'
+                [thisFit(f),thisOuts{f}] = MOOGA.EigenFit(Sim);
+            case 'UphillFitRun'
+                [thisFit(f),thisOuts{f}] = MOOGA.UphillFitRun(Sim);
+            case 'DownhillFitRun'
+                [thisFit(f),thisOuts{f}] = MOOGA.DownhillFitRun(Sim);
+            case 'ZMPFit'
+                [thisFit(f),thisOuts{f}] = MOOGA.ZMPFit(Sim);
+            otherwise
+                thisFit(f) = 0;
+                thisOuts{f} = [];
+        end
+    end
 end
 disp(['Genome ',num2str(ID),' results: ',num2str(thisFit)]);
 

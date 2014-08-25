@@ -190,8 +190,12 @@ classdef Simulation < handle & matlab.mixin.Copyable
             sim.Con.lastPhi = sim.Out.Slopes(1);
             
             % Maximum torque applied as a pulse
-            maxPls = max(max(abs(sim.Con.MinSat(2:end)),...
-                             abs(sim.Con.MaxSat(2:end))));
+            if ~isempty(sim.Con.MinSat)
+                maxPls = max(max(abs(sim.Con.MinSat(2:end)),...
+                                 abs(sim.Con.MaxSat(2:end))));
+            else
+                maxPls = abs(sim.Con.Amp(PushOff));
+            end
                          
             for s = 1:length(stepTime)-1
                 thisT = T(stepTime(s)+1:stepTime(s+1));

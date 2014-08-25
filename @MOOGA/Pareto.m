@@ -1,12 +1,17 @@
-function [Fronts] = Pareto(GA, Data)
+function [Fronts] = Pareto(GA, Data, Inv) %#ok<INUSL>
 %PARETO Finds Pareto fronts for multi-objective genetic algorithms
 %   The algorithm builds each front by "dropping" elements that are
 %   dominated until only dominant or weak dominant elements remain.
 %   These elements are removed from the set and the process is repeated to
 %   find a second pareto front and so forth until all elements are
-%   accounted for
+%   accounted for.
+%   When Inv = 1, domination is defined by >= instead of <=.
+%   NOTE: Data should be provided a unique ID as the last column.
 
 % Version 0.5 - 21/05/2014
+if nargin<3
+    Inv = 0;
+end
 if nargin<2
     nI = 5; nJ = 1000;
     % Run sample code
@@ -17,8 +22,8 @@ if nargin<2
         for j = 1:nJ
 %             r = 10*i+rand();
             r = randsample(2:2:10,1);
-            phi = pi*rand();
-            th = pi*rand();
+            phi = -pi/2+pi*rand();
+            th = 2*pi*rand();
             Data(nJ*(i-1)+j,:) = [...
                 r*cos(phi)*cos(th), ...
                 r*cos(phi)*sin(th), ...
@@ -28,31 +33,35 @@ if nargin<2
     Data = abs(Data);
     
     % Plot sample data before running algorithm
-    figure()
-    plot3(Data(:,1),Data(:,2),Data(:,3),'+');
+%     figure()
+%     plot3(Data(:,1),Data(:,2),Data(:,3),'+');
     
     % Save data to origx
     origx = Data;
+    
+    % Give unique ID to each sample
+    Data = [Data (1:size(Data,1))'];
 end
 
 % Round off to 3 decimal places
 % x = round(x*1000)/1000;
 
+% Sort by first objective
+if Inv
+    SortedData = sortrows(Data,1);
+else
+    SortedData = sortrows(Data,-1);
+end
+
 if size(Data,2) == 1
-    Data = sort(Data,1,'descend');
-    Fronts = num2cell(Data);
+    Fronts = num2cell(SortedData(:,end));
     return;
 end
 
 % Start separating layers
-% Give unique ID to each sample
-Data = [Data (1:size(Data,1))'];
-
 NFronts = 1;
 Fronts = {};
 out = [];
-% Sort by first objective
-SortedData = sortrows(Data,-1);
 
 while 1
     % Drop samples that are "dominated"
@@ -67,8 +76,13 @@ while 1
         j = i+1;
         
         % Find dominated values efficiently :)
-        IDs = j-1 + find(all(SortedData(j:Nd,2:end-1) <= ...
-                        repmat(SortedData(i,2:end-1),Nd-j+1,1),2)==1);
+        if Inv
+            IDs = j-1 + find(all(SortedData(j:Nd,2:end-1) >= ...
+                            repmat(SortedData(i,2:end-1),Nd-j+1,1),2)==1);
+        else
+            IDs = j-1 + find(all(SortedData(j:Nd,2:end-1) <= ...
+                            repmat(SortedData(i,2:end-1),Nd-j+1,1),2)==1);
+        end
         SortedData(IDs,:) = [];
         Nd = size(SortedData,1);
         
@@ -80,9 +94,13 @@ while 1
     out = [out; Fronts{NFronts}]; %#ok<AGROW>
     NFronts = NFronts+1;
     
-    % Restore samples to original data - samples already on fronts
-    SortedData = Data; SortedData(out,:) = [];
-    SortedData = sortrows(SortedData,-1);
+    % Restore samples to original data minus samples already on fronts
+    SortedData = Data; SortedData(ismember(SortedData(:,end),out),:) = [];
+    if Inv
+        SortedData = sortrows(SortedData,1);
+    else
+        SortedData = sortrows(SortedData,-1);
+    end
 end
 
 if nargin<2

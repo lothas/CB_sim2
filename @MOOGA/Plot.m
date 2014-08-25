@@ -16,8 +16,7 @@ switch which
                 'LineWidth',2);
             plot(Generations,FitMean,'--','Color',Colors{f},...
                 'LineWidth',2);
-            FitFcn = strsplit(func2str(GA.FitFcn{f}),{'.','('});
-            legends{f} = FitFcn{3};
+            legends{f} = MOOGA.GetFitFcnName(GA.FitFcn{f});
         end
         legend(h,legends,'Location','NorthWest');
 end

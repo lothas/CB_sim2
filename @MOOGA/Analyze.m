@@ -5,8 +5,8 @@ function [ Out ] = Analyze( GA, varargin )
 %   initial conditions, limit cycles, required torque/motor power,
 %   required ZMP, etc.
 
-MaxTries = 100;
-base_d = 0.1;
+MaxTries = 15;
+base_d = 0.5;
 
 switch nargin 
     case 2

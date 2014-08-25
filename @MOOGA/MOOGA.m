@@ -8,9 +8,20 @@ classdef MOOGA
         Generations;
         Population;
         Fittest;
+        
         WeightedPairing = 1; % Individuals have higher chances of
                              % "mating" when they belong to higher
                              % pareto fronts
+        JOAT = 1;   % "Jack of all trades"
+                    % Set to 0 uses the normal pareto front approach
+                    % Set to 1 takes the first pareto front from the
+                    %   general population and the remaining fronts from
+                    %   a quantile of the population that is fit in
+                    %   many aspects.
+                    % Set to 2 takes all fronts from the quantile of the
+                    %   population, a.k.a. "master of none".
+        Quant = 0.8;    % Drops 20% of the population that are bad at one
+                        % or more fitness aspects (for JOAT>0)
         
         % Objects
         Gen;        % Genome
@@ -81,8 +92,7 @@ classdef MOOGA
                 case 1
                     Max = cell(2,GA.NFit);
                     for f=1:GA.NFit
-                        FitStr = strsplit(func2str(GA.FitFcn{f}),{'.','('});
-                        Max{1,f} = FitStr{3};
+                        Max{1,f} = MOOGA.GetFitFcnName(GA.FitFcn{f});
                     end
                     Max(2,:) = num2cell(max(GA.Fit(:,:,GA.Progress)));
                     disp(Max)
@@ -386,6 +396,10 @@ classdef MOOGA
                    % Simulation GO
                    Slope = Slope+dSlope;
                 else
+                    % Slope = max(abs(SlSim.Out.Slopes))*58;
+                    % Add the percentage of total time it managed to walk
+                    % on the last slope before falling
+                    Slope = Slope + SlSim.Out.T(end)/40*dSlope;
                     break;
                 end
             end
@@ -398,6 +412,15 @@ classdef MOOGA
         
         function [fit,out] = DownSlopeFit(Sim)
             [fit,out] = MOOGA.SlopeFit(Sim,-1);
+        end
+        
+        function [name] = GetFitFcnName(fcn_handle)
+            fstr = strsplit(func2str(fcn_handle),{'.','('});
+            if length(fstr)==2
+                name = fstr{2};
+            else
+                name = fstr{3};
+            end
         end
     end
         

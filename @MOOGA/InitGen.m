@@ -17,6 +17,22 @@ else
 end
 
 if exist('In','var') == 1
+    % Are the same fitness functions used?
+    InNames = cell(In.GA.NFit,1);
+    ThisFitID = [];
+    InFitID = [];
+    for i = 1:In.GA.NFit
+        InNames{i} = MOOGA.GetFitFcnName(In.GA.FitFcn{i});
+    end
+    for i = 1:GA.NFit
+        ThisName = MOOGA.GetFitFcnName(GA.FitFcn{i});
+        ID = find(strcmp(ThisName,InNames),1,'first');
+        if ~isempty(ID)
+            ThisFitID = [ThisFitID,i]; %#ok<AGROW>
+            InFitID = [InFitID,ID]; %#ok<AGROW>
+        end
+    end
+    
     if In.GA.Population == GA.Population
         if GA.ReDo
             % Copy the last generation's seq. into new GA
@@ -25,8 +41,8 @@ if exist('In','var') == 1
             % Copy all the progress into new GA
             GA.Seqs(:,:,1:In.GA.Progress) = ...
                 In.GA.Seqs(:,:,1:In.GA.Progress);
-            GA.Fit(:,:,1:In.GA.Progress) = ...
-                In.GA.Fit(:,:,1:In.GA.Progress);
+            GA.Fit(:,ThisFitID,1:In.GA.Progress) = ...
+                In.GA.Fit(:,InFitID,1:In.GA.Progress);
             GA.Progress = In.GA.Progress-1;
         end
     else
@@ -36,13 +52,14 @@ if exist('In','var') == 1
 
             % Transfer top IDs to new population
             GA.Seqs(:,:,1) = In.GA.Seqs(TopIDs,:,In.GA.Progress);  
-            GA.Fit(:,:,1) = In.GA.Fit(TopIDs,:,In.GA.Progress);            
+            GA.Fit(:,ThisFitID,1) = ...
+                In.GA.Fit(TopIDs,InFitID,In.GA.Progress);            
         else
             % Copy the last generation's seq. into new GA
             GA.Seqs(1:In.GA.Population,:,1) = ...
                 In.GA.Seqs(:,:,In.GA.Progress);
-            GA.Fit(1:In.GA.Population,:,1) = ...
-                In.GA.Fit(:,:,In.GA.Progress);   
+            GA.Fit(1:In.GA.Population,ThisFitID,1) = ...
+                In.GA.Fit(:,InFitID,In.GA.Progress);   
             % Generate new random sequences
             GA.Seqs(In.GA.Population+1:end,:,1) = ...
                 GA.Gen.RandSeq(GA.Population-In.GA.Population);

@@ -33,13 +33,9 @@ function [ sim ] = Run( sim )
     
     if sim.nOuts>0
         % Save torques & slope
-%         TorquesTemp = zeros(length(TTemp),sim.nOuts);
-%         for j=1:length(TTemp)
-%             TorquesTemp(j,:) = sim.Con.NeurOutput()';
-%         end
         ThisTorques = sim.Con.NeurOutput()';
         ThisSlope = sim.Env.SurfSlope(sim.Mod.xS);
-        Torques = repmat(ThisTorques,length(TTemp),sim.nOuts);
+        Torques = repmat(ThisTorques,length(TTemp),1);
         Slopes = repmat(ThisSlope,length(TTemp),1);
     end
 
@@ -193,16 +189,9 @@ function [ sim ] = Run( sim )
             ThisTorques = sim.Con.NeurOutput()';
             ThisSlope = sim.Env.SurfSlope(sim.Mod.xS);
             Torques = [Torques; %#ok<AGROW>
-                       repmat(ThisTorques,length(TTemp),sim.nOuts)];
+                       repmat(ThisTorques,length(TTemp),1)];
             Slopes = [Slopes; %#ok<AGROW>
                       repmat(ThisSlope,length(TTemp),1)];
-        
-%             % Save torques
-%             TorquesTemp = zeros(length(TTemp),sim.nOuts);
-%             for j=1:length(TTemp)
-%                 TorquesTemp(j,:) = sim.Con.NeurOutput()';
-%             end
-%             Torques = [Torques; TorquesTemp]; %#ok<AGROW>
         end
     end
     

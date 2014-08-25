@@ -11,15 +11,15 @@ function [  ] = GAfine(  )
 % GA.Progress = 1;
 % save('GA_combined_in','GA');
 
-GA = MOOGA(30,10000);
-GA.Fittest = [1900,1900,200];
-% GA = MOOGA(50,1500);
-% GA.Fittest = [250,250,10];
+% GA = MOOGA(30,10000);
+% GA.Fittest = [1900,1900,200];
+GA = MOOGA(50,3000);
+GA.Fittest = [600,600,10];
 % GA.FileIn = 'GA_combined_in.mat';
-GA.FileIn = 'GA_08_02_22_10.mat';
-% GA.FileOut = GA.FileIn;
+GA.FileIn = 'GA_08_04_15_34.mat';
+GA.FileOut = GA.FileIn;
 
-GA.FileOut = ['GA_',datestr(now,'mm_dd_hh_MM'),'.mat'];
+% GA.FileOut = ['GA_',datestr(now,'mm_dd_hh_MM'),'.mat'];
 GA.Graphics = 0;
 
 % GA.ReDo = 1;
@@ -91,12 +91,15 @@ GA.Sim.Con = GA.Sim.Con.HandleEvent(1, GA.Sim.IC(GA.Sim.ConCo));
 %                                           GA.Sim.IC(GA.Sim.ConCo));
                                 
 % Fitness functions
-GA.FitFcn = {@GA.VelFit;
-             @GA.NrgEffFit;
-             @GA.EigenFit;
-             @GA.UpSlopeFit; % @GA.UphillFitRun;
-             @GA.DownSlopeFit; % @GA.DownhillFitRun};
-             @GA.ZMPFit};
+% GA.FitFcn = {@GA.VelFit;
+%              @GA.NrgEffFit;
+%              @GA.EigenFit;
+%              @GA.UpSlopeFit; % @GA.UphillFitRun;
+%              @GA.DownSlopeFit; % @GA.DownhillFitRun};
+%              @GA.ZMPFit};
+GA.FitFcn = {@MOOGA.UpSlopeFit; % @GA.UphillFitRun;
+             @MOOGA.DownSlopeFit; % @GA.DownhillFitRun};
+             @MOOGA.ZMPFit};
 GA.NFit = length(GA.FitFcn);
 GA.Sim.PMFull = 1; % Run poincare map on all 5 coords
 
