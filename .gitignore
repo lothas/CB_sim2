@@ -8,6 +8,8 @@ Old Sims/*
 #################
 *.asv
 Test*.mat
+GA*.mat
+Gen*.mat
 
 #################
 ## Eclipse

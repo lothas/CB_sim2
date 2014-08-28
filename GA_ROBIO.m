@@ -3,7 +3,7 @@ function [  ] = GA_ROBIO(  )
 % paper.
 % close all; clear all; clear classes;
 
-GA = MOOGA(35,1600);
+GA = MOOGA(25,2000);
 % GA = MOOGA(10,100);
 GA.Fittest = [300,300,10];
 GA.JOAT = 2; GA.Quant = 0.6;
@@ -32,8 +32,8 @@ Range = {0.7, 0.55, [-MaxAnkleT, 0, 0.01], [-MaxHipT, 0, 0.01],...
     -3, -3, TorqueFBMin, TorqueFBMin; % Min
          1.5, 0.85, [MaxAnkleT, 0.99, 0.99], [MaxHipT, 0.99, 0.99],...
     3,  3, TorqueFBMax, TorqueFBMax}; % Max
-MutDelta0 = 0.1;
-MutDelta1 = 0.01;
+MutDelta0 = 0.03;
+MutDelta1 = 0.003;
 
 GA.Gen = Genome(Keys, Range);
 KeyLength = GA.Gen.KeyLength;
@@ -98,7 +98,8 @@ GA.Seqs(1,:,1) = [1.106, 0.65, 13.626, 0, 0.1, -4.628, 0, 0.4, 0, 0, 0.4,...
 %         GA.Gen.Range = Range;
         
         % Reduce mutation range
-        j = min(GA.Progress,30)/30;
+%         j = min(GA.Progress,30)/30;
+        j = GA.Progress/GA.Generations;
         GA.Gen.MutDelta = (1-j)*MutDelta0 + MutDelta1*j;
     end
 GA.GenerationFcn = @GenFcn;

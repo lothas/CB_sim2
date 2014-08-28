@@ -140,6 +140,26 @@ while 1
     end
 end
 
+% Sort data
+Data = Out;
+LastUp = find(diff(Data.Slopes)<0,1,'first');
+NSlopes = length(Data.Slopes);
+Fields = fieldnames(Data);
+for f = 1:length(Fields)
+    [r,c] = size(Data.(Fields{f}));
+    if c == NSlopes
+        Data.(Fields{f}) = [fliplr(Data.(Fields{f})(:,LastUp+1:end)),...
+                            Data.(Fields{f})(:,1:LastUp)];
+    else
+        if r == NSlopes
+            Data.(Fields{f}) = [flipud(Data.(Fields{f})(LastUp+1:end,:));...
+                                Data.(Fields{f})(1:LastUp,:)];
+        else
+            disp('Error: wrong number of data points');
+        end
+    end
+end
+
     function sim = WalkOnSlope(sim_in, Data, start_s, end_s)
         sim = deepcopy(sim_in);
         fprintf('Processing data on %.2f degrees slope',end_s);

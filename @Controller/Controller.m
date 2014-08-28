@@ -256,17 +256,17 @@ classdef Controller < handle & matlab.mixin.Copyable
             plot(Time,TorqueSig);
         end
         
-        function [Time,TorqueSig]=GetTorqueSig(NC,tstep,mux)
+        function [Time,TorqueSig]=GetTorqueSig(NC,pstep,mux)
             % Check number of inputs to method
             if nargin<2
-                tstep = 0.01;
+                pstep = 0.01;
             end
             if nargin<3
                 mux = 1;
             end
             
             % Prepare empty variables
-            Phase = (0:tstep:1)';
+            Phase = (0:pstep:1)';
             Np = length(Phase);
             Time = Phase/NC.omega;
             if mux
@@ -289,5 +289,25 @@ classdef Controller < handle & matlab.mixin.Copyable
                 end
             end
         end
+        
+        function diffs = CompareSigs(NC,NC2,pstep)
+            if nargin<3
+                pstep = 0.001;
+            end
+            [thisT,thisSig]=NC.GetTorqueSig(pstep,1);
+            [~,otherSig]=NC2.GetTorqueSig(pstep,1);
+            
+            diffs = zeros(1,size(thisSig,2));
+            try
+                dSig = abs(thisSig-otherSig);
+                for p = 1:size(thisSig,2)
+                    diffs(p) = trapz(thisT,dSig(:,p));
+                end
+            catch err
+                diffs = diffs + 1e3;
+                disp(['Error comparing signals: ',err]);
+            end
+        end
+            
     end
 end

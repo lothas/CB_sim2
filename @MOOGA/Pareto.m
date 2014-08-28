@@ -1,4 +1,4 @@
-function [Fronts] = Pareto(GA, Data, Inv) %#ok<INUSL>
+function [Fronts] = Pareto(GA, Data, Inv, NFrontsReq) %#ok<INUSL>
 %PARETO Finds Pareto fronts for multi-objective genetic algorithms
 %   The algorithm builds each front by "dropping" elements that are
 %   dominated until only dominant or weak dominant elements remain.
@@ -8,10 +8,15 @@ function [Fronts] = Pareto(GA, Data, Inv) %#ok<INUSL>
 %   When Inv = 1, domination is defined by >= instead of <=.
 %   NOTE: Data should be provided a unique ID as the last column.
 
-% Version 0.5 - 21/05/2014
+% Version 1.1 - 28/08/2014
+if nargin<4
+    NFrontsReq = [];
+end
+
 if nargin<3
     Inv = 0;
 end
+
 if nargin<2
     nI = 5; nJ = 1000;
     % Run sample code
@@ -93,6 +98,10 @@ while 1
     Fronts{NFronts} = SortedData(:,end); %#ok<AGROW>
     out = [out; Fronts{NFronts}]; %#ok<AGROW>
     NFronts = NFronts+1;
+    
+    if ~isempty(NFrontsReq) && NFronts>NFrontsReq
+        break;
+    end
     
     % Restore samples to original data minus samples already on fronts
     SortedData = Data; SortedData(ismember(SortedData(:,end),out),:) = [];
