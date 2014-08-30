@@ -38,8 +38,8 @@ Sim = Sim.Init();
 Sim.Mod.LegShift = Sim.Mod.Clearance;
 Sim.Con = Sim.Con.HandleEvent(1, Sim.IC(Sim.ConCo));
 Sim.Con.FBType = 0;
-Sim.Con = Sim.Con.HandleExtFB(Sim.IC(Sim.ModCo),...
-                Sim.IC(Sim.ConCo),Sim.Env.SurfSlope(Sim.Mod.xS));
+% Sim.Con = Sim.Con.HandleExtFB(Sim.IC(Sim.ModCo),...
+%                 Sim.IC(Sim.ConCo),Sim.Env.SurfSlope(Sim.Mod.xS));
 
 % Simulate
 Sim = Sim.Run();

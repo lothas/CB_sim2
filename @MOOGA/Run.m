@@ -61,6 +61,7 @@ for g = GA.Progress+1:GA.Generations
         wSim = deepcopy(Sim);
         wSim = Gen.Decode(wSim,gSeqs(i,:)); %#ok<PFBNS>
         wSim = wSim.Init();
+        wSim.Con = wSim.Con.HandleEvent(1, wSim.IC(wSim.ConCo));
         
         % Run the simulation
         wSim = wSim.Run();

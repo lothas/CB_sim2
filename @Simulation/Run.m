@@ -161,6 +161,13 @@ function [ sim ] = Run( sim )
             break;
         end
 
+        % Check for runaway events
+        if any(abs(sim.IC(sim.ModCo(1:2)))>2*pi/3)
+            % Leg angles are above 120 degrees 
+            sim.StopSim = 1;
+            break;
+        end
+        
         % Continue simulation
         tspan = TTemp(end):sim.tstep:sim.tend;
         if length(tspan)<2

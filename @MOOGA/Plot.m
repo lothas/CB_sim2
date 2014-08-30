@@ -11,10 +11,12 @@ switch which
         legends = cell(1,GA.NFit);
         for f = 1:GA.NFit
             FitInd = GA.FitFcn{f,1};
-            FitMax = reshape(max(GA.Fit(:,FitInd,:)),1,[]);
-            FitMean = reshape(mean(GA.Fit(:,FitInd,:)),1,[]);
-            h(f) = plot(Generations,FitMax,'Color',Colors{f},...
+            LF = length(FitInd);
+            FitMax = reshape(max(GA.Fit(:,FitInd,:)),LF,[]);
+            FitMean = reshape(mean(GA.Fit(:,FitInd,:)),LF,[]);
+            Thish = plot(Generations,FitMax,'Color',Colors{f},...
                 'LineWidth',2);
+            h(f) = Thish(1);
             plot(Generations,FitMean,'--','Color',Colors{f},...
                 'LineWidth',2);
             legends{f} = MOOGA.GetFitFcnName(GA.FitFcn{f,2});

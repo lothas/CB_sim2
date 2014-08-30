@@ -91,11 +91,13 @@ classdef MOOGA
         function varargaout = Find(GA,varargin)
             switch nargin
                 case 1
-                    Max = cell(2,GA.NFit);
+                    Max = cell(2,max(cell2mat(GA.FitFcn(:,1)')));
                     for f=1:GA.NFit
-                        Max{1,f} = MOOGA.GetFitFcnName(GA.FitFcn{f,2});
-                        fID = GA.FitFcn{f,1};
-                        Max(2,f) = num2cell(max(GA.Fit(:,fID,GA.Progress)));
+                        FitInd = GA.FitFcn{f,1};
+                        Max{1,FitInd(1)} = ...
+                            MOOGA.GetFitFcnName(GA.FitFcn{f,2});
+                        Max(2,FitInd) = ...
+                            num2cell(max(GA.Fit(:,FitInd,GA.Progress)));
                     end
                     disp(Max)
                     return
@@ -358,7 +360,7 @@ classdef MOOGA
                 ZMPback = min(ZMP);
                 % Max foot size
                 MaxFront = 0.4; % 40cm (ankle to toes)
-                MaxBack = 0.1; % 10cm (ankle to heel)
+                MaxBack = 0.2; % 10cm (ankle to heel)
                 if abs(ZMPfront)/MaxFront>abs(ZMPback)/MaxBack
                     fit = max(1-abs(ZMPfront)/MaxFront,0);
                 else

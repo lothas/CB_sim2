@@ -108,16 +108,16 @@ switch Method
             end
         end
         
-        if groupsd == 0
-            % IDs with all zero values are already too many
-            % We'll duplicate the good result IDs
-            GoodIDs = cell2mat(IDabove(2:end));
-            rep = floor(DesOut/length(GoodIDs));
-            IDs = repmat(GoodIDs,rep,1);
-            IDs = [IDs; randsample(GoodIDs,DesOut-length(IDs))];
-            qData = Data(IDs,:);
-            return
-        end
+%         if groupsd == 0
+%             % IDs with all zero values are already too many
+%             % We'll duplicate the good result IDs
+%             GoodIDs = cell2mat(IDabove(2:end));
+%             rep = floor(DesOut/length(GoodIDs));
+%             IDs = repmat(GoodIDs,rep,1);
+%             IDs = [IDs; randsample(GoodIDs,DesOut-length(IDs))];
+%             qData = Data(IDs,:);
+%             return
+%         end
             
         % Delete IDs with too many zero values, but save the "best" ones
         qData = Data;
