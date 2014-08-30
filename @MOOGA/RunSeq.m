@@ -45,11 +45,11 @@ Sim.Con = Sim.Con.HandleExtFB(Sim.IC(Sim.ModCo),...
 Sim = Sim.Run();
 
 % Calculate the genome's fitness
-thisFit = zeros(1,GA.NFit);
+thisFit = zeros(1,max(cell2mat(GA.FitFcn(:,1)')));
 thisOuts = cell(1,GA.NFit);
 for f = 1:GA.NFit
     % Preprocessing for ZMPFit
-    if ~isempty(strfind(func2str(GA.FitFcn{f}),'ZMPFit'))
+    if ~isempty(strfind(func2str(GA.FitFcn{f,2}),'ZMPFit'))
         % Prepare all the required vectors
         % (torques, state, etc) and put them in wSim.Out
 
@@ -62,25 +62,26 @@ for f = 1:GA.NFit
         Sim.Con.FBType = 2;
     end
     
+    FitInd = GA.FitFcn{f,1};
     try
-        [thisFit(f),thisOuts{f}] = GA.FitFcn{f}(Sim);
+        [thisFit(FitInd),thisOuts{f}] = GA.FitFcn{f,2}(Sim);
     catch
-        FuncName = MOOGA.GetFitFcnName(GA.FitFcn{f});
+        FuncName = MOOGA.GetFitFcnName(GA.FitFcn{f,2});
         switch FuncName
             case 'VelFit'
-                [thisFit(f),thisOuts{f}] = MOOGA.VelFit(Sim);
+                [thisFit(FitInd),thisOuts{f}] = MOOGA.VelFit(Sim);
             case 'NrgEffFit'
-                [thisFit(f),thisOuts{f}] = MOOGA.NrgEffFit(Sim);
+                [thisFit(FitInd),thisOuts{f}] = MOOGA.NrgEffFit(Sim);
             case 'EigenFit'
-                [thisFit(f),thisOuts{f}] = MOOGA.EigenFit(Sim);
+                [thisFit(FitInd),thisOuts{f}] = MOOGA.EigenFit(Sim);
             case 'UphillFitRun'
-                [thisFit(f),thisOuts{f}] = MOOGA.UphillFitRun(Sim);
+                [thisFit(FitInd),thisOuts{f}] = MOOGA.UphillFitRun(Sim);
             case 'DownhillFitRun'
-                [thisFit(f),thisOuts{f}] = MOOGA.DownhillFitRun(Sim);
+                [thisFit(FitInd),thisOuts{f}] = MOOGA.DownhillFitRun(Sim);
             case 'ZMPFit'
-                [thisFit(f),thisOuts{f}] = MOOGA.ZMPFit(Sim);
+                [thisFit(FitInd),thisOuts{f}] = MOOGA.ZMPFit(Sim);
             otherwise
-                thisFit(f) = 0;
+                thisFit(FitInd) = 0;
                 thisOuts{f} = [];
         end
     end

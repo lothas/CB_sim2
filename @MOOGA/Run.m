@@ -20,15 +20,16 @@ end
 Sim = GA.Sim;
 Gen = GA.Gen;
 NFit = GA.NFit;
-FitFcn = GA.FitFcn;
+FitInd = GA.FitFcn(:,1); % Index for fit functions
+FitFcn = GA.FitFcn(:,2); % Handles for fit functions
 lastTime = [0 0];
 for i=1:GA.NFit
-    ThisName = MOOGA.GetFitFcnName(GA.FitFcn{i});
+    ThisName = MOOGA.GetFitFcnName(FitFcn{i});
     if strfind(ThisName,'Up')
-        UpID = i;
+        UpID = FitInd{i};
     end
     if strfind(ThisName,'Down')
-        DownID = i;
+        DownID = FitInd{i};
     end
 end
 
@@ -65,7 +66,7 @@ for g = GA.Progress+1:GA.Generations
         wSim = wSim.Run();
         
         % Calculate the genome's fitness
-        thisFit = zeros(1,NFit);
+        thisFit = zeros(1,max(cell2mat(FitInd')));
         thisOuts = cell(1,NFit);
         for f = 1:NFit
             % Preprocessing for ZMPFit
@@ -83,18 +84,18 @@ for g = GA.Progress+1:GA.Generations
             end
             
             % Call the fitness function
-            [thisFit(f),thisOuts{f}] = FitFcn{f}(wSim);
+            [thisFit(FitInd{f}),thisOuts{f}] = FitFcn{f}(wSim);
             
             % Postprocessing for VelFit
             if ~isempty(strfind(func2str(FitFcn{f}),'VelFit'))
                 % Switch direction if the model walks backwards
-                if thisFit(f)<0
+                if thisFit(FitInd{f})<0
                     revSeq = Gen.SwitchDir(gSeqs(i,:));
                     [Res,revSeq] = Gen.CheckGenome(revSeq);
                     
                     if Res{1}
                         gSeqs(i,:) = revSeq;
-                        thisFit(f) = -thisFit(f);
+                        thisFit(FitInd{f}) = -thisFit(FitInd{f});
                     end
                 end                    
             end
@@ -103,7 +104,7 @@ for g = GA.Progress+1:GA.Generations
             if ~isempty(strfind(func2str(FitFcn{f}),'ZMPFit'))
                 % Update the fitness based on the uphill (4) and
                 % downhill (5) fitness
-                thisFit(f) = 7.5*thisFit(f)*...
+                thisFit(FitInd{f}) = 7.5*thisFit(FitInd{f})*...
                     (1-cosd(max(thisFit(UpID),thisFit(DownID))));
             end
         end        

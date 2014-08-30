@@ -10,13 +10,14 @@ switch which
         h = zeros(1,GA.NFit);
         legends = cell(1,GA.NFit);
         for f = 1:GA.NFit
-            FitMax = reshape(max(GA.Fit(:,f,:)),1,[]);
-            FitMean = reshape(mean(GA.Fit(:,f,:)),1,[]);
+            FitInd = GA.FitFcn{f,1};
+            FitMax = reshape(max(GA.Fit(:,FitInd,:)),1,[]);
+            FitMean = reshape(mean(GA.Fit(:,FitInd,:)),1,[]);
             h(f) = plot(Generations,FitMax,'Color',Colors{f},...
                 'LineWidth',2);
             plot(Generations,FitMean,'--','Color',Colors{f},...
                 'LineWidth',2);
-            legends{f} = MOOGA.GetFitFcnName(GA.FitFcn{f});
+            legends{f} = MOOGA.GetFitFcnName(GA.FitFcn{f,2});
         end
         legend(h,legends,'Location','NorthWest');
 end

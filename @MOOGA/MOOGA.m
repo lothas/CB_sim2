@@ -43,6 +43,7 @@ classdef MOOGA
         % Fitness functions
         NFit;
         FitFcn;     % Fitness functions handles
+        FitIDs;     % Which values to use from within Fit
         
         % External function (called at the end of every generation)
         GenerationFcn;
@@ -92,9 +93,10 @@ classdef MOOGA
                 case 1
                     Max = cell(2,GA.NFit);
                     for f=1:GA.NFit
-                        Max{1,f} = MOOGA.GetFitFcnName(GA.FitFcn{f});
+                        Max{1,f} = MOOGA.GetFitFcnName(GA.FitFcn{f,2});
+                        fID = GA.FitFcn{f,1};
+                        Max(2,f) = num2cell(max(GA.Fit(:,fID,GA.Progress)));
                     end
-                    Max(2,:) = num2cell(max(GA.Fit(:,:,GA.Progress)));
                     disp(Max)
                     return
                 case 2
@@ -387,9 +389,14 @@ classdef MOOGA
             out = [];
             while 1
                 SlSim = SlSim.WalkOnSlope(Slope,Slope+dSlope,Leadway,40);
-                % Save part of the output
-                i = find(dir*SlSim.Out.Slopes*58>=dir*(Slope+dSlope),...
-                    1,'first');
+                if Slope~=0
+                    % Save part of the output
+                    i = find(dir*SlSim.Out.Slopes*58>=dir*(Slope+dSlope),...
+                        1,'first');
+                else
+                    % Save the whole output
+                    i = length(SlSim.Out.Slopes);
+                end
                 out = SlSim.JoinOuts(out,i);
                 
                 if SlSim.Out.Type == 6
@@ -412,6 +419,26 @@ classdef MOOGA
         
         function [fit,out] = DownSlopeFit(Sim)
             [fit,out] = MOOGA.SlopeFit(Sim,-1);
+        end
+        
+        function [fit,out] = UDZMPFit(Sim,dir)
+            % Calls the up/down fitness function and then calculates the
+            % ZMP of that run
+            [Slope,out] = MOOGA.SlopeFit(Sim,dir);
+            
+            ZMPSim = deepcopy(Sim);
+            ZMPSim.Out = out;
+            [ZMP,~] = MOOGA.ZMPFit(ZMPSim);
+            
+            fit = [50*ZMP*(1-cosd(Slope)), Slope, ZMP];
+        end
+        
+        function [fit,out] = ZMPUpFit(Sim)
+            [fit,out] = MOOGA.UDZMPFit(Sim,1);
+        end
+        
+        function [fit,out] = ZMPDownFit(Sim)
+            [fit,out] = MOOGA.UDZMPFit(Sim,-1);
         end
         
         function [name] = GetFitFcnName(fcn_handle)

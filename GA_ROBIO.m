@@ -8,7 +8,7 @@ GA = MOOGA(25,2000);
 GA.Fittest = [300,300,10];
 GA.JOAT = 2; GA.Quant = 0.6;
 % GA.Fittest = [20,20,1];
-% GA.FileIn = 'GA_08_04_15_34.mat';
+% GA.FileIn = 'GA_08_28_17_25.mat';
 % GA.FileOut = GA.FileIn;
 
 GA.FileOut = ['GA_',datestr(now,'mm_dd_hh_MM'),'.mat'];
@@ -33,7 +33,7 @@ Range = {0.7, 0.55, [-MaxAnkleT, 0, 0.01], [-MaxHipT, 0, 0.01],...
          1.5, 0.85, [MaxAnkleT, 0.99, 0.99], [MaxHipT, 0.99, 0.99],...
     3,  3, TorqueFBMax, TorqueFBMax}; % Max
 MutDelta0 = 0.03;
-MutDelta1 = 0.003;
+MutDelta1 = 0.01;
 
 GA.Gen = Genome(Keys, Range);
 KeyLength = GA.Gen.KeyLength;
@@ -60,7 +60,7 @@ GA.Sim.Con.MinSat = [-MaxAnkleT*ones(1,NAnkleT),-MaxHipT*ones(1,NHipT)];
 GA.Sim.Con.MaxSat = [MaxAnkleT*ones(1,NAnkleT),MaxHipT*ones(1,NHipT)];
 
 % Simulation parameters
-GA.Sim.IC = [start_slope, start_slope, 0, 0, 0.8];
+GA.Sim.IC = [start_slope, start_slope, 0, 0, 0.0];
 GA.Sim = GA.Sim.SetTime(0,0.15,40);
 
 % Some more simulation initialization
@@ -70,16 +70,19 @@ GA.Sim.Mod.LegShift = GA.Sim.Mod.Clearance;
 %                                           GA.Sim.IC(GA.Sim.ConCo));
                                 
 % Fitness functions
-GA.FitFcn = {@GA.VelFit;
-             @GA.NrgEffFit;
-             @GA.EigenFit;
-             @GA.UpSlopeFit; % @GA.UphillFitRun;
-             @GA.DownSlopeFit; % @GA.DownhillFitRun};
-             @GA.ZMPFit};
+GA.FitFcn = {1, @MOOGA.VelFit;
+             2, @MOOGA.NrgEffFit;
+             %@MOOGA.EigenFit;
+             3:5, @MOOGA.ZMPUpFit;
+             6:8, @MOOGA.ZMPDownFit};
+%              @GA.UpSlopeFit; % @GA.UphillFitRun;
+%              @GA.DownSlopeFit; % @GA.DownhillFitRun};
+%              @GA.ZMPFit};
 % GA.FitFcn = {@MOOGA.UpSlopeFit; % @GA.UphillFitRun;
 %              @MOOGA.DownSlopeFit; % @GA.DownhillFitRun};
 %              @MOOGA.ZMPFit};
-GA.NFit = length(GA.FitFcn);
+GA.FitIDs = [1,2,3,6];
+GA.NFit = size(GA.FitFcn,1);
 GA.Sim.PMFull = 1; % Run poincare map on all 5 coords
 
 GA = GA.InitGen();
