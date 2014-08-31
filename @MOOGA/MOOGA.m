@@ -113,7 +113,7 @@ classdef MOOGA
             if R>1
                 % Only some conditions provided as pairs:
                 % [Fitness number, Minimum required]
-                Reqs = zeros(GA.NFit,1);
+                Reqs = zeros(max(cell2mat(GA.FitFcn(:,1)')),1);
                 for r = 1:R
                     Reqs(varargin{1}(r,1)) = varargin{1}(r,2);
                 end
@@ -126,7 +126,7 @@ classdef MOOGA
 
             % Find results that fit the requirements
             Conds = ones(GA.Population,1);
-            for f = 1:GA.NFit
+            for f = 1:max(cell2mat(GA.FitFcn(:,1)'))
                 Conds = Conds & ...
                     GA.Fit(:,f,Gnrtn)>=Reqs(f);
             end
@@ -362,13 +362,16 @@ classdef MOOGA
                 MaxFront = 0.4; % 40cm (ankle to toes)
                 MaxBack = 0.2; % 10cm (ankle to heel)
                 if abs(ZMPfront)/MaxFront>abs(ZMPback)/MaxBack
-                    fit = max(1-abs(ZMPfront)/MaxFront,0);
+                    Max = MaxFront;
+                    ZMP = abs(ZMPfront);
                 else
-                    fit = max(1-abs(ZMPback)/MaxBack,0);
+                    Max = MaxBack;
+                    ZMP = abs(ZMPback);
                 end
-                % Make the fitness function nonlinear
-                % so going to 0 won't be so important
-%                 fit = cos(pi/2*(1-fit)^2)^2;
+                % Make the fitness function nonlinear:
+                % Grade changes slowly around 0, fast around Max
+                % Max grade is 2 at 0, 1 at Max, goes to 0 in infinity.
+                fit = 2./(1+(ZMP/Max).^3);
                 out = [];
             end
         end
