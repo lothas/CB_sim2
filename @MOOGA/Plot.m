@@ -19,7 +19,7 @@ switch which
             if MaxMax>1
                 % Normalize values larger than 1
                 maxID = find(FitMax==MaxMax,1,'first');
-                row = mod(maxID,size(FitMax,1));
+                row = 1+mod(maxID,size(FitMax,1));
                 col = ceil(maxID/size(FitMax,1));
                 FitMax(row,:) = FitMax(row,:)/MaxMax;
             end

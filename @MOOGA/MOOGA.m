@@ -88,6 +88,12 @@ classdef MOOGA
             end            
         end
         
+        function GA = SetFittest(GA,Top,MutTop,NewRnd)
+            GA.Fittest = [floor(Top/100*GA.Population),...
+                          floor(MutTop/100*GA.Population),...
+                          floor(NewRnd/100*GA.Population)];
+        end
+        
         function varargaout = Find(GA,varargin)
             switch nargin
                 case 1

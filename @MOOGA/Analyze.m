@@ -6,7 +6,7 @@ function [ Out ] = Analyze( GA, varargin )
 %   required ZMP, etc.
 
 MaxTries = 15;
-base_d = 0.5;
+base_d = 0.1;
 
 switch nargin 
     case 2
@@ -159,6 +159,8 @@ for f = 1:length(Fields)
         end
     end
 end
+save(Filename,'Data');
+
 
     function sim = WalkOnSlope(sim_in, Data, start_s, end_s)
         sim = deepcopy(sim_in);

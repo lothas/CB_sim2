@@ -102,12 +102,12 @@ for g = GA.Progress+1:GA.Generations
             end
             
             % Postprocesing for ZMPFit
-            if ~isempty(strfind(func2str(FitFcn{f}),'ZMPFit'))
-                % Update the fitness based on the uphill (4) and
-                % downhill (5) fitness
-                thisFit(FitInd{f}) = 7.5*thisFit(FitInd{f})*...
-                    (1-cosd(max(thisFit(UpID),thisFit(DownID))));
-            end
+%             if ~isempty(strfind(func2str(FitFcn{f}),'ZMPFit'))
+%                 % Update the fitness based on the uphill (4) and
+%                 % downhill (5) fitness
+%                 thisFit(FitInd{f}) = 7.5*thisFit(FitInd{f})*...
+%                     (1-cosd(max(thisFit(UpID),thisFit(DownID))));
+%             end
         end        
         gFit(i,:) = thisFit;
     end

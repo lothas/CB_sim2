@@ -1,4 +1,4 @@
-function [  ] = GA_ROBIO(  )
+function [  ] = GA_Flat(  )
 % Run MOOGA to fine tune the hand tuned controller used in the ROBIO/TRO
 % paper.
 % close all; clear all; clear classes;
@@ -8,10 +8,10 @@ GA = MOOGA(50,1000);
 GA = GA.SetFittest(20,20,0.5);
 GA.JOAT = 2; GA.Quant = 0.6;
 % GA.Fittest = [20,20,1];
-GA.FileIn = 'GA_08_31_21_52.mat';
-GA.FileOut = GA.FileIn;
+GA.FileIn = 'GA_09_05_11_08.mat';
+% GA.FileOut = GA.FileIn;
 
-% GA.FileOut = ['GA_',datestr(now,'mm_dd_hh_MM'),'.mat'];
+GA.FileOut = ['GA_',datestr(now,'mm_dd_hh_MM'),'.mat'];
 GA.Graphics = 1;
 
 % GA.ReDo = 1;
@@ -22,24 +22,14 @@ NAnkleT = 3;
 NHipT = 3;
 MaxAnkleT = 150;
 MaxHipT = 150;
-TorqueFBMin = [-1000*ones(1,NAnkleT),-1000*ones(1,NHipT)];
-TorqueFBMax = -TorqueFBMin;
-Keys = {'omega0','P_LegE',    'Pulses',    'Pulses',...
-    'kOmega_u','kOmega_d','kTorques_u','kTorques_d';...
-               1,       1, [NAnkleT,1],   [NHipT,2],...
-             1,         1,           1,           1};
-Range = {0.7, 0.55, [-MaxAnkleT, 0, 0.01], [-MaxHipT, 0, 0.01],...
-    -3, -3, TorqueFBMin, TorqueFBMin; % Min
-         1.5, 0.85, [MaxAnkleT, 0.99, 0.99], [MaxHipT, 0.99, 0.99],...
-    3,  3, TorqueFBMax, TorqueFBMax}; % Max
+Keys = {'omega0','P_LegE',    'Pulses',    'Pulses';...
+               1,       1, [NAnkleT,1],   [NHipT,2]};
+Range = {0.7, 0.55, [-MaxAnkleT, 0, 0.01], [-MaxHipT, 0, 0.01]; % Min
+         1.5, 0.85, [MaxAnkleT, 0.99, 0.99], [MaxHipT, 0.99, 0.99]}; % Max
 MutDelta0 = 0.03;
 MutDelta1 = 0.01;
 
 GA.Gen = Genome(Keys, Range);
-KeyLength = GA.Gen.KeyLength;
-KeyLength.kTorques_u = length(TorqueFBMin);
-KeyLength.kTorques_d = length(TorqueFBMin);
-GA.Gen = Genome(Keys, KeyLength, Range);
 
 % Set up the simulations
 GA.Sim = Simulation();
@@ -47,7 +37,7 @@ GA.Sim.Graphics = GA.Graphics;
 GA.Sim.EndCond = 2; % Run until converge (or fall)
 
 % Set up the compass biped model
-GA.Sim.Mod = GA.Sim.Mod.Set('damp',0.3);
+GA.Sim.Mod = GA.Sim.Mod.Set('damp',0,'I',0);
 
 % Set up the terrain
 start_slope = 0;
@@ -72,16 +62,15 @@ GA.Sim.Mod.LegShift = GA.Sim.Mod.Clearance;
 % Fitness functions
 GA.FitFcn = {1, @MOOGA.VelFit;
              2, @MOOGA.NrgEffFit;
-             %@MOOGA.EigenFit;
-             3:5, @MOOGA.ZMPUpFit;
-             6:8, @MOOGA.ZMPDownFit};
+             3, @MOOGA.EigenFit;
+             4, @MOOGA.ZMPFit};
 %              @GA.UpSlopeFit; % @GA.UphillFitRun;
 %              @GA.DownSlopeFit; % @GA.DownhillFitRun};
 %              @GA.ZMPFit};
 % GA.FitFcn = {@MOOGA.UpSlopeFit; % @GA.UphillFitRun;
 %              @MOOGA.DownSlopeFit; % @GA.DownhillFitRun};
 %              @MOOGA.ZMPFit};
-GA.FitIDs = [1,2,3,6];
+GA.FitIDs = [1,2,3,4];
 GA.NFit = size(GA.FitFcn,1);
 GA.Sim.PMFull = 1; % Run poincare map on all 5 coords
 

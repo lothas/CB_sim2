@@ -32,13 +32,13 @@ classdef Simulation < handle & matlab.mixin.Copyable
         CurSpeed; StepsTaken; Steps2Slope;
         MaxSlope; MinSlope;
         ICstore; nICsStored = 10;
-        minDiff = 8e-7; % Min. difference for LC convergence
+        minDiff = 1e-7; % Min. difference for LC convergence
         stepsReq = 15; % Steps of minDiff required for convergence
         stepsSS; % Steps taken since minDiff
         
         % Poincare map calculation parameters
         IClimCyc; Period;
-        PMeps = 1e-4; PMFull = 0;
+        PMeps = 1e-5; PMFull = 0;
         PMeigs; PMeigVs;
         % Check convergence progression
         doGoNoGo = 1; % 0 - OFF, 1 - Extend, 2 - Cut
@@ -48,6 +48,7 @@ classdef Simulation < handle & matlab.mixin.Copyable
                 
         % Rendering params
         Graphics = 1;
+        TimeTic = 0; RSkip = 0;
         Fig = 0; Once = 1; StopSim;
         FigWidth; FigHeight; AR;
         % Environment display
@@ -114,23 +115,39 @@ classdef Simulation < handle & matlab.mixin.Copyable
             sim.EndCond = value;
         end
         
-        function sim = SetTime(sim,tstart,tstep,tend)
+        function sim = SetTime(sim,varargin)
             if nargin~=4
+                if nargin == 3
+                    sim.tstart = varargin{1};
+                    sim.tstep = 0.0111;
+                    if isnumeric(varargin{2})
+                        sim.tend = varargin{2};
+                        sim.infTime = 0;
+                    else
+                        if strcmp(varargin{3},'inf')
+                            % Simulation will run for indefinite time
+                            sim.infTime = 1;
+                            sim.tend = 10;
+                        end
+                    end
+                    sim.Out.Tend = sim.tend;
+                    return
+                end
                 error(['Set time expects 3 input arguments',...
                     ' but was provided with ',num2str(nargin)]);
             end
-            sim.tstart = tstart;
-            sim.tstep_normal = tstep;
-            sim.tstep = tstep;
-            if isnumeric(tend)
-                if tend<=tstart+tstep
+            sim.tstart = varargin{1};
+            sim.tstep_normal = varargin{2};
+            sim.tstep = varargin{2};
+            if isnumeric(varargin{3})
+                if varargin{3}<=varargin{1}+varargin{2}
                     error('tend is too close to tstart');
                 else
-                    sim.tend = tend;
+                    sim.tend = varargin{3};
                 end
                 sim.infTime = 0;
             else
-                if strcmp(tend,'inf')
+                if strcmp(varargin{3},'inf')
                     % Simulation will run for indefinite time
                     sim.infTime = 1;
                     sim.tend = 10;
