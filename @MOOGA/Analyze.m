@@ -164,12 +164,13 @@ save(Filename,'Data');
 
     function sim = WalkOnSlope(sim_in, Data, start_s, end_s)
         sim = deepcopy(sim_in);
+        sim  = sim.Init();
         fprintf('Processing data on %.2f degrees slope',end_s);
         
         if start_s == 0
             sim.IClimCyc = 0*sim.IC;
         else
-            sim.IClimCyc = Data.IC(:,Data.Slopes == start_s);
+            sim.IClimCyc = Data.IC(1:sim.stDim,Data.Slopes == start_s);
         end
         
         sim = sim.WalkOnSlope(start_s, end_s, ~start_s*5, 75);
