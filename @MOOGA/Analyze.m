@@ -195,7 +195,7 @@ save(Filename,'Data');
             Coords = 1+EachP*(p-1):EachP*p;
             [EigV(Coords),~] = sim.Poincare();
         end
-        Data.EigV(:,end+1) = EigV;
+        Data.EigV(1:length(EigV),end+1) = EigV;
         
         % Prepare simulation for single period evaluation
         sim = sim.SetTime(0,0.003,5);
