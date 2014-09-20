@@ -1,4 +1,4 @@
-function [ Out ] = Analyze( GA, varargin )
+function [ Data ] = Analyze( GA, varargin )
 %ANALYZE Analyze the performance of the selected evolved controller
 %   Run simulations with the selected controller over a range of slopes
 %   until it is unable to walk. Calculate performance parameters such as
@@ -177,16 +177,30 @@ save(Filename,'Data');
 
     function Data = SavePerformance(sim,Slope,Data)
         Data.Slopes(end+1) = Slope;
-        Data.IC(:,end+1) = sim.IClimCyc; % Initial conditions
         Data.Period(end+1,1) = sim.Period(1);
+        % Initial conditions (for each step until a full period)
+        Coords = 1:sim.stDim*sim.Period(1);
+        Data.IC(Coords,end+1) = ...
+            reshape(sim.ICstore(:,1:sim.Period(1)),[],1); 
         
         % Calculate eigenvalues
-        [Data.EigV(:,end+1),~] = sim.Poincare();
+        if sim.PMFull
+            EachP = sim.stDim;
+        else
+            EachP = length(sim.ModCo);
+        end
+        EigV = zeros(EachP*sim.Period(1),1);
+        for p = 1:sim.Period(1)
+            sim.IClimCyc = sim.ICstore(:,p);
+            Coords = 1+EachP*(p-1):EachP*p;
+            [EigV(Coords),~] = sim.Poincare();
+        end
+        Data.EigV(:,end+1) = EigV;
         
-        % Prepare simulation for single step evaluation
+        % Prepare simulation for single period evaluation
         sim = sim.SetTime(0,0.003,5);
         sim.Env = sim.Env.Set('Type','inc','start_slope',Slope);
-        sim.EndCond = [1,sim.Period(1)]; % Run until converge
+        sim.EndCond = [1,sim.Period(1)]; % Run for one full period
         sim = sim.Init();
         sim.Mod.LegShift = sim.Mod.Clearance;
         sim.IC = sim.IClimCyc;
@@ -200,19 +214,21 @@ save(Filename,'Data');
         Data.LCt{end+1} = sim.Out.T; % Limit cycle time
         Data.Period(end,2) = max(sim.Out.T);
         Data.LCtorques{end+1} = sim.Out.Torques; % Limit cycle torques
+        
+        % Deal with torques
         % Separate impulses
         [Torques, Impulses] = sim.GetCleanPulses();
-        ImpTorqs = [Impulses, Torques];
+        Torques = [Torques, Impulses];
         % Calculate max torque (positive or negative)
-        mT = min(ImpTorqs,[],1); MT = max(ImpTorqs,[],1);
+        mT = min(Torques,[],1); MT = max(Torques,[],1);
         Moverm = find(abs(MT)>=abs(mT));
         moverM = find(abs(MT)<abs(mT));
         Data.MTorques(end+1,Moverm) = MT(Moverm);
         Data.MTorques(end,moverM) = mT(moverM);
         
         % Actuator power required
-        AnkPower = ImpTorqs(:,2).*sim.Out.X(:,3);
-        HipPower = ImpTorqs(:,3).*(sim.Out.X(:,4)-sim.Out.X(:,3));
+        AnkPower = Torques(:,1).*sim.Out.X(:,3);
+        HipPower = Torques(:,2).*(sim.Out.X(:,4)-sim.Out.X(:,3));
         Data.Power(end+1,:) = [max(abs(AnkPower)); max(abs(HipPower))];
         
         % ZMP

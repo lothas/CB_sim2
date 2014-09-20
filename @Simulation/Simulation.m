@@ -38,7 +38,7 @@ classdef Simulation < handle & matlab.mixin.Copyable
         
         % Poincare map calculation parameters
         IClimCyc; Period;
-        PMeps = 1e-5; PMFull = 0;
+        PMeps = 5e-6; PMFull = 0;
         PMeigs; PMeigVs;
         % Check convergence progression
         doGoNoGo = 1; % 0 - OFF, 1 - Extend, 2 - Cut
@@ -186,75 +186,7 @@ classdef Simulation < handle & matlab.mixin.Copyable
                 close(sim.Fig)
             end
         end  % StopButtonCallback
-        
-        function [varargout] = GetCleanPulses(sim)
-            T = sim.Out.T;
-            NT = length(T);
-            X = sim.Out.X;
-            Torques = sim.Out.Torques;
-            Impulses = zeros(size(sim.Out.Torques,1),1);
-            
-            % Remove "push-off" torques
-            stepTime = find(diff(sim.Out.SuppPos(:,1))~=0);
-            stepTime = [0; stepTime; NT];
-            pulseEnd = zeros(length(stepTime),1);
-            % Push-off parameters
-            PushOff = 1;
-            
-            % Save lastPhi (otherwise the slope adaptation gets discarded)
-            Temp = sim.Con.lastPhi;
-%             sim.Con.lastPhi = sim.Env.SurfSlope(sim.Out.SuppPos(stepTime(1),1));
-            sim.Con.lastPhi = sim.Out.Slopes(1);
-            
-            % Maximum torque applied as a pulse
-            if ~isempty(sim.Con.MinSat)
-                maxPls = max(max(abs(sim.Con.MinSat(2:end)),...
-                                 abs(sim.Con.MaxSat(2:end))));
-            else
-                maxPls = abs(sim.Con.Amp(PushOff));
-            end
-                         
-            for s = 1:length(stepTime)-1
-                thisT = T(stepTime(s)+1:stepTime(s+1));
-
-                % Update push-off parameters
-                sim.Con = sim.Con.HandleExtFB(X(stepTime(s)+1,sim.ModCo),...
-                                              X(stepTime(s)+1,sim.ConCo),...
-                                              sim.Out.Slopes(stepTime(s)+1));
-                POdur = 0.999*sim.Con.Duration(PushOff)/sim.Con.omega;
-                POamp = sim.Con.Amp(PushOff);
-
-                if length(thisT)>1
-                    next = find(thisT>=thisT(1)+POdur,1,'first');
-                    if ~isempty(next)
-                        pulseEnd(s) = stepTime(s) + next;
-                        POids = stepTime(s) + ...
-                            find(abs(Torques(stepTime(s)+1:pulseEnd(s),1))>...
-                                 abs(POamp)-maxPls);
-                        Torques(POids,1) = Torques(POids,1)-POamp;
-                        Impulses(POids) = Impulses(POids)+POamp;
-                    end
-                else
-                    pulseEnd(s) = stepTime(s) + 1;
-                    POids = stepTime(s) + ...
-                        find(abs(Torques(stepTime(s)+1:pulseEnd(s),1))>...
-                             abs(POamp)-maxPls);
-                    Torques(POids,1) = Torques(POids,1)-POamp;
-                    Impulses(POids) = Impulses(POids)+POamp;
-                end
-                    
-            end
-            sim.Con.lastPhi = Temp;
-            
-            switch nargout
-                case 1
-                    varargout{1} = Torques;
-                case 2
-                    varargout{1} = Torques;
-                    varargout{2} = Impulses;
-            end
-        end
-        
+                
         function out = JoinOuts(sim,ext_out,last_i)
             if nargin<3
                 last_i = length(sim.Out.T);
