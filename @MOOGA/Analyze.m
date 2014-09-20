@@ -24,28 +24,34 @@ end
 Filename = ['Gen',int2str(ID),'.mat'];
 if exist(Filename,'file') == 2
     In = load(Filename);
-    Out = In.Data;
-    start_slope = Out.Slopes(end);
-    if length(Out.Slopes)<2
+    Data = In.Data;
+    if Data.Done
+        return
+    end
+    
+    start_slope = Data.Slopes(end);
+    if length(Data.Slopes)<2
         d_slope = base_d;
     else
-        d_slope = sign(Out.Slopes(end))*median(abs(diff(Out.Slopes)));
+        d_slope = sign(Data.Slopes(end))*median(abs(diff(Data.Slopes)));
     end
 else
     % Initialize output
-    Out.Slopes = []; % Slopes
-    Out.IC = []; % Initial conditions
-    Out.LCx = {}; % Limit cycle states
-    Out.LCt = {}; % Limit cycle time
-    Out.LCtorques = {}; % Limit cycle Torques
-    Out.MTorques = []; % Max torques
-    Out.Power = []; % Actuator power required
-    Out.EigV = []; % Eigenvalues
-    Out.Period = []; % Period
-    Out.LCZMP = []; % Limit cycle ZMP
-    Out.MZMP = []; % Max ZMP
+    Data.Slopes = []; % Slopes
+    Data.IC = []; % Initial conditions
+    Data.LCx = {}; % Limit cycle states
+    Data.LCt = {}; % Limit cycle time
+    Data.LCtorques = {}; % Limit cycle Torques
+    Data.MTorques = []; % Max torques
+    Data.Power = []; % Actuator power required
+    Data.EigV = []; % Eigenvalues
+    Data.Period = []; % Period
+    Data.LCZMP = []; % Limit cycle ZMP
+    Data.MZMP = []; % Max ZMP
     start_slope = 0;
     d_slope = 0;
+    
+    Data.Done = 0;
 end
 
 % Run simulation starting from slope 0 and then increasing/decreasing slope
@@ -58,18 +64,18 @@ Sim.PMFull = 1; % Run poincare map on all 5 coords
 
 Sim = GA.Gen.Decode(Sim, GA.Seqs(ID,:,Generation));
 
-while 1
+while ~Data.Done
     Tries = 0;
     while Tries<MaxTries
         % Run simulation
-        Asim = WalkOnSlope(Sim,Out,start_slope,start_slope+d_slope);
+        Asim = WalkOnSlope(Sim,Data,start_slope,start_slope+d_slope);
 
         if Asim.Out.Type == 5
             % Simulation converged
             fprintf(' - ');
             cprintf('*green','OK!\n')
             
-            Out = SavePerformance(Asim,start_slope+d_slope,Out);
+            Data = SavePerformance(Asim,start_slope+d_slope,Data);
 
             % Keep going to next slope
             if d_slope == 0
@@ -86,14 +92,14 @@ while 1
             
             if Asim.Out.Type ~= 0
                 % Try running from 0 to the required slope
-                Asim = WalkOnSlope(Sim,Out,0,start_slope+d_slope);
+                Asim = WalkOnSlope(Sim,Data,0,start_slope+d_slope);
 
                 if Asim.Out.Type == 5
                     % Simulation converged
                     fprintf(' - ');
                     cprintf('*green','OK!\n')
 
-                    Out = SavePerformance(Asim,start_slope+d_slope,Out);
+                    Data = SavePerformance(Asim,start_slope+d_slope,Data);
 
                     % Keep going to next slope
                     if d_slope == 0
@@ -135,17 +141,21 @@ while 1
             start_slope = 0;
             d_slope = -base_d;
         else
+            Data.Done = 1;
             break;
         end
     end
 end
 
 % Sort data
-Data = Out;
 LastUp = find(diff(Data.Slopes)<0,1,'first');
 NSlopes = length(Data.Slopes);
 Fields = fieldnames(Data);
 for f = 1:length(Fields)
+    if strcmp(Fields{f},'Done')
+        continue
+    end
+    
     [r,c] = size(Data.(Fields{f}));
     if c == NSlopes
         Data.(Fields{f}) = [fliplr(Data.(Fields{f})(:,LastUp+1:end)),...

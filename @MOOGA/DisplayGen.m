@@ -25,6 +25,11 @@ if exist(FileName,'file') == 2
     % Load input file
     In = load(FileName);
     Data = In.Data;
+    if ~Data.Done
+        % Perform analysis and then open GUI
+        disp('Performing analysis...')
+        Data = GA.Analyze(Gen,ID);
+    end 
 else
     % Perform analysis and then open GUI
     disp('Performing analysis...')
