@@ -2,6 +2,9 @@ function [EigVal,EigVec] = Poincare( sim )
 % Calculates the Linearized Poincare eigenvalues
 % Version 0.1 - 10/05/2014
 
+TempG = sim.Graphics;
+sim.Graphics = 0;
+
 if sim.PMFull == 1
     Ncoord = sim.stDim;
 else
@@ -22,6 +25,7 @@ end
 % Run the simulations
 PMsim = copy(sim);
 PMsim.EndCond = [1,sim.Period(1)];
+PMsim = PMsim.SetTime(0,2*sim.Period(1)*sim.Period(2));
 Slope = PMsim.Env.SurfSlope(PMsim.Mod.xS);
 for d = Coords
     PMsim.IC = dIC(:,d);
@@ -44,4 +48,6 @@ end
 DP = 1/sim.PMeps*(dICp(Coords,:) - IC(Coords,:));
 [EigVec,EigVal] = eig(DP,'nobalance');
 EigVal = diag(EigVal);
+
+sim.Graphics = TempG;
 end

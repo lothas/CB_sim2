@@ -71,6 +71,15 @@ function status = Render(sim,t,X,flag)
     end
     
     if ~isempty(X)
+        % Check time elapsed
+        sim.TimeTic = sim.TimeTic+1;
+        if sim.TimeTic<sim.RSkip
+            status = sim.StopSim;
+            return
+        else
+            sim.TimeTic = 0;
+        end
+        
         if sim.Follow
             [COMx,~]=sim.Mod.GetPos(X(sim.ModCo),'COM');
             [COMy,~]=sim.Env.Surf(COMx);

@@ -6,7 +6,7 @@ function [ TopIDs, Weights ] = GetTopPop( GA, N )
 %   genomes that excell at each fitness individually are picked.
 
     if GA.NFit == 1
-        FitID = [GA.Fit(:,:,GA.Progress), (1:GA.Population)'];
+        FitID = [GA.Fit(:,GA.FitIDs,GA.Progress), (1:GA.Population)'];
         Sorted = sortrows(FitID,-1);
         TopIDs = Sorted(1:N,2);
         Weights = ones(N,1);
@@ -14,7 +14,7 @@ function [ TopIDs, Weights ] = GetTopPop( GA, N )
         TopIDs = zeros(GA.Population,1);
         Weights = ones(GA.Population,1);
         
-        Data = GA.Fit(:,:,GA.Progress);
+        Data = GA.Fit(:,GA.FitIDs,GA.Progress);
         % Give unique ID to each sample
         Data = [Data (1:size(Data,1))'];
         
@@ -119,8 +119,10 @@ function [ TopIDs, Weights ] = GetTopPop( GA, N )
     
         while IDindex2<=N
             % Select the highest genomes for each fitness
-            ThisID = find(GA.Fit(:,FitIndex,GA.Progress) == ...
-                max(GA.Fit(TopIDs(1:IDindex-IDindex2),FitIndex,...
+            FitInd = GA.FitIDs(FitIndex);
+            
+            ThisID = find(GA.Fit(:,FitInd,GA.Progress) == ...
+                max(GA.Fit(TopIDs(1:IDindex-IDindex2),FitInd,...
                            GA.Progress)),1,'first');      
             TopTopIDs(IDindex2) = ThisID;
             % Remove it from TopIDs

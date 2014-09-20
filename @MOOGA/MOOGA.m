@@ -43,6 +43,7 @@ classdef MOOGA
         % Fitness functions
         NFit;
         FitFcn;     % Fitness functions handles
+        FitIDs;     % Which values to use from within Fit
         
         % External function (called at the end of every generation)
         GenerationFcn;
@@ -87,14 +88,23 @@ classdef MOOGA
             end            
         end
         
+        function GA = SetFittest(GA,Top,MutTop,NewRnd)
+            GA.Fittest = [floor(Top/100*GA.Population),...
+                          floor(MutTop/100*GA.Population),...
+                          floor(NewRnd/100*GA.Population)];
+        end
+        
         function varargaout = Find(GA,varargin)
             switch nargin
                 case 1
-                    Max = cell(2,GA.NFit);
+                    Max = cell(2,max(cell2mat(GA.FitFcn(:,1)')));
                     for f=1:GA.NFit
-                        Max{1,f} = MOOGA.GetFitFcnName(GA.FitFcn{f});
+                        FitInd = GA.FitFcn{f,1};
+                        Max{1,FitInd(1)} = ...
+                            MOOGA.GetFitFcnName(GA.FitFcn{f,2});
+                        Max(2,FitInd) = ...
+                            num2cell(max(GA.Fit(:,FitInd,GA.Progress)));
                     end
-                    Max(2,:) = num2cell(max(GA.Fit(:,:,GA.Progress)));
                     disp(Max)
                     return
                 case 2
@@ -109,7 +119,7 @@ classdef MOOGA
             if R>1
                 % Only some conditions provided as pairs:
                 % [Fitness number, Minimum required]
-                Reqs = zeros(GA.NFit,1);
+                Reqs = zeros(max(cell2mat(GA.FitFcn(:,1)')),1);
                 for r = 1:R
                     Reqs(varargin{1}(r,1)) = varargin{1}(r,2);
                 end
@@ -122,7 +132,7 @@ classdef MOOGA
 
             % Find results that fit the requirements
             Conds = ones(GA.Population,1);
-            for f = 1:GA.NFit
+            for f = 1:max(cell2mat(GA.FitFcn(:,1)'))
                 Conds = Conds & ...
                     GA.Fit(:,f,Gnrtn)>=Reqs(f);
             end
@@ -356,15 +366,18 @@ classdef MOOGA
                 ZMPback = min(ZMP);
                 % Max foot size
                 MaxFront = 0.4; % 40cm (ankle to toes)
-                MaxBack = 0.1; % 10cm (ankle to heel)
+                MaxBack = 0.2; % 10cm (ankle to heel)
                 if abs(ZMPfront)/MaxFront>abs(ZMPback)/MaxBack
-                    fit = max(1-abs(ZMPfront)/MaxFront,0);
+                    Max = MaxFront;
+                    ZMP = abs(ZMPfront);
                 else
-                    fit = max(1-abs(ZMPback)/MaxBack,0);
+                    Max = MaxBack;
+                    ZMP = abs(ZMPback);
                 end
-                % Make the fitness function nonlinear
-                % so going to 0 won't be so important
-%                 fit = cos(pi/2*(1-fit)^2)^2;
+                % Make the fitness function nonlinear:
+                % Grade changes slowly around 0, fast around Max
+                % Max grade is 2 at 0, 1 at Max, goes to 0 in infinity.
+                fit = 2./(1+(ZMP/Max).^3);
                 out = [];
             end
         end
@@ -387,9 +400,14 @@ classdef MOOGA
             out = [];
             while 1
                 SlSim = SlSim.WalkOnSlope(Slope,Slope+dSlope,Leadway,40);
-                % Save part of the output
-                i = find(dir*SlSim.Out.Slopes*58>=dir*(Slope+dSlope),...
-                    1,'first');
+                if Slope~=0
+                    % Save part of the output
+                    i = find(dir*SlSim.Out.Slopes*58>=dir*(Slope+dSlope),...
+                        1,'first');
+                else
+                    % Save the whole output
+                    i = length(SlSim.Out.Slopes);
+                end
                 out = SlSim.JoinOuts(out,i);
                 
                 if SlSim.Out.Type == 6
@@ -412,6 +430,26 @@ classdef MOOGA
         
         function [fit,out] = DownSlopeFit(Sim)
             [fit,out] = MOOGA.SlopeFit(Sim,-1);
+        end
+        
+        function [fit,out] = UDZMPFit(Sim,dir)
+            % Calls the up/down fitness function and then calculates the
+            % ZMP of that run
+            [Slope,out] = MOOGA.SlopeFit(Sim,dir);
+            
+            ZMPSim = deepcopy(Sim);
+            ZMPSim.Out = out;
+            [ZMP,~] = MOOGA.ZMPFit(ZMPSim);
+            
+            fit = [50*ZMP*(1-cosd(Slope)), Slope, ZMP];
+        end
+        
+        function [fit,out] = ZMPUpFit(Sim)
+            [fit,out] = MOOGA.UDZMPFit(Sim,1);
+        end
+        
+        function [fit,out] = ZMPDownFit(Sim)
+            [fit,out] = MOOGA.UDZMPFit(Sim,-1);
         end
         
         function [name] = GetFitFcnName(fcn_handle)

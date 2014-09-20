@@ -4,7 +4,7 @@ function [ GA ] = InitGen( GA )
 
 % Initialize sequences and fitness
 GA.Seqs = zeros(GA.Population, GA.Gen.Length, GA.Generations);
-GA.Fit = zeros(GA.Population, GA.NFit, GA.Generations);
+GA.Fit = zeros(GA.Population, max(cell2mat(GA.FitFcn(:,1)')), GA.Generations);
 
 if exist(GA.FileIn,'file') == 2
     % Load input file
@@ -22,14 +22,18 @@ if exist('In','var') == 1
     ThisFitID = [];
     InFitID = [];
     for i = 1:In.GA.NFit
-        InNames{i} = MOOGA.GetFitFcnName(In.GA.FitFcn{i});
+        InNames{i} = MOOGA.GetFitFcnName(In.GA.FitFcn{i,2});
     end
     for i = 1:GA.NFit
-        ThisName = MOOGA.GetFitFcnName(GA.FitFcn{i});
+        ThisName = MOOGA.GetFitFcnName(GA.FitFcn{i,2});
         ID = find(strcmp(ThisName,InNames),1,'first');
         if ~isempty(ID)
-            ThisFitID = [ThisFitID,i]; %#ok<AGROW>
-            InFitID = [InFitID,ID]; %#ok<AGROW>
+            ThisFitID = [ThisFitID,GA.FitFcn{i,1}]; %#ok<AGROW>
+            InFitID = [InFitID,In.GA.FitFcn{ID,1}]; %#ok<AGROW>
+        end
+        
+        if length(ThisFitID) ~= length(InFitID)
+            error('Discrepancy in FitFcn indexes')
         end
     end
     

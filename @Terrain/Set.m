@@ -47,6 +47,10 @@ else
                 Te.start_x = value;
             case 'end_x'
                 Te.end_x = value;
+            case 'start_y'
+                Te.start_y = value;
+            case 'end_y'
+                Te.end_y = value;
             case 'FloorStep'
                 Te.FloorStep = value;
             case 'VertLines'
