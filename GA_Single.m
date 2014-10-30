@@ -1,14 +1,14 @@
-function [  ] = GA_ROBIO(  )
-% Run MOOGA to fine tune the hand tuned controller used in the ROBIO/TRO
-% paper.
+function [  ] = GA_Single(  )
+% Run MOOGA to fine tune a single pulse per joint controller for Alex's
+% paper
 % close all; clear all; clear classes;
 
-GA = MOOGA(20,800);
+GA = MOOGA(50,1000);
 % GA = MOOGA(10,100);
 GA = GA.SetFittest(20,20,0.5);
-GA.JOAT = 2; GA.Quant = 0.7;
+GA.JOAT = 2; GA.Quant = 0.6;
 % GA.Fittest = [20,20,1];
-GA.FileIn = 'GA_10_28_09_25.mat';
+% GA.FileIn = 'GA_08_31_21_52.mat';
 % GA.FileOut = GA.FileIn;
 
 GA.FileOut = ['GA_',datestr(now,'mm_dd_hh_MM'),'.mat'];
@@ -19,19 +19,19 @@ GA.Graphics = 1;
 % Set up the genome
 % Controller with swing pulse + limited ankle pulse and feedback
 NAnkleT = 1;
-NHipT = 2;
-MaxAnkleT = 45;
-MaxHipT = 180;
-TorqueFBMin = [-300*ones(1,NAnkleT),-600*ones(1,NHipT)];
+NHipT = 1;
+MaxAnkleT = 150;
+MaxHipT = 50;
+TorqueFBMin = [-1000*ones(1,NAnkleT),-1000*ones(1,NHipT)];
 TorqueFBMax = -TorqueFBMin;
 Keys = {'omega0','P_LegE',    'Pulses',    'Pulses',...
     'kOmega_u','kOmega_d','kTorques_u','kTorques_d';...
                1,       1, [NAnkleT,1],   [NHipT,2],...
              1,         1,           1,           1};
-Range = {1.3, 0.50, [-MaxAnkleT, 0, 0.01], [-MaxHipT, 0, 0.01],...
-    -5, -5, TorqueFBMin, TorqueFBMin; % Min
-         1.7, 0.85, [MaxAnkleT, 0.99, 0.99], [MaxHipT, 0.99, 0.99],...
-    5,  5, TorqueFBMax, TorqueFBMax}; % Max
+Range = {0.7, 0.55, [-MaxAnkleT, 0, 0.01], [-MaxHipT, 0, 0.01],...
+    -3, -3, TorqueFBMin, TorqueFBMin; % Min
+         1.5, 0.85, [MaxAnkleT, 0.99, 0.99], [MaxHipT, 0.99, 0.99],...
+    3,  3, TorqueFBMax, TorqueFBMax}; % Max
 MutDelta0 = 0.03;
 MutDelta1 = 0.01;
 
@@ -47,8 +47,7 @@ GA.Sim.Graphics = GA.Graphics;
 GA.Sim.EndCond = 2; % Run until converge (or fall)
 
 % Set up the compass biped model
-% GA.Sim.Mod = GA.Sim.Mod.Set('damp',0.3);
-GA.Sim.Mod = GA.Sim.Mod.Set('I',0,'damp',0);
+GA.Sim.Mod = GA.Sim.Mod.Set('damp',0,'I',0);
 
 % Set up the terrain
 start_slope = 0;

@@ -52,6 +52,7 @@ if exist('In','var') == 1
     else
         if In.GA.Population > GA.Population
             % Select the best genomes from the last generation
+            In.GA.Quant = GA.Quant;
             TopIDs = In.GA.GetTopPop(GA.Population); % fitness = genes
 
             % Transfer top IDs to new population

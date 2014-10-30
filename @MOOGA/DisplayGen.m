@@ -17,6 +17,8 @@ Colors = {[0 0 1],[1 0 0],[0 0.7 0.8],[0 0.7 0],[0.8 0 0.8]};
 Legends = {'\theta_1','\theta_2','d\theta_1/dt',...
                     'd\theta_2/dt','\phi_C_P_G'};
                 
+
+DefAxesArea = [0.14 0.06 0.84 0.9];
 SlopeID = 1;
 
 % Open analysis data if it exists
@@ -34,6 +36,142 @@ else
     % Perform analysis and then open GUI
     disp('Performing analysis...')
     Data = GA.Analyze(Gen,ID);
+end
+disp(['Min/Max slope: ',...
+        num2str(min(Data.Slopes),'%.2f'),' / '...
+        num2str(max(Data.Slopes),'%.2f')])
+
+% Calculate Zones
+Zones = {};
+% Period 1 zones
+dslope = mean(diff(Data.Slopes));
+splits = find(diff(Data.Slopes)>1.0001*dslope);
+if isempty(splits)
+    Zones{1} = {1:length(Data.Slopes)};
+else
+    P1zone = {1:splits(1)};
+    for zn = 1:length(splits)-1
+        P1zone(1,zn+1) = {splits(zn)+1:splits(zn+1)};
+    end
+    P1zone(1,end+1) = {splits(end)+1:length(Data.Slopes)};
+    Zones{1} = P1zone;
+end
+% Period 2 zones
+Zones{2} = {};
+for z1 = 1:length(Zones{1})
+    P2IDs = intersect(find(Data.Period(:,1)==2),Zones{1}{z1});
+    if isempty(P2IDs)
+        continue
+    end
+    splits = find(diff(P2IDs)>1);
+    if isempty(splits)
+        Zones{2} = [Zones{2}, P2IDs(1:length(P2IDs))];
+    else
+        P1zone = {P2IDs(1:splits(1))};
+        for zn = 1:length(splits)-1
+            P1zone(1,zn+1) = {P2IDs(splits(zn)+1:splits(zn+1))};
+        end
+        P1zone(1,end+1) = {P2IDs(splits(end)+1:length(P2IDs))};
+        Zones{2} = [Zones{2}, P1zone];
+    end
+end
+if isempty(Zones{2})
+    Zones(2) = [];
+end
+    
+function [Lines] = ConnectVectors( Lines )
+    N=size(Lines,2);
+    
+    for d=1:N-1
+        L=length(find(Lines(:,d)~=0));
+        if L==10
+            % To shorten the computation time of calculating
+            % all the permutations of a 10 elements vector,
+            % we remove the 2 eigenvalues that are closest
+            % to zero (there's a zero eigenvalue in the PM)
+            
+            CurVec=[Lines(1:L,d), (1:L)']; % Vector that holds the current points
+            NextVec=[Lines(1:L,d+1), (1:L)']; % Vector that holds the next set of points
+            
+            CurVecS=sortrows(CurVec,1);
+            NextVecS=sortrows(NextVec,1);
+            
+            % Grab the last 8
+            CurVec=CurVecS(3:end,1);
+            NextVec=NextVecS(3:end,1);
+            
+            L=8;
+            if length(CurVec)~=length(NextVec)
+                A=1;
+            end
+        else
+            CurVec=Lines(1:L,d); % Vector that holds the current points
+            NextVec=Lines(1:L,d+1); % Vector that holds the next set of points
+        end
+
+        % Calculate all possible permutations of the next points
+        % This takes a LONG LONG LONG while when M is large
+        PermVec=perms(NextVec);
+
+        % Calculate distance from current vector to all permutations
+        Dist=abs(PermVec-repmat(CurVec',size(PermVec,1),1));
+
+        % Find the most distant point for each permutation
+        MaxDist=max(Dist,[],2);
+
+        % Find the permutation where the max. distance is the smallest
+        MinPerm=find(MaxDist==min(MaxDist));
+
+        MP=length(MinPerm);
+        if MP==1
+            NextVec=PermVec(MinPerm,:)';
+            if L~=8
+                Lines(1:L,d+1)=NextVec;
+            else
+                Lines(CurVecS(1:2,2),d+1)=Lines(NextVecS(1:2,2),d+1);
+                Lines(CurVecS(3:end,2),d+1)=NextVec;
+            end
+        else            
+            % Too many best permutations found
+            % We'll select the one with the minimal overall distance
+            BestPerms=PermVec(MinPerm,:);
+
+            % Calculate absoulte distance from CurVec to each candidate
+            Dist=abs(BestPerms-repmat(CurVec',MP,1));
+            AbsDist=diag(Dist*Dist');
+
+            MinPerm=find(AbsDist==min(AbsDist));
+            if length(MinPerm)>1
+                % screw it, choose the first one
+                NextVec=BestPerms(MinPerm(1),:)';
+            else
+                NextVec=BestPerms(MinPerm,:)';
+            end
+            
+            if L~=8
+                Lines(1:L,d+1)=NextVec;
+            else
+                Lines(CurVecS(1:2,2),d+1)=Lines(NextVecS(1:2,2),d+1);
+                Lines(CurVecS(3:end,2),d+1)=NextVec;
+            end
+        end
+    end
+end
+
+function [Lines] = SortLines( Lines )
+   % Works great as long as lines don't intersect
+   N=size(Lines,2);
+   
+   % We'll only look at lines 1 and 6 and switch the whole sets
+   % 1:5 and 6:10 accordingly. Let row one be always "above" row 6
+   for c=1:N
+       if Lines(1,c)<Lines(6,c)
+           % Need to switch
+           Temp=Lines(1:5,c:end);
+           Lines(1:5,c:end)=Lines(6:10,c:end);
+           Lines(6:10,c:end)=Temp;
+       end
+   end
 end
 
 DG.fig = figure();
@@ -54,73 +192,90 @@ uicontrol('Style','Text','String','Display:',...
     'Units','Normalized','FontSize',TitleFont,...
     'Position', [0.01 0.02 0.1 0.96]);
 
+Btn0 = 0.89;
+BtnH = 0.05; % Button height
+BtnS = BtnH + 0.01; % Button spacing
+Btn1 = Btn0 - 6*BtnS - 0.01;
+
 % Add buttons
 % Initial conditions
 DG.menub(1) = uicontrol('Style','pushbutton',...
     'String','IC',...
     'Units','Normalized','FontSize',ButtonFont,...
-    'Position', [0.02 0.88 0.08 0.05],...
+    'Position', [0.02 Btn0 0.08 BtnH],...
     'Callback', {@Display,'IC',Data});
 % Eigenvalues
 DG.menub(2) = uicontrol('Style','pushbutton',...
     'String','Eigenvalues',...
     'Units','Normalized','FontSize',ButtonFont,...
-    'Position', [0.02 0.82 0.08 0.05],...
+    'Position', [0.02 Btn0-BtnS 0.08 BtnH],...
     'Callback', {@Display,'EigV',Data});
 % Max ZMP
 DG.menub(3) = uicontrol('Style','pushbutton',...
     'String','Max ZMP',...
     'Units','Normalized','FontSize',ButtonFont,...
-    'Position', [0.02 0.76 0.08 0.05],...
+    'Position', [0.02 Btn0-2*BtnS 0.08 BtnH],...
     'Callback', {@Display,'MZMP',Data});
-% Max Torques
+% Foot design
 DG.menub(4) = uicontrol('Style','pushbutton',...
+    'String','Foot design',...
+    'Units','Normalized','FontSize',ButtonFont,...
+    'Position', [0.02 Btn0-3*BtnS 0.08 BtnH],...
+    'Callback', {@Display,'FD',Data});
+% Max Torques
+DG.menub(5) = uicontrol('Style','pushbutton',...
     'String','Max Torques',...
     'Units','Normalized','FontSize',ButtonFont,...
-    'Position', [0.02 0.70 0.08 0.05],...
+    'Position', [0.02 Btn0-4*BtnS 0.08 BtnH],...
     'Callback', {@Display,'MTorques',Data});
 % Power
-DG.menub(5) = uicontrol('Style','pushbutton',...
+DG.menub(6) = uicontrol('Style','pushbutton',...
     'String','Actuator Power',...
     'Units','Normalized','FontSize',ButtonFont,...
-    'Position', [0.02 0.64 0.08 0.05],...
+    'Position', [0.02 Btn0-5*BtnS 0.08 BtnH],...
     'Callback', {@Display,'Power',Data});
 
 % Limit cycle (states, torques, ZMP)
 uicontrol('Style','Text','String','','Units','Normalized',...
-    'Position', [0.02 0.623 0.08 0.001], 'BackgroundColor',[0 0 0]);
-DG.menub(6) = uicontrol('Style','pushbutton',...
+    'Position', [0.02 Btn1+0.0575 0.08 0.001], 'BackgroundColor',[0 0 0]);
+DG.menub(7) = uicontrol('Style','pushbutton',...
     'String','By slope',...
     'Units','Normalized','FontSize',ButtonFont,...
-    'Position', [0.02 0.56 0.08 0.05],...
+    'Position', [0.02 Btn1 0.08 BtnH],...
     'Callback', {@Display,'LC',Data});
+
 % Add checkboxes
 CBH = 0.03; % Height
 CBS = CBH+0.01; % Spacing
+Btn2 = Btn1 - CBS;
 
-DG.menub(7) = uicontrol('Style','checkbox',...
+DG.menub(8) = uicontrol('Style','checkbox',...
     'String','Limit Cycle','Value',1,...
     'Units','Normalized','FontSize',ButtonFont,...
-    'Position', [0.02 0.56-CBS 0.08 CBH]);
-DG.menub(8) = uicontrol('Style','checkbox',...
+    'Position', [0.02 Btn2 0.08 CBH]);
+DG.menub(9) = uicontrol('Style','checkbox',...
     'String','Angles',...
     'Units','Normalized','FontSize',ButtonFont,...
-    'Position', [0.02 0.56-2*CBS 0.08 CBH]);
-DG.menub(9) = uicontrol('Style','checkbox',...
+    'Position', [0.02 Btn2-CBS 0.08 CBH]);
+DG.menub(10) = uicontrol('Style','checkbox',...
     'String','Ang. velocities','Value',1,...
     'Units','Normalized','FontSize',ButtonFont,...
-    'Position', [0.02 0.56-3*CBS 0.08 CBH]);
-DG.menub(10) = uicontrol('Style','checkbox',...
+    'Position', [0.02 Btn2-2*CBS 0.08 CBH]);
+DG.menub(11) = uicontrol('Style','checkbox',...
     'String','CPG phase',...
     'Units','Normalized','FontSize',ButtonFont,...
-    'Position', [0.02 0.56-4*CBS 0.08 CBH]);
-DG.menub(11) = uicontrol('Style','checkbox',...
+    'Position', [0.02 Btn2-3*CBS 0.08 CBH]);
+DG.menub(12) = uicontrol('Style','checkbox',...
     'String','Torques','Value',1,...
     'Units','Normalized','FontSize',ButtonFont,...
-    'Position', [0.02 0.56-5*CBS 0.08 CBH]);
+    'Position', [0.02 Btn2-4*CBS 0.08 CBH]);
+DG.menub(13) = uicontrol('Style','checkbox',...
+    'String','ZMP','Value',0,...
+    'Units','Normalized','FontSize',ButtonFont,...
+    'Position', [0.02 Btn2-5*CBS 0.08 CBH]);
 
 DG.DispArea = axes('Units','Normalized','FontSize',AxesFont,...
-    'Position',[0.14 0.06 0.84 0.9]);
+    'Position',DefAxesArea);
 
     function Display(hObject, eventdata, Type, Data) %#ok<INUSL>
         % Get the axes handle(s)
@@ -133,7 +288,7 @@ DG.DispArea = axes('Units','Normalized','FontSize',AxesFont,...
         end
         cla
         axis auto
-        set(hAx,'Position',[0.14 0.06 0.84 0.9]);
+        set(hAx,'Position',DefAxesArea);
         % Hide legends
         hLg = findobj(gcf,'Type','axes','Tag','legend');
         set(hLg,'visible','off')
@@ -146,50 +301,124 @@ DG.DispArea = axes('Units','Normalized','FontSize',AxesFont,...
         
         switch Type
             case 'IC'
-                Ncoords = size(Data.IC,1);
-                h = zeros(Ncoords,1);
-                for c = 1:Ncoords
-                    h(c) = plot(Data.Slopes,Data.IC(c,:),...
-                        LineStyles{c},'LineWidth',LineWidth,...
-                        'Color',Colors{c});
-                end
-                axis([min(Data.Slopes) max(Data.Slopes) ylim])
-                legend(h,Legends);
+                PlotIC(Data.Slopes,Data.IC);
             case 'EigV'
-                % Separate into zones
-                zID = find(diff(Data.Period(:,1))~=0);
-                zID = [zID; size(Data.Period,1)];
-                sID = 1;
-                for z = 1:length(zID)
-                    IDs = sID:zID(z);
-                    sID = zID(z)+1;
-                    plot(Data.Slopes(IDs),abs(Data.EigV(:,IDs)),...
-                        'LineWidth',LineWidth);
-                    % Add zone letter and display period number
-                    zmid = mean(Data.Slopes(IDs));
-                    ZString = [char(z-1+'A'),' - ',...
-                        int2str(Data.Period(IDs(1),1))];
-                    text(zmid,0.95,ZString,'FontSize',AxesFont,...
-                        'HorizontalAlignment','center');
-                    if z<length(zID)
-                        % Add a vertical line
-                        Lx = (Data.Slopes(sID)+Data.Slopes(sID-1))/2;
-                        line([Lx Lx],[0 1],'LineWidth',LineWidth,...
-                            'Color',[0 0 0])
-                    end
+                % Sort eigenvalues lines
+%                 [Data.EigV] = SortLines(Data.EigV);
+                [Data.EigV(1:5,:)] = ConnectVectors(Data.EigV(1:5,:));
+                if length(Zones)>1
+                    [Data.EigV(6:10,:)] = ConnectVectors(Data.EigV(6:10,:));
                 end
-                % plot(Data.Slopes,Data.Period(:,1));
-                axis([min(Data.Slopes) max(Data.Slopes) 0 1])
+                PlotEigV(Data.Slopes,Data.EigV);
             case 'MZMP'
-                h = zeros(3,1);
-                MZMP = [Data.MZMP, Data.MZMP(:,1)-Data.MZMP(:,2)];
-                for c = 1:3
-                    h(c) = plot(Data.Slopes,MZMP(:,c),...
-                        LineStyles{c},'LineWidth',LineWidth,...
-                        'Color',Colors{c});
-                end
-                axis([min(Data.Slopes) max(Data.Slopes) ylim])
-                legend(h,'Front','Back','Foot length');
+                PlotMaxZMP(Data.Slopes,Data.MZMP);
+%                 h = zeros(3,1);
+%                 MZMP = [Data.MZMP, Data.MZMP(:,1)-Data.MZMP(:,2)];
+%                 for c = 1:3
+%                     h(c) = plot(Data.Slopes,MZMP(:,c),...
+%                         LineStyles{c},'LineWidth',LineWidth,...
+%                         'Color',Colors{c});
+%                 end
+%                 axis([min(Data.Slopes) max(Data.Slopes) ylim])
+%                 legend(h,'Front','Back','Foot length');
+            case 'FD'
+%                 % Make space for sizing buttons
+%                 set(hAx,'Position',[DefAxesArea(1:3) 0.85]);
+%                 
+%                 SlopeStr = ['Slope: ',num2str(Data.Slopes(SlopeID),'%.2f')];
+%                 uicontrol('Style','Text','String',SlopeStr,...
+%                     'Units','Normalized','FontSize',TitleFont,...
+%                     'Position', [xS 0.92 xL 0.04]);
+                prompt = {'Enter ankle to toe distance:',...
+                          'Enter ankle to heel distance:'...
+                          'OR enter total foot length'};
+                dlg_title = 'Foot design';
+                num_lines = 1;
+                def = {'0.15','0.15',''};
+                answer = inputdlg(prompt,dlg_title,num_lines,def);
+                Sizing = cellfun(@str2num,answer,'UniformOutput',0);
+                Sizing = cellfun(@abs,Sizing,'UniformOutput',0);
+                try
+                    if isempty(Sizing{3})
+                        PlotMaxZMP(Data.Slopes,Data.MZMP);
+                        % Draw toe line
+                        line([min(Data.Slopes) max(Data.Slopes)],...
+                            [Sizing{1} Sizing{1}],...
+                            'LineWidth',LineWidth,'Color',[0 0 0]);
+                        % Draw heel line
+                        line([min(Data.Slopes) max(Data.Slopes)],...
+                            [-Sizing{2} -Sizing{2}],...
+                            'LineWidth',LineWidth,'Color',[0 0 0]);
+                        % Find intersections
+                        mSlope = fzero(@FuncIntrsct,0,[],...
+                            Data.Slopes,Data.MZMP(:,1)-Sizing{1});
+                        MSlope = fzero(@FuncIntrsct,0,[],...
+                            Data.Slopes,Data.MZMP(:,2)+Sizing{2});
+                        text(mSlope,Sizing{1}+0.02,...
+                            ['(',num2str(mSlope),',',...
+                                 num2str(Sizing{1}),')']);
+                        text(MSlope,-Sizing{2}+0.02,...
+                            ['(',num2str(MSlope),',',...
+                                 num2str(-Sizing{2}),')']);
+                    else
+                        % We'll start checking with the longest heel
+                        if Sizing{3}>max(abs(Data.MZMP(:,2)))
+                            % Don't start toe from 0
+                            T0 = Sizing{3}-max(abs(Data.MZMP(:,2)));
+                            H0 = max(abs(Data.MZMP(:,2)));
+                        else
+                            T0 = 0;
+                            H0 = Sizing{3};
+                        end
+                        if Sizing{3}>max(Data.MZMP(:,1))-T0
+                            aMax = (max(Data.MZMP(:,1))-T0)/Sizing{3};
+                        else
+                            aMax = 0.99;
+                        end
+                        
+                        % Check possible slopes
+                        Npoints = 100;
+                        dL = linspace(0.01,aMax,Npoints)*(Sizing{3}-T0);
+                        Toe = zeros(Npoints,1);
+                        Heel = zeros(Npoints,1);
+                        Slopes = zeros(Npoints,3);
+                        for i = 1:Npoints
+                            Toe(i) = T0+dL(i);
+                            Heel(i) = H0-dL(i);
+                            % Negative slope
+                            Slopes(i,1) = fzero(@FuncIntrsct,0,[],...
+                                Data.Slopes,Data.MZMP(:,1)-Toe(i));
+                            % Positive slope
+                            Slopes(i,2) = fzero(@FuncIntrsct,0,[],...
+                                Data.Slopes,Data.MZMP(:,2)+Heel(i));
+                            % Range
+                            Slopes(i,3) = Slopes(i,2) - Slopes(i,1);
+%                             disp(['Foot size: ',num2str(Toe(i)+Heel(i),'%.2f'),...
+%                                 ' - Min/Max slope: ',...
+%                                 num2str(Slopes(i,1),'%.2f'),' / '...
+%                                 num2str(Slopes(i,2),'%.2f')]);
+                        end
+                        
+                        % Display results
+                        % Make space for axes labels
+                        Area = DefAxesArea + [0 0.05 0 -0.05];
+                        
+                        delete(hAx)
+                        hAx = axes('Position',Area,...
+                                      'XAxisLocation','bottom');                        
+                        plot(Toe,abs(Slopes));
+                        axis([min(Toe) max(Toe) ylim])
+                        xlabel('Ankle to Toe [m]')
+                        legend('Ankle to Toe slopes',...
+                            'Ankle to Heel slopes',...
+                            'Range');
+                        disp(['Foot size(s): ',num2str(unique(Toe+Heel))])
+                    end
+                catch err
+                    disp('ERROR: Wrong input');
+                    disp(err)
+                end                    
+                
             case 'MTorques'
                 h = zeros(2,1);
                 for c = 1:2
@@ -219,7 +448,7 @@ DG.DispArea = axes('Units','Normalized','FontSize',AxesFont,...
                 if ~isempty(LCID)
                     if length(checks)>1
                         % Plot limit cycle in smaller area
-                        set(hAx,'Position',[0.14 0.06 0.44 0.9]);
+                        set(hAx,'Position',[DefAxesArea(1:2) 0.44 0.9]);
                         xS = 0.62;
                         xL = 0.34;
                         checks(LCID) = [];
@@ -257,6 +486,11 @@ DG.DispArea = axes('Units','Normalized','FontSize',AxesFont,...
                         PlotTorques(Data.LCt{SlopeID},Data.LCtorques{SlopeID});
                     end
                     
+                    if strcmp(checks{p},'ZMP')
+                        % Plot Torques
+                        PlotZMP(Data.LCt{SlopeID},Data.LCZMP{SlopeID});
+                    end
+                    
                     if p<NPlots
                         set(gca,'XTickLabel','')
                     end
@@ -271,6 +505,73 @@ DG.DispArea = axes('Units','Normalized','FontSize',AxesFont,...
                 % Set keyboard callback
                 set(gcf,'KeyPressFcn',{@KeybHandle,Data})
         end
+    end
+
+    function PlotIC(Slopes,IC)
+        Ncoords = size(IC,1)/max(Data.Period(:,1));
+        h = zeros(Ncoords,1);
+        for p = 1:length(Zones)
+            pZone = Zones{p};
+            for z = 1:length(pZone)
+                Coords = pZone{z};
+                for c = 1:Ncoords
+                    StCoord = (p-1)*Ncoords+c;
+                    h(c) = plot(Slopes(Coords),IC(StCoord,Coords),...
+                        LineStyles{c},'LineWidth',LineWidth,...
+                        'Color',Colors{c});
+                end
+            end
+        end
+        axis([min(Slopes) max(Slopes) ylim])
+        legend(h,Legends);
+    end
+
+    function PlotEigV(Slopes,EigV)
+        % Separate into zones
+        zID = find(diff(Data.Period(:,1))~=0);
+        zID = [zID; size(Data.Period,1)];
+        sID = 1;
+        ZoneLetter = 0;
+        for z = 1:length(zID)
+            IDs = sID:zID(z);
+            sID = zID(z)+1;
+            if length(IDs)<2
+                continue
+            end
+            plot(Slopes(IDs),abs(EigV(:,IDs)),...
+                'LineWidth',LineWidth);
+            % Add zone letter and display period number
+            zmid = mean(Slopes(IDs));
+            ZString = [char(ZoneLetter+'A'),' - ',...
+                int2str(Data.Period(IDs(1),1))];
+            ZoneLetter = ZoneLetter+1;
+            text(zmid,0.95,ZString,'FontSize',AxesFont,...
+                'HorizontalAlignment','center');
+            if z<length(zID)
+                % Add a vertical line
+                Lx = (Slopes(sID)+Slopes(sID-1))/2;
+                line([Lx Lx],[0 1],'LineWidth',LineWidth,...
+                    'Color',[0 0 0])
+            end
+        end
+        % plot(Data.Slopes,Data.Period(:,1));
+        axis([min(Slopes) max(Slopes) 0 1])
+    end
+
+    function PlotMaxZMP(Slopes,MZMP)
+        h = zeros(3,1);
+        MZMP = [MZMP, MZMP(:,1)-MZMP(:,2)];
+        pZone = Zones{1};
+        for z = 1:length(pZone)
+            Coords = pZone{z};
+            for c = 1:3
+                h(c) = plot(Slopes(Coords),MZMP(Coords,c),...
+                    LineStyles{c},'LineWidth',LineWidth,...
+                    'Color',Colors{c});
+            end
+        end
+        axis([min(Slopes) max(Slopes) ylim])
+        legend(h,'Front','Back','Foot length');
     end
 
     function PlotLC(X)
@@ -305,6 +606,12 @@ DG.DispArea = axes('Units','Normalized','FontSize',AxesFont,...
         legend('Ankle','Hip');
     end
 
+    function PlotZMP(T,ZMP)
+        hold on
+        plot(T,ZMP,...
+            LineStyles{1},'LineWidth',LineWidth,'Color',Colors{1});
+    end
+
     function h = FindSlopeDisp()
         hs = findobj(gcf,'Type','uicontrol','Style','Text');
         for i = 1:length(hs)
@@ -315,6 +622,16 @@ DG.DispArea = axes('Units','Normalized','FontSize',AxesFont,...
         end
         % SlopeDisp object not found
         h = 0;
+    end
+
+    function val = FuncIntrsct(x,X,Y)
+        if x<min(X)
+            x = min(X);
+        end
+        if x>max(X)
+            x = max(X);
+        end
+        val = interp1(X,Y,x);
     end
 
     function checks = GetSelected()

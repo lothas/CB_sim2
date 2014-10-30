@@ -5,8 +5,8 @@ function [ Data ] = Analyze( GA, varargin )
 %   initial conditions, limit cycles, required torque/motor power,
 %   required ZMP, etc.
 
-MaxTries = 15;
-base_d = 0.1;
+MaxTries = 10;
+base_d = 0.05;
 
 switch nargin 
     case 2
@@ -52,6 +52,10 @@ else
     d_slope = 0;
     
     Data.Done = 0;
+    
+    % Store genome information
+    Data.Gen = GA.Gen;
+    Data.Seq = GA.Seqs(ID,:,Generation);    
 end
 
 % Run simulation starting from slope 0 and then increasing/decreasing slope
@@ -62,7 +66,7 @@ if Sim.Graphics == 1
 end
 Sim.PMFull = 1; % Run poincare map on all 5 coords
 
-Sim = GA.Gen.Decode(Sim, GA.Seqs(ID,:,Generation));
+Sim = Data.Gen.Decode(Sim, Data.Seq);
 
 while ~Data.Done
     Tries = 0;
@@ -210,11 +214,12 @@ save(Filename,'Data');
         
         % Prepare simulation for single period evaluation
         sim = sim.SetTime(0,0.003,5);
+        sim.Mod.xS = 0; sim.Mod.yS = 0;
         sim.Env = sim.Env.Set('Type','inc','start_slope',Slope);
         sim.EndCond = [1,sim.Period(1)]; % Run for one full period
         sim = sim.Init();
         sim.Mod.LegShift = sim.Mod.Clearance;
-        sim.IC = sim.IClimCyc;
+        sim.IC = Data.IC(1:sim.stDim,end); % sim.IClimCyc;
         sim.Con = sim.Con.Reset(sim.IC(sim.ConCo));
         sim.Con = sim.Con.HandleExtFB(sim.IC(sim.ModCo),...
                 sim.IC(sim.ConCo),sim.Env.SurfSlope(sim.Mod.xS));

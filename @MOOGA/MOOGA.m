@@ -376,8 +376,8 @@ classdef MOOGA
                 end
                 % Make the fitness function nonlinear:
                 % Grade changes slowly around 0, fast around Max
-                % Max grade is 2 at 0, 1 at Max, goes to 0 in infinity.
-                fit = 2./(1+(ZMP/Max).^3);
+                % Max grade is 1 at 0, 0.5 at Max, goes to 0 in infinity.
+                fit = 1./(1+(ZMP/Max).^3);
                 out = [];
             end
         end
@@ -441,7 +441,8 @@ classdef MOOGA
             ZMPSim.Out = out;
             [ZMP,~] = MOOGA.ZMPFit(ZMPSim);
             
-            fit = [50*ZMP*(1-cosd(Slope)), Slope, ZMP];
+%             fit = [50*ZMP*(1-cosd(Slope)), Slope, ZMP];
+            fit = [(Slope+3.0*ZMP)/18.0 Slope, ZMP];
         end
         
         function [fit,out] = ZMPUpFit(Sim)
