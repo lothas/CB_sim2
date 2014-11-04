@@ -1,20 +1,29 @@
-function [  ] = GA_ROBIO(  )
+function [  ] = GA_ROBIO( gen, pop, file_in, file_out )
 % Run MOOGA to fine tune the hand tuned controller used in the ROBIO/TRO
 % paper.
 % close all; clear all; clear classes;
 
-GA = MOOGA(20,800);
-% GA = MOOGA(10,100);
-GA = GA.SetFittest(20,20,0.5);
-GA.JOAT = 2; GA.Quant = 0.7;
-% GA.Fittest = [20,20,1];
-GA.FileIn = 'GA_10_28_09_25.mat';
-% GA.FileOut = GA.FileIn;
+if nargin<4
+    GA = MOOGA(20,1000);
+    % GA = MOOGA(10,100);
+    GA = GA.SetFittest(20,20,0.5);
+    GA.JOAT = 2; GA.Quant = 0.6;
+    % GA.Fittest = [20,20,1];
+    GA.FileIn = 'GA_11_04_11_29.mat';
+    % GA.FileOut = GA.FileIn;
 
-GA.FileOut = ['GA_',datestr(now,'mm_dd_hh_MM'),'.mat'];
+    GA.FileOut = ['GA_',datestr(now,'mm_dd_hh_MM'),'.mat'];
+else
+    GA = MOOGA(gen,pop);
+    GA = GA.SetFittest(20,20,0.5);
+    GA.JOAT = 2; GA.Quant = 0.6;
+    % GA.Fittest = [20,20,1];
+    GA.FileIn = file_in;
+    GA.FileOut = file_out;
+end
+
 GA.Graphics = 1;
-
-% GA.ReDo = 1;
+GA.ReDo = 1;
 
 % Set up the genome
 % Controller with swing pulse + limited ankle pulse and feedback

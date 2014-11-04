@@ -365,8 +365,8 @@ classdef MOOGA
                 ZMPfront = max(ZMP);
                 ZMPback = min(ZMP);
                 % Max foot size
-                MaxFront = 0.4; % 40cm (ankle to toes)
-                MaxBack = 0.2; % 10cm (ankle to heel)
+                MaxFront = 0.25; % cm (ankle to toes)
+                MaxBack = 0.15; % cm (ankle to heel)
                 if abs(ZMPfront)/MaxFront>abs(ZMPback)/MaxBack
                     Max = MaxFront;
                     ZMP = abs(ZMPfront);
@@ -421,7 +421,7 @@ classdef MOOGA
                     break;
                 end
             end
-            fit = abs(Slope);
+            fit = min(abs(Slope),15);
         end
         
         function [fit,out] = UpSlopeFit(Sim)
@@ -442,7 +442,7 @@ classdef MOOGA
             [ZMP,~] = MOOGA.ZMPFit(ZMPSim);
             
 %             fit = [50*ZMP*(1-cosd(Slope)), Slope, ZMP];
-            fit = [(Slope+3.0*ZMP)/18.0 Slope, ZMP];
+            fit = [(Slope+5.0*ZMP)/20.0 Slope, ZMP];
         end
         
         function [fit,out] = ZMPUpFit(Sim)

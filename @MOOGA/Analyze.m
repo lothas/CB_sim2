@@ -6,7 +6,7 @@ function [ Data ] = Analyze( GA, varargin )
 %   required ZMP, etc.
 
 MaxTries = 10;
-base_d = 0.05;
+base_d = 0.3;
 
 switch nargin 
     case 2
