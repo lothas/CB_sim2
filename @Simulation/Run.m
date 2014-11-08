@@ -95,6 +95,20 @@ function [ sim ] = Run( sim )
             end
         end
 
+        if sim.nOuts>0 && sim.EndZMP == 1
+            % Check ZMP
+            ThisTorques = repmat(sim.Con.NeurOutput()',length(TTemp),1);
+            CleanTorques = sim.GetCleanPulses(TTemp,XTemp,ThisTorques);
+            [ZMPfront, ZMPback] = sim.Mod.GetZMP(XTemp,CleanTorques);
+            if ZMPfront>sim.Mod.A2T || abs(ZMPback)>sim.Mod.A2H
+                % ZMP crossed the limits
+                sim.Out.Type = 8;
+                sim.Out.Text = 'ZMP crossed the limits';
+                sim.StopSim = 1;
+                break;
+            end                
+        end
+        
         % Check ground clearance
 %         [xNS,yNS] = sim.Mod.GetPos(Xa(sim.ModCo),'NS');
 %         if yNS-sim.Env.Surf(xNS)<-1e-4*sim.Mod.L

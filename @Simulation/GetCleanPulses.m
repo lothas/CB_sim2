@@ -1,17 +1,23 @@
-function [varargout] = GetCleanPulses(sim)
-%GETCLEANPULSES Separates the "impulse" pulses from regular pulses        
-    T = sim.Out.T;
-    NT = length(T);
-    X = sim.Out.X;
-    Torques = sim.Out.Torques;
-    Impulses = zeros(size(sim.Out.Torques,1),1);
+function [varargout] = GetCleanPulses(sim, varargin)
+%GETCLEANPULSES Separates the "impulse" pulses from regular pulses   
+    if nargin == 1
+        T = sim.Out.T;
+        X = sim.Out.X;
+        Torques = sim.Out.Torques;
+    else
+        T = varargin{1};
+        X = varargin{2};
+        Torques = varargin{3};
+    end
     
+    Impulses = zeros(size(Torques,1),1);
     if ~isempty(sim.Con.ExtPulses)
         ImpInd = sim.Con.ExtPulses;
         [ImpJoint,~,~] = find(sim.Con.OutM(:,sim.Con.ExtPulses));
         Impulses = zeros(size(sim.Out.Torques,1),length(ImpJoint));
 
         % Remove "push-off" torques
+        NT = length(T);
         stepTime = find(diff(sim.Out.SuppPos(:,1))~=0);
         stepTime = [0; stepTime; NT];
         pulseEnd = zeros(length(stepTime),1);

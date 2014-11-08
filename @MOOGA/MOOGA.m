@@ -349,21 +349,10 @@ classdef MOOGA
                 out = [];
             else
                 X = Sim.Out.X;
-                T = Sim.Out.T;
-                NT = length(T);
                 Torques = Sim.GetCleanPulses();
-
-                % Process the data
-                GRF = zeros(NT,2);
-                ZMP = zeros(NT,1);
-                for t=1:NT
-                    thisX = X(t,Sim.ModCo);
-                    GRF(t,:) = Sim.Mod.GetGRF(thisX)';
-                    ZMP(t) = Torques(t,1)/GRF(t,2); % Ankle torque/GRFy
-                end
-
-                ZMPfront = max(ZMP);
-                ZMPback = min(ZMP);
+                
+                [ZMPfront,ZMPback] = Sim.Mod.GetZMP(X, Torques);
+                
                 % Max foot size
                 MaxFront = 0.25; % cm (ankle to toes)
                 MaxBack = 0.15; % cm (ankle to heel)
@@ -383,7 +372,7 @@ classdef MOOGA
         end
         
         function [fit,out] = SlopeFit(Sim,dir)
-            % Start running up/downwards at intervals and check that the
+            % Start running up/downwards at intervals and checks that the
             % simulation converges on each slope before moving forward
             
             Slope = 0;

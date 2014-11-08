@@ -30,6 +30,10 @@ else
                 CB.I = value;
             case 'Clearance'
                 CB.Clearance = value;
+            case 'A2T'
+                CB.A2T = value;
+            case 'A2H'
+                CB.A2H = value;
             case 'g' % gravity
                 CB.g = value;
             case 'damp' % Damping (for both legs)

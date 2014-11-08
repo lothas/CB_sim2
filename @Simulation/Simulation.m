@@ -28,6 +28,9 @@ classdef Simulation < handle & matlab.mixin.Copyable
         % 0 - the end of time
         % [1,numsteps] - numsteps are taken on end_slope
         % 2 - the system converges to a limit cycle
+        EndZMP = 1;
+        % If EndZMP = 1 the simulation will stop if the
+        % limits defined in the CB model are crossed
         
         CurSpeed; StepsTaken; Steps2Slope;
         MaxSlope; MinSlope;

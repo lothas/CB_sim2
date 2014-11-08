@@ -2,6 +2,14 @@ function Plot( GA,which )
 %PLOT Outputs different plots of the algorithm's performance
 switch which
     case {'Fit','fit','fitness'}
+        PlotFit(1);
+    case {'FitMax','fitmax'}
+        PlotFit(0);
+end
+
+    function PlotFit(Type)
+        % Type 0: Just max
+        % Type 1: Max and mean
         figure()
         hold on
         Generations = 1:GA.Generations;
@@ -15,33 +23,37 @@ switch which
             FitMax = reshape(max(GA.Fit(:,FitInd,:)),LF,[]);
             FitMean = reshape(mean(GA.Fit(:,FitInd,:)),LF,[]);
             
-            MaxMax = max(max(FitMax));
-            if MaxMax>1
-                % Normalize values larger than 1
-                maxID = find(FitMax==MaxMax,1,'first');
-                row = 1+mod(maxID,size(FitMax,1));
-                col = ceil(maxID/size(FitMax,1));
-                FitMax(row,:) = FitMax(row,:)/MaxMax;
-            end
-                
-            Thish = plot(Generations,FitMax,'Color',Colors{f},...
-                'LineWidth',2);
-            h(f) = Thish(1);
-            plot(Generations,FitMean,'--','Color',Colors{f},...
-                'LineWidth',2);
-            
-            if MaxMax>1
-                % Add a text balloon with the max value
-                text(Generations(col)-0.2,0.98,num2str(MaxMax,'%.2f'),...
-                    'HorizontalAlignment','center',...
-                    'BackgroundColor',[1 1 1],'FontSize',12,...
-                    'VerticalAlignment','top');
+            for fi = 1:LF
+                FitMaxi = FitMax(fi,:);
+                FitMeani = FitMean(fi,:);
+                Max = max(FitMaxi);
+                if Max>1
+                    % Normalize values larger than 1
+                    maxID = find(FitMaxi==Max,1,'first');
+                    FitMaxi = FitMaxi/Max;
+                    FitMeani = FitMeani/Max;
+                end
+
+                Thish = plot(Generations,FitMaxi,'Color',Colors{f},...
+                    'LineWidth',2);
+                h(f) = Thish(1);
+                if Type == 1
+                    plot(Generations,FitMeani,'--','Color',Colors{f},...
+                        'LineWidth',2);
+                end
+
+                if Max>1
+                    % Add a text balloon with the max value
+                    text(Generations(maxID)-0.2,0.98,num2str(Max,'%.2f'),...
+                        'HorizontalAlignment','center',...
+                        'BackgroundColor',[1 1 1],'FontSize',12,...
+                        'VerticalAlignment','top');
+                end
             end
             
             legends{f} = MOOGA.GetFitFcnName(GA.FitFcn{f,2});
         end
         legend(h,legends,'Location','NorthWest');
-end
-
+    end
 end
 

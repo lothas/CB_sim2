@@ -20,6 +20,10 @@ classdef CompassBiped < handle & matlab.mixin.Copyable
         
         LegShift=0; % leg shift var. for clearance
         Clearance=0.03; % clearance
+        
+        % Foot size, for ZMP
+        A2T = 0.15; % Ankle to toe
+        A2H = 0.1;  % Ankle to heel
 
         g=9.81; % Gravity
         
@@ -59,7 +63,7 @@ classdef CompassBiped < handle & matlab.mixin.Copyable
         % 2 - Robot falling
         
         % Set keys
-        SetKeys = {'m','mh','L','a','I','Clearance',...
+        SetKeys = {'m','mh','L','a','I','Clearance','A2T','A2H',...
             'g','damp','dampNS','dampS','xS','yS','Support',...
             'm_radius','m_color','mh_radius','mh_color',...
             'leg_width','leg_color','CircRes','LinkRes','LineWidth'};
@@ -272,6 +276,26 @@ classdef CompassBiped < handle & matlab.mixin.Copyable
                   Coef1*cos(q1)*q1dot2 + Coef2*cos(q2)*q2dot2;
             F(2)= Coef1*cos(q1)*q1dot^2 + Coef2*cos(q2)*q2dot^2 + ...
                   Coef1*sin(q1)*q1dot2 + Coef2*sin(q2)*q2dot2 + (2*CB.m+CB.mh)*CB.g;
+        end
+        
+        function [ZMPf,ZMPb] = GetZMP(CB, X, Torques)
+            NT = size(X,1);
+            curTrq = CB.Torques; % Store current torques
+
+            % Process the data
+            GRF = zeros(NT,2);
+            ZMP = zeros(NT,1);
+            for t=1:NT
+                thisX = X(t,:);
+                CB.Torques = Torques(t,:)';
+                GRF(t,:) = CB.GetGRF(thisX)';
+                ZMP(t) = Torques(t,1)/GRF(t,2); % Ankle torque/GRFy
+            end
+
+            ZMPf = max(0,max(ZMP));
+            ZMPb = min(0,min(ZMP));
+            
+            CB.Torques = curTrq; % restore torques
         end
         
         function [Length] = GetStepLength(CB, X)

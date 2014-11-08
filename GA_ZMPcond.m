@@ -1,15 +1,14 @@
-function [  ] = GA_ROBIO( gen, pop, file_in, file_out )
-% Run MOOGA to fine tune the hand tuned controller used in the ROBIO/TRO
-% paper.
-% close all; clear all; clear classes;
+function [  ] = GA_ZMPcond( gen, pop, file_in, file_out )
+% Run MOOGA using only Vel, Nrg and Slope fitness but limiting the
+% Simulation with a bounded foot size (ZMP threshold)
 
 if nargin<4
-    GA = MOOGA(6,6000);
+    GA = MOOGA(25,1000);
     % GA = MOOGA(10,100);
     GA = GA.SetFittest(20,20,0.5);
-    GA.JOAT = 2; GA.Quant = 0.6;
+    GA.JOAT = 2; GA.Quant = 0.7;
     % GA.Fittest = [20,20,1];
-    GA.FileIn = 'GA_11_06_14_26_St1.mat';
+    GA.FileIn = 'GA_11_08_11_18.mat';
 %     GA.FileOut = GA.FileIn;
 
     GA.FileOut = ['GA_',datestr(now,'mm_dd_hh_MM'),'.mat'];
@@ -23,7 +22,7 @@ else
 end
 
 GA.Graphics = 0;
-GA.ReDo = 1;
+GA.ReDo = 0;
 
 % Set up the genome
 % Controller with swing pulse + limited ankle pulse and feedback
@@ -57,7 +56,7 @@ GA.Sim.EndCond = 2; % Run until converge (or fall)
 
 % Set up the compass biped model
 % GA.Sim.Mod = GA.Sim.Mod.Set('damp',0.3);
-GA.Sim.Mod = GA.Sim.Mod.Set('I',0,'damp',0);
+GA.Sim.Mod = GA.Sim.Mod.Set('I',0,'damp',0,'A2T',0.16,'A2H',0.12);
 
 % Set up the terrain
 start_slope = 0;
@@ -82,16 +81,9 @@ GA.Sim.Mod.LegShift = GA.Sim.Mod.Clearance;
 % Fitness functions
 GA.FitFcn = {1, @MOOGA.VelFit;
              2, @MOOGA.NrgEffFit;
-             %@MOOGA.EigenFit;
-             3:5, @MOOGA.ZMPUpFit;
-             6:8, @MOOGA.ZMPDownFit};
-%              @GA.UpSlopeFit; % @GA.UphillFitRun;
-%              @GA.DownSlopeFit; % @GA.DownhillFitRun};
-%              @GA.ZMPFit};
-% GA.FitFcn = {@MOOGA.UpSlopeFit; % @GA.UphillFitRun;
-%              @MOOGA.DownSlopeFit; % @GA.DownhillFitRun};
-%              @MOOGA.ZMPFit};
-GA.FitIDs = [1,2,3,6];
+             3, @MOOGA.UpSlopeFit;
+             4, @MOOGA.DownSlopeFit};
+GA.FitIDs = [1,2,3,4];
 GA.NFit = size(GA.FitFcn,1);
 GA.Sim.PMFull = 1; % Run poincare map on all 5 coords
 
