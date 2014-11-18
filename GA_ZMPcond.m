@@ -3,12 +3,12 @@ function [  ] = GA_ZMPcond( gen, pop, file_in, file_out )
 % Simulation with a bounded foot size (ZMP threshold)
 
 if nargin<4
-    GA = MOOGA(25,1000);
+    GA = MOOGA(6,1000);
     % GA = MOOGA(10,100);
     GA = GA.SetFittest(20,20,0.5);
-    GA.JOAT = 2; GA.Quant = 0.7;
+    GA.JOAT = 2; GA.Quant = 0.6;
     % GA.Fittest = [20,20,1];
-    GA.FileIn = 'GA_11_08_11_18.mat';
+    GA.FileIn = 'GA_11_12_20_44.mat';
 %     GA.FileOut = GA.FileIn;
 
     GA.FileOut = ['GA_',datestr(now,'mm_dd_hh_MM'),'.mat'];
@@ -33,15 +33,15 @@ MaxHipT = 180;
 TorqueFBMin = [-300*ones(1,NAnkleT),-600*ones(1,NHipT)];
 TorqueFBMax = -TorqueFBMin;
 Keys = {'omega0','P_LegE',    'Pulses',    'Pulses',...
-    'kOmega_u','kOmega_d','kTorques_u','kTorques_d';...
+    'kOmega_u','kTorques_u','kOmega_d','kTorques_d';...
                1,       1, [NAnkleT,1],   [NHipT,2],...
              1,         1,           1,           1};
-Range = {1.3, 0.50, [-MaxAnkleT, 0, 0.01], [-MaxHipT, 0, 0.01],...
-    -5, -5, TorqueFBMin, TorqueFBMin; % Min
+Range = {0.7, 0.50, [-MaxAnkleT, 0, 0.01], [-MaxHipT, 0, 0.01],...
+    -6, TorqueFBMin, -6, TorqueFBMin; % Min
          1.7, 0.85, [MaxAnkleT, 0.99, 0.99], [MaxHipT, 0.99, 0.99],...
-    5,  5, TorqueFBMax, TorqueFBMax}; % Max
-MutDelta0 = 0.03;
-MutDelta1 = 0.01;
+    6, TorqueFBMax,  6, TorqueFBMax}; % Max
+MutDelta0 = 0.04;
+MutDelta1 = 0.02;
 
 GA.Gen = Genome(Keys, Range);
 KeyLength = GA.Gen.KeyLength;
@@ -81,9 +81,10 @@ GA.Sim.Mod.LegShift = GA.Sim.Mod.Clearance;
 % Fitness functions
 GA.FitFcn = {1, @MOOGA.VelFit;
              2, @MOOGA.NrgEffFit;
-             3, @MOOGA.UpSlopeFit;
-             4, @MOOGA.DownSlopeFit};
-GA.FitIDs = [1,2,3,4];
+             3, @MOOGA.EigenFit;
+             4, @MOOGA.UpSlopeFit;
+             5, @MOOGA.DownSlopeFit};
+GA.FitIDs = [1,2,3,4,5];
 GA.NFit = size(GA.FitFcn,1);
 GA.Sim.PMFull = 1; % Run poincare map on all 5 coords
 

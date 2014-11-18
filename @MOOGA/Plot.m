@@ -1,10 +1,35 @@
-function Plot( GA,which )
+function Plot( GA,varargin )
 %PLOT Outputs different plots of the algorithm's performance
-switch which
+if nargin<2
+    PlotFit(0);
+end
+
+switch varargin{1}
     case {'Fit','fit','fitness'}
         PlotFit(1);
     case {'FitMax','fitmax'}
         PlotFit(0);
+    case {'Gen','gen'}
+        if nargin<3
+            error('No specific genome provided');
+        else
+            if length(varargin{2}) == 1
+                ID = varargin{2}(1);
+                Gen = GA.Progress;
+            else
+                ID = varargin{2}(1);
+                Gen = varargin{2}(2);
+            end
+            
+            % Open analysis data if it exists
+            Data = GA.Analyze(Gen,ID);
+            
+            if nargin == 3
+                GA.PlotGen(Data);
+            else
+                GA.PlotGen(Data,varargin{3:end});
+            end
+        end
 end
 
     function PlotFit(Type)
@@ -55,5 +80,6 @@ end
         end
         legend(h,legends,'Location','NorthWest');
     end
+        
 end
 
