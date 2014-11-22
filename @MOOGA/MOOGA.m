@@ -376,7 +376,7 @@ classdef MOOGA
             % simulation converges on each slope before moving forward
             
             Slope = 0;
-            dSlope = dir*2;
+            dSlope = dir*1;
             SlSim = deepcopy(Sim);
             SlSim.doGoNoGo = 2;
             SlSim.GNGThresh = [10,10];

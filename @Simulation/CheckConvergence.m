@@ -84,7 +84,7 @@ function [ sim ] = CheckConvergence( sim )
                 sim.ConvProgr(1) = 0;
                 sim.minMaxDiff(1) = thisminMax(1);
                 
-                if sim.ConvProgr(2) >= sim.GNGThresh(1)
+                if sim.ConvProgr(2) >= sim.GNGThresh(2)
                     if sim.doGoNoGo == 2
                         % Stop the simulation
                         sim.Out.Type = 7;
