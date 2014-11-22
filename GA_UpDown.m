@@ -3,12 +3,12 @@ function [  ] = GA_UpDown( gen, pop, file_in, file_out )
 % Simulation with a bounded foot size (ZMP threshold)
 
 if nargin<4
-    GA = MOOGA(10,5000);
+    GA = MOOGA(20,5000);
     % GA = MOOGA(10,100);
     GA = GA.SetFittest(15,15,0.5);
     GA.JOAT = 2; GA.Quant = 0.5;
     % GA.Fittest = [20,20,1];
-    GA.FileIn = 'GA_11_20_09_30.mat';
+%     GA.FileIn = 'GA_11_21_16_33.mat';
 %     GA.FileOut = GA.FileIn;
 
     GA.FileOut = ['GA_',datestr(now,'mm_dd_hh_MM'),'.mat'];
@@ -82,26 +82,12 @@ GA.Sim.Mod.LegShift = GA.Sim.Mod.Clearance;
 GA.FitFcn = {1, @MOOGA.VelFit;
              2, @MOOGA.NrgEffFit;
              3, @MOOGA.EigenFit;
-             4, @MOOGA.UpSlopeFit;
-             5, @MOOGA.DownSlopeFit;
-             6, @MOOGA.CombFit};
-GA.FitIDs = [1,2,3,4,5,6];
+             4:6, @MOOGA.UpDownFit};
+GA.FitIDs = [1,2,3,4];
 GA.NFit = size(GA.FitFcn,1);
-GA.NCombFit = 1;
-GA.CombProd = {[4,5]};
 GA.Sim.PMFull = 1; % Run poincare map on all 5 coords
 
 GA = GA.InitGen();
-
-% Add the hand-tuned sequence
-% GA.Seqs(1,:,1) = [1.47554, 0.648931, 17.4513, 0.00295044, 0.0964363, 0.863992, 0.0344213,...
-% 0.440563, 2.85191, 0.0638943, 0.312524, -25.3207, 0.18705, 0.546365, 78.8249,...
-% 0.0118607, 0.144335, -0.656188, 0.658988, 0.0902285, 0.323728, 1.34998, -36.7771,...
-% -378.117, 27.6624, 62.126, -14.0237, -80.0125, 48.3919, -297.515, -0.0371825,...
-% -122.33, 453.648, 52.8764];
-% GA.Seqs(2,:,1) = [1.106, 0.65, 13.626, 0, 0.1, -4.628, 0, 0.4, 0, 0, 0.4,...
-%                                13.626, 0, 0.1, 0, 0, 0.1, 0, 0, 0.1,...
-%        0.46, 0.9, 95, -443, 0, 95, 0, 0, 80, -295, 0, 80, 0, 0];
 
 % Update MOOGA parameters after each generation
     function GA = GenFcn(GA)

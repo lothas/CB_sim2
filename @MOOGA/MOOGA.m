@@ -44,10 +44,7 @@ classdef MOOGA
         NFit;
         FitFcn;     % Fitness functions handles
         FitIDs;     % Which values to use from within Fit
-        
-        NCombFit=0; % Number of fitness combinations (product of fits)
-        CombProd;   % Cell array with fit product specifications
-        
+                
         % External function (called at the end of every generation)
         GenerationFcn;
         
@@ -445,10 +442,18 @@ classdef MOOGA
             [fit,out] = MOOGA.UDZMPFit(Sim,-1);
         end
         
-        function [fit,out] = CombFit(Sim) %#ok<INUSD>
-            % Combines several fitness results (done in MOOGA/Run)
-            fit = 0;
-            out = [];
+        function [fit,out] = UpDownFit(Sim)
+            % Combines the upslope and downslope fitness results
+            % Run the upslope test
+            [up_fit,up_out] = MOOGA.SlopeFit(Sim,1);
+            % Run the downslope test
+            [down_fit,down_out] = MOOGA.SlopeFit(Sim,-1);
+            
+            fit = [up_fit*down_fit up_fit down_fit];
+            
+            UDSim = deepcopy(Sim);
+            UDSim.Out = up_out;
+            out = UDSim.JoinOuts(down_out);
         end
         
         function [name] = GetFitFcnName(fcn_handle)

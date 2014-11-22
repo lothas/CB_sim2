@@ -51,8 +51,7 @@ for g = GA.Progress+1:GA.Generations
     
     gSeqs = GA.Seqs(:,:,g);
     gFit = GA.Fit(:,:,g);
-    gNCombFit = GA.NCombFit;
-    gCombProd = GA.CombProd;
+    
     parfor i = 1:GA.Population
 %     for i = 1:GA.Population
         if any(gFit(i,:)~=0)
@@ -102,26 +101,6 @@ for g = GA.Progress+1:GA.Generations
                     end
                 end                    
             end
-            
-            % Postprocessing for CombFit
-            if ~isempty(strfind(func2str(FitFcn{f}),'CombFit'))
-                for c = 1:gNCombFit
-                    thisFit(FitInd{f}(c)) = 1;
-                    for cf = 1:length(gCombProd{c}) %#ok<PFBNS>
-                        thisFit(FitInd{f}(c)) = thisFit(FitInd{f}(c))*...
-                            thisFit(gCombProd{c}(cf));
-                    end
-                end
-            end
-                    
-            
-            % Postprocesing for ZMPFit
-%             if ~isempty(strfind(func2str(FitFcn{f}),'ZMPFit'))
-%                 % Update the fitness based on the uphill (4) and
-%                 % downhill (5) fitness
-%                 thisFit(FitInd{f}) = 7.5*thisFit(FitInd{f})*...
-%                     (1-cosd(max(thisFit(UpID),thisFit(DownID))));
-%             end
         end        
         gFit(i,:) = thisFit;
     end
