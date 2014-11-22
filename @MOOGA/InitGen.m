@@ -57,14 +57,18 @@ if exist('In','var') == 1
 
             % Transfer top IDs to new population
             GA.Seqs(:,:,1) = In.GA.Seqs(TopIDs,:,In.GA.Progress);  
-            GA.Fit(:,ThisFitID,1) = ...
-                In.GA.Fit(TopIDs,InFitID,In.GA.Progress);            
+            if ~GA.ReDo 
+                GA.Fit(:,ThisFitID,1) = ...
+                    In.GA.Fit(TopIDs,InFitID,In.GA.Progress);
+            end
         else
             % Copy the last generation's seq. into new GA
             GA.Seqs(1:In.GA.Population,:,1) = ...
                 In.GA.Seqs(:,:,In.GA.Progress);
-            GA.Fit(1:In.GA.Population,ThisFitID,1) = ...
-                In.GA.Fit(:,InFitID,In.GA.Progress);   
+            if ~GA.ReDo
+                GA.Fit(1:In.GA.Population,ThisFitID,1) = ...
+                    In.GA.Fit(:,InFitID,In.GA.Progress);
+            end
             % Generate new random sequences
             GA.Seqs(In.GA.Population+1:end,:,1) = ...
                 GA.Gen.RandSeq(GA.Population-In.GA.Population);

@@ -45,6 +45,9 @@ classdef MOOGA
         FitFcn;     % Fitness functions handles
         FitIDs;     % Which values to use from within Fit
         
+        NCombFit=0; % Number of fitness combinations (product of fits)
+        CombProd;   % Cell array with fit product specifications
+        
         % External function (called at the end of every generation)
         GenerationFcn;
         
@@ -410,7 +413,7 @@ classdef MOOGA
                     break;
                 end
             end
-            fit = min(abs(Slope),15);
+            fit = min(abs(Slope),10);
         end
         
         function [fit,out] = UpSlopeFit(Sim)
@@ -431,7 +434,7 @@ classdef MOOGA
             [ZMP,~] = MOOGA.ZMPFit(ZMPSim);
             
 %             fit = [50*ZMP*(1-cosd(Slope)), Slope, ZMP];
-            fit = [(Slope+5.0*ZMP)/20.0 Slope, ZMP];
+            fit = [(Slope+5.0*ZMP)/15.0 Slope, ZMP];
         end
         
         function [fit,out] = ZMPUpFit(Sim)
@@ -440,6 +443,12 @@ classdef MOOGA
         
         function [fit,out] = ZMPDownFit(Sim)
             [fit,out] = MOOGA.UDZMPFit(Sim,-1);
+        end
+        
+        function [fit,out] = CombFit(Sim) %#ok<INUSD>
+            % Combines several fitness results (done in MOOGA/Run)
+            fit = 0;
+            out = [];
         end
         
         function [name] = GetFitFcnName(fcn_handle)

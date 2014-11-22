@@ -130,6 +130,14 @@ classdef Controller < handle & matlab.mixin.Copyable
             Xperc = (X-NC.P_reset)/(NC.P_th-NC.P_reset);
         end
         
+        function diff = PhaseDiff(NC,ph1,ph2)
+            diff = ph1 - ph2;
+            % wrap it up
+            Range = NC.P_th - NC.P_reset;
+            diff(diff>Range/2) = diff(diff>Range/2) - Range;
+            diff(diff<-Range/2) = diff(diff<-Range/2) + Range;
+        end
+        
         function [NC] = Adaptation(NC, Phi)
             if NC.FBType == 0
                 % NO FEEDBACK

@@ -12,7 +12,10 @@ function [ sim ] = CheckConvergence( sim )
         if Checked(p)
             continue;
         end
-        diff = norm(sim.ICstore(:,1) - sim.ICstore(:,1+p));
+        vdiff = [sim.ICstore(sim.ModCo,1) - sim.ICstore(sim.ModCo,1+p);
+                 sim.Con.PhaseDiff(sim.ICstore(sim.ConCo,1),...
+                                   sim.ICstore(sim.ConCo,1+p))];
+        diff = norm(vdiff);
         
         if diff < sim.minDiff
             % Set every period multiple of p as converging

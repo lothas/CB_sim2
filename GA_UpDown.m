@@ -1,4 +1,4 @@
-function [  ] = GA_ZMPcond( gen, pop, file_in, file_out )
+function [  ] = GA_UpDown( gen, pop, file_in, file_out )
 % Run MOOGA using only Vel, Nrg and Slope fitness but limiting the
 % Simulation with a bounded foot size (ZMP threshold)
 
