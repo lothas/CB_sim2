@@ -34,7 +34,7 @@ classdef Simulation < handle & matlab.mixin.Copyable
         
         CurSpeed; StepsTaken; Steps2Slope;
         MaxSlope; MinSlope;
-        ICstore; nICsStored = 10;
+        ICstore; nICsStored = 10; ICdiff;
         minDiff = 1e-7; % Min. difference for LC convergence
         stepsReq = 15; % Steps of minDiff required for convergence
         stepsSS; % Steps taken since minDiff

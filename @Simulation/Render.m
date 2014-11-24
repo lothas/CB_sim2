@@ -105,14 +105,17 @@ function status = Render(sim,t,X,flag)
         % Update convergence display
         Period = find(sim.stepsSS>0,1,'first');
         if ~isempty(Period)
-            diff = norm(sim.ICstore(:,1) - sim.ICstore(:,1+Period));
+%             diff = norm(sim.ICstore(:,1) - sim.ICstore(:,1+Period));
+            diff = min(sim.ICdiff);
             set(sim.hConv,'string',...
                 sprintf(sim.ConvStr,diff,int2str(Period)),...
                     'backgroundcolor',[0.5 1 0.5]);
         else
-            diff = norm(sim.ICstore(:,1) - sim.ICstore(:,2));
+%             diff = norm(sim.ICstore(:,1) - sim.ICstore(:,2));
+            diff = min(sim.ICdiff);
+            Period = find(sim.ICdiff == diff, 1, 'first');
             set(sim.hConv,'string',...
-                sprintf(sim.ConvStr,diff,'-'),...
+                sprintf(sim.ConvStr,diff,['(',int2str(Period),')']),...
                     'backgroundcolor',get(gca,'color'));
         end
         % Update torque display

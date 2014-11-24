@@ -379,7 +379,7 @@ classdef MOOGA
             dSlope = dir*1;
             SlSim = deepcopy(Sim);
             SlSim.doGoNoGo = 2;
-            SlSim.GNGThresh = [10,10];
+            SlSim.GNGThresh = [5,10];
             if isempty(SlSim.IClimCyc)
                 SlSim.IClimCyc = 0*SlSim.IC;
                 Leadway = 3;
@@ -444,6 +444,14 @@ classdef MOOGA
         
         function [fit,out] = UpDownFit(Sim)
             % Combines the upslope and downslope fitness results
+            
+            if isempty(Sim.Period)
+                % Weed out results that didn't converge
+                fit = [0 0 0];
+                out = [];
+                return;
+            end
+                
             % Run the upslope test
             [up_fit,up_out] = MOOGA.SlopeFit(Sim,1);
             % Run the downslope test

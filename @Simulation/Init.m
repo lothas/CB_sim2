@@ -59,6 +59,7 @@ function [ sim ] = Init( sim )
     sim.MinSlope = 0;
     sim.MaxSlope = 0;
     sim.ICstore = zeros(sim.stDim, sim.nICsStored);
+    sim.ICdiff = ones(1,sim.nICsStored-1);
     sim.stepsSS = zeros(1,sim.nICsStored-1);
     
     % Init sim.End result

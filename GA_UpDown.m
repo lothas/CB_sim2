@@ -3,12 +3,12 @@ function [  ] = GA_UpDown( gen, pop, file_in, file_out )
 % Simulation with a bounded foot size (ZMP threshold)
 
 if nargin<4
-    GA = MOOGA(20,5000);
+    GA = MOOGA(30,2500);
     % GA = MOOGA(10,100);
     GA = GA.SetFittest(15,15,0.5);
     GA.JOAT = 2; GA.Quant = 0.5;
     % GA.Fittest = [20,20,1];
-%     GA.FileIn = 'GA_11_21_16_33.mat';
+    GA.FileIn = 'GA_11_22_18_27.mat';
 %     GA.FileOut = GA.FileIn;
 
     GA.FileOut = ['GA_',datestr(now,'mm_dd_hh_MM'),'.mat'];
@@ -70,7 +70,7 @@ GA.Sim.Con.MaxSat = [MaxAnkleT*ones(1,NAnkleT),MaxHipT*ones(1,NHipT)];
 
 % Simulation parameters
 GA.Sim.IC = [start_slope, start_slope, 0, 0, 0];
-GA.Sim = GA.Sim.SetTime(0,0.15,40);
+GA.Sim = GA.Sim.SetTime(0,0.15,60);
 
 % Some more simulation initialization
 GA.Sim.Mod.LegShift = GA.Sim.Mod.Clearance;

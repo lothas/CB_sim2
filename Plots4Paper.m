@@ -121,30 +121,30 @@ Ncoords = size(Data.IC,1)/max(Data.Period(:,1));
 % figure('units','normalized','Position',[0.25,0.15,0.33,0.6]);
 % subplot(3,1,[1 2]);
 % hold on
-% plot(T,Torques(:,1),...
+% plot(CPGphi,Torques(:,1),...
 %     LineStyles{2},'LineWidth',LineWidth,'Color',Colors{1});
-% plot(T,Torques(:,2),...
+% plot(CPGphi,Torques(:,2),...
 %     LineStyles{1},'LineWidth',LineWidth,'Color',Colors{2});
 % hl = legend('Ankle','Hip');
 % set(hl,'FontSize',LabelFont);
 % set(gca,'XTickLabel',[]);
 % set(gca,'FontSize',AxesFont);
 % ylabel('Torques [Nm]','FontSize',LabelFont);
-% axis([min(T) max(T) ylim])
+% axis([CPGphi(1) CPGphi(end) ylim])
 % 
 % % Add impact time
 % MaxT = max(max(Torques));
-% text(T(ImpN),0.3*MaxT,'Impact','rotation',90,'FontSize',LabelFont);
+% text(CPGphi(ImpN),0.3*MaxT,'Impact','rotation',90,'FontSize',LabelFont);
 % DrawArrow([T(ImpN),0.3*MaxT],[T(ImpN),0.03*MaxT]);
 % 
 % subplot(3,1,3);
 % hold on
-% plot(T,CPGphi,...
+% plot(CPGphi,CPGphi,...
 %     LineStyles{3},'LineWidth',LineWidth,'Color',Colors{3});
 % set(gca,'FontSize',AxesFont);
 % xlabel('Time [sec]','FontSize',LabelFont);
 % ylabel('CPG Phase','FontSize',LabelFont);
-% axis([min(T) max(T) ylim])
+% axis([CPGphi(1) CPGphi(end) ylim])
 % 
 %     function DrawArrow(Tail, Head)
 %         Dir=Head-Tail;
