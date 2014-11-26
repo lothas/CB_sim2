@@ -70,7 +70,7 @@ GA.Sim.Con.MaxSat = [MaxAnkleT*ones(1,NAnkleT),MaxHipT*ones(1,NHipT)];
 
 % Simulation parameters
 GA.Sim.IC = [start_slope, start_slope, 0, 0, 0];
-GA.Sim = GA.Sim.SetTime(0,0.15,60);
+GA.Sim = GA.Sim.SetTime(0,0.15,40);
 
 % Some more simulation initialization
 GA.Sim.Mod.LegShift = GA.Sim.Mod.Clearance;
