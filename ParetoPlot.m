@@ -1,18 +1,28 @@
 clear all
 close all
 
-LnWidth = 3;
+LnWidth = 4;
 MrkrSize = 12;
-FontSizeT = 24;
-FontSize = 20;
-FontSize2 = 16;
+FontSizeT = 14;
+FontSize = 12;
+FontSize2 = 10;
+FitLabels = {
+    'Velocity fitness',...
+    'Energy fitness',...
+    'Stability fitness',...
+    'Up*Down fitness',...
+    'Uphill fitness',...
+    'Downhill fitness'};
+load('GA_11_24_10_25');
+SelectedGen = 4;
 
-load('GA_11_13_19_31_St1');
+%%%%%%%%%%%%%%%%%%%%%%%%%%% First Plot %%%%%%%%%%%%%%%%%%%%%%%%%%%
+Fits = [1 2];
 Fi = [1, 10, 20];
 NF = length(Fi);
 
 figure
-Data = [GA.Fit(:,[1 2],GA.Progress),(1:GA.Population)'];
+Data = [GA.Fit(:,Fits,GA.Progress),(1:GA.Population)'];
 Fronts = GA.Pareto(Data);
 subplot(1,2,1);
 hold on
@@ -23,13 +33,21 @@ for f = 1:NF
     Color = f/NF*[1, 0, 0] + (1-f/NF)*[0, 0.8, 0];
     plot(x,y,'-x','Color',Color,'LineWidth',3,'MarkerSize',12);
 end
-xlabel('Velocity fitness','FontSize',FontSize)
-ylabel('Energy efficiency fitness','FontSize',FontSize)
-set(gca,'FontSize',FontSize2)
+% Add the selected genome
+GenFit = GA.Fit(SelectedGen,Fits,GA.Progress);
+plot(GenFit(1),GenFit(2),'ko','MarkerSize',12,...
+    'MarkerFaceColor',[0 0 0]);
+xlabel(FitLabels{Fits(1)},'FontSize',FontSize)
+ylabel(FitLabels{Fits(2)},'FontSize',FontSize)
+set(gca,'FontSize',FontSize2,'LineWidth',LnWidth/2)
 title('A','FontSize',FontSizeT);
 
-Fi = [1, 4, 15];
-Data = [GA.Fit(:,[4 5],GA.Progress),(1:GA.Population)'];
+%%%%%%%%%%%%%%%%%%%%%%%%%%% Second Plot %%%%%%%%%%%%%%%%%%%%%%%%%%%
+Fits = [5 6];
+Fi = [1, 4, 8, 12];
+NF = length(Fi);
+
+Data = [GA.Fit(:,Fits,GA.Progress),(1:GA.Population)'];
 Fronts = GA.Pareto(Data);
 subplot(1,2,2);
 hold on
@@ -40,9 +58,13 @@ for f = 1:NF
     Color = f/NF*[1, 0, 0] + (1-f/NF)*[0, 0.8, 0];
     plot(x,y,'-x','Color',Color,'LineWidth',3,'MarkerSize',12);
 end
-xlabel('Uphill fitness','FontSize',FontSize)
-ylabel('Downhill fitness','FontSize',FontSize)
-set(gca,'FontSize',FontSize2)
+% Add the selected genome
+GenFit = GA.Fit(SelectedGen,Fits,GA.Progress);
+plot(GenFit(1),GenFit(2),'ko','MarkerSize',12,...
+    'MarkerFaceColor',[0 0 0]);
+xlabel(FitLabels{Fits(1)},'FontSize',FontSize)
+ylabel(FitLabels{Fits(2)},'FontSize',FontSize)
+set(gca,'FontSize',FontSize2,'LineWidth',LnWidth/2)
 title('B','FontSize',FontSizeT);
 
 % Data = [GA.Fit(:,[7 8],GA.Progress),(1:GA.Population)'];

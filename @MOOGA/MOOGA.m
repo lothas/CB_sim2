@@ -133,12 +133,17 @@ classdef MOOGA
             % Find results that fit the requirements
             Conds = ones(GA.Population,1);
             for f = 1:max(cell2mat(GA.FitFcn(:,1)'))
-                Conds = Conds & ...
-                    GA.Fit(:,f,Gnrtn)>=Reqs(f);
+                if Reqs(f)>=0
+                    Conds = Conds & ...
+                        GA.Fit(:,f,Gnrtn)>=Reqs(f);
+                else
+                    Conds = Conds & ...
+                        GA.Fit(:,f,Gnrtn)<=-Reqs(f);
+                end 
             end
 
             Fits = find(Conds);
-            if length(Fits)>10
+            if length(Fits)>10 && nargout<1
                 disp([int2str(length(Fits)),...
                     ' results fit the requirements']);
                 return

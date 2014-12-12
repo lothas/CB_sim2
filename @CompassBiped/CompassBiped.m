@@ -28,8 +28,8 @@ classdef CompassBiped < handle & matlab.mixin.Copyable
         g=9.81; % Gravity
         
         % Dampening
-        dampNS=0; %0.3;
-        dampS=0; %0.3;
+        dampH=0; %0.3; % hip joint friction
+        dampA=0; %0.3; % ankle joint friction
         
         % enum
         Left=1;
@@ -58,13 +58,14 @@ classdef CompassBiped < handle & matlab.mixin.Copyable
         curSpeed = 0; % Current walking speed
         
         stDim=4; % state dimension
-        nEvents=2; % num. of simulation events
+        nEvents=3; % num. of simulation events
         % 1 - Foot contact
         % 2 - Robot falling
+        % 3 - Swing leg falling
         
         % Set keys
         SetKeys = {'m','mh','L','a','I','Clearance','A2T','A2H',...
-            'g','damp','dampNS','dampS','xS','yS','Support',...
+            'g','damp','dampH','dampA','xS','yS','Support',...
             'm_radius','m_color','mh_radius','mh_color',...
             'leg_width','leg_color','CircRes','LinkRes','LineWidth'};
                 
@@ -157,8 +158,8 @@ classdef CompassBiped < handle & matlab.mixin.Copyable
             CB.Igag=CB.I/CB.mh/CB.L^2;
             LMg = CB.mh*CB.L*CB.g;
             DampND = CB.omega/LMg;
-            CB.C1gag=CB.dampS*DampND;
-            CB.C2gag=CB.dampNS*DampND;
+            CB.C1gag=CB.dampA*DampND;
+            CB.C2gag=CB.dampH*DampND;
             
             % ND matrices elements
             CB.M1=(CB.a-2+2/CB.a)*CB.aalpha+CB.Igag+1;
@@ -278,7 +279,7 @@ classdef CompassBiped < handle & matlab.mixin.Copyable
                   Coef1*sin(q1)*q1dot2 + Coef2*sin(q2)*q2dot2 + (2*CB.m+CB.mh)*CB.g;
         end
         
-        function [ZMPf,ZMPb] = GetZMP(CB, X, Torques)
+        function [ZMPf,ZMPb] = GetZMP(CB, X, Torques, Slope)
             NT = size(X,1);
             curTrq = CB.Torques; % Store current torques
 
@@ -289,7 +290,10 @@ classdef CompassBiped < handle & matlab.mixin.Copyable
                 thisX = X(t,:);
                 CB.Torques = Torques(t,:)';
                 GRF(t,:) = CB.GetGRF(thisX)';
-                ZMP(t) = Torques(t,1)/GRF(t,2); % Ankle torque/GRFy
+%                 ZMP(t) = Torques(t,1)/GRF(t,2); % Ankle torque/GRFy
+                % Extended ZMP
+                ZMP(t) = Torques(t,1)/(GRF(t,2)*cos(Slope) -...
+                                       GRF(t,1)*sin(Slope));
             end
 
             ZMPf = max(0,max(ZMP));
@@ -407,6 +411,9 @@ classdef CompassBiped < handle & matlab.mixin.Copyable
             X(1:2) = X(1:2) - Floor.SurfSlope((CB.xS+xNS)/2);
             [HipPosx,HipPosy]=CB.GetPos(X,'Hip'); %#ok<ASGLU>
             value(2)=HipPosy-CB.yS-0.7*CB.L;
+            
+            % Check for the swing leg angular velocity crossing 0 (from +)
+%             value(3)=X(4);
         end
         
         % %%%%%% % Events % %%%%%% %
@@ -437,6 +444,10 @@ classdef CompassBiped < handle & matlab.mixin.Copyable
                     CB.last_t = t;
                 case 2
                     % Robot fell, do nothing
+                    Xa = Xb;
+                case 3
+                    % Extend the leg
+                    CB.LegShift = 0;
                     Xa = Xb;
             end
         end

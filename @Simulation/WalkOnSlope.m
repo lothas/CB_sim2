@@ -10,8 +10,8 @@ function sim = WalkOnSlope(sim, start_s, end_s, leadway, max_t)
 
     % Some more simulation initialization
     sim.Mod.LegShift = sim.Mod.Clearance;
-    %sim.Mod.xS = 0; sim.Mod.yS = 0;
-    sim.Con.FBType = 2;
+    % sim.Mod.xS = 0; sim.Mod.yS = 0;
+    % sim.Con.FBType = 2;
     sim = sim.Init();
     sim.Env = sim.Env.Set('Type','finite','start_slope',start_s,...
                           'start_x',sim.Mod.xS+leadway,...

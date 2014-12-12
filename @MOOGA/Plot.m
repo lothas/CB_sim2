@@ -1,5 +1,17 @@
 function Plot( GA,varargin )
 %PLOT Outputs different plots of the algorithm's performance
+
+% Plots format
+AxesFont = 16;
+LabelFont = 18;
+TitleFont = 20; %#ok<NASGU>
+LineWidth = 4;
+LineStyles = {'-','--',':','-.','-*','-o'};
+Markers = {'+','o','d','^','v'};
+Colors = {[0 0 1],[1 0 0],[0 0.7 0.8],[0 0.7 0],[0.8 0 0.8]};
+Legends = {'\theta_1','\theta_2','d\theta_1/dt',...
+                    'd\theta_2/dt','\phi_C_P_G'};
+
 if nargin<2
     PlotFit(0);
 end
@@ -35,11 +47,9 @@ end
     function PlotFit(Type)
         % Type 0: Just max
         % Type 1: Max and mean
-        figure()
+        figure('units','normalized','Position',[0.1, 0.1, 0.45, 0.6])
         hold on
         Generations = 1:GA.Generations;
-        Colors = {[1 0 0],[0 0 1],[0 0 0],[0 0.7 0],...
-                [0.6 0.4 0],[0 0.4 0.6],[0 0.7 0.3]};
         h = zeros(1,GA.NFit);
         legends = cell(1,GA.NFit);
         for f = 1:GA.NFit
@@ -59,26 +69,36 @@ end
                     FitMeani = FitMeani/Max;
                 end
 
-                Thish = plot(Generations,FitMaxi,'Color',Colors{f},...
-                    'LineWidth',2);
+                if fi == 1
+                    Thish = plot(Generations,FitMaxi,'Color',Colors{f},...
+                        'LineWidth',LineWidth);
+                end
                 h(f) = Thish(1);
+                
                 if Type == 1
+                    if fi>1 
+                        plot(Generations,FitMaxi,'-.','Color',Colors{f},...
+                            'LineWidth',LineWidth);
+                    end
                     plot(Generations,FitMeani,'--','Color',Colors{f},...
-                        'LineWidth',2);
+                        'LineWidth',LineWidth);
                 end
 
-                if Max>1
+                if Max>1 && (fi == 1 || Type == 1)
                     % Add a text balloon with the max value
-                    text(Generations(maxID)-0.2,0.98,num2str(Max,'%.2f'),...
+                    ht = text(Generations(maxID)-0.2,0.98,num2str(Max,'%.2f'),...
                         'HorizontalAlignment','center',...
                         'BackgroundColor',[1 1 1],'FontSize',12,...
                         'VerticalAlignment','top');
+                    set(ht,'FontSize',12);
                 end
             end
             
             legends{f} = MOOGA.GetFitFcnName(GA.FitFcn{f,2});
         end
-        legend(h,legends,'Location','NorthWest');
+        legend(h,legends,'Location','SouthEast','FontSize',LabelFont);
+        xlabel('Generations','FontSize',LabelFont);
+        set(gca,'FontSize',AxesFont,'LineWidth',2);
     end
         
 end

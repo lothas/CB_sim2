@@ -99,7 +99,8 @@ function [ sim ] = Run( sim )
             % Check ZMP
             ThisTorques = repmat(sim.Con.NeurOutput()',length(TTemp),1);
             CleanTorques = sim.GetCleanPulses(TTemp,XTemp,ThisTorques);
-            [ZMPfront, ZMPback] = sim.Mod.GetZMP(XTemp,CleanTorques);
+            Slope = sim.Env.SurfSlope(sim.Mod.xS);
+            [ZMPfront, ZMPback] = sim.Mod.GetZMP(XTemp,CleanTorques,Slope);
             if ZMPfront>sim.Mod.A2T || abs(ZMPback)>sim.Mod.A2H
                 % ZMP crossed the limits
                 sim.Out.Type = 8;

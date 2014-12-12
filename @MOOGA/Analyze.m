@@ -8,6 +8,7 @@ function [ Data ] = Analyze( GA, varargin )
 MaxTries = 10;
 base_d = 0.05;
 
+Type = 'CL';
 switch nargin 
     case 2
         Generation = GA.Progress;
@@ -15,13 +16,17 @@ switch nargin
     case 3
         Generation = varargin{1};
         ID = varargin{2};
+    case 4
+        Generation = varargin{1};
+        ID = varargin{2};
+        Type = varargin{3};
     otherwise
         Generation = GA.Progress;
         TopIDs = GA.GetTopPop(GA.Fittest(1));
         ID = randsample(TopIDs,1);
 end
 
-Filename = ['Gen',int2str(ID),'.mat'];
+Filename = ['Gen',int2str(ID),Type,'.mat'];
 if exist(Filename,'file') == 2
     In = load(Filename);
     Data = In.Data;
@@ -47,8 +52,21 @@ else
     Data.Power = []; % Actuator power required
     Data.EigV = []; % Eigenvalues
     Data.Period = []; % Period
+    Data.StepLength = [];
+    Data.Speed = [];
+    Data.LCGRF = []; % Limit cycle GRF
     Data.LCZMP = []; % Limit cycle ZMP
+    Data.MuFric = []; % Max friction coefficient
     Data.MZMP = []; % Max ZMP
+    
+    % Energies:
+    Data.dPotE = []; % Potential energy gained/lost
+    Data.dKinEIm = []; % Kinetic energy lost to impact
+    Data.dKinEFr = []; % Kinetic energy lost to friction
+    Data.ContEff = []; % Control effort
+    Data.AbsContEff = []; % Absolute control effort
+    Data.COT = []; % Cost of transport
+    
     start_slope = 0;
     d_slope = 0;
     
@@ -61,11 +79,18 @@ end
 
 % Run simulation starting from slope 0 and then increasing/decreasing slope
 Sim = deepcopy(GA.Sim);
+Sim.EndZMP = 0;
 Sim.Graphics = 0;
 if Sim.Graphics == 1
     Sim.Fig = figure();
 end
 Sim.PMFull = 1; % Run poincare map on all 5 coords
+switch Type
+    case 'OL'
+        Sim.Con.FBType = 0;
+    case 'CL'
+        Sim.Con.FBType = 2;
+end
 
 Sim = Data.Gen.Decode(Sim, Data.Seq);
 
@@ -277,8 +302,13 @@ DispRes();
         
         Data.LCx{end+1} = sim.Out.X; % Limit cycle states
         Data.LCt{end+1} = sim.Out.T; % Limit cycle time
-        Data.Period(end,2) = max(sim.Out.T);
         Data.LCtorques{end+1} = sim.Out.Torques; % Limit cycle torques
+        
+        Data.Period(end,2) = max(sim.Out.T); % Step duration
+        X0 = Data.IC(1:sim.stDim,end);
+        Data.StepLength(end+1) = norm(sim.Mod.GetPos(X0,'NS') - ...
+                                      sim.Mod.GetPos(X0,'S'));
+        Data.Speed(end+1) = Data.StepLength(end)/Data.Period(end,2);
         
         % Deal with torques
         % Separate impulses
@@ -308,8 +338,14 @@ DispRes();
             ZMP(t) = Torques(t,1)/GRF(t,2); % Ankle torque/GRFy
         end
 
+        Data.LCGRF{end+1} = GRF;
         Data.LCZMP{end+1} = ZMP;
+        % Max coefficient of friction required and minimum GRFy
+        Data.MuFric(end+1,:) = [max(abs(GRF(:,1)./GRF(:,2))); min(GRF(:,2))];
         Data.MZMP(end+1,:) = [max(ZMP); min(ZMP)]; % ZMP front; back
+        
+        % Calculate energies
+        Data = CalcEnergy(sim,Data);
         
         % Save progress
         save(Filename,'Data');
@@ -406,14 +442,89 @@ DispRes();
 
        % We'll only look at lines 1 and 6 and switch the whole sets
        % 1:5 and 6:10 accordingly. Let row one be always "above" row 6
-       for c=1:N
-           if Lines(1,c)<Lines(6,c)
+       for cl=1:N
+           if Lines(1,cl)<Lines(6,cl)
                % Need to switch
-               Temp=Lines(1:5,c:end);
-               Lines(1:5,c:end)=Lines(6:10,c:end);
-               Lines(6:10,c:end)=Temp;
+               Temp=Lines(1:5,cl:end);
+               Lines(1:5,cl:end)=Lines(6:10,cl:end);
+               Lines(6:10,cl:end)=Temp;
            end
        end
+    end
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%% Potential, Kinetic, and other energies calculation %%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
+    function Data = CalcEnergy(Sim,Data)
+        ESim = deepcopy(Sim);
+        
+        % Get limit cycle
+        X = ESim.Out.X;
+        T = ESim.Out.T;
+        Torques = ESim.Out.Torques;
+        
+        % Get initial and final position
+        Hip0 = zeros(2,1); Hip1 = zeros(2,1);
+        
+        ESim.Mod.xS = ESim.Out.SuppPos(1,1);
+        ESim.Mod.yS = ESim.Out.SuppPos(1,2);
+        [Hip0(1), Hip0(2)] = ESim.Mod.GetPos(X(1,ESim.ModCo),'Hip');
+        
+        ESim.Mod.xS = ESim.Out.SuppPos(end,1);
+        ESim.Mod.yS = ESim.Out.SuppPos(end,2);
+        [Hip1(1), Hip1(2)] = ESim.Mod.GetPos(X(end,ESim.ModCo),'Hip');
+        
+        Weight = ESim.Mod.GetWeight(); % Get weight
+
+        % Calculate distance travelled
+        DistanceTravelled = abs(Hip1(1)-Hip0(1));
+
+        % Calculate absolute control effort
+        StTrq = Torques(:,1)-Torques(:,2);
+        StAngVel = X(:,ESim.ModCo(3));
+        SwTrq = Torques(:,2);
+        SwAngVel = X(:,ESim.ModCo(4));
+        AbsControlEffort = trapz(T,abs(StTrq.*StAngVel)) + ...
+                           trapz(T,abs(SwTrq.*SwAngVel));
+        ControlEffort = trapz(T,StTrq.*StAngVel) + ...
+                        trapz(T,SwTrq.*SwAngVel);
+
+        % Calculate difference in potential energy
+        dPotentialE = Weight*(Hip1(2)-Hip0(2));
+
+        % Calculate kinetic energy lost to impact
+        if ESim.Period(1)>1
+            warning('Period doubling calculation not implemented')
+            dKineticEIm = 0;
+        else
+            Xb = X(end,ESim.ModCo);
+            Xa = ESim.Mod.CalcImpact(Xb);
+            if norm(Xa-X(1,ESim.ModCo))>1e-6
+                warning('Erroneous limit cycle')
+            end
+            K0 = ESim.Mod.GetKineticEnergy(Xb);
+            K1 = ESim.Mod.GetKineticEnergy(Xa);
+            dKineticEIm = K1 - K0;
+        end
+        
+        % Calculate kinetic energy lost to friction
+        StFric = - ESim.Mod.dampA*StAngVel...
+                 - ESim.Mod.dampH*(StAngVel-SwAngVel);
+        SwFric = - ESim.Mod.dampH*(SwAngVel-StAngVel);
+        dKineticEFr = trapz(T,StFric.*StAngVel) + ...
+                      trapz(T,SwFric.*SwAngVel);
+        
+        % Calculate Cost Of Transport
+        COT=(ControlEffort-dPotentialE)/(Weight*DistanceTravelled);
+        
+        % Save data
+        Data.dPotE(end+1,:) = dPotentialE;
+        Data.dKinEIm(end+1,:) = dKineticEIm;
+        Data.dKinEFr(end+1,:) = dKineticEFr;
+        Data.ContEff(end+1,:) = ControlEffort;
+        Data.AbsContEff(end+1,:) = AbsControlEffort;
+        Data.COT(end+1,:) = COT;
     end
 
 end

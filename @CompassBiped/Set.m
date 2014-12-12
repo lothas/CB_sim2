@@ -36,13 +36,13 @@ else
                 CB.A2H = value;
             case 'g' % gravity
                 CB.g = value;
-            case 'damp' % Damping (for both legs)
-                CB.dampNS = value;
-                CB.dampS = value;
-            case 'dampNS' % Damping (for swing leg)
-                CB.dampNS = value;
-            case 'dampS' % Damping (for stance leg)
-                CB.dampS = value;
+            case 'damp' % Damping (for both joints)
+                CB.dampH = value;
+                CB.dampA = value;
+            case 'dampH' % Damping (for hip joint)
+                CB.dampH = value;
+            case 'dampA' % Damping (for ankle joint)
+                CB.dampA = value;
             case 'xS' % Stance leg x position
                 CB.xS = value;
             case 'yS' % Stance leg y position
