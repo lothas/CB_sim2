@@ -6,7 +6,7 @@ function status = Render(sim,t,X,flag)
 
             if sim.Once
                 % Open new figure
-                if sim.Fig
+                if ishandle(sim.Fig) && strcmp(get(sim.Fig,'type'),'figure')
                     figure(sim.Fig);
                     if isempty(findobj(gcf,'Type','uicontrol'))
                         % Make window larger

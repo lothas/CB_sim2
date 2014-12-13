@@ -69,7 +69,7 @@ classdef Terrain < handle & matlab.mixin.Copyable
                         case 3  % parabolla init and end slope
                             Te.start_slope=varargin{2};
                             Te.end_slope=varargin{3};
-                        otherwise
+                        otherwise % case 0: inclined plane
                             Te.start_slope=varargin{2};
                             Te.end_slope=varargin{2};
                     end
@@ -195,7 +195,7 @@ classdef Terrain < handle & matlab.mixin.Copyable
                    sin(alpha), cos(alpha)];
                
             if x<Te.start_x
-                y=0;            
+                y=0*x;
             else
                 y=Te.sinAmp*(1-cos(Te.sinFreq*(x-Te.start_x)));
             end
@@ -203,7 +203,7 @@ classdef Terrain < handle & matlab.mixin.Copyable
 
         function [alpha]=SurfSlope1(Te,x)
             if x<Te.start_x
-                alpha=0;
+                alpha=0*x;
             else
                 alpha=Te.sinAmp*Te.sinFreq*sin(Te.sinFreq*(x));
             end

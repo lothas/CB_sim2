@@ -14,7 +14,7 @@ function [ sim ] = Init( sim )
     sim.StopSim = 0;
         
     % Set render params
-    if sim.Graphics == 1
+    if sim.Graphics == 1 && sim.Once
         if sim.Fig == 0
             sim.Once = 1;
         end
