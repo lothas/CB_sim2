@@ -315,14 +315,14 @@ function CB = Render(CB,X)
             coordZ=zeros(1,2*CB.LinkRes+1);
 
             x=0;
-            y=Length/2-CB.leg_width/2;
+            y=Length-CB.leg_width/2;
             for r=1:CB.LinkRes
                 coordX(1,r)=x+CB.leg_width/2*cos(r/CB.LinkRes*pi);
                 coordY(1,r)=y+CB.leg_width/2*sin(r/CB.LinkRes*pi);
                 coordZ(1,r)=0;
             end
 
-            y=-Length/2+CB.leg_width/2;
+            y=CB.leg_width/2;
             for r=CB.LinkRes:2*CB.LinkRes
                 coordX(1,r+1)=x+CB.leg_width/2*cos(r/CB.LinkRes*pi);
                 coordY(1,r+1)=y+CB.leg_width/2*sin(r/CB.LinkRes*pi);
@@ -336,14 +336,12 @@ function CB = Render(CB,X)
             set(res.Geom,'Parent',res.Trans);
             set(res.Trans,'Matrix',Txy*Rz);
         else
-            Center=[(x0+x1)/2;
-                    (y0+y1)/2];
             Orientation=atan2(y1-y0,x1-x0);
             Length=sqrt((x1-x0)^2+(y1-y0)^2);
 
-            Txy=makehgtform('translate',[Center(1) Center(2) z]);
+            Txy=makehgtform('translate',[x0 y0 z]);
             Rz=makehgtform('zrotate',Orientation-pi/2);
-            Sx=makehgtform('scale',[Length/CB.L,1,1]);
+            Sx=makehgtform('scale',[1,Length/CB.L,1]);
             set(Obj.Trans,'Matrix',Txy*Rz*Sx);
             res=1;
         end

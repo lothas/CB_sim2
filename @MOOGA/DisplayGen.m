@@ -3,7 +3,7 @@ function [ ] = DisplayGen(GA,ID,Gen)
 %   Detailed explanation goes here
 
 Type = 'CL';
-MinSl = -8.3;
+MinSl = -8;
 MaxSl = 7;
 
 if nargin<3
@@ -29,7 +29,39 @@ DefAxesArea = [0.14 0.06 0.84 0.9];
 SlopeID = 1;
 
 % Open analysis data if it exists
-Data = GA.Analyze(Gen,ID,Type);
+AllData = GA.Analyze(Gen,ID,Type);
+Data = LoadRange(AllData,MinSl,MaxSl);
+
+    function Data = LoadRange(AllData,MinSl,MaxSl)
+        i0 = find(AllData.Slopes>=MinSl,1,'first');
+        i1 = find(AllData.Slopes<=MaxSl,1,'last');
+        
+        Data.Slopes = AllData.Slopes(i0:i1);
+        Data.IC = AllData.IC(:,i0:i1);
+        Data.LCx = AllData.LCx(i0:i1);
+        Data.LCt = AllData.LCt(i0:i1);
+        Data.LCtorques = AllData.LCtorques(i0:i1);
+        Data.MTorques = AllData.MTorques(i0:i1,:);
+        Data.Power = AllData.Power(i0:i1,:);
+        Data.EigV = AllData.EigV(:,i0:i1);
+        Data.Period = AllData.Period(i0:i1,:);
+        Data.StepLength = AllData.StepLength(i0:i1);
+        Data.Speed = AllData.Speed(i0:i1);
+        Data.LCGRF = AllData.LCGRF(i0:i1);
+        Data.LCZMP = AllData.LCZMP(i0:i1);
+        Data.MuFric = AllData.MuFric(i0:i1,:);
+        Data.MZMP = AllData.MZMP(i0:i1,:);
+        Data.dPotE = AllData.dPotE(i0:i1);
+        Data.dKinEIm = AllData.dKinEIm(i0:i1);
+        Data.dKinEFr = AllData.dKinEFr(i0:i1);
+        Data.ContEff = AllData.ContEff(i0:i1);
+        Data.AbsContEff = AllData.AbsContEff(i0:i1);
+        Data.COT = AllData.COT(i0:i1);
+        Data.Done = AllData.Done;
+        Data.Gen = AllData.Gen;
+        Data.Seq = AllData.Seq;
+        Data.Zones = {{1:length(Data.Slopes)}};
+    end
 
 DG.fig = figure();
 set(DG.fig,'Toolbar','figure')
@@ -51,7 +83,7 @@ uicontrol('Style','Text','String','Display:',...
 
 Btn0 = 0.89;
 BtnH = 0.045; % Button height
-BtnW = 0.09; % Button width
+BtnW = 0.08; % Button width
 BtnS = BtnH + 0.01; % Button spacing
 Btn1 = Btn0 - 9*BtnS - 0.01;
 

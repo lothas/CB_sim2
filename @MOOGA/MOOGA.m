@@ -247,8 +247,8 @@ classdef MOOGA
                 fit = 0;
             else
                 % Calculate absolute control effort
-%                 StTrq = Torques(:,1)-Torques(:,2);
-                StTrq = Torques(:,1);
+                StTrq = Torques(:,1)-Torques(:,2);
+%                 StTrq = Torques(:,1);
                 StAngVel = X(:,Sim.ModCo(3));
                 SwTrq = Torques(:,2);
 %                 SwAngVel = X(:,Sim.ModCo(4))-X(:,Sim.ModCo(3));

@@ -5,16 +5,20 @@ SelectedGen = 4;
 
 AutoLC = 0; % Set to 1 to plot the LC for the steepest up/downward slope
 % Otherwise set the desired values here (in degrees):
-DSLC = -8.0;
-USLC = 7.0;    
+MinSl = -8;
+MaxSl = 7;
+DSLC = MinSl;
+USLC = MaxSl;
+TorqueSlope = 0;
 
 % DoPlots = [1,... Initial Conditions
 %            2,... Torques plot
 %            3,... Limit cycles
 %            4,... Eigenvalues vs slope
 %            5,... Eigenvalues locus
-%            6]; % MOOGA statistics
-DoPlots = 6;
+%            6,... MOOGA statistics
+%            7]; % Saltation matrix analysis
+DoPlots = 7;
        
 % Plots format
 AxesFont = 16;
@@ -31,7 +35,7 @@ Genes = {'f_{osc}','\phi_{ext}','T_1','\phi_1','\Delta\phi_1',...
          'T_2','\phi_2','\Delta\phi_2','T_3','\phi_3',...
          '\Delta\phi_1','k_f^+','k_1^+','k_2^+','k_3^+',...
          'k_f^-','k_1^-','k_2^-','k_3^-'};
-Fits = {'Velocity','Efficiency','Stability','Up*Down','Up','Down'};
+Fits = {'Velocity','Efficiency','Convergence','Slope','Uphill','Downhill'};
 
 % Close open figures
 close all;
@@ -41,7 +45,39 @@ if ~exist('GA','var')
     In = load(InputFile);
     GA = In.GA;
 end
-Data = GA.Analyze(GA.Progress,SelectedGen,'CL');
+AllData = GA.Analyze(GA.Progress,SelectedGen,'CL');
+Data = LoadRange(AllData,DSLC,USLC);
+
+    function Data = LoadRange(AllData,MinSl,MaxSl)
+        i0 = find(AllData.Slopes>=MinSl,1,'first');
+        i1 = find(AllData.Slopes<=MaxSl,1,'last');
+        
+        Data.Slopes = AllData.Slopes(i0:i1);
+        Data.IC = AllData.IC(:,i0:i1);
+        Data.LCx = AllData.LCx(i0:i1);
+        Data.LCt = AllData.LCt(i0:i1);
+        Data.LCtorques = AllData.LCtorques(i0:i1);
+        Data.MTorques = AllData.MTorques(i0:i1,:);
+        Data.Power = AllData.Power(i0:i1,:);
+        Data.EigV = AllData.EigV(:,i0:i1);
+        Data.Period = AllData.Period(i0:i1,:);
+        Data.StepLength = AllData.StepLength(i0:i1);
+        Data.Speed = AllData.Speed(i0:i1);
+        Data.LCGRF = AllData.LCGRF(i0:i1);
+        Data.LCZMP = AllData.LCZMP(i0:i1);
+        Data.MuFric = AllData.MuFric(i0:i1,:);
+        Data.MZMP = AllData.MZMP(i0:i1,:);
+        Data.dPotE = AllData.dPotE(i0:i1);
+        Data.dKinEIm = AllData.dKinEIm(i0:i1);
+        Data.dKinEFr = AllData.dKinEFr(i0:i1);
+        Data.ContEff = AllData.ContEff(i0:i1);
+        Data.AbsContEff = AllData.AbsContEff(i0:i1);
+        Data.COT = AllData.COT(i0:i1);
+        Data.Done = AllData.Done;
+        Data.Gen = AllData.Gen;
+        Data.Seq = AllData.Seq;
+        Data.Zones = {{1:length(Data.Slopes)}};
+    end
 
 if AutoLC == 1
     DSLC = 1;
@@ -54,7 +90,17 @@ end
 % Show genome results
 % GA.DisplayGen(SelectedGen);
 
-%% %%%%%%%%%%%%% Begin plots %%%%%%%%%%%%% %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%%%%%%%%% Begin plots %%%%%%%%%%%%%%%%%%%%%%%% %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% % Eigenvalue / convergence check
+% ALSO: uncomment lines 47-48 in RunSeq and add convT as return value
+% convT = [GA.RunSeq(257);
+%          GA.RunSeq(350);
+%          GA.RunSeq(323);
+%          GA.RunSeq(4)];
+% EigV = 1-GA.Fit([257, 350, 323, 4],3,30);
 
 % Number of system coordinates
 Ncoords = size(Data.IC,1)/max(Data.Period(:,1));
@@ -62,7 +108,7 @@ Ncoords = size(Data.IC,1)/max(Data.Period(:,1));
 % Plot walking speed VS slope
 % plot(Data.Slopes,sin(abs(Data.IC(1,:)-Data.IC(2,:))/2)*2./cellfun(@max,Data.LCt))
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% IC plot %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%% IC plot %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ismember(1,DoPlots)
     % Plot angles, angular velocities and CPG phase in 3 subplots
     figure('units','normalized','Position',[0.3,0.03,0.35,0.8]);
@@ -108,11 +154,12 @@ end
         set(gca,'FontSize',AxesFont,'LineWidth',AxesLineWidth);
     end
 
-%%%%%%%%%%%%%%%%% CPG phase / Torque signal plot %%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%% CPG phase / Torque signal plot %%%%%%%%%%%%%%%%%
 if ismember(2,DoPlots)
     % Plot the CPG phase and torque signal for a specific slope
 
-    SlopeID = find(Data.Slopes == 0, 1, 'first');
+    diff = abs(Data.Slopes - TorqueSlope);
+    SlopeID = find(diff == min(diff), 1, 'first');
 %     SlopeID = length(Data.Slopes);
 
     T = Data.LCt{SlopeID};
@@ -184,7 +231,7 @@ end
         patch(Points(1:3,1), Points(1:3,2),[0,0,0],'EdgeColor',[0,0,0]);
     end
 
-%%%%%%%%%%%%%%%%%%%%%%%%% Limit cycle plot %%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%%%%%%% Limit cycle plot %%%%%%%%%%%%%%%%%%%%%%%%%
 if ismember(3,DoPlots)
     TitleSpacing = 0.12;
     LabelSpacing = 0.07;
@@ -206,11 +253,30 @@ if ismember(3,DoPlots)
     ylabel('Ang. velocity [rad/sec]','FontSize',LabelFont);
 
     axes('units','normalized','Position',Pos(2,:));
-    PlotLC(find(Data.Slopes == 0, 1,'first'));
+    SlID = find(Data.Slopes == 0, 1,'first');
+    PlotLC(SlID);
     xlabel('Leg Angle [rad]','FontSize',LabelFont);
+    % Add stance/swing arrows
+    LC = Data.LCx{SlID};
+    tID1 = floor(size(LC,1)/2);
+    tID2 = floor(size(LC,1)/3);
+    dAr = 1;
+    ahSt = annotation('textarrow');
+    ahSw = annotation('textarrow');
+    set(ahSt,'parent',gca,'LineWidth',2,'FontSize',14);
+    set(ahSw,'parent',gca,'LineWidth',2,'FontSize',14);
+    set(ahSt,'position',...
+        [LC(tID1,1)-0.02*dAr LC(tID1,3)-dAr 0.02*dAr dAr],...
+        'String','Stance');
+    set(ahSw,'position',...
+        [LC(tID2,2)+0.02*dAr LC(tID2,4)-dAr -0.02*dAr dAr],...
+        'String','Swing');
 
     axes('units','normalized','Position',Pos(3,:));
     PlotLC(USLC);
+    hLC = get(gca,'Children');
+    legend([hLC(4),hLC(2)],{'Stance','Swing'},'Location','SouthEast',...
+        'Orientation','horizontal')
 end
 
     function PlotLC(Slope)
@@ -242,7 +308,7 @@ end
         end
     end
         
-%%%%%%%%%%%%%%%%%%%%%%%%% Eigenvalues plot %%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%%%%%%% Eigenvalues plot %%%%%%%%%%%%%%%%%%%%%%%%%
 if ismember(4,DoPlots)
     % Plot the Poincare map eigenvalues over the range of slopes
     figure('units','normalized','Position',[0.2,0.1,0.5,0.65]);
@@ -283,13 +349,13 @@ if ismember(4,DoPlots)
 end
 
 
-%%%%%%%%%%%%%%%%%%%%% Eigenvalues locus plot %%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%%% Eigenvalues locus plot %%%%%%%%%%%%%%%%%%%%%
 if ismember(5,DoPlots)
     % Plot the Poincare map eigenvalues over the range of slopes
 end
 
 
-%%%%%%%%%%%%%%%%%%%%% MOOGA statistics plot %%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%%% MOOGA statistics plot %%%%%%%%%%%%%%%%%%%%%
 if ismember(6,DoPlots)
     % Plot statistics for evolved genomes based on the final parameter
     % distribution
@@ -337,12 +403,13 @@ if ismember(6,DoPlots)
 %     GrLegends = {'General','Ascend','Descend','Efficient'};
 %     GrLegends = {'General','Climbers','Efficient'};
 %     GrLegends = {'General','Climbers','Efficient','Stable'};
-    GrLegends = {'Climbers','Efficient','Fast','Stable','General'};
+    GrLegends = {'Fast','Efficient','Convergent','Climbers'};
     
     PlotAvgTorque(FastParams,1);
-    PlotAvgTorque(ClimbParams,4);
-    PlotAvgTorque(StabParams,3);
     PlotAvgTorque(SlowParams,2);
+    PlotAvgTorque(StabParams,3);
+    PlotAvgTorque(ClimbParams,4);
+    set(gcf,'units','normalized','Position',[0.35 0.1 0.37 0.6])
     
     % 30 bins for fitness
     % 20 bins for genes
@@ -362,12 +429,12 @@ if ismember(6,DoPlots)
         
         MySubplot(2,2,sp);
         hold on
-        nelements(:,1) = hist(ClimbFits(:,sp),xvalues);
+        nelements(:,1) = hist(FastFits(:,sp),xvalues);
+        nelements(:,2) = hist(SlowFits(:,sp),xvalues);
+        nelements(:,3) = hist(StabFits(:,sp),xvalues);
+        nelements(:,4) = hist(ClimbFits(:,sp),xvalues);
 %         hist(ClimbUpFits(:,sp),xvalues);
 %         hist(ClimbDownFits(:,sp),xvalues);
-        nelements(:,2) = hist(SlowFits(:,sp),xvalues);
-        nelements(:,3) = hist(FastFits(:,sp),xvalues);
-        nelements(:,4) = hist(StabFits(:,sp),xvalues);
         
         bar_h = bar(xvalues,nelements,'stacked');
         SetBarColors(bar_h);
@@ -388,12 +455,126 @@ if ismember(6,DoPlots)
         set(gca,'FontSize',AxesFont,'LineWidth',2);
     end
     legend(GrLegends)
+end
+
+
+%%%%%%%%%%%%%%%%%%%%% Saltation matrix analysis %%%%%%%%%%%%%%%%%%%%%
+if ismember(7,DoPlots)
+    % Load data
+    SMData = load('Gen4CLSaltMat.mat');
+    i0 = find(SMData.Slopes>=MinSl,1,'first');
+    i1 = find(SMData.Slopes<=MaxSl,1,'last');
+    AnEigV = SMData.AnEigV(:,i0:i1);
+    NumEigV = SMData.NumEigV(:,i0:i1);
+    Slopes = SMData.Slopes(i0:i1);
+    Alpha = SMData.Alpha(i0:i1);
     
+    figure('units','normalized','Position',[0.1 0.1 0.5 0.8])
+    hold on
+%     SkipN = 20;
+    for co = 1:5
+        plot(Slopes(DSLC:USLC),abs(AnEigV(co,DSLC:USLC)),...
+            '--','LineWidth',LineWidth,...
+            'Color',Colors{co});
+%         plot(Slopes(DSLC:SkipN:USLC),abs(AnEigV(co,DSLC:SkipN:USLC)),...
+%             '*','LineWidth',LineWidth,...
+%             'Color',Colors{co},'MarkerSize',16);
+    end
+    for co = 1:5
+        plot(Slopes(DSLC:USLC),abs(NumEigV(co,DSLC:USLC)),...
+            '-','LineWidth',LineWidth,...
+            'Color',Colors{co});
+%         plot(Slopes(DSLC:SkipN:USLC),abs(AnEigV(co,DSLC:SkipN:USLC)),...
+%             '*','LineWidth',LineWidth,...
+%             'Color',Colors{co},'MarkerSize',16);
+    end
+    axis([min(Slopes(DSLC:USLC)) max(Slopes(DSLC:USLC)) 0 1])
+    xlabel('Slope [deg]','FontSize',LabelFont)
+    ylabel('|\lambda_i|','FontSize',LabelFont)
+    set(gca,'FontSize',AxesFont,'LineWidth',LineWidth/2)
+    
+    % Add plot numbers
+    SlID = DSLC+floor(length(NumEigV(1,DSLC:USLC))/4);
+    Delta = floor(length(NumEigV(1,DSLC:USLC))/20);
+    dAr = 0.001;
+    ah = zeros(5,1);
+    for i = 1:5
+        ah(i) = annotation('textbox');
+        set(ah(i),'parent',gca,'FontSize',14,...
+            'VerticalAlignment','bottom','EdgeColor','none');
+        set(ah(i),'position',...
+            [Slopes(SlID+i*Delta) abs(NumEigV(i,SlID+i*Delta))+dAr 1 0.1],...
+            'String',int2str(i));
+    end
+    
+    hA = plot(0,0,'--k','LineWidth',LineWidth-1);
+    hN = plot(0,0,'-k','LineWidth',LineWidth-1);
+    legend([hA,hN],'Numeric LC + Analytic EV','Numeric LC + Numeric EV',...
+        'location','NorthWest')
+    
+%     figure('units','normalized','Position',[0.1 0.1 0.5 0.8])
+%     plot(Slopes(DSLC:USLC),Alpha(DSLC:USLC),...
+%             '-','LineWidth',LineWidth,...
+%             'Color',Colors{co});
+%     axis([min(Slopes(DSLC:USLC)) max(Slopes(DSLC:USLC)) ylim])
+%     xlabel('Slope [deg]','FontSize',LabelFont)
+%     ylabel('Half inter-leg angle \alpha [rad]','FontSize',LabelFont)
+%     set(gca,'FontSize',AxesFont,'LineWidth',LineWidth/2)
+%     
+%     % Compute maximum velocities during the LC
+%     NSlopes = length(Slopes(DSLC:USLC));
+%     MaxAngVel = zeros(NSlopes,2);
+%     for sl = DSLC:USLC
+%         id = sl-DSLC+1;
+%         
+%         LCx = Data.LCx{sl};
+%         MaxAngVel(id,1) = max(abs(LCx(:,3)));
+%         MaxAngVel(id,2) = max(abs(LCx(:,4)));
+% %         th1tm = min(LCx(:,3)); % Max negative value
+% %         th1tM = max(LCx(:,3)); % Max positive value
+% %         if abs(th1tm)>th1tM
+% %             MaxAngVel(id,1) = th1tm;
+% %         else
+% %             MaxAngVel(id,1) = th1tM;
+% %         end
+% %         th2tm = min(LCx(:,4)); % Max negative value
+% %         th2tM = max(LCx(:,4)); % Max positive value
+% %         if abs(th2tm)>th2tM
+% %             MaxAngVel(id,2) = th2tm;
+% %         else
+% %             MaxAngVel(id,2) = th2tM;
+% %         end
+%     end
+%     figure('units','normalized','Position',[0.1 0.1 0.5 0.8])
+%     plot(Slopes(DSLC:USLC),MaxAngVel,...
+%             '-','LineWidth',LineWidth);
+%     axis([min(Slopes(DSLC:USLC)) max(Slopes(DSLC:USLC)) ylim])
+%     xlabel('Slope [deg]','FontSize',LabelFont)
+%     ylabel('Max. leg angular vel. [rad/sec]','FontSize',LabelFont)
+%     set(gca,'FontSize',AxesFont,'LineWidth',LineWidth/2)
+%     legend('Stance','Swing','location','NorthWest')
     
 end
+    
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%% Auxilliary functions %%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     function PlotGenes(IDs)
         figure
+        set(gcf,'units','normalized')
+        if ismember(1,IDs)
+            % Oscillator gains genes
+            set(gcf,'Position',[0.3 0.4 0.43 0.31])
+        end
+        if ismember(3,IDs)
+            % Pulse genes
+            set(gcf,'Position',[0.2 0.1 0.43 0.8])
+        end
+        if ismember(13,IDs)
+            % Pulse gain genes
+            set(gcf,'Position',[0.3 0.2 0.4 0.55])
+        end
         NRows = ceil(length(IDs)/3);
         for gi=1:length(IDs)
             gp = IDs(gi);
@@ -406,12 +587,12 @@ end
 
             MySubplot(NRows,3,gi);
             hold on
-            nelements(:,1) = hist(ClimbParams(:,gp),xvalues);
+            nelements(:,1) = hist(FastParams(:,gp),xvalues);
+            nelements(:,2) = hist(SlowParams(:,gp),xvalues);
+            nelements(:,3) = hist(StabParams(:,gp),xvalues);
+            nelements(:,4) = hist(ClimbParams(:,gp),xvalues);
     %         hist(ClimbUpParams(:,gp),xvalues);
     %         hist(ClimbDownParams(:,gp),xvalues);
-            nelements(:,2) = hist(SlowParams(:,gp),xvalues);
-            nelements(:,3) = hist(FastParams(:,gp),xvalues);
-            nelements(:,4) = hist(StabParams(:,gp),xvalues);
 
             bar_h = bar(xvalues,nelements,'stacked');
             SetBarColors(bar_h);
@@ -443,14 +624,14 @@ end
             gSim = deepcopy(GA.Sim);
             gSim = GA.Gen.Decode(gSim,Params(ge,:));
             phi_step = dT*Params(ge,1);
-            [Time,TorqueSig] = gSim.Con.GetTorqueSig(phi_step,1);
+            [~,TorqueSig] = gSim.Con.GetTorqueSig(phi_step,1);
             range = 1:length(TorqueSig);
             Torque(range,:) = Torque(range,:) + TorqueSig/nG;
             mT(ge) = max(max(abs(TorqueSig)));
         end
         
         % Prepare time vector
-        Time = linspace(0,MaxPeriod,length(Torque));
+%         Time = linspace(0,MaxPeriod,length(Torque));
         
         figure(1)
         MySubplot(2,2,Style);
@@ -470,7 +651,7 @@ end
         area(Time/max(Time),TorqueSig(:,2),'LineStyle',LineStyles{1},...
             'FaceColor',Colors{Style},'LineWidth',2);
         
-        set(gca,'FontSize',AxesFont);
+        set(gca,'FontSize',AxesFont,'LineWidth',LineWidth/2);
         switch Style
             case 1
                 title('Fast walkers')
@@ -511,12 +692,12 @@ end
                 TitlePad = 0.16;
                 xPad = 0.06;
             elseif Ny == 2
-                yPad = 0.07;
-                TitlePad = 0.16;
+                yPad = 0.05;
+                TitlePad = 0.11;
                 xPad = 0.06;
             else
-                yPad = 0.04;
-                TitlePad = 0.08;
+                yPad = 0.03;
+                TitlePad = 0.07;
                 xPad = 0.06;
             end
         end

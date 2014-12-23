@@ -44,6 +44,9 @@ Sim.Con.FBType = 2;
 % Simulate
 Sim = Sim.Run();
 
+% convT = Sim.Out.T(end);
+% return
+
 % Calculate the genome's fitness
 thisFit = zeros(1,max(cell2mat(GA.FitFcn(:,1)')));
 thisOuts = cell(1,GA.NFit);

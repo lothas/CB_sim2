@@ -11,6 +11,7 @@ Markers = {'+','o','d','^','v'};
 Colors = {[0 0 1],[1 0 0],[0 0.7 0.8],[0 0.7 0],[0.8 0 0.8]};
 Legends = {'\theta_1','\theta_2','d\theta_1/dt',...
                     'd\theta_2/dt','\phi_C_P_G'};
+mylegends = {'F_{Vel}','F_{Energy}','F_{Conv}','F_{Slope}'};
 
 if nargin<2
     PlotFit(0);
@@ -94,9 +95,9 @@ end
                 end
             end
             
-            legends{f} = MOOGA.GetFitFcnName(GA.FitFcn{f,2});
+%             legends{f} = MOOGA.GetFitFcnName(GA.FitFcn{f,2});
         end
-        legend(h,legends,'Location','SouthEast','FontSize',LabelFont);
+        legend(h,mylegends,'Location','SouthEast','FontSize',LabelFont);
         xlabel('Generations','FontSize',LabelFont);
         set(gca,'FontSize',AxesFont,'LineWidth',2);
     end

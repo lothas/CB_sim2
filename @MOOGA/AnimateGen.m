@@ -1,14 +1,23 @@
-function [ ] = AnimateGen( GA, GenID, Dur, TerrType, TerrParams )
+function [ ] = AnimateGen( GA, GenID, Dur, TerrType, TerrParams, filename )
 %ANIMATEGEN Summary of this function goes here
 %   Detailed explanation goes here
 
-if nargin<3
+if nargin<5
     GenID = 4;
     Dur = 10;
     TerrType = 'us'; % upslope
     TerrParams = 1;
 end
+if nargin<6
+    if ~isnumeric(TerrParams)
+        filename = TerrParams;
+        TerrParams = [];
+    else
+        filename = ['Gen',int2str(GenID),TerrType,'.gif'];
+    end
+end
 Generation = GA.Progress;
+TerrParams = num2cell(TerrParams);
 
 % Animation properties
 FPS = 25;
@@ -130,22 +139,22 @@ X(Doubles,:) = [];
 Pos(Doubles,:) = [];
 
 % Render animation in realtime
-filename = ['Gen',int2str(GenID),TerrType,'.gif'];
 if Sim.Env.Type == 1 % Sine wave
     % Find how many frames until it finishes a full cycle
-    ID1 = find(diff(Sim.Out.SuppPos(:,2))<0,1,'first'); % Going down
-    ID2 = find(diff(Sim.Out.SuppPos(ID1+1:end,2))>0,1,'first'); % Going up
+    ID1 = find(diff(Pos(:,2))<0,1,'first'); % Going down
+    ID2 = find(diff(Pos(ID1+1:end,2))>0,1,'first'); % Going up
     
     % Trim output
     T = T(1:ID1+ID2);
     X = X(1:ID1+ID2,:);
+    Pos = Pos(1:ID1+ID2,:);
 end
 NPanels = floor(FPS*T(end));
 dt = T(end)/NPanels;
 Render(X(1,:)); % Init Render
 
 % Foot retraction
-TSteps = [Sim.Out.T(diff(Sim.Out.SuppPos(:,1))~=0); Sim.Out.T(end)];
+TSteps = [T(diff(Pos(:,1))~=0); T(end)];
 % StepPos = Sim.Out.SuppPos(diff(Sim.Out.SuppPos(:,1))~=0,:);
 Nf = 226;
 Shape = 1-(1-sin(0.45:0.01:2.7).^10).^10;
@@ -153,17 +162,32 @@ StepsTaken = 0;
 Tf = linspace(0,TSteps(StepsTaken+1),Nf);
 Sim.Mod.Clearance = 0.05*Sim.Mod.L;
 
+OldX = X(1,:);
 for p = 1:NPanels+1
     t = dt*(p-1);
     
     % Find the state at time t
-    thisX = interp1(T,X,t,'pchip');
-        
-    % Change foot position
     ID = find(abs(T-t)==min(abs(T-t)),1,'first');
-    if ~isempty(ID)
-        Sim.Mod.xS = Pos(ID,1); Sim.Mod.yS = Pos(ID,2);
+    
+    if Sim.Mod.xS~=Pos(ID,1)
+        % Step taken, switch legs
+        if Sim.Mod.Support==Sim.Mod.Left
+            Sim.Mod.Support=Sim.Mod.Right;
+        else
+            if Sim.Mod.Support==Sim.Mod.Right
+                Sim.Mod.Support=Sim.Mod.Left;
+            end
+        end
     end
+    
+    thisX = interp1(T,X,t,'pchip');
+    if norm(OldX(1:2)-thisX(1:2))>0.15
+        thisX = X(ID,:);
+    end
+    OldX = thisX;
+
+    % Change foot position
+    Sim.Mod.xS = Pos(ID,1); Sim.Mod.yS = Pos(ID,2);
     
     % Retract the leg based on t
     if t>Tf(end)
@@ -194,7 +218,7 @@ end
 disp('FINISHED RENDERING GENOME ANIMATION');
 
     function Sim = SimStep(Sim)
-        Sim.EndCond = [1,Sim.Period(1)];
+        Sim.EndCond = [1,2*ceil(Sim.Period(1)/2)];
         Sim.IC = Sim.IClimCyc;
         Sim.Con.Reset(Sim.IC(Sim.ConCo));
         Sim.Mod.LegShift = Sim.Mod.Clearance;
