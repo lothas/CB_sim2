@@ -215,6 +215,7 @@ DG.DispArea = axes('Units','Normalized','FontSize',AxesFont,...
         switch Type
             case 'IC'
                 PlotIC(Data.Slopes,Data.IC);
+                set(gcf,'KeyPressFcn',{@ICKeybHandle,Data})
             case 'EigV'
                 PlotEigV(Data.Slopes,Data.EigV);
             case 'MZMP'
@@ -553,7 +554,46 @@ DG.DispArea = axes('Units','Normalized','FontSize',AxesFont,...
         end
     end
 
-    function PlotIC(Slopes,IC)
+    function PlotIC(Slopes,IC,ICs)
+        if nargin<3
+            ICs=[];
+        end
+        
+        % calculate min/max values for each coordinate
+        Ncoords = length(ICs);
+        if Ncoords>0
+            NSlopes = length(Slopes);
+            MinCo = zeros(NSlopes,Ncoords);
+            MaxCo = zeros(NSlopes,Ncoords);
+            for sl = 1:NSlopes
+                ThisMin = min(Data.LCx{sl},[],1);
+                ThisMax = max(Data.LCx{sl},[],1);
+                MinCo(sl,:) = ThisMin(ICs);
+                MaxCo(sl,:) = ThisMax(ICs);
+            end
+            for c = 1:Ncoords
+%                 h(c) = plot(Slopes,MinCo(:,c),...
+%                     LineStyles{c},'LineWidth',LineWidth,...
+%                     'Color',Colors{c});
+%                 h(c) = plot(Slopes,MaxCo(:,c),...
+%                     LineStyles{c},'LineWidth',LineWidth,...
+%                     'Color',Colors{c});
+                Color = 0.1*Colors{ICs(c)}+[1 1 1];
+                X = [Slopes,fliplr(Slopes)];
+                Y = [MinCo;flipud(MaxCo)];
+                h = fill(X,Y,Color/norm(Color));
+                set(h,'EdgeColor','none')
+%                 area(Slopes,[MinCo,MaxCo],'FaceColor',Color/norm(Color));
+            end
+            axis([min(Slopes) max(Slopes) 1.05*min(MinCo) 1.05*max(MaxCo)])
+        end
+        
+        if nargin<3
+            axis auto
+            ICs=1:5;
+        end
+        
+        % Plot IC value right after impact
         Ncoords = size(IC,1)/max(Data.Period(:,1));
         h = zeros(Ncoords,1);
         for p = 1:length(Data.Zones)
@@ -564,12 +604,12 @@ DG.DispArea = axes('Units','Normalized','FontSize',AxesFont,...
                     StCoord = (p-1)*Ncoords+c;
                     h(c) = plot(Slopes(Coords),IC(StCoord,Coords),...
                         LineStyles{c},'LineWidth',LineWidth,...
-                        'Color',Colors{c});
+                        'Color',Colors{ICs(c)});
                 end
             end
         end
         axis([min(Slopes) max(Slopes) ylim])
-        legend(h,Legends);
+        legend(h,Legends(ICs));
     end
 
     function PlotEigV(Slopes,EigV)
@@ -752,6 +792,31 @@ DG.DispArea = axes('Units','Normalized','FontSize',AxesFont,...
 %                 PMKeybHandle([],evt);
 %             end
 %         end
+    end
+
+    function ICKeybHandle(h_obj,evt,Data) %#ok<INUSL>
+        if strfind(evt.Key,'numpad')
+            switch evt.Key(7)
+                case '0'
+                    cla
+                    PlotIC(Data.Slopes,Data.IC);
+                    return
+                case '1'
+                    IC = 1;
+                case '2'
+                    IC = 2;
+                case '3'
+                    IC = 3;
+                case '4'
+                    IC = 4;
+                case '5'
+                    IC = 5;
+                otherwise
+                    return
+            end
+            cla
+            PlotIC(Data.Slopes,Data.IC(IC,:),IC);
+        end
     end
 end
 
