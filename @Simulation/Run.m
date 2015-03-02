@@ -90,7 +90,7 @@ function [ sim ] = Run( sim )
                 % Handle event interactions
                 switch ConEvID
                     case 1 % Neuron fired
-                        sim.Mod.LegShift = sim.Mod.Clearance;
+%                         sim.Mod.LegShift = sim.Mod.Clearance;
                     case 2 % Leg extension
 %                         sim.Mod.LegShift = 0;
                 end 

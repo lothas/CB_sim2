@@ -28,6 +28,7 @@ GA.Sim.Env = GA.Sim.Env.Set('Type','inc','start_slope',start_slope);
 % Initialize the controller
 GA.Sim.Con = GA.Sim.Con.ClearTorques();
 GA.Sim.Con.FBType = 0;
+GA.Sim.Con.ExtP_reset = 0;
 GA.Sim.IC = [start_slope*pi/180, start_slope*pi/180, 0, 0, 0];
 
 % Simulation parameters

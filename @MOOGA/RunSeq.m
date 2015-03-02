@@ -40,6 +40,7 @@ Sim.Con = Sim.Con.Reset(Sim.IC(Sim.ConCo));
 Sim.Con.FBType = 0; % 2
 % Sim.Con = Sim.Con.HandleExtFB(Sim.IC(Sim.ModCo),...
 %                 Sim.IC(Sim.ConCo),Sim.Env.SurfSlope(Sim.Mod.xS));
+% Sim.Con.ExtP_reset = 0;
 
 % Simulate
 Sim = Sim.Run();
