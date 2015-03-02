@@ -115,6 +115,9 @@ classdef Controller < handle & matlab.mixin.Copyable
                 [Xperc] = NC.GetPhasePerc(Phase);
                 On = Xperc >= Start & Xperc < End;
                 NC.Switch = (NC.Amp.*On)';
+                if isempty(NC.Switch)
+                    NC.Switch = 0;
+                end
             end 
         end
         

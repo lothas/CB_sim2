@@ -168,12 +168,14 @@ classdef MOOGA
         function [fit,out] = HeightFit(Sim)
             X = Sim.Out.X;
             T = Sim.Out.T;
+            SuppPos = Sim.Out.SuppPos;
             Nt = length(T);
             L = Sim.Mod.L;
             Points = zeros(1,Nt);
             for t = 1:Nt
                 % Get hip height at each instant
                 [~, Y] = Sim.Mod.GetPos(X(t,Sim.ModCo),'Hip');
+                Y = Y - SuppPos(t,2);
                 
                 % Award or substract points based on the hip height
                 % For the simple model the hip can't be higher than leg length

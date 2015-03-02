@@ -361,6 +361,7 @@ classdef CompassBiped < handle & matlab.mixin.Copyable
             % Musculo-Skeletal System
             % M*quu+N*qu+G=Eu
             [Minv, N, G, Eu] = CB.GetSystemMat(X);
+%             Eu = [0; 0.04*sin(2*pi*1.28*t)];
             quu=Minv*(Eu-N*[theta1t; theta2t]-G);
             
             % Return to normal coordinates
@@ -413,7 +414,7 @@ classdef CompassBiped < handle & matlab.mixin.Copyable
             value(2)=HipPosy-CB.yS-0.7*CB.L;
             
             % Check for the swing leg angular velocity crossing 0 (from +)
-%             value(3)=X(4);
+            value(3)=X(4);
         end
         
         % %%%%%% % Events % %%%%%% %

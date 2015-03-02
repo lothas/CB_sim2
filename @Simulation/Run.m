@@ -69,6 +69,8 @@ function [ sim ] = Run( sim )
                         sim.TimeStr = ['t = %.2f s\nOsc.=%.3f\n',...
                          'Slope = %.2f ',char(176)','\nSpeed = %.3f m/s'];
                     end
+                    
+                    sim.Mod.LegShift = sim.Mod.Clearance; % Retract leg
                 end
                 
                 if ModEvID == 2 % Robot fell down (hip height too low)
@@ -90,7 +92,7 @@ function [ sim ] = Run( sim )
                     case 1 % Neuron fired
                         sim.Mod.LegShift = sim.Mod.Clearance;
                     case 2 % Leg extension
-                        sim.Mod.LegShift = 0;
+%                         sim.Mod.LegShift = 0;
                 end 
             end
         end
