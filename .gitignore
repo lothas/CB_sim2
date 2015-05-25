@@ -12,6 +12,8 @@ Old Sims/*
 Test*.mat
 GA*.mat
 Gen*.mat
+LIF*.mat
+EIG*.mat
 
 #################
 ## Eclipse
