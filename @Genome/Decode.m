@@ -21,11 +21,17 @@ for k = 1:size(Ge.Keys,2)
         %% %%%%%%%%%% Simulation keys in general %%%%%%%%%% %%
         case {'IC','ic','init cond','initial conditions'}
             if isfield(Ge.KeyExtra,Ge.Keys{1,k})
+                % Default KeyExtra.IC = [1,-1,2,3,4];
+                % Uses IC(1) as half interleg angle, IC(2,3) as ang. vel.
+                % and IC(4) as CPG phase_0
                 KE = Ge.KeyExtra.(Ge.Keys{1,k});
                 % Store initial conditions provided based
                 % on the KeyExtra value for 'IC'
                 for v = 1:length(KE)
                     if KE(v) ~= 0
+                        % Add the gene value to the current IC
+                        % (used to "store" the terrain's slope before
+                        % decoding the genome)
                         Sim.IC(v) = Sim.IC(v) ...
                             + sign(KE(v))*Seq(SeqPos-1+abs(KE(v)));
                     end

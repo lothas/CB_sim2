@@ -1,53 +1,48 @@
-function [  ] = GA_UpDown( gen, pop, file_in, file_out )
-% Run MOOGA using only Vel, Nrg and Slope fitness but limiting the
-% Simulation with a bounded foot size (ZMP threshold)
+function [  ] = GA_Slope( gen, pop, slope, file_in, file_out )
+% Run MOOGA using Vel, Nrg, Robustness and Uniqueness fitness
+% The Simulation is limited with a bounded foot size (ZMP threshold)
+% Inputs:
+% gen - number of generations to run
+% pop - number of genomes in population
+% slope - desired slope for optimization (in degrees)
+% file_in - input file with initial population / to continue MOGA
+% file_out - output file for results
 
-if nargin<4
-    GA = MOOGA(30,2500);
+if nargin<5
+    GA = MOOGA(10,100);
     % GA = MOOGA(10,100);
     GA = GA.SetFittest(15,15,0.5);
-    GA.JOAT = 2; GA.Quant = 0.5;
+    slope = 0;
     % GA.Fittest = [20,20,1];
-    GA.FileIn = 'GA_11_22_18_27.mat';
+%     GA.FileIn = 'GA_11_22_18_27.mat';
 %     GA.FileOut = GA.FileIn;
 
     GA.FileOut = ['GA_',datestr(now,'mm_dd_hh_MM'),'.mat'];
 else
     GA = MOOGA(gen,pop);
-    GA = GA.SetFittest(20,20,0.5);
-    GA.JOAT = 2; GA.Quant = 0.6;
+    GA = GA.SetFittest(15,15,0.5);
     % GA.Fittest = [20,20,1];
     GA.FileIn = file_in;
     GA.FileOut = file_out;
 end
 
 GA.Graphics = 0;
-GA.ReDo = 1;
+GA.ReDo = 1; % 1 - start the algorithm from scratch (random pop)
 
 % Set up the genome
 % Controller with swing pulse + limited ankle pulse and feedback
 NAnkleT = 1;
 NHipT = 2;
-MaxAnkleT = 30;
-MaxHipT = 150;
-TorqueFBMin = [-300*ones(1,NAnkleT),-600*ones(1,NHipT)];
-TorqueFBMax = -TorqueFBMin;
-Keys = {'omega0','P_LegE',    'Pulses',    'Pulses',...
-    'kOmega_u','kTorques_u','kOmega_d','kTorques_d';...
-               1,       1, [NAnkleT,1],   [NHipT,2],...
-             1,         1,           1,           1};
-Range = {0.7, 0.50, [-MaxAnkleT, 0, 0.01], [-MaxHipT, 0, 0.01],...
-    -6, TorqueFBMin, -6, TorqueFBMin; % Min
-         1.7, 0.85, [MaxAnkleT, 0.99, 0.99], [MaxHipT, 0.99, 0.99],...
-    6, TorqueFBMax,  6, TorqueFBMax}; % Max
+MaxAnkleT = 20;
+MaxHipT = 80;
+Keys = {'IC', 'omega0',    'Pulses',    'Pulses';
+           4,        1, [NAnkleT,1],   [NHipT,2]};
+Range = {[0,-2,-2,0], 0.90, [-MaxAnkleT, 0, 0.01], [-MaxHipT, 0, 0.01],... % Min
+     [0.79,2,2,0.99], 1.8, [MaxAnkleT, 0.99, 0.99], [MaxHipT, 0.99, 0.99]}; % Max
 MutDelta0 = 0.04;
 MutDelta1 = 0.02;
 
 GA.Gen = Genome(Keys, Range);
-KeyLength = GA.Gen.KeyLength;
-KeyLength.kTorques_u = length(TorqueFBMin);
-KeyLength.kTorques_d = length(TorqueFBMin);
-GA.Gen = Genome(Keys, KeyLength, Range);
 
 % Set up the simulations
 GA.Sim = Simulation();
