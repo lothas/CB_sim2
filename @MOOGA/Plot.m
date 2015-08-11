@@ -15,34 +15,34 @@ mylegends = {'F_{Vel}','F_{Energy}','F_{Conv}','F_{Slope}'};
 
 if nargin<2
     PlotFit(0);
-end
+else
+    switch varargin{1}
+        case {'Fit','fit','fitness'}
+            PlotFit(1);
+        case {'FitMax','fitmax'}
+            PlotFit(0);
+        case {'Gen','gen'}
+            if nargin<3
+                error('No specific genome provided');
+            else
+                if length(varargin{2}) == 1
+                    ID = varargin{2}(1);
+                    Gen = GA.Progress;
+                else
+                    ID = varargin{2}(1);
+                    Gen = varargin{2}(2);
+                end
 
-switch varargin{1}
-    case {'Fit','fit','fitness'}
-        PlotFit(1);
-    case {'FitMax','fitmax'}
-        PlotFit(0);
-    case {'Gen','gen'}
-        if nargin<3
-            error('No specific genome provided');
-        else
-            if length(varargin{2}) == 1
-                ID = varargin{2}(1);
-                Gen = GA.Progress;
-            else
-                ID = varargin{2}(1);
-                Gen = varargin{2}(2);
+                % Open analysis data if it exists
+                Data = GA.Analyze(Gen,ID);
+
+                if nargin == 3
+                    GA.PlotGen(Data);
+                else
+                    GA.PlotGen(Data,varargin{3:end});
+                end
             end
-            
-            % Open analysis data if it exists
-            Data = GA.Analyze(Gen,ID);
-            
-            if nargin == 3
-                GA.PlotGen(Data);
-            else
-                GA.PlotGen(Data,varargin{3:end});
-            end
-        end
+    end
 end
 
     function PlotFit(Type)
@@ -99,6 +99,7 @@ end
         end
         legend(h,mylegends,'Location','SouthEast','FontSize',LabelFont);
         xlabel('Generations','FontSize',LabelFont);
+        ylabel('Normalized Fitness','FontSize',LabelFont);
         set(gca,'FontSize',AxesFont,'LineWidth',2);
     end
         

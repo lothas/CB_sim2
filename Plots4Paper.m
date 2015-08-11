@@ -18,7 +18,7 @@ TorqueSlope = 0;
 %            5,... Eigenvalues locus
 %            6,... MOOGA statistics
 %            7]; % Saltation matrix analysis
-DoPlots = 7;
+DoPlots = 6;
        
 % Plots format
 AxesFont = 16;
@@ -363,6 +363,13 @@ if ismember(6,DoPlots)
     [GoodIDs,~] = GA.GetTopPop(GA.Fittest(1)); % fitness = genes
     AllFits = GA.Fit(:,:,GA.Progress);
     
+    % Normalize results
+    FitMax = ones(4,1);
+    FitMax(1) = max(max(AllFits(:,1,:)));
+    FitMax(4) = max(max(AllFits(:,4,:)));
+    AllFits(:,1,:) = AllFits(:,1,:)/FitMax(1);
+    AllFits(:,4,:) = AllFits(:,4,:)/FitMax(4);
+    
     % Weed out genomes with some fit == 0
 %     GoodIDs = all(AllFits~=0,2);
     GoodFits = AllFits(GoodIDs,:);
@@ -370,7 +377,7 @@ if ismember(6,DoPlots)
     GF = GoodFits;
     GP = GoodParams;
     
-    ClimbIDs = GoodFits(:,4)>30;
+    ClimbIDs = GoodFits(:,4)>30/FitMax(4);
     ClimbFits = GoodFits(ClimbIDs,:);
     ClimbParams = GoodParams(ClimbIDs,:);
     
@@ -390,7 +397,7 @@ if ismember(6,DoPlots)
     
     RemoveIDs(SlowIDs);
     
-    FastIDs = GoodFits(:,1)>0.4;
+    FastIDs = GoodFits(:,1)>0.4/FitMax(1);
     FastFits = GoodFits(FastIDs,:);
     FastParams = GoodParams(FastIDs,:);
     
@@ -419,7 +426,7 @@ if ismember(6,DoPlots)
     PlotGenes(3:11);
     PlotGenes([13:15,17:19]);
     
-    figure
+    figure('units','normalized','Position',[0.07, 0.15, 0.413, 0.6694])
     for sp=1:4
         hmin = min(GF(:,sp));
         hmax = max(GF(:,sp));
@@ -427,7 +434,13 @@ if ismember(6,DoPlots)
         padding = (hmax-hmin)/Nbins;
         nelements = zeros(length(xvalues),length(GrLegends)-1);
         
-        MySubplot(2,2,sp);
+        MySubplot(2,2,sp,0.65);
+        if mod(sp,2)
+            ylabel('Percentage of genomes','FontSize',LabelFont)
+        end
+        if sp>2
+            xlabel('Normalized fitness','FontSize',LabelFont)
+        end
         hold on
         nelements(:,1) = hist(FastFits(:,sp),xvalues);
         nelements(:,2) = hist(SlowFits(:,sp),xvalues);
@@ -436,7 +449,7 @@ if ismember(6,DoPlots)
 %         hist(ClimbUpFits(:,sp),xvalues);
 %         hist(ClimbDownFits(:,sp),xvalues);
         
-        bar_h = bar(xvalues,nelements,'stacked');
+        bar_h = bar(xvalues,nelements/sum(sum(nelements)),'stacked');
         SetBarColors(bar_h);
 %         hist(GF(:,sp),xvalues);
         
@@ -680,7 +693,10 @@ end
 %         GoodFits(IDs,:) = [];
     end
 
-    function MySubplot(Ny,Nx,N)
+    function MySubplot(Ny,Nx,N,lgnd)
+        if nargin<4
+            lgnd = 0;
+        end
         % For fitness plot
         if Nx == 2
             yPad = 0.03;
@@ -702,14 +718,14 @@ end
             end
         end
         
-        xAx = (1-xPad*(Nx+1))/Nx;
-        yAx = (1-TitlePad*Ny-yPad*(Ny+1))/Ny;
+        xAx = (1-xPad*(Nx+1+lgnd))/Nx;
+        yAx = (1-TitlePad*Ny-yPad*(Ny+1+lgnd))/Ny;
         
         Col = 1+mod((N-1),Nx);
         Row = 1+floor((N-1)/Nx);
         
-        AxPos = [xPad + (xPad+xAx)*(Col-1),...
-                 1 - TitlePad*Row - yAx*Row - yPad*(Row-1), xAx, yAx];
+        AxPos = [(1+lgnd)*xPad + (xPad+xAx)*(Col-1),...
+                 1 - TitlePad*Row - yAx*Row - yPad*(Row-1-lgnd), xAx, yAx];
         axes('Position',AxPos);
     end
 end

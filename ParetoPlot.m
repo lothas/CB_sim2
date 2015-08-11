@@ -7,21 +7,28 @@ FontSizeT = 14;
 FontSize = 12;
 FontSize2 = 10;
 FitLabels = {
-    'Velocity fitness',...
+    'Normalized Velocity fitness',...
     'Energy fitness',...
     'Stability fitness',...
-    'Up*Down fitness',...
+    'Normalized Slope fitness',...
     'Uphill fitness',...
     'Downhill fitness'};
 load('GA_11_24_10_25');
+% load('GA_Final2');
 SelectedGen = 4;
+
+% Normalize fitness
+% max(max(GA.Fit(:,1,:)))
+GA.Fit(:,1,:) = GA.Fit(:,1,:)/max(max(GA.Fit(:,1,:)));
+% max(max(GA.Fit(:,4,:)))
+GA.Fit(:,4,:) = GA.Fit(:,4,:)/max(max(GA.Fit(:,4,:)));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%% First Plot %%%%%%%%%%%%%%%%%%%%%%%%%%%
 Fits = [1 2];
 Fi = [1, 10, 20];
 NF = length(Fi);
 
-figure
+figure('units','normalized','Position',[0.0953, 0.3870, 0.3161, 0.3139])
 Data = [GA.Fit(:,Fits,GA.Progress),(1:GA.Population)'];
 Fronts = GA.Pareto(Data);
 subplot(1,2,1);
@@ -43,8 +50,8 @@ set(gca,'FontSize',FontSize2,'LineWidth',LnWidth/2)
 title('A','FontSize',FontSizeT);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%% Second Plot %%%%%%%%%%%%%%%%%%%%%%%%%%%
-Fits = [5 6];
-Fi = [1, 4, 8, 12];
+Fits = [1 4];
+Fi = [1, 10, 20];
 NF = length(Fi);
 
 Data = [GA.Fit(:,Fits,GA.Progress),(1:GA.Population)'];
