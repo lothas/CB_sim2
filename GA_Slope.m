@@ -12,7 +12,7 @@ if nargin<5
     GA = MOOGA(10,100);
     % GA = MOOGA(10,100);
     GA = GA.SetFittest(15,15,0.5);
-    slope = 0;
+    slope = 5;
     % GA.Fittest = [20,20,1];
 %     GA.FileIn = 'GA_11_22_18_27.mat';
 %     GA.FileOut = GA.FileIn;
@@ -26,7 +26,7 @@ else
     GA.FileOut = file_out;
 end
 
-GA.Graphics = 0;
+GA.Graphics = 1;
 GA.ReDo = 1; % 1 - start the algorithm from scratch (random pop)
 
 % Set up the genome
@@ -54,33 +54,32 @@ GA.Sim.EndCond = 2; % Run until converge (or fall)
 GA.Sim.Mod = GA.Sim.Mod.Set('I',0,'damp',0,'A2T',0.16,'A2H',0.12);
 
 % Set up the terrain
-start_slope = 0;
-GA.Sim.Env = GA.Sim.Env.Set('Type','inc','start_slope',start_slope);
+GA.Sim.Env = GA.Sim.Env.Set('Type','inc','start_slope',slope);
 
 % Initialize the controller
 GA.Sim.Con = GA.Sim.Con.ClearTorques();
-GA.Sim.Con.FBType = 2;
+GA.Sim.Con.FBType = 0;  % no feedback
 GA.Sim.Con.MinSat = [-MaxAnkleT*ones(1,NAnkleT),-MaxHipT*ones(1,NHipT)];
 GA.Sim.Con.MaxSat = [MaxAnkleT*ones(1,NAnkleT),MaxHipT*ones(1,NHipT)];
 
 % Simulation parameters
-GA.Sim.IC = [start_slope, start_slope, 0, 0, 0];
-GA.Sim = GA.Sim.SetTime(0,0.15,40);
+GA.Sim.IC = [slope, slope, 0, 0, 0];
+tstep = 0.05;  % simulation time step
+tend = 40;  % max simulation runtime
+GA.Sim = GA.Sim.SetTime(0,tstep,tend);
 
 % Some more simulation initialization
 GA.Sim.Mod.LegShift = GA.Sim.Mod.Clearance;
-% GA.Sim.Con = GA.Sim.Con.HandleEvent(1, GA.Sim.IC(GA.Sim.ConCo));
-% GA.Sim.Con = GA.Sim.Con.HandleExtFB(GA.Sim.IC(GA.Sim.ModCo),...
-%                                           GA.Sim.IC(GA.Sim.ConCo));
                                 
 % Fitness functions
 GA.FitFcn = {1, @MOOGA.VelFit;
              2, @MOOGA.NrgEffFit;
-             3, @MOOGA.EigenFit;
-             4:6, @MOOGA.UpDownFit};
-GA.FitIDs = [1,2,3,4];
+             3, @MOOGA.RobustFit;
+             4, @MOOGA.EigenFit;};
+GA.FitIDs = [1,2,3];
 GA.NFit = size(GA.FitFcn,1);
 GA.Sim.PMFull = 1; % Run poincare map on all 5 coords
+GA.CrowdCont = 1;  % Run "crowd control" to prevent solutions from clustering
 
 GA = GA.InitGen();
 
