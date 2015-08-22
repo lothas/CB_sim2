@@ -12,7 +12,7 @@ classdef MOOGA
         WeightedPairing = 1; % Individuals have higher chances of
                              % "mating" when they belong to higher
                              % pareto fronts
-        JOAT = 1;   % "Jack of all trades"
+        SelectionMode = 3;
                     % Set to 0 uses the normal pareto front approach
                     % Set to 1 takes the first pareto front from the
                     %   general population and the remaining fronts from
@@ -20,8 +20,13 @@ classdef MOOGA
                     %   many aspects.
                     % Set to 2 takes all fronts from the quantile of the
                     %   population, a.k.a. "master of none".
+                    % Set to 3 runs "crowd control" to prevent solutions
+                    % from clustering
         Quant = 0.8;    % Drops 20% of the population that are bad at one
-                        % or more fitness aspects (for JOAT>0)
+                        % or more fitness aspects (for mode 1 or 2)
+        UpdateIC = 1; % Set to 1 if genome includes IC and you want them
+                      % to be updated using the results from the genome
+                      % evaluation
         
         % Objects
         Gen;        % Genome

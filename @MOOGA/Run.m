@@ -23,15 +23,43 @@ NFit = GA.NFit;
 FitInd = GA.FitFcn(:,1); % Index for fit functions
 FitFcn = GA.FitFcn(:,2); % Handles for fit functions
 lastTime = [0 0];
-for i=1:GA.NFit
-    ThisName = MOOGA.GetFitFcnName(FitFcn{i});
-    if strfind(ThisName,'Up')
-        UpID = FitInd{i};
+% for i=1:GA.NFit
+%     ThisName = MOOGA.GetFitFcnName(FitFcn{i});
+%     if strfind(ThisName,'Up')
+%         UpID = FitInd{i};
+%     end
+%     if strfind(ThisName,'Down')
+%         DownID = FitInd{i};
+%     end
+% end
+
+% Variables for UpdateIC
+if GA.UpdateIC
+    % Check which key is 'IC' key
+    ICid = find(not(cellfun('isempty',...
+                strfind(GA.Gen.Keys(1,:),'IC'))),1,'first');
+    if ~isempty(ICid)
+        UpdateIC = 1;
+        % Get position of ICs on genome sequence
+        Seq_i = 1;
+        for s = 1:ICid
+            Seq_i = Seq_i + GA.Gen.Segments(s);
+        end
+        SeqPos = Seq_i-GA.Gen.Segments(s):Seq_i-1;
+        % Prepare encode matrix
+        if isfield(GA.Gen.KeyExtra,'IC')
+            KE = GA.Gen.KeyExtra.('IC');
+            EncodeM = zeros(max(abs(KE)),GA.Sim.stDim);
+            for k = 1:length(KE)
+                EncodeM(abs(KE(k)),k) = sign(KE(k));
+            end
+        else
+            EncodeM = eye(GA.Sim.stDim);
+        end
+    else
+        UpdateIC = 0;
     end
-    if strfind(ThisName,'Down')
-        DownID = FitInd{i};
-    end
-end
+end                
 
 for g = GA.Progress+1:GA.Generations
     startTime = now();
@@ -101,6 +129,17 @@ for g = GA.Progress+1:GA.Generations
                     end
                 end                    
             end
+            
+            % Postprocessing for IC key
+            if UpdateIC && wSim.Out.nSteps>12
+                curGen = gSeqs(i,:);
+                % Encode last ICs from simulation into genome
+                curGen(SeqPos) = (EncodeM*wSim.ICstore(:,4))';
+                res = Gen.CheckGenome(curGen);
+                if res{1}
+                    gSeqs(i,:) = curGen;
+                end
+            end 
         end        
         gFit(i,:) = thisFit;
     end

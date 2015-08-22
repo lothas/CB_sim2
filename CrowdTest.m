@@ -19,31 +19,65 @@ end
 
 BestCrowd = BestPar;
 BestPar = BestPar(1:Nout);
-% Get samples selected so far
-XF = Xe(BestPar,:);
-NCsamples = size(XF,1);
-Dist = zeros(NCsamples,1);
-for s = 1:NCsamples
-    % Calculate the distance from each sample to the others
-    FitDiff = repmat(XF(s,1:end-1),NCsamples-1,1) - ...
-        XF([1:s-1,s+1:end],1:end-1);
-    sDist = diag(FitDiff*FitDiff');
-    Dist(s) = min(sDist); % minimal distance of sample s to all others
+
+% Check distance between all candidates
+CFits = Xe(BestCrowd,1:end-1);
+[NC,NF] = size(CFits);
+CFits = [CFits,(1:NC)'];
+dists = ones(NC,1);
+Extr = max(CFits(:,1:end-1),[],1) - ...
+    min(CFits(:,1:end-1),[],1); % Distance value given to
+                                % extreme points
+for f = 1:NF
+    FitVal = sortrows(CFits(:,[f, end]),1);
+    FitDist = diff(FitVal(:,1));
+    FitDistAvg = (FitDist(1:end-1)+FitDist(2:end))/2;
+    dists(FitVal(:,2)) = dists(FitVal(:,2)) .* ...
+        [Extr(f); FitDistAvg; Extr(f)];
 end
 
-Dist = [Dist, XF(:,end)];
+dists = [dists,BestCrowd];
+
+% Remove delta candidates
 while length(BestCrowd)>Nout
-    % Find the closest pair of points
-    IDs = find(Dist(:,1)==min(Dist(:,1)));
-    dIDs = IDs;
-    % Keep one point
-    safeID = randsample(length(IDs),1);
-    dIDs(safeID) = [];
-    
-    % Remove points from Dist and BestCrowd
-    BestCrowd(ismember(BestCrowd,Dist(dIDs,2))) = [];
-    Dist(IDs,:) = [];
+    % Find pair of closest points
+    mIDs = find(dists(:,1) == min(dists(:,1)));
+    dIDs = mIDs;
+    if length(dIDs)>=2
+        % Keep only one point at random
+        safeID = randsample(length(dIDs),1);
+        dIDs(safeID) = [];
+    end
+    BestCrowd(ismember(BestCrowd,dists(dIDs,2))) = [];
+    dists(mIDs,:) = [];
 end
+                
+BestPar = BestPar(1:Nout);
+% % Get samples selected so far
+% XF = Xe(BestPar,:);
+% NCsamples = size(XF,1);
+% Dist = zeros(NCsamples,1);
+% for s = 1:NCsamples
+%     % Calculate the distance from each sample to the others
+%     FitDiff = repmat(XF(s,1:end-1),NCsamples-1,1) - ...
+%         XF([1:s-1,s+1:end],1:end-1);
+%     sDist = diag(FitDiff*FitDiff');
+%     Dist(s) = min(sDist); % minimal distance of sample s to all others
+% end
+% 
+% Dist = [Dist, XF(:,end)];
+% while length(BestCrowd)>Nout
+%     % Find the closest pair of points
+%     IDs = find(Dist(:,1)==min(Dist(:,1)));
+%     dIDs = IDs;
+%     % Keep one point
+%     safeID = randsample(length(IDs),1);
+%     dIDs(safeID) = [];
+%     
+%     % Remove points from Dist and BestCrowd
+%     BestCrowd(ismember(BestCrowd,Dist(dIDs,2))) = [];
+%     Dist(IDs,:) = [];
+% end
 
 % BestCrowd = [];
 % while length(BestCrowd)<Nout

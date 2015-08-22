@@ -9,15 +9,15 @@ function [  ] = GA_Slope( gen, pop, slope, file_in, file_out )
 % file_out - output file for results
 
 if nargin<5
-    GA = MOOGA(10,100);
+    GA = MOOGA(20,1000);
     % GA = MOOGA(10,100);
     GA = GA.SetFittest(15,15,0.5);
-    slope = 5;
+    slope = 0;
     % GA.Fittest = [20,20,1];
 %     GA.FileIn = 'GA_11_22_18_27.mat';
 %     GA.FileOut = GA.FileIn;
 
-    GA.FileOut = ['GA_',datestr(now,'mm_dd_hh_MM'),'.mat'];
+    GA.FileOut = ['GA_',num2str(slope),'_',datestr(now,'mm_dd_hh_MM'),'.mat'];
 else
     GA = MOOGA(gen,pop);
     GA = GA.SetFittest(15,15,0.5);
@@ -26,7 +26,7 @@ else
     GA.FileOut = file_out;
 end
 
-GA.Graphics = 1;
+GA.Graphics = 0;
 GA.ReDo = 1; % 1 - start the algorithm from scratch (random pop)
 
 % Set up the genome
@@ -37,7 +37,7 @@ MaxAnkleT = 20;
 MaxHipT = 80;
 Keys = {'IC', 'omega0',    'Pulses',    'Pulses';
            4,        1, [NAnkleT,1],   [NHipT,2]};
-Range = {[0,-2,-2,0], 0.90, [-MaxAnkleT, 0, 0.01], [-MaxHipT, 0, 0.01],... % Min
+Range = {[0,-2,-2,0], 0.90, [-MaxAnkleT, 0, 0.01], [-MaxHipT, 0, 0.01];... % Min
      [0.79,2,2,0.99], 1.8, [MaxAnkleT, 0.99, 0.99], [MaxHipT, 0.99, 0.99]}; % Max
 MutDelta0 = 0.04;
 MutDelta1 = 0.02;
@@ -63,7 +63,7 @@ GA.Sim.Con.MinSat = [-MaxAnkleT*ones(1,NAnkleT),-MaxHipT*ones(1,NHipT)];
 GA.Sim.Con.MaxSat = [MaxAnkleT*ones(1,NAnkleT),MaxHipT*ones(1,NHipT)];
 
 % Simulation parameters
-GA.Sim.IC = [slope, slope, 0, 0, 0];
+GA.Sim.IC = [slope*pi/180, slope*pi/180, 0, 0, 0];
 tstep = 0.05;  % simulation time step
 tend = 40;  % max simulation runtime
 GA.Sim = GA.Sim.SetTime(0,tstep,tend);
@@ -72,14 +72,18 @@ GA.Sim = GA.Sim.SetTime(0,tstep,tend);
 GA.Sim.Mod.LegShift = GA.Sim.Mod.Clearance;
                                 
 % Fitness functions
+% GA.FitFcn = {1, @MOOGA.VelFit;
+%              2, @MOOGA.NrgEffFit;
+%              3, @MOOGA.RobustFit;
+%              4, @MOOGA.EigenFit};
 GA.FitFcn = {1, @MOOGA.VelFit;
              2, @MOOGA.NrgEffFit;
-             3, @MOOGA.RobustFit;
-             4, @MOOGA.EigenFit;};
+             3, @MOOGA.EigenFit};
 GA.FitIDs = [1,2,3];
 GA.NFit = size(GA.FitFcn,1);
 GA.Sim.PMFull = 1; % Run poincare map on all 5 coords
-GA.CrowdCont = 1;  % Run "crowd control" to prevent solutions from clustering
+GA.SelectionMode = 3;  % Run "crowd control" to prevent solutions from
+                       % clustering
 
 GA = GA.InitGen();
 

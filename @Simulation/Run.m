@@ -75,6 +75,9 @@ function [ sim ] = Run( sim )
                     sim.Out.Type = 1;
                     sim.Out.Text = 'Robot fell down (hip height too low)';
                     sim.StopSim = 1;
+                    if StoreIC == 1
+                        sim.StepsTaken = sim.StepsTaken - 1;
+                    end
                     break;
                 end
             end
@@ -106,6 +109,9 @@ function [ sim ] = Run( sim )
                 sim.Out.Type = 8;
                 sim.Out.Text = 'ZMP crossed the limits';
                 sim.StopSim = 1;
+                if StoreIC == 1
+                    sim.StepsTaken = sim.StepsTaken - 1;
+                end
                 break;
             end                
         end
@@ -184,6 +190,9 @@ function [ sim ] = Run( sim )
         if any(abs(sim.IC(sim.ModCo(1:2)))>2*pi/3)
             % Leg angles are above 120 degrees 
             sim.StopSim = 1;
+            if StoreIC == 1
+                sim.StepsTaken = sim.StepsTaken - 1;
+            end
             break;
         end
         

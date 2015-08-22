@@ -15,14 +15,14 @@ function MOGAcrowd(mode, type)
 if nargin<2
     type = 2;
     if nargin<1
-        mode = 5;
+        mode = 6;
     end
 end
 
 % Algorithm parameters
-Pop = 200;
-NGen = 100;
-NTop = 40;
+Pop = 30;
+NGen = 1000;
+NTop = 10;
 
 AllPop = zeros(Pop,2,NGen);
 AllTop = zeros(NTop,2,NGen);
@@ -125,6 +125,15 @@ while curGen<NGen
                             BestIDs = Candidates(Candidates(:,2)==1,1);
                         end
                     end
+                    
+                    if f>length(Fronts) && sum(Candidates(:,2))<NTop
+                        id = 1;
+                        while sum(Candidates(:,2))<NTop
+                            Candidates(id,2) = 1;
+                            id = id + 1;
+                        end
+                        BestIDs = Candidates(Candidates(:,2)==1,1);
+                    end
                 end
                 BestIDs = BestIDs(1:NTop);
                 
@@ -142,7 +151,11 @@ while curGen<NGen
             end
             
             if mode == 5
-                % Select from Pareto fronts until NTop+10%
+                % Mode 5 fills NTop with pareto fronts (overflowing NTop)
+                % and removes points from the selection based on proximity
+                % to each other until NTop.
+                
+                % Select from Pareto fronts until NTop+delta
                 f = 1;
                 BestIDs = [];
                 while length(BestIDs)<NTop
@@ -163,6 +176,7 @@ while curGen<NGen
                 stdist(curGen+1) = std(dists)/mean(dists);
                 dists = [dists,BestIDs];
                 
+                % Remove delta candidates
                 while length(BestIDs)>NTop
                     % Find pair of closest points
                     mIDs = find(dists(:,1) == min(dists(:,1)));
@@ -186,6 +200,135 @@ while curGen<NGen
                         CFits([1:c-1,c+1:end],:);
                     dist = diag(distM*distM');
                     dists(c) = min(dist);
+                end
+                weights = dists;
+            end
+            
+            if mode == 6
+                % Mode 6 fills NTop with pareto fronts (overflowing NTop)
+                % and removes points from the selection based on proximity
+                % to each other until NTop.
+                % Proximity is calculated as average of distance to nearest
+                % two points
+                
+                % Select from Pareto fronts until NTop+delta
+                f = 1;
+                BestIDs = [];
+                while length(BestIDs)<NTop
+                    BestIDs = [BestIDs;Fronts{f}]; %#ok<AGROW>
+                    f = f + 1;
+                end
+                
+                % Check distance between all candidates
+                CFits = Fit(BestIDs,:);
+                [NC,NF] = size(CFits);
+                CFits = [CFits,(1:NC)'];
+                dists = ones(NC,1);
+                Extr = max(CFits(:,1:end-1),[],1) - ...
+                    min(CFits(:,1:end-1),[],1); % Distance value given to
+                                                % extreme points
+                for f = 1:NF
+                    FitVal = sortrows(CFits(:,[f, end]),1);
+                    FitDist = diff(FitVal(:,1));
+                    FitDistAvg = (FitDist(1:end-1)+FitDist(2:end))/2;
+                    dists(FitVal(:,2)) = dists(FitVal(:,2)) .* ...
+                        [Extr(f); FitDistAvg; Extr(f)];
+                end
+                    
+                stdist(curGen+1) = std(dists)/mean(dists);
+                dists = [dists,BestIDs];
+                
+                % Remove delta candidates
+                while length(BestIDs)>NTop
+                    % Find pair of closest points
+                    mIDs = find(dists(:,1) == min(dists(:,1)));
+                    dIDs = mIDs;
+                    if length(dIDs)>=2
+                        % Keep only one point at random
+                        safeID = randsample(length(dIDs),1);
+                        dIDs(safeID) = [];
+                    end
+                    BestIDs(ismember(BestIDs,dists(dIDs,2))) = [];
+                    dists(mIDs,:) = [];
+                end
+%                 BestIDs = BestIDs(1:NTop);
+                
+                % Update distance between all candidates
+                CFits = Fit(BestIDs,:);
+                NC = size(CFits,1);
+                dists = zeros(NC,1);
+                for c = 1:NC
+                    distM = repmat(CFits(c,:),NC-1,1) - ...
+                        CFits([1:c-1,c+1:end],:);
+                    dist = diag(distM*distM');
+                    dists(c) = min(dist);
+                end
+                weights = dists;
+            end
+            
+            if mode == 7
+                % Mode 7 fills NTop with pareto fronts (overflowing NTop)
+                % and removes points from the selection based on proximity
+                % to each other until NTop.
+                % Proximity is calculated as average of distance to nearest
+                % two points within the same pareto front
+                
+                % Select from Pareto fronts until NTop+delta
+                f = 1;
+                BestIDs = [];
+                BestDists = [];
+                while length(BestIDs)<NTop
+                    BestIDs = [BestIDs;Fronts{f}]; %#ok<AGROW>
+                    
+                    % Check distance between all candidates
+                    CFits = Fit(Fronts{f},:);
+                    [NC,NF] = size(CFits);
+                    CFits = [CFits,(1:NC)'];
+                    dists = ones(NC,1);
+                    Extr = max(CFits(:,1:end-1),[],1) - ...
+                        min(CFits(:,1:end-1),[],1); % Distance value given to
+                                                    % extreme points
+                    for fi = 1:NF
+                        FitVal = sortrows(CFits(:,[fi, end]),1);
+                        FitDist = diff(FitVal(:,1));
+                        FitDistAvg = (FitDist(1:end-1)+FitDist(2:end))/2;
+                        dists(FitVal(:,2)) = dists(FitVal(:,2)) .* ...
+                            [Extr(fi); FitDistAvg; Extr(fi)];
+                    end
+
+                    BestDists = [BestDists; dists,Fronts{f}];
+                    f = f + 1;
+                end
+                
+                % Remove delta candidates
+                while length(BestIDs)>NTop
+                    % Find pair of closest points
+                    mIDs = find(BestDists(:,1) == min(BestDists(:,1)));
+                    dIDs = mIDs;
+                    if length(dIDs)>=2
+                        % Keep only one point at random
+                        safeID = randsample(length(dIDs),1);
+                        dIDs(safeID) = [];
+                    end
+                    BestIDs(ismember(BestIDs,BestDists(dIDs,2))) = [];
+                    BestDists(mIDs,:) = [];
+                end
+%                 BestIDs = BestIDs(1:NTop);
+                
+                % Update distance between all candidates
+                CFits = Fit(BestIDs,:);
+                [NC,NF] = size(CFits);
+                CFits = [CFits,(1:NC)'];
+                dists = ones(NC,1);
+                Extr = max(CFits(:,1:end-1),[],1) - ...
+                    min(CFits(:,1:end-1),[],1); % Distance value given to
+                                                % extreme points
+                for fi = 1:NF
+                    FitVal = sortrows(CFits(:,[fi, end]),1);
+                    FitDist = diff(FitVal(:,1));
+                    FitDistAvg = (FitDist(1:end-1)+FitDist(2:end))/2;
+                    dists(FitVal(:,2)) = dists(FitVal(:,2)) .* ...
+                        [Extr(fi); FitDistAvg; Extr(fi)];
                 end
                 weights = dists;
             end
@@ -244,8 +387,8 @@ end
 axis equal
 axis([0 1 0 1])
 
-figure
-plot(stdist);
+% figure
+% plot(stdist);
 % figure
 % plot(AllDistMu);
 % hold on

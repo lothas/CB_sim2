@@ -29,7 +29,7 @@ Sim.EndCond = 2; % Run until converge
 Sim = GA.Gen.Decode(Sim, GA.Seqs(ID,:,Generation));
 disp(GA.Gen.seq2str(GA.Seqs(ID,:,Generation)));
 % Simulation parameters
-Sim = Sim.SetTime(0,0.09,tend);
+Sim = Sim.SetTime(0,0.05,tend);
 
 % Set internal parameters (state dimensions, events, etc)
 Sim = Sim.Init();

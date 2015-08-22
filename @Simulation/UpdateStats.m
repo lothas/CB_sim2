@@ -25,6 +25,7 @@ if abs(Xmod(2)-Xmod(1))<0.00001
     sim.Out.Type = 2;
     sim.Out.Text = 'Step length too small';
     sim.StopSim = 1;
+    sim.StepsTaken = sim.StepsTaken-1;
 end
 
 if sim.Mod.LegShift>0
@@ -32,6 +33,7 @@ if sim.Mod.LegShift>0
     sim.Out.Type = 3;
     sim.Out.Text = 'Robot hit the ground before extending the leg';
     sim.StopSim = 1;
+    sim.StepsTaken = sim.StepsTaken-1;
 end
 
 % Check slope that the robot is walking on

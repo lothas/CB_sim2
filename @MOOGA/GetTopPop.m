@@ -20,7 +20,8 @@ function [ TopIDs, Weights ] = GetTopPop( GA, N )
         
         f = 1;
         IDindex = 1;
-        switch GA.JOAT % Jack of all trades
+        
+        switch GA.SelectionMode
             %%%%%%%%%%%%%%%%% Specialization "allowed" %%%%%%%%%%%%%%%%%
             case 0
                 % Divide population into pareto fronts
@@ -36,7 +37,7 @@ function [ TopIDs, Weights ] = GetTopPop( GA, N )
                     % Select the best genomes from each fitness
                     TopIDs = GetByBest(GA,TopIDs,IDindex,N);
                 end
-            %%%%%% Specialization allowed for single "elite" stratum %%%%%%
+            %%%%% Specialization allowed for single "elite" stratum %%%%%
             case 1
                 % Divide population into pareto fronts
                 Fronts = GA.Pareto(Data);
@@ -84,12 +85,83 @@ function [ TopIDs, Weights ] = GetTopPop( GA, N )
                     % Select the best genomes from each fitness
                     TopIDs = GetByBest(GA,TopIDs,IDindex,N);
                 end
+            %%%%%%%%%%%%%% Encourage spread out solutions %%%%%%%%%%%%%%
+            case 3
+                % Run NSGA-like algorithm to select best genomes based on
+                % their distance from each other
+                
+                % Divide population into pareto fronts
+                Fronts = GA.Pareto(Data);
+                while IDindex<=N
+                    % Take IDs from pareto fronts until TopPop is reached
+                    [f,TopIDs,Weights,IDindex] = ...
+                        GetFront(Fronts,f,TopIDs,Weights,IDindex);
+                end
+                TopIDs = TopIDs(TopIDs~=0);
+                
+                % Calculate distance of genomes to each other
+                CFits = Data(TopIDs,1:end-1);
+                [NC,NF] = size(CFits);
+                CFits = [CFits,(1:NC)'];
+                dists = ones(NC,1);
+                Extr = max(CFits(:,1:end-1),[],1) - ...
+                    min(CFits(:,1:end-1),[],1); % Distance value given to
+                                                % extreme points
+                for f = 1:NF
+                    if Extr(f)==0
+                        continue
+                    else
+                        FitVal = sortrows(CFits(:,[f, end]),1);
+                        FitDist = diff(FitVal(:,1));
+                        FitDistAvg = (FitDist(1:end-1)+FitDist(2:end))/2;
+                        dists(FitVal(:,2)) = dists(FitVal(:,2)) .* ...
+                            [1; FitDistAvg/Extr(f); 1];
+                    end
+                end
+                dists = [dists,TopIDs];
+                
+                % Remove delta candidates
+                while length(TopIDs)>N
+                    % Find pair of closest points
+                    mIDs = find(dists(:,1) == min(dists(:,1)));
+                    dIDs = mIDs;
+                    if length(dIDs)>=2
+                        % Keep only one point at random
+                        safeID = randsample(length(dIDs),1);
+                        dIDs(safeID) = [];
+                    end
+                    TopIDs(ismember(TopIDs,dists(dIDs,2))) = [];
+                    dists(mIDs,:) = [];
+                end
+                
+                % Update distance of genomes to each other
+                CFits = Data(TopIDs,1:end-1);
+                [NC,NF] = size(CFits);
+                CFits = [CFits,(1:NC)'];
+                Weights = ones(NC,1);
+                Extr = max(CFits(:,1:end-1),[],1) - ...
+                    min(CFits(:,1:end-1),[],1); % Distance value given to
+                                                % extreme points
+                for f = 1:NF
+                    if Extr(f)==0
+                        continue
+                    else
+                        FitVal = sortrows(CFits(:,[f, end]),1);
+                        FitDist = diff(FitVal(:,1));
+                        FitDistAvg = (FitDist(1:end-1)+FitDist(2:end))/2;
+                        Weights(FitVal(:,2)) = Weights(FitVal(:,2)) .* ...
+                            [1; FitDistAvg/Extr(f); 1];
+                    end
+                end
+                Weights = (Weights+0.001)/1.001; % Avoid zero weights
         end
-        
-        TopIDs = TopIDs(1:N);
-        % Invert the weights (first fronts get higher weight)
-        Weights = f-Weights;
-        Weights = Weights(1:N);
+                
+        if GA.SelectionMode ~= 3
+            TopIDs = TopIDs(1:N);
+            % Invert the weights (first fronts get higher weight)
+            Weights = f-Weights;
+            Weights = Weights(1:N);
+        end
     end
     
     %%%%%%%%%%%%%%%%%% GETFRONT %%%%%%%%%%%%%%%%%%

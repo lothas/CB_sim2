@@ -3,3 +3,4 @@
 MOGAcrowd(3);
 MOGAcrowd(4);
 MOGAcrowd(5);
+MOGAcrowd(6);
