@@ -19,6 +19,7 @@ function [ sim ] = Run( sim )
     else
         tspan = [sim.tstart,sim.tend];
     end
+    % Run first simulation segment
     [TTemp,XTemp,TE,YE,IE] = ...
         ode45(@sim.Derivative,tspan,sim.IC,options); %#ok<ASGLU>
     
@@ -80,6 +81,12 @@ function [ sim ] = Run( sim )
                     end
                     break;
                 end
+                
+                if ModEvID == 3
+                    % Swing leg angular velocity became negative.
+                    % Extend leg
+                    sim.Mod.LegShift = 0;
+                end
             end
 
             % Is it a controller event?
@@ -92,8 +99,8 @@ function [ sim ] = Run( sim )
                 switch ConEvID
                     case 1 % Neuron fired
                         sim.Mod.LegShift = sim.Mod.Clearance;
-                    case 2 % Leg extension
-                        sim.Mod.LegShift = 0;
+%                     case 2 % Leg extension
+%                         sim.Mod.LegShift = 0;
                 end 
             end
         end

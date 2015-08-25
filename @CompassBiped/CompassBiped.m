@@ -413,7 +413,7 @@ classdef CompassBiped < handle & matlab.mixin.Copyable
             value(2)=HipPosy-CB.yS-0.7*CB.L;
             
             % Check for the swing leg angular velocity crossing 0 (from +)
-%             value(3)=X(4);
+            value(3)=X(4);
         end
         
         % %%%%%% % Events % %%%%%% %

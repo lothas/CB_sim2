@@ -6,6 +6,7 @@ nParams = (nargin-1)/2;
 if rem(nParams,1)~=0 || nargin<1
     error('Set failed: not enough inputs')
 else
+    Slopes = [0,0]; % Check if start_slope or end_slope are set separately
     for p = 1:nParams
         key = varargin{2*p-1};
         value = varargin{2*p};
@@ -41,8 +42,10 @@ else
                 Te.parK = value;
             case 'start_slope'
                 Te.start_slope = value;
+                Slopes(1) = 1;
             case 'end_slope'
                 Te.end_slope = value;
+                Slopes(2) = 1;
             case 'start_x'
                 Te.start_x = value;
             case 'end_x'
@@ -62,6 +65,10 @@ else
             case 'LineWidth'
                 Te.LineWidth = value;
         end
+    end
+    if sum(Slopes) == 1
+        % Only start_slope or end_slope was set
+        error('Set failed: start_slope and end_slope should be specified when creating the terrain');
     end
     Te=SetEndConditions(Te);
 end

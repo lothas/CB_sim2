@@ -126,8 +126,14 @@ function [ TopIDs, Weights ] = GetTopPop( GA, N )
                     mIDs = find(dists(:,1) == min(dists(:,1)));
                     dIDs = mIDs;
                     if length(dIDs)>=2
+                        nToDelete = length(TopIDs)-N;
+                        if length(dIDs)-1>nToDelete
+                            dSave = length(dIDs)-nToDelete;
+                        else
+                            dSave = 1;
+                        end
                         % Keep only one point at random
-                        safeID = randsample(length(dIDs),1);
+                        safeID = randsample(length(dIDs),dSave);
                         dIDs(safeID) = [];
                     end
                     TopIDs(ismember(TopIDs,dists(dIDs,2))) = [];

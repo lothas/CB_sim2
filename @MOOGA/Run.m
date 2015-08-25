@@ -50,8 +50,15 @@ if GA.UpdateIC
         if isfield(GA.Gen.KeyExtra,'IC')
             KE = GA.Gen.KeyExtra.('IC');
             EncodeM = zeros(max(abs(KE)),GA.Sim.stDim);
-            for k = 1:length(KE)
-                EncodeM(abs(KE(k)),k) = sign(KE(k));
+            nK = length(KE);
+            
+            weight = zeros(1,nK);
+            Genes = unique(abs(KE));
+            for gi = 1:length(Genes)
+                weight(abs(KE)==Genes(gi)) = sum(abs(KE)==Genes(gi));
+            end
+            for k = 1:nK
+                EncodeM(abs(KE(k)),k) = sign(KE(k))/weight(k);
             end
         else
             EncodeM = eye(GA.Sim.stDim);
@@ -90,7 +97,9 @@ for g = GA.Progress+1:GA.Generations
         wSim = deepcopy(Sim);
         wSim = Gen.Decode(wSim,gSeqs(i,:)); %#ok<PFBNS>
         wSim = wSim.Init();
-        wSim.Con = wSim.Con.HandleEvent(1, wSim.IC(wSim.ConCo));
+        wSim.Mod.LegShift = wSim.Mod.Clearance;
+        wSim.Con = wSim.Con.Reset(wSim.IC(wSim.ConCo));
+%         wSim.Con = wSim.Con.HandleEvent(1, wSim.IC(wSim.ConCo));
         
         % Run the simulation
         wSim = wSim.Run();

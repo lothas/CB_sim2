@@ -248,7 +248,7 @@ classdef MOOGA
             % Calculate distance travelled
             DistanceTravelled = abs(Hip1(1)-Hip0(1));
             
-            if DistanceTravelled<3*Sim.Mod.L
+            if DistanceTravelled<4*Sim.Mod.L
                 fit = 0;
             else
                 % Calculate absolute control effort

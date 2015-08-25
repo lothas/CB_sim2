@@ -9,12 +9,12 @@ function [  ] = GA_Slope( gen, pop, slope, file_in, file_out )
 % file_out - output file for results
 
 if nargin<5
-    GA = MOOGA(20,1000);
+    GA = MOOGA(25,1000);
     % GA = MOOGA(10,100);
     GA = GA.SetFittest(15,15,0.5);
-    slope = 0;
+    slope = 1;
     % GA.Fittest = [20,20,1];
-%     GA.FileIn = 'GA_11_22_18_27.mat';
+    GA.FileIn = 'GA_0_08_22_17_51.mat';
 %     GA.FileOut = GA.FileIn;
 
     GA.FileOut = ['GA_',num2str(slope),'_',datestr(now,'mm_dd_hh_MM'),'.mat'];
@@ -54,7 +54,7 @@ GA.Sim.EndCond = 2; % Run until converge (or fall)
 GA.Sim.Mod = GA.Sim.Mod.Set('I',0,'damp',0,'A2T',0.16,'A2H',0.12);
 
 % Set up the terrain
-GA.Sim.Env = GA.Sim.Env.Set('Type','inc','start_slope',slope);
+GA.Sim.Env = Terrain(0,slope);
 
 % Initialize the controller
 GA.Sim.Con = GA.Sim.Con.ClearTorques();
