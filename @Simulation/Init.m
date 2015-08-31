@@ -25,8 +25,8 @@ function [ sim ] = Init( sim )
             % If 2 screens are used in Linux
             scrsz(3) = scrsz(3)/2;
         end
-        sim.FigWidth = scrsz(3)-250;
-        sim.FigHeight = scrsz(4)-250;
+        sim.FigWidth = scrsz(3)-900; % 250;
+        sim.FigHeight = scrsz(4)-600; % 250;
         sim.AR = sim.FigWidth/sim.FigHeight;
         if isempty(sim.IC)
             [sim.COMx0,sim.COMy0] = sim.Mod.GetPos(zeros(1,sim.Mod.stDim),'COM');
@@ -67,6 +67,7 @@ function [ sim ] = Init( sim )
     sim.Out.Text = 'Reached end of tspan';
     
     % Adapt CPG (if adaptive)
-    sim.Con = sim.Con.Adaptation(sim.Env.SurfSlope(sim.Mod.xS));
+    sim.Con = sim.Con.Adaptation(sim.Env.SurfSlope(sim.Mod.xS),...
+        sim.IC(sim.ConCo));
 end
 

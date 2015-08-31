@@ -10,7 +10,7 @@ NC.FBType = 2;
 NC.lastPhi = Phi;
 NCorig.FBType = 2;
 NCorig.lastPhi = Phi;
-NCorig = NCorig.Adaptation(Phi);
+NCorig = NCorig.Adaptation(Phi,0);
 
 % Mimic the CPG frequency
 kOmega = (NCorig.omega-NC.omega0)/Phi;
@@ -92,7 +92,7 @@ K = [kOmega, K(opt,:)];
         else
             NC.kTorques_d(kIDs) = K;
         end
-        NC = NC.Adaptation(Phi);
+        NC = NC.Adaptation(Phi,0);
         diffs = CompareSigs(NC,NC2,0.001);
         
         diff = diffs(jID);
@@ -105,7 +105,7 @@ K = [kOmega, K(opt,:)];
         else
             NC.kTorques_d = K;
         end
-        NC = NC.Adaptation(Phi);
+        NC = NC.Adaptation(Phi,0);
         diffs = CompareSigs(NC,NC2,0.001);
         
         diff = sum(diffs);

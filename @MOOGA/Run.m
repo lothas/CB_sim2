@@ -9,7 +9,7 @@ if GA.Sim.Graphics == 1
 end
 
 if isempty(gcp('nocreate'))
-    parpool(7) % Work in parallel to finish faster
+    parpool(4) % Work in parallel to finish faster
 end
 
 % Decode base genome if provided

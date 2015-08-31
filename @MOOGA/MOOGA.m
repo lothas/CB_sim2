@@ -248,9 +248,7 @@ classdef MOOGA
             % Calculate distance travelled
             DistanceTravelled = abs(Hip1(1)-Hip0(1));
             
-            if DistanceTravelled<4*Sim.Mod.L
-                fit = 0;
-            else
+            if DistanceTravelled>4*Sim.Mod.L || Sim.Out.nSteps>8
                 % Calculate absolute control effort
                 StTrq = Torques(:,1)-Torques(:,2);
 %                 StTrq = Torques(:,1);
@@ -273,6 +271,8 @@ classdef MOOGA
                 % COT of 0.03 gives 0.869
                 % COT of 0.12 gives 0.625
                 % COT of 0.3 gives 0.4
+            else
+                fit = 0;
             end
             out = [];
         end

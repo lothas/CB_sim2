@@ -1,4 +1,4 @@
-function [  ] = GA_Slope( gen, pop, slope, file_in, file_out )
+function varargout = GA_Slope( gen, pop, slope, file_in, file_out )
 % Run MOOGA using Vel, Nrg, Robustness and Uniqueness fitness
 % The Simulation is limited with a bounded foot size (ZMP threshold)
 % Inputs:
@@ -8,23 +8,29 @@ function [  ] = GA_Slope( gen, pop, slope, file_in, file_out )
 % file_in - input file with initial population / to continue MOGA
 % file_out - output file for results
 
-if nargin<5
-    GA = MOOGA(25,1000);
-    % GA = MOOGA(10,100);
-    GA = GA.SetFittest(15,15,0.5);
-    slope = 1;
-    % GA.Fittest = [20,20,1];
-    GA.FileIn = 'GA_0_08_22_17_51.mat';
-%     GA.FileOut = GA.FileIn;
-
-    GA.FileOut = ['GA_',num2str(slope),'_',datestr(now,'mm_dd_hh_MM'),'.mat'];
-else
-    GA = MOOGA(gen,pop);
-    GA = GA.SetFittest(15,15,0.5);
-    % GA.Fittest = [20,20,1];
-    GA.FileIn = file_in;
-    GA.FileOut = file_out;
+if nargin<2
+    gen = 10;
+    pop = 1200;
 end
+
+if nargin<3
+    slope = 8.4;
+end
+
+if nargin<5
+    if nargin<4
+        file_in = [];
+%         FileIn = 'GA_83_08_26_18_00.mat';
+    end
+    file_out = ['GA_',strrep(sprintf('%2.1f', slope),'.',''),...
+        '_',datestr(now,'mm_dd_hh_MM'),'.mat'];
+end
+            
+GA = MOOGA(gen,pop);
+GA = GA.SetFittest(15,15,0.5);
+% GA.Fittest = [20,20,1];
+GA.FileIn = file_in;
+GA.FileOut = file_out;
 
 GA.Graphics = 0;
 GA.ReDo = 1; % 1 - start the algorithm from scratch (random pop)
@@ -109,6 +115,11 @@ GA.GenerationFcn = @GenFcn;
 % TrySim.Run()
 
 GA = GA.Run();
-GA.Plot('Fit');
+
+if nargout == 0
+    GA.Plot('Fit');
+else
+    varargout = {GA};
+end
 
 end

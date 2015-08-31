@@ -38,7 +38,9 @@ classdef Controller < handle & matlab.mixin.Copyable
                      % 1 - single gain for omega and each joint
                      % 2 - individual gains for each pulse (not
                      % implemented?)
+                     % 3 - look-up table
         lastPhi = 0;
+        LUT = []; % look up table for FBType 3
                      
         % Phase reset
         ExtP_reset = []; % set to a certain phase to use phase reset
@@ -138,26 +140,54 @@ classdef Controller < handle & matlab.mixin.Copyable
             diff(diff<-Range/2) = diff(diff<-Range/2) + Range;
         end
         
-        function [NC] = Adaptation(NC, Phi)
+        function [NC] = Adaptation(NC, Phi, Phase)
             if NC.FBType == 0
                 % NO FEEDBACK
                 NC.omega = NC.omega0;
                 NC.Amp = NC.Amp0;
             else
-                if abs(Phi-NC.lastPhi)>0.1
-                    % Don't apply changes when the slope
-                    % varies too abruptly
-                    % (usually happens when the robot falls)
-                    return
+                if NC.FBType == 3
+                    % Find appropriate slope on look-up table
+                    ind = find(NC.LUT.Slopes>Phi,1,'first');
+                    if isempty(ind)
+                        % Current slope is larger than every know slope.
+                        % Use largest known slope
+                        ind = length(NC.LUT.Slopes);
+                    else
+                        if ind > 1
+                            % Find closest slope on LUT
+                            if abs(NC.LUT.Slopes(ind)-Phi) > ...
+                                    abs(NC.LUT.Slopes(ind-1)-Phi)
+                                ind = ind - 1; % use previous slope
+                            end
+                        end
+                    end
+                    
+                    disp(['Slope: ',num2str(Phi*180/pi),...
+                        ' - LUT slope:',num2str(NC.LUT.Slopes(ind)*180/pi)]);
+                    
+                    % Update controller with info from LUT
+                    NC.omega = NC.LUT.Freq(ind);
+                    NC.Amp = NC.LUT.Amp(ind,:);
+                    NC.Offset = NC.LUT.Offset(ind,:);
+                    NC.Duration = NC.LUT.Duration(ind,:);
+%                     NC.Reset(Phase);
+                else
+                    if abs(Phi-NC.lastPhi)>0.1
+                        % Don't apply changes when the slope
+                        % varies too abruptly
+                        % (usually happens when the robot falls)
+                        return
+                    end
+                    NC.lastPhi = Phi;
+
+                    NC.omega = NC.omega0 + ...
+                        min(0,Phi)*NC.kOmega_d + ...    % Phi<0
+                        max(0,Phi)*NC.kOmega_u;         % Phi>0
+                    NC.Amp = NC.Amp0 + ...
+                        min(0,Phi)*NC.kTorques_d + ...  % Phi<0
+                        max(0,Phi)*NC.kTorques_u;       % Phi>0
                 end
-                NC.lastPhi = Phi;
-                
-                NC.omega = NC.omega0 + ...
-                    min(0,Phi)*NC.kOmega_d + ...    % Phi<0
-                    max(0,Phi)*NC.kOmega_u;         % Phi>0
-                NC.Amp = NC.Amp0 + ...
-                    min(0,Phi)*NC.kTorques_d + ...  % Phi<0
-                    max(0,Phi)*NC.kTorques_u;       % Phi>0
             end
             % Apply saturation
             if ~isempty(NC.MinSat)
@@ -222,7 +252,7 @@ classdef Controller < handle & matlab.mixin.Copyable
             % This function is called when the leg hits the ground
             if NC.FBType > 0
                 % Perform adaptation based on terrain slope
-                NC = NC.Adaptation(Slope);
+                NC = NC.Adaptation(Slope, Xcon);
             end
             
             if ~isempty(NC.ExtP_reset)

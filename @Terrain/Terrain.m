@@ -188,24 +188,26 @@ classdef Terrain < handle & matlab.mixin.Copyable
             alpha=Te.start_slope*pi/180;
         end
         
-% %%%%%%%%%%%% Type 1 - sinusoidal %%%%%%%%%%%%
+% %%%%%%%%%%% Type 1 - sinusoidal + slope %%%%%%%%%%%
         function [y, Trans] = Surf1(Te,x)
             alpha = Te.SurfSlope(x);
             Trans=[cos(alpha), -sin(alpha);
                    sin(alpha), cos(alpha)];
                
             if x<Te.start_x
-                y=0*x;
+                y=Te.start_slope*(x-Te.start_x);
             else
-                y=Te.sinAmp*(1-cos(Te.sinFreq*(x-Te.start_x)));
+                y=Te.sinAmp*(1-cos(Te.sinFreq*(x-Te.start_x))) + ...
+                    Te.start_slope*(x-Te.start_x);
             end
         end
 
         function [alpha]=SurfSlope1(Te,x)
             if x<Te.start_x
-                alpha=0*x;
+                alpha=Te.start_slope;
             else
-                alpha=Te.sinAmp*Te.sinFreq*sin(Te.sinFreq*(x));
+                alpha=Te.sinAmp*Te.sinFreq*sin(Te.sinFreq*(x)) + ...
+                    Te.start_slope;
             end
         end
         
