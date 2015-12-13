@@ -39,6 +39,8 @@ classdef Controller < handle & matlab.mixin.Copyable
                      % 2 - individual gains for each pulse (not
                      % implemented?)
         lastPhi = 0;
+        s_in = 0;    % Speed input - higher level input to control the
+                     % desired walking speed
                      
         % Phase reset
         ExtP_reset = []; % set to a certain phase to use phase reset
@@ -55,6 +57,10 @@ classdef Controller < handle & matlab.mixin.Copyable
         kOmega_d = 0.0;
         kTorques_u = 0;
         kTorques_d = 0;
+        sOmega_f = 0.0;
+        sOmega_s = 0.0;
+        sTorques_f = 0;
+        sTorques_s = 0;
         
         % Saturation
         MinSat; MaxSat;
@@ -62,7 +68,9 @@ classdef Controller < handle & matlab.mixin.Copyable
         % Set keys
         SetKeys = {'P_reset','P_th','P_0','P_LegE','omega0',...
                    'nPulses','Amp0','Offset','Duration','AngVelImp',...
-                   'FBType','kOmega_u','kOmega_d','kTorques_u','kTorques_d'};
+                   'FBType',...
+                   'kOmega_u','kOmega_d','kTorques_u','kTorques_d',...
+                   'sOmega_f','sOmega_s','sTorques_f','sTorques_s'};
     end
     
     methods
@@ -159,6 +167,15 @@ classdef Controller < handle & matlab.mixin.Copyable
                     min(0,Phi)*NC.kTorques_d + ...  % Phi<0
                     max(0,Phi)*NC.kTorques_u;       % Phi>0
             end
+            
+            % Apply higher-level speed input
+            NC.omega = NC.omega0 + ...
+                min(0,NC.s_in)*NC.sOmega_s + ...    % s_in<0 (slow)
+                max(0,NC.s_in)*NC.sOmega_f;         % s_in>0 (fast)
+            NC.Amp = NC.Amp0 + ...
+                min(0,NC.s_in)*NC.sTorques_s + ...  % s_in<0 (slow)
+                max(0,NC.s_in)*NC.sTorques_f;       % s_in>0 (fast)
+            
             % Apply saturation
             if ~isempty(NC.MinSat)
                 NC.Amp = min(max(NC.Amp,NC.MinSat),NC.MaxSat);
@@ -180,7 +197,7 @@ classdef Controller < handle & matlab.mixin.Copyable
             value(1) = NC.P_th - X;
 
             % Check for leg extension signal (for clearance)
-            value(2) = NC.P_LegE - X;
+%             value(2) = NC.P_LegE - X;
             
             % Check for switching on/off signal
             Xperc = NC.GetPhasePerc(X);

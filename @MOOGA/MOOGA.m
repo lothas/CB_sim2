@@ -469,6 +469,104 @@ classdef MOOGA
             out = UDSim.JoinOuts(down_out);
         end
         
+        function [max_vel, max_s, out] = DeltaVelFit(Sim, dir, base_vel)
+            % Starts walking faster/slower at intervals and checks that the
+            % simulation converges at each speed before moving forward
+            
+            max_vel = base_vel;
+            max_s = 0;
+            s_in = 0;
+            ds_in = dir*1;
+            VelSim = deepcopy(Sim);
+            VelSim.doGoNoGo = 2;
+            VelSim.GNGThresh = [5,10];
+            out = [];
+            
+            while 1
+                % Run a simulation of the robot walking with different speed
+                s_in = s_in + ds_in;
+                
+                % Simulation parameters
+                VelSim = VelSim.SetTime(0,0.15,40);
+                VelSim.EndCond = 2; % Run until converge
+
+                % Some more simulation initialization
+                VelSim.Mod.LegShift = VelSim.Mod.Clearance;
+                VelSim = VelSim.Init();
+
+                VelSim.IC = VelSim.IClimCyc;
+
+                % Apply higher-level velocity signal
+                VelSim.Con.s_in = s_in;
+                VelSim.Con = VelSim.Con.Adaptation();
+                
+                VelSim.Con = VelSim.Con.Reset(VelSim.IC(VelSim.ConCo));
+                if all(VelSim.IC) == 0
+                    VelSim.Con = VelSim.Con.HandleEvent(1, VelSim.IC(VelSim.ConCo));
+                else
+                    VelSim.Con = VelSim.Con.HandleExtFB(VelSim.IC(VelSim.ModCo),...
+                        VelSim.IC(VelSim.ConCo),VelSim.Env.SurfSlope(VelSim.Mod.xS));
+                end
+
+                % Simulate
+                VelSim = VelSim.Run();
+                out = VelSim.JoinOuts(out);
+                
+                if VelSim.Out.Type == 6
+                    % Simulation GO
+                    % Get average velocity
+                    T = 2*sin(Sim.ICstore(1,2))*Sim.Mod.L/Sim.Mod.curSpeed;
+                    n = min(VelSim.Out.nSteps, length(VelSim.ICstore));
+                    
+                    if n > 5
+                        % At least 5 steps should be taken
+                        % (though go-no-go should take care of it as well)
+                        avg_vel = sum(2*sin(Sim.ICstore(1,2:n))*Sim.Mod.L/T) ...
+                                    / (n-1);
+                    else
+                        avg_vel = 0;
+                    end
+                    
+                    if dir*avg_vel > 1.01*dir*max_vel
+                        % Expect at least a 1% increase
+                        max_vel = avg_vel;
+                        max_s = s_in;
+                    else
+                        break;
+                    end
+                else
+                    break;
+                end
+            end
+        end
+        
+        function [fit,out] = VelRangeFit(Sim)
+            % Combines the upslope and downslope fitness results
+            
+            if isempty(Sim.Period)
+                % Weed out results that didn't converge
+                fit = [0 0 0 0 0];
+                out = [];
+                return;
+            end
+            
+            % Get last speed achieved with s_in=0
+            base_vel = Sim.Mod.curSpeed;
+            % Run the increased velocity test (s_in>0)
+            [max_vel, max_s, fast_out] = MOOGA.DeltaVelFit(Sim, 1, base_vel);
+            % Run the decreased velocity test (s_in<0)
+            [min_vel, min_s, slow_out] = MOOGA.DeltaVelFit(Sim, -1, base_vel);
+            
+            fit = [(max_vel-base_vel+0.01)*(base_vel-min_vel+0.01), ...
+                    max_vel, max_s, min_vel, min_s];
+            
+            % Combine simulation outputs (in case other fitness function
+            % needs them)
+            FSSim = deepcopy(Sim);
+            FSSim.Out = fast_out;
+            out = FSSim.JoinOuts(slow_out);
+        end
+        
         function [name] = GetFitFcnName(fcn_handle)
             fstr = strsplit(func2str(fcn_handle),{'.','('});
             if length(fstr)==2

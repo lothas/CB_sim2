@@ -40,6 +40,8 @@ if exist('In','var') == 1
     if In.GA.Population == GA.Population
         if GA.ReDo
             % Copy the last generation's seq. into new GA
+            % ids = [1,3:19];
+            % GA.Seqs(:,:,1) = In.GA.Seqs(:,ids,In.GA.Progress);
             GA.Seqs(:,:,1) = In.GA.Seqs(:,:,In.GA.Progress);
         else
             % Copy all the progress into new GA

@@ -1,6 +1,6 @@
 function [  ] = GA_Vel( gen, pop, file_in, file_out )
-% Run MOOGA using only Vel, Nrg and Slope fitness but limiting the
-% Simulation with a bounded foot size (ZMP threshold)
+% Run MOOGA using only Vel, Nrg and Speed-range fitness but limiting the
+% simulation with a bounded foot size (ZMP threshold)
 
 if nargin<4
     GA = MOOGA(30,2500);
@@ -8,10 +8,10 @@ if nargin<4
     GA = GA.SetFittest(15,15,0.5);
     GA.JOAT = 2; GA.Quant = 0.5;
     % GA.Fittest = [20,20,1];
-    GA.FileIn = 'GA_11_22_18_27.mat';
+    GA.FileIn = 'VGA_12_13_11_45.mat';
 %     GA.FileOut = GA.FileIn;
 
-    GA.FileOut = ['GA_',datestr(now,'mm_dd_hh_MM'),'.mat'];
+    GA.FileOut = ['VGA_',datestr(now,'mm_dd_hh_MM'),'.mat'];
 else
     GA = MOOGA(gen,pop);
     GA = GA.SetFittest(20,20,0.5);
@@ -22,31 +22,31 @@ else
 end
 
 GA.Graphics = 0;
-GA.ReDo = 1;
+GA.ReDo = 0;
 
 % Set up the genome
 % Controller with swing pulse + limited ankle pulse and feedback
 NAnkleT = 1;
 NHipT = 2;
-MaxAnkleT = 30;
-MaxHipT = 150;
-TorqueFBMin = [-300*ones(1,NAnkleT),-600*ones(1,NHipT)];
+MaxAnkleT = 25;
+MaxHipT = 25;
+TorqueFBMin = [-5*ones(1,NAnkleT),-10*ones(1,NHipT)];
 TorqueFBMax = -TorqueFBMin;
-Keys = {'omega0','P_LegE',    'Pulses',    'Pulses',...
-    'kOmega_u','kTorques_u','kOmega_d','kTorques_d';...
-               1,       1, [NAnkleT,1],   [NHipT,2],...
-             1,         1,           1,           1};
-Range = {0.7, 0.50, [-MaxAnkleT, 0, 0.01], [-MaxHipT, 0, 0.01],...
-    -6, TorqueFBMin, -6, TorqueFBMin; % Min
-         1.7, 0.85, [MaxAnkleT, 0.99, 0.99], [MaxHipT, 0.99, 0.99],...
-    6, TorqueFBMax,  6, TorqueFBMax}; % Max
+Keys = {'omega0',    'Pulses',   'Pulses',...
+      'sOmega_f','sTorques_f', 'sOmega_s','sTorques_s';...
+               1, [NAnkleT,1],  [NHipT,2],...
+               1,           1,          1,          1};
+Range = {0.7, [-MaxAnkleT, 0, 0.01], [-MaxHipT, 0, 0.01],...
+    -0.3, TorqueFBMin, -6, TorqueFBMin; % Min
+         1.7, [MaxAnkleT, 0.99, 0.99], [MaxHipT, 0.99, 0.99],...
+    0.3, TorqueFBMax,  6, TorqueFBMax}; % Max
 MutDelta0 = 0.04;
 MutDelta1 = 0.02;
 
 GA.Gen = Genome(Keys, Range);
 KeyLength = GA.Gen.KeyLength;
-KeyLength.kTorques_u = length(TorqueFBMin);
-KeyLength.kTorques_d = length(TorqueFBMin);
+KeyLength.sTorques_f = length(TorqueFBMax);
+KeyLength.sTorques_s = length(TorqueFBMin);
 GA.Gen = Genome(Keys, KeyLength, Range);
 
 % Set up the simulations
@@ -64,7 +64,7 @@ GA.Sim.Env = GA.Sim.Env.Set('Type','inc','start_slope',start_slope);
 
 % Initialize the controller
 GA.Sim.Con = GA.Sim.Con.ClearTorques();
-GA.Sim.Con.FBType = 2;
+GA.Sim.Con.FBType = 0; % no slope feedback
 GA.Sim.Con.MinSat = [-MaxAnkleT*ones(1,NAnkleT),-MaxHipT*ones(1,NHipT)];
 GA.Sim.Con.MaxSat = [MaxAnkleT*ones(1,NAnkleT),MaxHipT*ones(1,NHipT)];
 
@@ -81,9 +81,9 @@ GA.Sim.Mod.LegShift = GA.Sim.Mod.Clearance;
 % Fitness functions
 GA.FitFcn = {1, @MOOGA.VelFit;
              2, @MOOGA.NrgEffFit;
-             3, @MOOGA.EigenFit;
-             4:6, @MOOGA.UpDownFit};
-GA.FitIDs = [1,2,3,4];
+             3:7, @MOOGA.VelRangeFit;
+             8, @MOOGA.EigenFit};
+GA.FitIDs = [1,2,3];
 GA.NFit = size(GA.FitFcn,1);
 GA.Sim.PMFull = 1; % Run poincare map on all 5 coords
 
