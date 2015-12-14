@@ -143,7 +143,7 @@ classdef MOOGA
             end
 
             Fits = find(Conds);
-            if length(Fits)>10 && nargout<1
+            if length(Fits)>15 && nargout<1
                 disp([int2str(length(Fits)),...
                     ' results fit the requirements']);
                 return
@@ -476,7 +476,7 @@ classdef MOOGA
             max_vel = base_vel;
             max_s = 0;
             s_in = 0;
-            ds_in = dir*1;
+            ds_in = dir*0.5;
             VelSim = deepcopy(Sim);
             VelSim.doGoNoGo = 2;
             VelSim.GNGThresh = [5,10];
@@ -498,7 +498,7 @@ classdef MOOGA
 
                 % Apply higher-level velocity signal
                 VelSim.Con.s_in = s_in;
-                VelSim.Con = VelSim.Con.Adaptation();
+                VelSim.Con = VelSim.Con.Adaptation(0);
                 
                 VelSim.Con = VelSim.Con.Reset(VelSim.IC(VelSim.ConCo));
                 if all(VelSim.IC) == 0
@@ -521,7 +521,7 @@ classdef MOOGA
                     if n > 5
                         % At least 5 steps should be taken
                         % (though go-no-go should take care of it as well)
-                        avg_vel = sum(2*sin(Sim.ICstore(1,2:n))*Sim.Mod.L/T) ...
+                        avg_vel = sum(2*sin(VelSim.ICstore(1,2:n))*Sim.Mod.L/T) ...
                                     / (n-1);
                     else
                         avg_vel = 0;
@@ -557,7 +557,7 @@ classdef MOOGA
             % Run the decreased velocity test (s_in<0)
             [min_vel, min_s, slow_out] = MOOGA.DeltaVelFit(Sim, -1, base_vel);
             
-            fit = [(max_vel-base_vel+0.01)*(base_vel-min_vel+0.01), ...
+            fit = [10*(max_vel-base_vel+0.01)*(base_vel-min_vel+0.01), ...
                     max_vel, max_s, min_vel, min_s];
             
             % Combine simulation outputs (in case other fitness function

@@ -3,12 +3,12 @@ function [  ] = GA_Vel( gen, pop, file_in, file_out )
 % simulation with a bounded foot size (ZMP threshold)
 
 if nargin<4
-    GA = MOOGA(30,2500);
+    GA = MOOGA(30,1200);
     % GA = MOOGA(10,100);
     GA = GA.SetFittest(15,15,0.5);
     GA.JOAT = 2; GA.Quant = 0.5;
     % GA.Fittest = [20,20,1];
-    GA.FileIn = 'VGA_12_13_11_45.mat';
+%     GA.FileIn = 'VGA_12_14_08_57.mat';
 %     GA.FileOut = GA.FileIn;
 
     GA.FileOut = ['VGA_',datestr(now,'mm_dd_hh_MM'),'.mat'];
@@ -22,7 +22,7 @@ else
 end
 
 GA.Graphics = 0;
-GA.ReDo = 0;
+GA.ReDo = 1;
 
 % Set up the genome
 % Controller with swing pulse + limited ankle pulse and feedback
@@ -84,7 +84,7 @@ GA.FitFcn = {1, @MOOGA.VelFit;
              3:7, @MOOGA.VelRangeFit;
              8, @MOOGA.EigenFit};
 GA.FitIDs = [1,2,3];
-GA.NFit = size(GA.FitFcn,1);
+GA.NFit = size(GA.FitIDs,2);
 GA.Sim.PMFull = 1; % Run poincare map on all 5 coords
 
 GA = GA.InitGen();

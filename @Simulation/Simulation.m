@@ -198,7 +198,7 @@ classdef Simulation < handle & matlab.mixin.Copyable
             set(sim.hParam,'string',['s_in = ',num2str(sim.Con.s_in)]);
         end  % PlusButtonCallback
         
-        function MinuButtonCb(sim, hObject, eventdata, handles) %#ok<INUSD>
+        function MinusButtonCb(sim, hObject, eventdata, handles) %#ok<INUSD>
             sim.Con.s_in = sim.Con.s_in - 1;
             sim.Con.Adaptation(0);
             set(sim.hParam,'string',['s_in = ',num2str(sim.Con.s_in)]);
