@@ -59,6 +59,14 @@ else
                 NC.kTorques_u = value;
             case 'kTorques_d'
                 NC.kTorques_d = value;
+            case 'sOmega_f'
+                NC.sOmega_f = value;
+            case 'sOmega_s'
+                NC.sOmega_s = value;
+            case 'sTorques_f'
+                NC.sTorques_f = value;
+            case 'sTorques_s'
+                NC.sTorques_s = value;
             
             otherwise
                 error(['Set failed: ',key,' property not found']);

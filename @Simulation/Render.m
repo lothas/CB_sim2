@@ -10,13 +10,13 @@ function status = Render(sim,t,X,flag)
                     figure(sim.Fig);
                     if isempty(findobj(gcf,'Type','uicontrol'))
                         % Make window larger
-                        set(sim.Fig,'Position', [100 100,...
+                        set(sim.Fig,'Position', [sim.FigWidth 100,...
                             sim.FigWidth sim.FigHeight]);
                     end
                 else
                     sim.Fig = figure();
                     % Make window larger
-                    set(sim.Fig,'Position', [100 100,...
+                    set(sim.Fig,'Position', [sim.FigWidth 100,...
                         sim.FigWidth sim.FigHeight]);
                 end
                 set(gca,'LooseInset',get(gca,'TightInset')*2)
@@ -25,6 +25,34 @@ function status = Render(sim,t,X,flag)
                 % Initialize COM tranform for "follow" mode
                 sim.tCOM = hgtransform('Parent',gca);
 
+                btn_x0 = 0.79;
+                btn_y0 = 0.91;
+                btn_delta = 0.0;
+                if isprop(sim.Con,'s_in')
+                    % Controller has higher level speed input
+                    % Add controllers to simulation display
+                    btn_delta = 0.05;
+                    
+                    uicontrol('Style', 'pushbutton', 'String', '-',...
+                    'Units','normalized','FontSize',16,'FontWeight','bold',...
+                    'Position', [btn_x0 btn_y0-0.05 0.035 0.035],...
+                    'Callback', @sim.MinusButtonCb);
+                    sim.hParam = ...
+                        uicontrol('Style', 'text', 'String', 's_in = 0',...
+                        'Units','normalized','FontSize',12,...
+                        'Position', [btn_x0+0.04 btn_y0-0.05 0.10 0.035]);
+                    uicontrol('Style', 'pushbutton', 'String', '+',...
+                    'Units','normalized','FontSize',16,'FontWeight','bold',...
+                        'Position', [btn_x0+0.145 btn_y0-0.05 0.035 0.035],...
+                        'Callback', @sim.PlusButtonCb);
+                end
+                    
+                % Add a 'Stop simulation' button
+                uicontrol('Style', 'pushbutton', 'String', 'Stop Simulation',...
+                    'Units','normalized','FontSize',12,...
+                    'Position', [btn_x0 btn_y0 0.18 0.05],...
+                    'Callback', @sim.StopButtonCb);
+                
                 % Initialize display timer
                 sim.hTime = uicontrol('Style', 'text',...
                     'String', sprintf(sim.TimeStr,t,X(sim.ConCo),...
@@ -32,7 +60,7 @@ function status = Render(sim,t,X,flag)
                     'HorizontalAlignment','left',...
                     'FontSize',12,...
                     'Units','normalized',...
-                    'Position', [0.88 0.76 0.08 0.12],...
+                    'Position', [btn_x0+0.01 btn_y0-btn_delta-0.14 0.16 0.12],...
                     'backgroundcolor',get(gca,'color')); 
                 
                 % Initialize convergence display
@@ -41,14 +69,9 @@ function status = Render(sim,t,X,flag)
                     'HorizontalAlignment','left',...
                     'FontSize',12,...
                     'Units','normalized',...
-                    'Position', [0.88 0.7 0.08 0.06],...
+                    'Position', [btn_x0+0.01 btn_y0-btn_delta-0.2 0.16 0.06],...
                     'backgroundcolor',get(gca,'color')); 
 
-                % Add a 'Stop simulation' button
-                uicontrol('Style', 'pushbutton', 'String', 'Stop Simulation',...
-                    'Units','normalized','FontSize',12,...
-                    'Position', [0.87 0.9 0.1 0.05],...
-                    'Callback', @sim.StopButtonCb);
                 sim.Once = 0;
 
                 % Render torque plots
@@ -80,24 +103,26 @@ function status = Render(sim,t,X,flag)
             sim.TimeTic = 0;
         end
         
+        FlMin = sim.FlMin;
+        FlMax = sim.FlMax;
         if sim.Follow
             [COMx,~]=sim.Mod.GetPos(X(sim.ModCo),'COM');
             [COMy,~]=sim.Env.Surf(COMx);
-            sim.FlMin=COMx-1.25*sim.AR*sim.Mod.L;
-            sim.FlMax=COMx+1.25*sim.AR*sim.Mod.L;
-            HeightMin=COMy-1/sim.AR*sim.Mod.L;
-            HeightMax=COMy+4/sim.AR*sim.Mod.L;
-
+            FlMin = sim.FlMin - sim.COMx0 + COMx;
+            FlMax = sim.FlMax - sim.COMx0 + COMx;
+            HeightMin = sim.HeightMin - sim.COMy0 + COMy;
+            HeightMax = sim.HeightMax - sim.COMy0 + COMy;
+            
             TCOMx = makehgtform('translate',[COMx-sim.COMx0 COMy-sim.COMy0 0]);
             set(sim.tCOM,'Matrix',TCOMx);
 
-            axis([sim.FlMin sim.FlMax HeightMin HeightMax]);
+            axis([FlMin FlMax HeightMin HeightMax]);
         end
 
         % Update model render
         sim.Mod = sim.Mod.Render(X(sim.ModCo));
         % Update environment render
-        sim.Env = sim.Env.Render(sim.FlMin,sim.FlMax);
+        sim.Env = sim.Env.Render(FlMin,FlMax);
         % Update time display
         set(sim.hTime,'string',...
             sprintf(sim.TimeStr,t(1),X(sim.ConCo),...

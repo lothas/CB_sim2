@@ -60,6 +60,8 @@ classdef Simulation < handle & matlab.mixin.Copyable
         Follow = 1; % Follow model with camera
         % COM transformation
         tCOM; COMx0; COMy0;
+        % Parameter tweak display
+        hParam;
         % Time display
         hTime; TimeStr = ['t = %.2f s\nOsc.=%.3f\n',...
                          'Slope = %.2f ',char(176)','\nSpeed = %s'];
@@ -189,6 +191,18 @@ classdef Simulation < handle & matlab.mixin.Copyable
                 close(sim.Fig)
             end
         end  % StopButtonCallback
+        
+        function PlusButtonCb(sim, hObject, eventdata, handles) %#ok<INUSD>
+            sim.Con.s_in = sim.Con.s_in + 1;
+            sim.Con.Adaptation(0);
+            set(sim.hParam,'string',['s_in = ',num2str(sim.Con.s_in)]);
+        end  % PlusButtonCallback
+        
+        function MinusButtonCb(sim, hObject, eventdata, handles) %#ok<INUSD>
+            sim.Con.s_in = sim.Con.s_in - 1;
+            sim.Con.Adaptation(0);
+            set(sim.hParam,'string',['s_in = ',num2str(sim.Con.s_in)]);
+        end  % MinusButtonCallback
                 
         function out = JoinOuts(sim,ext_out,last_i)
             if nargin<3

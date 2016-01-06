@@ -101,6 +101,20 @@ for g = GA.Progress+1:GA.Generations
                     end
                 end                    
             end
+            
+            % Postprocessing for VelRangeFit
+            if ~isempty(strfind(func2str(FitFcn{f}),'VelRangeFit'))
+                % If high-level signal only works in one direction,
+                % copy those parameters for the other direction
+                newSeq = gSeqs(i,:);
+                if abs(thisFit(3))>0 && thisFit(5)==0
+                    newSeq(15:18) = 0.33*newSeq(11:14);
+                end
+                if abs(thisFit(5))>0 && thisFit(3)==0
+                    newSeq(11:14) = 0.33*newSeq(15:18);
+                end
+                gSeqs(i,:) = newSeq;
+            end
         end        
         gFit(i,:) = thisFit;
     end

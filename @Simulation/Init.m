@@ -25,7 +25,7 @@ function [ sim ] = Init( sim )
             % If 2 screens are used in Linux
             scrsz(3) = scrsz(3)/2;
         end
-        sim.FigWidth = scrsz(3)-250;
+        sim.FigWidth = (scrsz(3)-250)/2;
         sim.FigHeight = scrsz(4)-250;
         sim.AR = sim.FigWidth/sim.FigHeight;
         if isempty(sim.IC)
@@ -35,17 +35,17 @@ function [ sim ] = Init( sim )
         end
         
         % Init world size params
-        sim.FlMin = sim.COMx0-1.25*sim.AR*sim.Mod.L;
-        sim.FlMax = sim.COMx0+1.25*sim.AR*sim.Mod.L;
-        sim.HeightMin = sim.COMy0-1/sim.AR*sim.Mod.L;
-        sim.HeightMax = sim.COMy0+4/sim.AR*sim.Mod.L;
+        sim.FlMin = sim.COMx0-1*sim.AR*sim.Mod.L;
+        sim.FlMax = sim.COMx0+1.5*sim.AR*sim.Mod.L;
+        sim.HeightMin = sim.COMy0-0.75/sim.AR*sim.Mod.L;
+        sim.HeightMax = sim.COMy0+1.75/sim.AR*sim.Mod.L;
 
         % Init torque display params
         if sim.Con.nPulses>0
             % Set number of steps so a whole cycle of the oscillator
             % will be included
             sim.nTsteps = ceil(sim.Con.GetPeriod()/sim.tstep);
-            sim.Ttime = linspace(sim.FlMax*0.8,sim.FlMax*0.95,sim.nTsteps);
+            sim.Ttime = linspace(sim.FlMax*0.68,sim.FlMax*0.95,sim.nTsteps);
             sim.Thold = zeros(sim.nOuts,sim.nTsteps);
             sim.Tbase = (sim.HeightMax+sim.HeightMin)/2;
             sim.Tscale = 0.1*(sim.HeightMax-sim.HeightMin)/max(abs(sim.Con.Amp0));
