@@ -31,19 +31,39 @@ if exist(Filename,'file') == 2
     In = load(Filename);
     Data = In.Data;
     if Data.Done
-        DispRes();
+        switch Type
+            case {'OL','CL'}
+                DispRes();
+            case 's_in'
+        end
         return
     end
     
-    start_slope = Data.Slopes(end);
-    if length(Data.Slopes)<2
-        d_slope = base_d;
-    else
-        d_slope = sign(Data.Slopes(end))*median(abs(diff(Data.Slopes)));
+    switch Type
+        case 's_in'
+            start_slope = 0;
+            start_s_in = Data.s_in(end);
+            if length(Data.s_in)<2
+                ds_in = base_d;
+            else
+                ds_in = sign(Data.s_in(end))*median(abs(diff(Data.s_in)));
+            end
+        case {'OL','CL'}
+            start_slope = Data.Slopes(end);
+            if length(Data.Slopes)<2
+                d_slope = base_d;
+            else
+                d_slope = sign(Data.Slopes(end))*median(abs(diff(Data.Slopes)));
+            end
     end
 else
     % Initialize output
-    Data.Slopes = []; % Slopes
+    switch Type
+        case 's_in'
+            Data.s_in = []; % High level speed command
+        case {'OL','CL'}
+            Data.Slopes = []; % Slopes
+    end
     Data.IC = []; % Initial conditions
     Data.LCx = {}; % Limit cycle states
     Data.LCt = {}; % Limit cycle time
@@ -69,6 +89,8 @@ else
     
     start_slope = 0;
     d_slope = 0;
+    start_s_in = 0;
+    ds_in = 0;
     
     Data.Done = 0;
     
@@ -79,14 +101,14 @@ end
 
 % Run simulation starting from slope 0 and then increasing/decreasing slope
 Sim = deepcopy(GA.Sim);
-Sim.EndZMP = 0;
+Sim.EndZMP = 1; % Stop for ZMP (1) - don't stop (0)
 Sim.Graphics = 0;
 if Sim.Graphics == 1
     Sim.Fig = figure();
 end
 Sim.PMFull = 1; % Run poincare map on all 5 coords
 switch Type
-    case 'OL'
+    case {'OL','s_in'}
         Sim.Con.FBType = 0;
     case 'CL'
         Sim.Con.FBType = 2;
@@ -99,37 +121,22 @@ while ~Data.Done
     Tries = 0;
     while Tries<MaxTries
         % Run simulation
-        Asim = WalkOnSlope(Sim,Data,start_slope,start_slope+d_slope);
+        switch Type
+            case {'OL','CL'}
+                Asim = WalkOnSlope(Sim,Data,start_slope,...
+                                            start_slope+d_slope);
+            case 's_in'
+                Asim = WalkAtSpeed(Sim,Data,start_s_in,...
+                                            start_s_in+ds_in);
+        end
 
         if Asim.Out.Type == 5
             % Simulation converged
             fprintf(' - ');
             cprintf('*green','OK!\n')
             
-            Data = SavePerformance(Asim,start_slope+d_slope,Data);
-
-            % Keep going to next slope
-            if d_slope == 0
-                d_slope = base_d;
-            else
-                start_slope = start_slope+d_slope;
-                d_slope = d_slope/abs(d_slope)*base_d;
-            end
-            break
-        else
-            fprintf(' - ');
-            cprintf('*red','FAILED!\n')
-            disp(Asim.Out.Text);
-            
-            if Asim.Out.Type ~= 0
-                % Try running from 0 to the required slope
-                Asim = WalkOnSlope(Sim,Data,0,start_slope+d_slope);
-
-                if Asim.Out.Type == 5
-                    % Simulation converged
-                    fprintf(' - ');
-                    cprintf('*green','OK!\n')
-
+            switch Type
+                case {'OL','CL'}
                     Data = SavePerformance(Asim,start_slope+d_slope,Data);
 
                     % Keep going to next slope
@@ -139,48 +146,115 @@ while ~Data.Done
                         start_slope = start_slope+d_slope;
                         d_slope = d_slope/abs(d_slope)*base_d;
                     end
-                    break
-                else
-                    % Simulation failed to converge
-                    fprintf(' - ');
-                    cprintf('*red','FAILED!\n')
-                    disp(Asim.Out.Text);
+                case 's_in'
+                    Data = SavePerformance(Asim,start_s_in+ds_in,Data);
 
-                    % Try the next slope
-                    if d_slope>0
-                        d_slope = d_slope+base_d;
+                    % Keep going to next speed
+                    if ds_in == 0
+                        ds_in = base_d;
                     else
-                        d_slope = d_slope-base_d;
+                        start_s_in = start_s_in+ds_in;
+                        ds_in = ds_in/abs(ds_in)*base_d;
+                    end
+            end
+            break
+        else
+            fprintf(' - ');
+            cprintf('*red','FAILED!\n')
+            disp(Asim.Out.Text);
+            
+            switch Type
+                case {'OL','CL'}
+                    if Asim.Out.Type ~= 0
+                        % Try running from 0 to the required slope
+                        Asim = WalkOnSlope(Sim,Data,0,start_slope+d_slope);
+
+                        if Asim.Out.Type == 5
+                            % Simulation converged
+                            fprintf(' - ');
+                            cprintf('*green','OK!\n')
+
+                            Data = SavePerformance(Asim,start_slope+d_slope,Data);
+
+                            % Keep going to next slope
+                            if d_slope == 0
+                                d_slope = base_d;
+                            else
+                                start_slope = start_slope+d_slope;
+                                d_slope = d_slope/abs(d_slope)*base_d;
+                            end
+                            break
+                        else
+                            % Simulation failed to converge
+                            fprintf(' - ');
+                            cprintf('*red','FAILED!\n')
+                            disp(Asim.Out.Text);
+
+                            % Try the next slope
+                            if d_slope>0
+                                d_slope = d_slope+base_d;
+                            else
+                                d_slope = d_slope-base_d;
+                            end
+                            Tries = Tries + 1;
+                        end
+                    else
+                        % Try the next slope
+                        if d_slope>0
+                            d_slope = d_slope+base_d;
+                        else
+                            d_slope = d_slope-base_d;
+                        end
+                        Tries = Tries + 1;
+                    end
+                case 's_in'
+                    % Keep going to next speed
+                    if ds_in>0
+                        ds_in = ds_in+base_d;
+                    else
+                        ds_in = ds_in-base_d;
                     end
                     Tries = Tries + 1;
-                end
-            else
-                % Try the next slope
-                if d_slope>0
-                    d_slope = d_slope+base_d;
-                else
-                    d_slope = d_slope-base_d;
-                end
-                Tries = Tries + 1;
-            end
+            end     
         end
     end
     
     if Tries == MaxTries
-        % Simulation failed to converge, start checking negative slopes
-        if d_slope > 0
-            start_slope = 0;
-            d_slope = -base_d;
-        else
-            Data.Done = 1;
-            break;
+        switch Type
+            case {'OL','CL'}
+                % Simulation failed to converge
+                % Start checking negative slopes
+                if d_slope > 0
+                    start_slope = 0;
+                    d_slope = -base_d;
+                else
+                    Data.Done = 1;
+                    break;
+                end
+            case 's_in'
+                % Simulation failed to converge
+                % Start checking negative speeds
+                if ds_in > 0
+                    start_s_in = 0;
+                    ds_in = -base_d;
+                else
+                    Data.Done = 1;
+                    break;
+                end
         end
     end
 end
 
 % Sort data
-LastUp = find(diff(Data.Slopes)<0,1,'first');
-NSlopes = length(Data.Slopes);
+switch Type
+    case {'OL','CL'}
+        Last = find(diff(Data.Slopes)<0,1,'first');
+        NS = length(Data.Slopes);
+    case 's_in'
+        Last = find(diff(Data.s_in)<0,1,'first');
+        NS = length(Data.s_in);
+end
+
 Fields = fieldnames(Data);
 for f = 1:length(Fields)
     if strcmp(Fields{f},'Done')
@@ -188,57 +262,63 @@ for f = 1:length(Fields)
     end
     
     [r,c] = size(Data.(Fields{f}));
-    if c == NSlopes
-        Data.(Fields{f}) = [fliplr(Data.(Fields{f})(:,LastUp+1:end)),...
-                            Data.(Fields{f})(:,1:LastUp)];
+    if c == NS
+        Data.(Fields{f}) = [fliplr(Data.(Fields{f})(:,Last+1:end)),...
+                            Data.(Fields{f})(:,1:Last)];
     else
-        if r == NSlopes
-            Data.(Fields{f}) = [flipud(Data.(Fields{f})(LastUp+1:end,:));...
-                                Data.(Fields{f})(1:LastUp,:)];
+        if r == NS
+            Data.(Fields{f}) = [flipud(Data.(Fields{f})(Last+1:end,:));...
+                                Data.(Fields{f})(1:Last,:)];
         else
             disp('Error: wrong number of data points');
         end
     end
 end
 
-% Calculate Zones
-Zones = {};
-% Period 1 zones
-dslope = mean(diff(Data.Slopes));
-splits = find(diff(Data.Slopes)>1.0001*dslope);
-if isempty(splits)
-    Zones{1} = {1:length(Data.Slopes)};
-else
-    P1zone = {1:splits(1)};
-    for zn = 1:length(splits)-1
-        P1zone(1,zn+1) = {splits(zn)+1:splits(zn+1)};
-    end
-    P1zone(1,end+1) = {splits(end)+1:length(Data.Slopes)};
-    Zones{1} = P1zone;
-end
-% Period 2 zones
-Zones{2} = {};
-for z1 = 1:length(Zones{1})
-    P2IDs = intersect(find(Data.Period(:,1)==2),Zones{1}{z1});
-    if isempty(P2IDs)
-        continue
-    end
-    splits = find(diff(P2IDs)>1);
-    if isempty(splits)
-        Zones{2} = [Zones{2}, P2IDs(1:length(P2IDs))];
-    else
-        P1zone = {P2IDs(1:splits(1))};
-        for zn = 1:length(splits)-1
-            P1zone(1,zn+1) = {P2IDs(splits(zn)+1:splits(zn+1))};
+switch Type
+    case {'OL','CL'}
+        % Calculate Zones
+        Zones = {};
+        % Period 1 zones
+        dslope = mean(diff(Data.Slopes));
+        splits = find(diff(Data.Slopes)>1.0001*dslope);
+        if isempty(splits)
+            Zones{1} = {1:length(Data.Slopes)};
+        else
+            P1zone = {1:splits(1)};
+            for zn = 1:length(splits)-1
+                P1zone(1,zn+1) = {splits(zn)+1:splits(zn+1)};
+            end
+            P1zone(1,end+1) = {splits(end)+1:length(Data.Slopes)};
+            Zones{1} = P1zone;
         end
-        P1zone(1,end+1) = {P2IDs(splits(end)+1:length(P2IDs))}; %#ok<AGROW>
-        Zones{2} = [Zones{2}, P1zone];
-    end
+        % Period 2 zones
+        Zones{2} = {};
+        for z1 = 1:length(Zones{1})
+            P2IDs = intersect(find(Data.Period(:,1)==2),Zones{1}{z1});
+            if isempty(P2IDs)
+                continue
+            end
+            splits = find(diff(P2IDs)>1);
+            if isempty(splits)
+                Zones{2} = [Zones{2}, P2IDs(1:length(P2IDs))];
+            else
+                P1zone = {P2IDs(1:splits(1))};
+                for zn = 1:length(splits)-1
+                    P1zone(1,zn+1) = {P2IDs(splits(zn)+1:splits(zn+1))};
+                end
+                P1zone(1,end+1) = {P2IDs(splits(end)+1:length(P2IDs))}; %#ok<AGROW>
+                Zones{2} = [Zones{2}, P1zone];
+            end
+        end
+        if isempty(Zones{2})
+            Zones(2) = [];
+        end
+        Data.Zones = Zones;
+    case 's_in'
+        Data.Zones = 1;
 end
-if isempty(Zones{2})
-    Zones(2) = [];
-end
-Data.Zones = Zones;
+
 
 % Sort eigenvalues lines
 % [Data.EigV] = SortLines(Data.EigV);
@@ -248,7 +328,11 @@ if length(Data.Zones)>1
 end
                 
 save(Filename,'Data');
-DispRes();
+switch Type
+    case {'OL','CL'}
+        DispRes();
+    case 's_in'
+end
 
     function sim = WalkOnSlope(sim_in, Data, start_s, end_s)
         sim = deepcopy(sim_in);
@@ -264,8 +348,30 @@ DispRes();
         sim = sim.WalkOnSlope(start_s, end_s, ~start_s*5, 75);
     end
 
-    function Data = SavePerformance(sim,Slope,Data)
-        Data.Slopes(end+1) = Slope;
+    function sim = WalkAtSpeed(sim_in, Data, start_s_in, s_in)
+        sim = deepcopy(sim_in);
+        sim  = sim.Init();
+        fprintf('Processing data for s_in = %.2f', s_in);
+        
+        if s_in == 0
+            sim.IClimCyc = 0*sim.IC;
+        else
+            sim.IClimCyc = Data.IC(1:sim.stDim,Data.s_in == start_s_in);
+        end
+        
+        sim = sim.WalkAtSpeed(s_in, 75);
+    end
+
+    function Data = SavePerformance(sim,S,Data)
+        switch Type
+            case {'OL','CL'}
+                Data.Slopes(end+1) = S;
+                Slope = S;
+            case 's_in'
+                Data.s_in(end+1) = S;
+                Slope = 0;
+                sim.Con.s_in = S;
+        end
         Data.Period(end+1,1) = sim.Period(1);
         % Initial conditions (for each step until a full period)
         Coords = 1:sim.stDim*sim.Period(1);

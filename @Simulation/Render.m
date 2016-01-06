@@ -123,6 +123,10 @@ function status = Render(sim,t,X,flag)
         sim.Mod = sim.Mod.Render(X(sim.ModCo));
         % Update environment render
         sim.Env = sim.Env.Render(FlMin,FlMax);
+        % Update s_in display
+        if isprop(sim.Con,'s_in')
+            set(sim.hParam,'string',['s_in = ',num2str(sim.Con.s_in)]);
+        end
         % Update time display
         set(sim.hTime,'string',...
             sprintf(sim.TimeStr,t(1),X(sim.ConCo),...

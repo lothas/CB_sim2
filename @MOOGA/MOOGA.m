@@ -486,30 +486,7 @@ classdef MOOGA
                 % Run a simulation of the robot walking with different speed
                 s_in = s_in + ds_in;
                 
-                % Simulation parameters
-                VelSim = VelSim.SetTime(0,0.15,40);
-                VelSim.EndCond = 2; % Run until converge
-
-                % Some more simulation initialization
-                VelSim.Mod.LegShift = VelSim.Mod.Clearance;
-                VelSim = VelSim.Init();
-
-                VelSim.IC = VelSim.IClimCyc;
-
-                % Apply higher-level velocity signal
-                VelSim.Con.s_in = s_in;
-                VelSim.Con = VelSim.Con.Adaptation(0);
-                
-                VelSim.Con = VelSim.Con.Reset(VelSim.IC(VelSim.ConCo));
-                if all(VelSim.IC) == 0
-                    VelSim.Con = VelSim.Con.HandleEvent(1, VelSim.IC(VelSim.ConCo));
-                else
-                    VelSim.Con = VelSim.Con.HandleExtFB(VelSim.IC(VelSim.ModCo),...
-                        VelSim.IC(VelSim.ConCo),VelSim.Env.SurfSlope(VelSim.Mod.xS));
-                end
-
-                % Simulate
-                VelSim = VelSim.Run();
+                VelSim = VelSim.WalkAtSpeed(s_in, 40);
                 out = VelSim.JoinOuts(out);
                 
                 if VelSim.Out.Type == 6

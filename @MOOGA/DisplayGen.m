@@ -3,8 +3,6 @@ function [ ] = DisplayGen(GA,ID,Gen)
 %   Detailed explanation goes here
 
 Type = 'CL';
-MinSl = -8;
-MaxSl = 7;
 
 if nargin<3
     Gen = GA.Progress;
@@ -30,13 +28,32 @@ SlopeID = 1;
 
 % Open analysis data if it exists
 AllData = GA.Analyze(Gen,ID,Type);
-Data = LoadRange(AllData,MinSl,MaxSl);
+switch Type
+    case {'OL','CL'}
+        MinS = -8;
+        MaxS = 7;
+    case 's_in'
+        MinS = -0.75;
+        MaxS = 4.65;
+end
+Data = LoadRange(AllData,MinS,MaxS);
 
-    function Data = LoadRange(AllData,MinSl,MaxSl)
-        i0 = find(AllData.Slopes>=MinSl,1,'first');
-        i1 = find(AllData.Slopes<=MaxSl,1,'last');
+    function Data = LoadRange(AllData,MinS,MaxS)
+        switch Type
+            case {'OL','CL'}
+                i0 = find(AllData.Slopes>=MinS,1,'first');
+                i1 = find(AllData.Slopes<=MaxS,1,'last');
+                Data.Slopes = AllData.Slopes(i0:i1);
+                Data.Zones = {{1:length(Data.Slopes)}};
+                Data.Param = Data.Slopes;
+            case 's_in'
+                i0 = find(AllData.s_in>=MinS,1,'first');
+                i1 = find(AllData.s_in<=MaxS,1,'last');
+                Data.s_in = AllData.s_in(i0:i1);
+                Data.Zones = {{1:length(Data.s_in)}};
+                Data.Param = AllData.Speed(i0:i1);
+        end
         
-        Data.Slopes = AllData.Slopes(i0:i1);
         Data.IC = AllData.IC(:,i0:i1);
         Data.LCx = AllData.LCx(i0:i1);
         Data.LCt = AllData.LCt(i0:i1);
@@ -60,7 +77,6 @@ Data = LoadRange(AllData,MinSl,MaxSl);
         Data.Done = AllData.Done;
         Data.Gen = AllData.Gen;
         Data.Seq = AllData.Seq;
-        Data.Zones = {{1:length(Data.Slopes)}};
     end
 
 DG.fig = figure();
@@ -214,12 +230,12 @@ DG.DispArea = axes('Units','Normalized','FontSize',AxesFont,...
         
         switch Type
             case 'IC'
-                PlotIC(Data.Slopes,Data.IC);
+                PlotIC(Data.Param,Data.IC);
                 set(gcf,'KeyPressFcn',{@ICKeybHandle,Data})
             case 'EigV'
-                PlotEigV(Data.Slopes,Data.EigV);
+                PlotEigV(Data.Param,Data.EigV);
             case 'MZMP'
-                PlotMaxZMP(Data.Slopes,Data.MZMP);
+                PlotMaxZMP(Data.Param,Data.MZMP);
 %                 h = zeros(3,1);
 %                 MZMP = [Data.MZMP, Data.MZMP(:,1)-Data.MZMP(:,2)];
 %                 for c = 1:3
@@ -251,20 +267,20 @@ DG.DispArea = axes('Units','Normalized','FontSize',AxesFont,...
 %                     A2H = Data.MZMP(:,2);
                     [A2T,A2H] = CalcZMP();
                     if isempty(Sizing{3})
-                        PlotMaxZMP(Data.Slopes,Data.MZMP);
+                        PlotMaxZMP(Data.Param,Data.MZMP);
                         % Draw toe line
-                        line([min(Data.Slopes) max(Data.Slopes)],...
+                        line([min(Data.Param) max(Data.Param)],...
                             [Sizing{1} Sizing{1}],...
                             'LineWidth',LineWidth,'Color',[0 0 0]);
                         % Draw heel line
-                        line([min(Data.Slopes) max(Data.Slopes)],...
+                        line([min(Data.Param) max(Data.Param)],...
                             [-Sizing{2} -Sizing{2}],...
                             'LineWidth',LineWidth,'Color',[0 0 0]);
                         % Find intersections
                         mSlope = fzero(@FuncIntrsct,0,[],...
-                            Data.Slopes,A2T-Sizing{1});
+                            Data.Param,A2T-Sizing{1});
                         MSlope = fzero(@FuncIntrsct,0,[],...
-                            Data.Slopes,A2H+Sizing{2});
+                            Data.Param,A2H+Sizing{2});
                         text(mSlope,Sizing{1}+0.02,...
                             ['(',num2str(mSlope),',',...
                                  num2str(Sizing{1}),')']);
@@ -298,10 +314,10 @@ DG.DispArea = axes('Units','Normalized','FontSize',AxesFont,...
                             Heel(i) = H0-dL(i);
                             % Negative slope
                             Slopes(i,1) = fzero(@FuncIntrsct,0,[],...
-                                Data.Slopes,A2T-Toe(i));
+                                Data.Param,A2T-Toe(i));
                             % Positive slope
                             Slopes(i,2) = fzero(@FuncIntrsct,0,[],...
-                                Data.Slopes,A2H+Heel(i));
+                                Data.Param,A2H+Heel(i));
                             % Range
                             Slopes(i,3) = Slopes(i,2) - Slopes(i,1);
 %                             disp(['Foot size: ',num2str(Toe(i)+Heel(i),'%.2f'),...
@@ -333,20 +349,20 @@ DG.DispArea = axes('Units','Normalized','FontSize',AxesFont,...
             case 'MTorques'
                 h = zeros(2,1);
                 for c = 1:2
-                    h(c) = plot(Data.Slopes,Data.MTorques(:,c),...
+                    h(c) = plot(Data.Param,Data.MTorques(:,c),...
                         LineStyles{c},'LineWidth',LineWidth,...
                         'Color',Colors{c});
                 end
-                axis([min(Data.Slopes) max(Data.Slopes) ylim])
+                axis([min(Data.Param) max(Data.Param) ylim])
                 legend(h,'Ankle','Hip');
             case 'Power'
                 h = zeros(2,1);
                 for c = 1:2
-                    h(c) = plot(Data.Slopes,Data.Power(:,c),...
+                    h(c) = plot(Data.Param,Data.Power(:,c),...
                         LineStyles{c},'LineWidth',LineWidth,...
                         'Color',Colors{c});
                 end
-                axis([min(Data.Slopes) max(Data.Slopes) ylim])
+                axis([min(Data.Param) max(Data.Param) ylim])
                 legend(h,'Ankle','Hip');
             case 'GRF'
                 [Mu,N] = CalcFric();
@@ -354,20 +370,20 @@ DG.DispArea = axes('Units','Normalized','FontSize',AxesFont,...
 %                 h(1) = plot(Data.Slopes,Data.MuFric(:,1),...
 %                     LineStyles{1},'LineWidth',LineWidth,...
 %                     'Color',Colors{1});
-                h(1) = plot(Data.Slopes,Mu,...
+                h(1) = plot(Data.Param,Mu,...
                     LineStyles{1},'LineWidth',LineWidth,...
                     'Color',Colors{1});
 %                 h(2) = plot(Data.Slopes,...
 %                     Data.MuFric(:,2)/max(Data.MuFric(:,2)),...
 %                     LineStyles{2},'LineWidth',LineWidth,...
 %                     'Color',Colors{2});
-                h(2) = plot(Data.Slopes,N/max(N),...
+                h(2) = plot(Data.Param,N/max(N),...
                     LineStyles{2},'LineWidth',LineWidth,...
                     'Color',Colors{2});
-                axis([min(Data.Slopes) max(Data.Slopes) ylim])
+                axis([min(Data.Param) max(Data.Param) ylim])
                 legend(h,'\mu_{fr}','min GRF_y');
-                i0 = find(Data.Slopes>=MinSl,1,'first');
-                i1 = find(Data.Slopes<=MaxSl,1,'last');
+                i0 = find(Data.Param>=MinS,1,'first');
+                i1 = find(Data.Param<=MaxS,1,'last');
                 disp(['Average friction coeff. required: ',...
                     num2str(mean(Mu(i0:i1)),'%.3f'),177,...
                     num2str(std(Mu(i0:i1)),'%.3f')]);
@@ -414,28 +430,28 @@ DG.DispArea = axes('Units','Normalized','FontSize',AxesFont,...
                     LineStyles{2},'LineWidth',LineWidth,...
                     'Color',Colors{2});
                 axis([min(Data.Slopes) max(Data.Slopes) ylim])
-                i0 = find(Data.Slopes>=MinSl,1,'first');
-                i1 = find(Data.Slopes<=MaxSl,1,'last');
+                i0 = find(Data.Slopes>=MinS,1,'first');
+                i1 = find(Data.Slopes<=MaxS,1,'last');
                 disp(['Specific cost of transport: ',...
                     num2str(mean(AbsCOT(i0:i1)),'%.3f'),177,...
                     num2str(std(AbsCOT(i0:i1)),'%.3f')]);
                 legend(h,'COT','|COT|');
             case 'Speed'
                 h = zeros(3,1);
-                h(1) = plot(Data.Slopes,Data.StepLength,...
+                h(1) = plot(Data.Param,Data.StepLength,...
                     LineStyles{1},'LineWidth',LineWidth,...
                     'Color',Colors{1});
-                h(2) = plot(Data.Slopes,Data.Period(:,2),...
+                h(2) = plot(Data.Param,Data.Period(:,2),...
                     LineStyles{2},'LineWidth',LineWidth,...
                     'Color',Colors{2});
-                h(3) = plot(Data.Slopes,Data.Speed,...
+                h(3) = plot(Data.Param,Data.Speed,...
                     LineStyles{3},'LineWidth',LineWidth,...
                     'Color',Colors{3});
-                axis([min(Data.Slopes) max(Data.Slopes) ylim])
+                axis([min(Data.Param) max(Data.Param) ylim])
                 legend(h,'Step length [m]',...
                     'Gait period [s]','Avg. Speed [m/s]');
-                i0 = find(Data.Slopes>=MinSl,1,'first');
-                i1 = find(Data.Slopes<=MaxSl,1,'last');
+                i0 = find(Data.Param>=MinS,1,'first');
+                i1 = find(Data.Param<=MaxS,1,'last');
                 disp(['Step length: ',...
                     num2str(mean(Data.StepLength(i0:i1)),'%.3f'),177,...
                     num2str(std(Data.StepLength(i0:i1)),'%.3f'),'[m]']);
@@ -510,7 +526,7 @@ DG.DispArea = axes('Units','Normalized','FontSize',AxesFont,...
                 end
                 
                 % Show current slope
-                SlopeStr = ['Slope: ',num2str(Data.Slopes(SlopeID),'%.2f')];
+                SlopeStr = ['Slope: ',num2str(Data.Param(SlopeID),'%.2f')];
                 uicontrol('Style','Text','String',SlopeStr,...
                     'Units','Normalized','FontSize',TitleFont,...
                     'Position', [xS 0.92 xL 0.04]);
@@ -521,14 +537,14 @@ DG.DispArea = axes('Units','Normalized','FontSize',AxesFont,...
     end
 
     function [Mu,N] = CalcFric()
-        NSlopes = length(Data.Slopes);
-        Mu = zeros(1,NSlopes);
-        N = zeros(1,NSlopes);
-        for sl = 1:NSlopes
+        NP = length(Data.Param);
+        Mu = zeros(1,NP);
+        N = zeros(1,NP);
+        for sl = 1:NP
             GRFxy = Data.LCGRF{sl};
             
             % Rotate GRF vector to be normal/tangent to terrain
-            alpha = -Data.Slopes(sl);
+            alpha = -Data.Param(sl);
             A = [cosd(alpha) -sind(alpha);
                  sind(alpha) cosd(alpha)];
             GRFnt = (A*GRFxy')';
@@ -540,11 +556,11 @@ DG.DispArea = axes('Units','Normalized','FontSize',AxesFont,...
 
     
     function [A2T,A2H] = CalcZMP()
-        NSlopes = length(Data.Slopes);
-        A2T = zeros(1,NSlopes);
-        A2H = zeros(1,NSlopes);
-        for sl = 1:NSlopes
-            alpha = Data.Slopes(sl);
+        NP = length(Data.Param);
+        A2T = zeros(1,NP);
+        A2H = zeros(1,NP);
+        for sl = 1:NP
+            alpha = Data.Param(sl);
             Ta = Data.LCtorques{sl}(:,1);
             GRFx = Data.LCGRF{sl}(:,1);
             GRFy = Data.LCGRF{sl}(:,2);
@@ -554,7 +570,7 @@ DG.DispArea = axes('Units','Normalized','FontSize',AxesFont,...
         end
     end
 
-    function PlotIC(Slopes,IC,ICs)
+    function PlotIC(Param,IC,ICs)
         if nargin<3
             ICs=[];
         end
@@ -562,10 +578,10 @@ DG.DispArea = axes('Units','Normalized','FontSize',AxesFont,...
         % calculate min/max values for each coordinate
         Ncoords = length(ICs);
         if Ncoords>0
-            NSlopes = length(Slopes);
-            MinCo = zeros(NSlopes,Ncoords);
-            MaxCo = zeros(NSlopes,Ncoords);
-            for sl = 1:NSlopes
+            NP = length(Param);
+            MinCo = zeros(NP,Ncoords);
+            MaxCo = zeros(NP,Ncoords);
+            for sl = 1:NP
                 ThisMin = min(Data.LCx{sl},[],1);
                 ThisMax = max(Data.LCx{sl},[],1);
                 MinCo(sl,:) = ThisMin(ICs);
@@ -579,13 +595,13 @@ DG.DispArea = axes('Units','Normalized','FontSize',AxesFont,...
 %                     LineStyles{c},'LineWidth',LineWidth,...
 %                     'Color',Colors{c});
                 Color = 0.1*Colors{ICs(c)}+[1 1 1];
-                X = [Slopes,fliplr(Slopes)];
+                X = [Param,fliplr(Param)];
                 Y = [MinCo;flipud(MaxCo)];
                 h = fill(X,Y,Color/norm(Color));
                 set(h,'EdgeColor','none')
 %                 area(Slopes,[MinCo,MaxCo],'FaceColor',Color/norm(Color));
             end
-            axis([min(Slopes) max(Slopes) 1.05*min(MinCo) 1.05*max(MaxCo)])
+            axis([min(Param) max(Param) 1.05*min(MinCo) 1.05*max(MaxCo)])
         end
         
         if nargin<3
@@ -602,17 +618,17 @@ DG.DispArea = axes('Units','Normalized','FontSize',AxesFont,...
                 Coords = pZone{z};
                 for c = 1:Ncoords
                     StCoord = (p-1)*Ncoords+c;
-                    h(c) = plot(Slopes(Coords),IC(StCoord,Coords),...
+                    h(c) = plot(Param(Coords),IC(StCoord,Coords),...
                         LineStyles{c},'LineWidth',LineWidth,...
                         'Color',Colors{ICs(c)});
                 end
             end
         end
-        axis([min(Slopes) max(Slopes) ylim])
+        axis([min(Param) max(Param) ylim])
         legend(h,Legends(ICs));
     end
 
-    function PlotEigV(Slopes,EigV)
+    function PlotEigV(Param,EigV)
         % Separate into zones
         zID = find(diff(Data.Period(:,1))~=0);
         zID = [zID; size(Data.Period,1)];
@@ -624,10 +640,10 @@ DG.DispArea = axes('Units','Normalized','FontSize',AxesFont,...
             if length(IDs)<2
                 continue
             end
-            plot(Slopes(IDs),abs(EigV(:,IDs)),...
+            plot(Param(IDs),abs(EigV(:,IDs)),...
                 'LineWidth',LineWidth);
             % Add zone letter and display period number
-            zmid = mean(Slopes(IDs));
+            zmid = mean(Param(IDs));
             ZString = [char(ZoneLetter+'A'),' - ',...
                 int2str(Data.Period(IDs(1),1))];
             ZoneLetter = ZoneLetter+1;
@@ -635,32 +651,32 @@ DG.DispArea = axes('Units','Normalized','FontSize',AxesFont,...
                 'HorizontalAlignment','center');
             if z<length(zID)
                 % Add a vertical line
-                Lx = (Slopes(sID)+Slopes(sID-1))/2;
+                Lx = (Param(sID)+Param(sID-1))/2;
                 line([Lx Lx],[0 1],'LineWidth',LineWidth,...
                     'Color',[0 0 0])
             end
         end
         % plot(Data.Slopes,Data.Period(:,1));
-        axis([min(Slopes) max(Slopes) 0 1])
+        axis([min(Param) max(Param) 0 1])
     end
 
-    function PlotMaxZMP(Slopes,MZMP)
+    function PlotMaxZMP(Param,MZMP)
         h = zeros(3,1);
         MZMP = [MZMP, MZMP(:,1)-MZMP(:,2)];
         pZone = Data.Zones{1};
         for z = 1:length(pZone)
             Coords = pZone{z};
             for c = 1:3
-                h(c) = plot(Slopes(Coords),MZMP(Coords,c),...
+                h(c) = plot(Param(Coords),MZMP(Coords,c),...
                     LineStyles{c},'LineWidth',LineWidth,...
                     'Color',Colors{c});
             end
         end
         hold on
         [A2T,A2H] = CalcZMP();
-        plot(Data.Slopes,A2T);
-        plot(Data.Slopes,A2H);
-        axis([min(Slopes) max(Slopes) ylim])
+        plot(Data.Param,A2T);
+        plot(Data.Param,A2H);
+        axis([min(Param) max(Param) ylim])
         legend(h,'Front','Back','Foot length');
     end
 
@@ -745,7 +761,7 @@ DG.DispArea = axes('Units','Normalized','FontSize',AxesFont,...
     end
 
     function KeybHandle(h_obj,evt,Data) %#ok<INUSL>
-        Sections = length(Data.Slopes);
+        Sections = length(Data.Param);
         BigJump = floor(Sections/10);
         
         if strcmp(evt.Key,'uparrow')
@@ -799,7 +815,7 @@ DG.DispArea = axes('Units','Normalized','FontSize',AxesFont,...
             switch evt.Key(7)
                 case '0'
                     cla
-                    PlotIC(Data.Slopes,Data.IC);
+                    PlotIC(Data.Param,Data.IC);
                     return
                 case '1'
                     IC = 1;
@@ -815,7 +831,7 @@ DG.DispArea = axes('Units','Normalized','FontSize',AxesFont,...
                     return
             end
             cla
-            PlotIC(Data.Slopes,Data.IC(IC,:),IC);
+            PlotIC(Data.Param,Data.IC(IC,:),IC);
         end
     end
 end
