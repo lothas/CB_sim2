@@ -11,10 +11,14 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
         u0 = 1;
         wfe = 3;
         
-        stDim = 2; % state dimension
-        nEvents = 0; % num. of simulation events
+        stDim = 4; % state dimension
+        nEvents = 1; % num. of simulation events
         
         % Controller Output
+        nPulses = 1;
+        OutM = [0, 0; 1 -0.1];
+        Amp0 = 10;
+        ExtPulses = [];
         
         % Saturation
         MinSat; MaxSat;
@@ -63,11 +67,18 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
 %             end 
         end
         
-        function [Torques] = NeurOutput(MO)
+        function [Torques] = Output(MO, ~, MOX, ~)
+            y = max(MOX(1:2:end,:),0);
+            try
+                Torques = MO.OutM*y;
+            catch
+                disp('fuck!')
+            end
 %             Torques = MO.OutM*MO.Switch;
         end
 
         function [per] = GetPeriod(MO)
+            per = 0.754;
 %             per = (MO.P_th-MO.P_reset)/MO.omega;
         end
         
@@ -76,7 +87,7 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
         end
         
         function diff = PhaseDiff(MO,ph1,ph2)
-%             diff = ph1 - ph2;
+            diff = ph1 - ph2;
 %             % wrap it up
 %             Range = MO.P_th - MO.P_reset;
 %             diff(diff>Range/2) = diff(diff>Range/2) - Range;
@@ -86,8 +97,8 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
         function [MO] = Adaptation(MO, Phi)
             if MO.FBType == 0
                 % NO FEEDBACK
-                MO.omega = MO.omega0;
-                MO.Amp = MO.Amp0;
+%                 MO.omega = MO.omega0;
+%                 MO.Amp = MO.Amp0;
             else
 %                 MO.omega = MO.omega0 + ...
 %                     min(0,Phi)*MO.kOmega_d + ...    % Phi<0
@@ -133,94 +144,95 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
             direction = -ones(MO.nEvents,1);
             
             % Check for firing neuron
-            value(1) = MO.P_th - X;
-
-            % Check for leg extension signal (for clearance)
-%             value(2) = MO.P_LegE - X;
-            
-            % Check for switching on/off signal
-            Xperc = MO.GetPhasePerc(X);
-            value(3:2+MO.nPulses) = MO.Offset - Xperc;
-            value(3+MO.nPulses:2+2*MO.nPulses) = ...
-                MO.Offset + MO.Duration - Xperc;
+            Torques = MO.Output(0, X, 0);
+            value(1) = -Torques(2);
+% 
+%             % Check for leg extension signal (for clearance)
+% %             value(2) = MO.P_LegE - X;
+%             
+%             % Check for switching on/off signal
+%             Xperc = MO.GetPhasePerc(X);
+%             value(3:2+MO.nPulses) = MO.Offset - Xperc;
+%             value(3+MO.nPulses:2+2*MO.nPulses) = ...
+%                 MO.Offset + MO.Duration - Xperc;
         end
         
         function [MO,Xa] = HandleEvent(MO, EvID, Xb)
             Xa = Xb;
-            switch EvID
-                case 1
-                    % Neuron fired
-                    for i=1:MO.nPulses
-                        if MO.Offset(i)==0;
-                            % Turn on signal now
-                            MO.Switch(i) = MO.Amp(i);
-                        end
-                    end
-                    Xa = MO.P_reset; % reset phase
-                case 2
-                    % Extend the leg
-                    % This is done from the simulation file
-                case num2cell(3:2+MO.nPulses)
-                    % Switch on signal
-                    MO.Switch(EvID-2) = MO.Amp(EvID-2);
-                case num2cell(3+MO.nPulses:2+2*MO.nPulses)
-                    % Switch off signal
-                    PulseID = EvID-(2+MO.nPulses);
-                    MO.Switch(PulseID) = 0;
-                    if any(PulseID == MO.ExtPulses)
-                        % Set offset back to 200%
-                        MO.Offset(PulseID) = 2;
-                    end
-            end
+%             switch EvID
+%                 case 1
+%                     % Neuron fired
+%                     for i=1:MO.nPulses
+%                         if MO.Offset(i)==0;
+%                             % Turn on signal now
+%                             MO.Switch(i) = MO.Amp(i);
+%                         end
+%                     end
+%                     Xa = MO.P_reset; % reset phase
+%                 case 2
+%                     % Extend the leg
+%                     % This is done from the simulation file
+%                 case num2cell(3:2+MO.nPulses)
+%                     % Switch on signal
+%                     MO.Switch(EvID-2) = MO.Amp(EvID-2);
+%                 case num2cell(3+MO.nPulses:2+2*MO.nPulses)
+%                     % Switch off signal
+%                     PulseID = EvID-(2+MO.nPulses);
+%                     MO.Switch(PulseID) = 0;
+%                     if any(PulseID == MO.ExtPulses)
+%                         % Set offset back to 200%
+%                         MO.Offset(PulseID) = 2;
+%                     end
+%             end
         end
         
         function [MO, Xmod, Xcon] = HandleExtFB(MO, Xmod, Xcon, Slope)
             % This function is called when the leg hits the ground
-            if MO.FBType > 0
-                % Perform adaptation based on terrain slope
-                MO = MO.Adaptation(Slope);
-            end
-            
-            if ~isempty(MO.ExtP_reset)
-                % Perform a phase reset
-                Xcon = MO.ExtP_reset;
-                
-                % Check if any event happens at ExtP_reset
-                [value, it, dir] = MO.Events(Xcon); %#ok<NASGU,ASGLU>
-                EvIDs = find(value == 0);
-                for ev = 1:length(EvIDs)
-                    [MO,Xcon] = MO.HandleEvent(EvIDs(ev),Xcon);
-                end
-            end
-            
-            switch MO.FBImpulse
-                case 1 % 1 - add a constant value
-                    Xmod(3:4) = Xmod(3:4) + MO.AngVelImp;
-                case 2 % 2 - set ang. vel. to certain value
-%                     delta = MO.AngVelImp - Xmod(3:4)
-                    Xmod(3:4) = MO.AngVelImp;
-            end
-            
-            % Activate external pulses
-            MO.Switch(MO.ExtPulses) = MO.Amp(MO.ExtPulses);
-            MO.Offset(MO.ExtPulses) = MO.GetPhasePerc(Xcon);
-            % Set the torque to get turned off after the neuron fires if
-            % the off event is larger than 100% of osc. period
-            Overflow = MO.Offset(MO.ExtPulses)+MO.Duration(MO.ExtPulses)>1;
-            MO.Offset(MO.ExtPulses) = MO.Offset(MO.ExtPulses) - Overflow;
+%             if MO.FBType > 0
+%                 % Perform adaptation based on terrain slope
+%                 MO = MO.Adaptation(Slope);
+%             end
+%             
+%             if ~isempty(MO.ExtP_reset)
+%                 % Perform a phase reset
+%                 Xcon = MO.ExtP_reset;
+%                 
+%                 % Check if any event happens at ExtP_reset
+%                 [value, it, dir] = MO.Events(Xcon); %#ok<NASGU,ASGLU>
+%                 EvIDs = find(value == 0);
+%                 for ev = 1:length(EvIDs)
+%                     [MO,Xcon] = MO.HandleEvent(EvIDs(ev),Xcon);
+%                 end
+%             end
+%             
+%             switch MO.FBImpulse
+%                 case 1 % 1 - add a constant value
+%                     Xmod(3:4) = Xmod(3:4) + MO.AngVelImp;
+%                 case 2 % 2 - set ang. vel. to certain value
+% %                     delta = MO.AngVelImp - Xmod(3:4)
+%                     Xmod(3:4) = MO.AngVelImp;
+%             end
+%             
+%             % Activate external pulses
+%             MO.Switch(MO.ExtPulses) = MO.Amp(MO.ExtPulses);
+%             MO.Offset(MO.ExtPulses) = MO.GetPhasePerc(Xcon);
+%             % Set the torque to get turned off after the neuron fires if
+%             % the off event is larger than 100% of osc. period
+%             Overflow = MO.Offset(MO.ExtPulses)+MO.Duration(MO.ExtPulses)>1;
+%             MO.Offset(MO.ExtPulses) = MO.Offset(MO.ExtPulses) - Overflow;
         end
         
-        function PlotTorques(MO,tstep,mux)
+        function PlotTorques(MO, tstep, mux)
             if nargin<3
-                [Time,TorqueSig]=MO.GetTorqueSig();
+                [Time,TorqueSig] = MO.GetTorqueSig();
             else
-                [Time,TorqueSig]=MO.GetTorqueSig(tstep,mux);
+                [Time,TorqueSig] = MO.GetTorqueSig(tstep, mux);
             end
 
-            plot(Time,TorqueSig);
+            plot(Time, TorqueSig);
         end
         
-        function [Time,TorqueSig]=GetTorqueSig(MO,pstep,mux)
+        function [Time, TorqueSig] = GetTorqueSig(MO, pstep, mux)
             % Check number of inputs to method
             if nargin<2
                 pstep = 0.01;

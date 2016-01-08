@@ -126,7 +126,7 @@ classdef Controller < handle & matlab.mixin.Copyable
             end 
         end
         
-        function [Torques] = NeurOutput(NC)
+        function [Torques] = Output(NC, ~, ~, ~)
             Torques = NC.OutM*NC.Switch;
         end
 
@@ -272,10 +272,14 @@ classdef Controller < handle & matlab.mixin.Copyable
         end
         
         function PlotTorques(NC,tstep,mux)
-            if nargin<3
+            if nargin<2
                 [Time,TorqueSig]=NC.GetTorqueSig();
             else
-                [Time,TorqueSig]=NC.GetTorqueSig(tstep,mux);
+                if nargin<3
+                    [Time,TorqueSig]=NC.GetTorqueSig(tstep);
+                else
+                    [Time,TorqueSig]=NC.GetTorqueSig(tstep,mux);
+                end
             end
 
             plot(Time,TorqueSig);

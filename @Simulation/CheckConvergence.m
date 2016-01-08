@@ -66,7 +66,7 @@ function [ sim ] = CheckConvergence( sim )
                 if sim.ConvProgr(1) >= sim.GNGThresh(1)
                     if sim.doGoNoGo == 1 && sim.infTime == 0
                         % Extend the simulation by 2 step periods
-                        sim.tend = min(sim.tend + 2/sim.Con.omega,...
+                        sim.tend = min(sim.tend + 2*sim.Con.GetPeriod(),...
                                        3*sim.Out.Tend); % Don't extend forever
     %                     disp(['TIME EXTENSION! ',num2str(sim.tend,'%.1f')]);
                     end

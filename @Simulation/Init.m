@@ -4,7 +4,7 @@ function [ sim ] = Init( sim )
     sim.stDim = sim.Mod.stDim + sim.Con.stDim; % state dimension
     sim.ModCo = 1:sim.Mod.stDim; % Model coord. indices
     sim.ConCo = sim.Mod.stDim+1:sim.stDim; % Contr. coord. indices
-    sim.nOuts = length(sim.Con.NeurOutput());
+    sim.nOuts = length(sim.Con.Output(0, sim.ConCo', sim.ModCo'));
 
     % Set events
     sim.nEvents = sim.Mod.nEvents + sim.Con.nEvents;

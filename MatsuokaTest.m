@@ -3,21 +3,21 @@ function MatsuokaTest()
 %   Detailed explanation goes here
 
 MO = Matsuoka();
-MO.tau = 0.3;
-MO.tav = 1;     % Affects oscillations period and shape
-MO.beta = 3;   % Affects oscillations period (must be close to wfe?)
-MO.u0 = 3;        % Affects final amplitude
-MO.wfe = -3;
+MO.tau = 0.25;
+MO.tav = 0.5;     % Affects oscillations period and shape
+MO.beta = 20;   % Affects oscillations period (must be close to wfe?)
+MO.u0 = 60;        % Affects final amplitude
+MO.wfe = -5;
 
-uSS = MO.u0/(1+MO.beta);
+uSS = MO.u0/(1-MO.wfe);
 
 % Initial conditions
-IC0 = [uSS; uSS; -uSS; 0];
+IC0 = [-15.7618    3.3300    2.7334    6.8556]/2;
 
 % tspan
 t_start = 0;
-t_end = 10;
-t_step = 0.05;
+t_end = 0.754*2;
+t_step = 0.03;
 t_span = t_start:t_step:t_end;
 
 % Run simulation
@@ -28,11 +28,15 @@ options = odeset('MaxStep',t_step/10,'RelTol',.5e-7,'AbsTol',.5e-8);
 % [TTemp,XTemp,TE,YE,IE] = ...
 %     ode45(@MO.Derivative,t_span,IC0,options); %#ok<ASGLU>
 
-y = max(XTemp(:,1),0) - 0.1*max(XTemp(:,3),0);
-subplot(2,1,1)
-plot(TTemp, XTemp(:,[1,3]));
-subplot(2,1,2)
-plot(TTemp, y);
+y = max(XTemp(:,1:2:end),0);
+out = y(:,1) - 0.1*y(:,2);
+figure
+for i = 1:4
+    subplot(4,1,i)
+    plot(TTemp, XTemp(:,i));
+end
+figure
+plot(TTemp, out);
 grid on
 
 end

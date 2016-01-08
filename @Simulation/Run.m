@@ -37,9 +37,9 @@ function [ sim ] = Run( sim )
     
     if sim.nOuts>0
         % Save torques & slope
-        ThisTorques = sim.Con.NeurOutput()';
+        ThisTorques = sim.Con.Output(TTemp, ...
+            XTemp(:,sim.ConCo)', XTemp(:,sim.ModCo)')';
         ThisSlope = sim.Env.SurfSlope(sim.Mod.xS);
-        Torques = repmat(ThisTorques,length(TTemp),1);
         Slopes = repmat(ThisSlope,length(TTemp),1);
     end
 
@@ -97,7 +97,8 @@ function [ sim ] = Run( sim )
 
         if sim.nOuts>0 && sim.EndZMP == 1
             % Check ZMP
-            ThisTorques = repmat(sim.Con.NeurOutput()',length(TTemp),1);
+            ThisTorques = sim.Con.Output(TTemp, ...
+                XTemp(:,sim.ConCo)', XTemp(:,sim.ModCo)')';
             CleanTorques = sim.GetCleanPulses(TTemp,XTemp,ThisTorques);
             Slope = sim.Env.SurfSlope(sim.Mod.xS);
             [ZMPfront, ZMPback] = sim.Mod.GetZMP(XTemp,CleanTorques,Slope);
@@ -216,10 +217,11 @@ function [ sim ] = Run( sim )
         
         if sim.nOuts>0
             % Save torques & slope
-            ThisTorques = sim.Con.NeurOutput()';
+            ThisTorques = sim.Con.Output(TTemp, ...
+                XTemp(:,sim.ConCo)', XTemp(:,sim.ModCo)')';
             ThisSlope = sim.Env.SurfSlope(sim.Mod.xS);
             Torques = [Torques; %#ok<AGROW>
-                       repmat(ThisTorques,length(TTemp),1)];
+                       ThisTorques];
             Slopes = [Slopes; %#ok<AGROW>
                       repmat(ThisSlope,length(TTemp),1)];
         end
