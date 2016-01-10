@@ -1,4 +1,4 @@
-function [ NC ] = Set( NC, varargin )
+function [ MO ] = Set( MO, varargin )
 % Sets desired object properties
 % Use as Set(CB,'m',3,'mh',10,_)
 
@@ -13,60 +13,64 @@ else
             error('Set failed: property value must be numeric');
         end
         
-        switch key
-            % LIF parameters
-            case 'P_reset'
-                NC.P_reset = value;
-            case 'P_th'
-                NC.P_th = value;
-            case 'P_0' % Initial phase for oscillator
-                NC.P_0 = value;
-            case 'P_LegE'
-                NC.P_LegE = value; % timed leg extension
-            case 'omega0' % Oscillator's frequency
-                NC.omega0 = value;
-                NC.omega = value;
+        switch lower(key)
+            case {'npulses','nneurons','n_pulses','n_neurons'}
+                MO.nPulses = value; % Overall number of E/F neuron pairs
+                
+            % neuron parameters
+            case {'tau', 'tau_u'}
+                MO.tau = value;
+            case {'tav', 'tau_v'}
+                MO.tav = value;
+            case 'beta'
+                MO.beta = value;
+            case 'win' % Intra-neuron pair inhibition
+                N = length(value);
+                if N == 1
+                    % One inhibition to rule them all
+                    D = mat2cell(repmat([0, value; value, 0], ...
+                                 1, MO.nPulses), 2, 2*ones(1,MO.nPulses)); 
+                else
+                    D = {};
+                    if N == MO.nPulses
+                        % One inhibition per neuron pair
+                        for i = 1:length(value)
+                            D = [D, [0, value(i); value(i), 0]];  %#ok<AGROW>
+                        end
+                    else
+                        % One inhibition per neuron
+                        for i = 1:length(value)
+                            D = [D, [0, value(2*i-1); value(2*i), 0]];  %#ok<AGROW>
+                        end
+                    end
+                end
+                MO.win = blkdiag(D{:});
+            case 'wex' % Extra-neuron inhibition (E to E and F to F)
+                MO.wex = zeros(length(value));
+                v = 1;
+                for n = 1:length(value)
+                    ids = 2-mod(n,2):2:2*MO.nPulses;
+                    ids(ids == n) = [];
+                    MO.wex(n,ids) = value(v:v+length(ids)-1);
+                    v = v+length(ids);
+                end
                 
             % Controller Output
-            case 'nPulses'
-                NC.nPulses = value;  % Overall number of pulses
-            case 'Amp0'
-                NC.Amp0 = value;     % Base pulse amplitude in N
-                NC.Amp = value;      % Pulse amplitude in N
-            case 'Offset'
-                NC.Offset = value;   % Defines beginning of pulse as % of neuron period
-            case 'Duration'
-                NC.Duration = value; % Pulse duration as % of neuron period
+            case {'amp0', 'amp'} % Base neuron amplitude multiplier
+                N = length(value);
+                if N == MO.nPulses
+                    MO.Amp0 = reshape([value; value], 1, []);
+                else
+                    MO.Amp0 = value;
+                end
+                MO.Amp = MO.Amp0;
                 
-            % Impulsive output
-            case 'AngVelImp'
-                NC.AngVelImp = value;
-                % Sets the ang. velocities to value if FBImpulse = 2
-                % or to ang. vel. + value if FBImpulse = 1
-
             % Adaptation
-            case 'FBType'
-                NC.FBType = value;
-                % 0 - no feedback, 1 - single gain for omega and each joint
-                % 2 - individual gains for each pulse
-
+            case {'fbtype', 'feedback', 'fb'}
+                MO.FBType = value;
+                % Not yet implemented
+                
             % Gains
-            case 'kOmega_u'
-                NC.kOmega_u = value;
-            case 'kOmega_d'
-                NC.kOmega_d = value;
-            case 'kTorques_u'
-                NC.kTorques_u = value;
-            case 'kTorques_d'
-                NC.kTorques_d = value;
-            case 'sOmega_f'
-                NC.sOmega_f = value;
-            case 'sOmega_s'
-                NC.sOmega_s = value;
-            case 'sTorques_f'
-                NC.sTorques_f = value;
-            case 'sTorques_s'
-                NC.sTorques_s = value;
             
             otherwise
                 error(['Set failed: ',key,' property not found']);

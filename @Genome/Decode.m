@@ -81,6 +81,17 @@ for k = 1:size(Ge.Keys,2)
                         'dur',Seq(P0+1));
                 end
             end
+        case 'IC_matsuoka'
+            % When this key shows up in a genome, it tells the decoder to
+            % set the simulation's initial condition to a value that aids
+            % the oscillators' convergence
+            Sim = Sim.Init();
+            wfe = mean(mean(abs(Sim.Con.win(Sim.Con.win~=0))));
+            u_ss = Sim.Con.u0/Sim.Con.beta*abs(wfe);
+            MIC = zeros(1,Sim.Con.stDim);
+            MIC(1) = u_ss;
+            Sim.IC(Sim.ConCo) = MIC;
+            
         
         %% %%%%%%%%%% Model keys %%%%%%%%%% %%
         case Sim.Mod.SetKeys

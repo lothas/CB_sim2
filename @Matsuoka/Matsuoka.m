@@ -9,7 +9,8 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
         tav = 1;
         beta = 0.1;
         u0 = 1;
-        wfe = 3;
+        win = [0, 3; 1, 0];
+        wex = [];
         
         stDim = 4; % state dimension
         nEvents = 1; % num. of simulation events
@@ -18,6 +19,7 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
         nPulses = 1;
         OutM = [0, 0; 1 -0.1];
         Amp0 = 10;
+        Amp = 10;
         ExtPulses = [];
         
         % Saturation
@@ -44,7 +46,9 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
                          % on foot contact
         
         % Set keys
-        SetKeys = {};
+        SetKeys = {'npulses', 'nneurons', 'n_pulses', 'n_neurons', ...
+            'tau', 'tau_u', 'tav', 'tau_v', 'beta', 'win', 'wex', ...
+            'amp0', 'amp', 'fbtype', 'feedback', 'fb'};
     end
     
     methods
@@ -67,8 +71,23 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
 %             end 
         end
         
+        function MO = SetOutMatrix(MO, ppj)
+            % ppj - Pulses per joint
+            % Provided as, [# of E/F neuron pairs for joint 1, ...
+            %               # of E/F neuron pairs for joint 2, ... ]
+            n_joints = length(ppj);
+            MO.nPulses = sum(ppj);
+            MO.OutM = zeros(n_joints, 2*MO.nPulses);
+            p = 1;
+            for j = 1:n_joints
+                MO.OutM(j, p:p + 2*ppj(j) - 1) = ...
+                    repmat([1, -1], 1, ppj(j));
+                p = p + 2*ppj(j);
+            end
+        end
+            
         function [Torques] = Output(MO, ~, MOX, ~)
-            y = max(MOX(1:2:end,:),0);
+            y = diag(MO.Amp)*max(MOX(1:2*MO.nPulses,:),0);
             try
                 Torques = MO.OutM*y;
             catch
@@ -124,17 +143,17 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
         
         % %%%%%% % Derivative % %%%%%% %
         function [Xdot] = Derivative(MO, ~, X)
-            % For a single extensor/flexor neuron pair
-            % X = [u_e; v_e; u_f; v_f];
-            y_e = max(X(1),0);
-            y_f = max(X(3),0);
+            % X = [u_i; v_i];
+            u = X(1:2*MO.nPulses,:);
+            v = X(2*MO.nPulses+1:end);
+            y = max(u,0);
             
-            Xdot = [1/MO.tau*(-X(1) - MO.beta*X(2) + MO.u0 + ...
-                        MO.wfe*y_f);            % EXTENSOR
-                    1/MO.tav*(-X(2) + y_e);
-                    1/MO.tau*(-X(3) - MO.beta*X(4) + MO.u0 + ...
-                        MO.wfe*y_e);            % FLEXOR
-                    1/MO.tav*(-X(4) + y_f)];
+            udot = 1/MO.tau*(-u - MO.beta*v + MO.u0 + ...
+                             (MO.win+MO.wex)*y);
+            vdot = 1/MO.tav*(-v+y);
+            
+            Xdot = [udot;
+                    vdot];
         end
         
         % %%%%%% % Events % %%%%%% %

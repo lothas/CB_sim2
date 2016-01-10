@@ -1,12 +1,13 @@
 function [Sim] = TestGen()
 % close all
 
-GenType = 7;
+GenType = 8;
 
 Sim = Simulation();
 Sim.Graphics = 1;
 Sim.EndCond = 2; % Run until converge
 tend = 60;
+Sim = Sim.SetTime(0,0.15,tend);
 
 % Set up the compass biped model
 Sim.Mod = Sim.Mod.Set('damp',0,'I',0);
@@ -16,10 +17,15 @@ start_slope = 0;
 Sim.Env = Sim.Env.Set('Type','inc','start_slope',start_slope);
 
 % Set up the controller using a genome
-Sim.Con = Sim.Con.ClearTorques();
+if GenType<8
+    Sim.Con = Sim.Con.ClearTorques();
+end
 Sim.Con.FBType = 0;
+
 Sim.IC = [start_slope, start_slope, 0, 0, 0];
+
 KeyLength = [];
+
 switch GenType
     case 1 % Event triggered controller
         Keys = {'IC','omega0','P_LegE','ExtPulses','ExtPulses';...
@@ -130,16 +136,38 @@ switch GenType
         Sim.Con.FBType = 2;
         tend = 10;
         Sim.tstep_small = 0.001;
+    case 8 % Matsuoka controller
+        Sim.Con = Matsuoka;
+        
+        nAnkle = 1; % Number of ankle torques
+        nHip = 1;   % Number of hip torques
+        maxAnkle = 5;   % Max ankle torque
+        maxHip = 20;    % Max hip torque
+        Mamp = [maxAnkle*ones(1,2*nAnkle), maxHip*ones(1,2*nHip)];
+        mamp = 0*Mamp;
+        N = nAnkle+nHip;
+        Mwex = -20*ones(1,2*N);
+        mwex = 0*Mwex;
+        
+        Sim.Con.nPulses = N;
+        Sim.Con.stDim = 4*N;
+        Sim.Con = Sim.Con.SetOutMatrix([nAnkle,nHip]);
+        
+        Keys = {'tau','tav','beta','amp','win','wex','IC_matsuoka';
+                   1 ,   1 ,    1 , 2*N ,   1 , 2*N ,           0 };
+        Range = {0.1 , 0.1 ,   10 , mamp, -20 , Mwex; % Min
+                   2 ,   2 ,   30 , Mamp,  -1 , mwex}; % Max
+                   
+        %           tau,  tav, beta,        amp, win,          wex
+        Sequence = [0.5, 0.25,   20, [0,1,10,1],  -5, [-5,-5,-5,-5]];
 end
+
 if ~isempty(KeyLength)
     Gen = Genome(Keys, KeyLength, Range);
 else
     Gen = Genome(Keys, Range);
 end
 Sim = Gen.Decode(Sim, Sequence);
-
-% Simulation parameters
-Sim = Sim.SetTime(0,0.15,tend);
 
 % Set internal parameters (state dimensions, events, etc)
 Sim = Sim.Init();
