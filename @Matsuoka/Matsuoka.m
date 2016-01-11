@@ -32,14 +32,8 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
                      % desired walking speed
         
         % Gains
-%         kOmega_u = 0.0;
-%         kOmega_d = 0.0;
-%         kTorques_u = 0;
-%         kTorques_d = 0;
-%         sOmega_f = 0.0;
-%         sOmega_s = 0.0;
-%         sTorques_f = 0;
-%         sTorques_s = 0;
+        ks_tau = 0;
+        ks_out = 0;
         
         % Phase reset
         ExtP_reset = []; % set to a certain phase to use phase reset
@@ -48,7 +42,9 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
         % Set keys
         SetKeys = {'npulses', 'nneurons', 'n_pulses', 'n_neurons', ...
             'tau', 'tau_u', 'tav', 'tau_v', 'beta', 'win', 'wex', ...
-            'amp0', 'amp', 'fbtype', 'feedback', 'fb'};
+            'amp0', 'amp', 'fbtype', 'feedback', 'fb', ...
+            'ks_tau', 'speed_tau', 'tau_speed_gain', ...
+            'ks_out', 'speed_out', 'torque_speed_gain'};
     end
     
     methods
@@ -94,6 +90,14 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
                 disp('fuck!')
             end
 %             Torques = MO.OutM*MO.Switch;
+
+            % Apply saturation
+            if ~isempty(MO.MinSat)
+                for j = 1:length(MO.MinSat)
+                    Torques(j,:) = ...
+                        min(max(Torques(j,:),MO.MinSat(j)),MO.MaxSat(j));
+                end
+            end
         end
 
         function [per] = GetPeriod(MO)
@@ -102,7 +106,8 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
         end
         
         function [Xperc] = GetPhasePerc(MO,X)
-%             Xperc = (X-MO.P_reset)/(MO.P_th-MO.P_reset);
+            phase = atan2(X(1), X(MO.nPulses*2+1));
+            Xperc = phase/2/pi;
         end
         
         function diff = PhaseDiff(MO,ph1,ph2)
@@ -128,17 +133,9 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
             end
             
             % Apply higher-level speed input
-%             MO.omega = MO.omega0 + ...
-%                 min(0,MO.s_in)*MO.sOmega_s + ...    % s_in<0 (slow)
-%                 max(0,MO.s_in)*MO.sOmega_f;         % s_in>0 (fast)
-%             MO.Amp = MO.Amp0 + ...
-%                 min(0,MO.s_in)*MO.sTorques_s + ...  % s_in<0 (slow)
-%                 max(0,MO.s_in)*MO.sTorques_f;       % s_in>0 (fast)
-            
-            % Apply saturation
-            if ~isempty(MO.MinSat)
-                MO.Amp = min(max(MO.Amp,MO.MinSat),MO.MaxSat);
-            end
+            MO.tau = MO.tau + MO.ks_tau*MO.s_in;
+            MO.tav = MO.tav + MO.ks_tau*MO.s_in;
+            MO.Amp = MO.Amp0 + MO.ks_out*MO.s_in;
         end
         
         % %%%%%% % Derivative % %%%%%% %

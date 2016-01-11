@@ -110,7 +110,7 @@ function [ sim ] = CheckConvergence( sim )
     if sim.EndCond == 2        
         Period = find(sim.stepsSS >= sim.stepsReq, 1, 'first');
         Increasing = find(Converge == 1, 1, 'first');
-        if ~isempty(Period)
+        if ~isempty(Period) && ~isempty(Increasing)
             if Period<=Increasing && ismember(Period,[1,2,4,8])
                 % shortest period reached the required num. of steps
                 sim.Out.Type = 5;

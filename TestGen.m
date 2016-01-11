@@ -141,7 +141,7 @@ switch GenType
         
         nAnkle = 1; % Number of ankle torques
         nHip = 1;   % Number of hip torques
-        maxAnkle = 5;   % Max ankle torque
+        maxAnkle = 8;   % Max ankle torque
         maxHip = 20;    % Max hip torque
         Mamp = [maxAnkle*ones(1,2*nAnkle), maxHip*ones(1,2*nHip)];
         mamp = 0*Mamp;
@@ -152,14 +152,18 @@ switch GenType
         Sim.Con.nPulses = N;
         Sim.Con.stDim = 4*N;
         Sim.Con = Sim.Con.SetOutMatrix([nAnkle,nHip]);
+        Sim.Con.MinSat = [-maxAnkle,-maxHip];
+        Sim.Con.MaxSat = [ maxAnkle, maxHip];
         
-        Keys = {'tau','tav','beta','amp','win','wex','IC_matsuoka';
-                   1 ,   1 ,    1 , 2*N ,   1 , 2*N ,           0 };
-        Range = {0.1 , 0.1 ,   10 , mamp, -20 , Mwex; % Min
-                   2 ,   2 ,   30 , Mamp,  -1 , mwex}; % Max
+        Keys = {'tau','tav','beta','amp','win','wex','ks_tau',  'ks_out','IC_matsuoka';
+                   1 ,   1 ,    1 , 2*N ,   1 , 2*N ,      1 ,      2*N ,           0 };
+        Range = {0.1 , 0.1 ,   10 , mamp, -20 , Mwex,   -1e2 , -0.1*Mamp; % Min
+                   2 ,   2 ,   30 , Mamp,  -1 , mwex,    1e2 ,  0.1*Mamp}; % Max
                    
-        %           tau,  tav, beta,        amp, win,          wex
-        Sequence = [0.5, 0.25,   20, [0,1,10,1],  -5, [-5,-5,-5,-5]];
+        %            tau,   tav, beta,                  amp,    win,
+        Sequence = [0.45, 0.255, 19.5, [0.08,7.8,3.45,00.5],  -4.66,...
+                    [-3.9,-3.2,-5.2,-5.7], -0.0001, [-0.02 0.02 0.4 0.1]];
+        %                             wex,   s_tau,               s_out
 end
 
 if ~isempty(KeyLength)

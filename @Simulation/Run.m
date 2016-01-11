@@ -37,7 +37,7 @@ function [ sim ] = Run( sim )
     
     if sim.nOuts>0
         % Save torques & slope
-        ThisTorques = sim.Con.Output(TTemp, ...
+        Torques = sim.Con.Output(TTemp, ...
             XTemp(:,sim.ConCo)', XTemp(:,sim.ModCo)')';
         ThisSlope = sim.Env.SurfSlope(sim.Mod.xS);
         Slopes = repmat(ThisSlope,length(TTemp),1);

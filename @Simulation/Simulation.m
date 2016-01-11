@@ -63,7 +63,7 @@ classdef Simulation < handle & matlab.mixin.Copyable
         % Parameter tweak display
         hParam;
         % Time display
-        hTime; TimeStr = ['t = %.2f s\nOsc.=%.3f\n',...
+        hTime; TimeStr = ['t = %.2f s\nPhase = %.3f\n',...
                          'Slope = %.2f ',char(176)','\nSpeed = %s'];
         % Convergence display
         hConv; ConvStr = 'Diff = %.2e\nPeriod = %s';

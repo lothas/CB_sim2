@@ -228,47 +228,19 @@ classdef MOOGA
         end
         
         function [fit,out] = NrgEffFit(Sim)
-            X = Sim.Out.X;
-            T = Sim.Out.T;
-            Torques = Sim.Out.Torques;
-            Hip0 = zeros(2,1); Hip1 = zeros(2,1);
-            Sim.Mod.xS = Sim.Out.SuppPos(1,1);
-            Sim.Mod.yS = Sim.Out.SuppPos(1,2);
-            [Hip0(1), Hip0(2)] = Sim.Mod.GetPos(X(1,Sim.ModCo),'Hip');
-            Sim.Mod.xS = Sim.Out.SuppPos(end,1);
-            Sim.Mod.yS = Sim.Out.SuppPos(end,2);
-            [Hip1(1), Hip1(2)] = Sim.Mod.GetPos(X(end,Sim.ModCo),'Hip');
-            Weight = Sim.Mod.GetWeight();
+            % Calculate Cost Of Transport
+            COT = Sim.GetCOT([1,0], 0);
             
-            % Calculate distance travelled
-            DistanceTravelled = abs(Hip1(1)-Hip0(1));
-            
-            if DistanceTravelled<3*Sim.Mod.L
-                fit = 0;
-            else
-                % Calculate absolute control effort
-                StTrq = Torques(:,1)-Torques(:,2);
-%                 StTrq = Torques(:,1);
-                StAngVel = X(:,Sim.ModCo(3));
-                SwTrq = Torques(:,2);
-%                 SwAngVel = X(:,Sim.ModCo(4))-X(:,Sim.ModCo(3));
-                SwAngVel = X(:,Sim.ModCo(4));
-                ControlEffort = trapz(T,abs(StTrq.*StAngVel)) + ...
-                                trapz(T,abs(SwTrq.*SwAngVel));
-
-                % Calculate difference in potential energy
-                dPotentialE = Weight*(Hip1(2)-Hip0(2));
-
-                % Calculate Cost Of Transport
-                COT=(ControlEffort-dPotentialE)/(Weight*DistanceTravelled);
-
-                % Low COT (as low as 0) is best so points are given by
-                fit=1/(1+5*COT);
-                % COT of 0 gives 1
-                % COT of 0.03 gives 0.869
-                % COT of 0.12 gives 0.625
-                % COT of 0.3 gives 0.4
+            if isempty(COT)
+                COT = 0;
             end
+               
+            % Low COT (as low as 0) is best so points are given by
+            fit=1/(1+5*COT);
+            % COT of 0 gives 1
+            % COT of 0.03 gives 0.869
+            % COT of 0.12 gives 0.625
+            % COT of 0.3 gives 0.4
             out = [];
         end
         

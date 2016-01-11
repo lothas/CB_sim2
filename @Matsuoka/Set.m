@@ -65,12 +65,16 @@ else
                 end
                 MO.Amp = MO.Amp0;
                 
-            % Adaptation
+            % Feedback
             case {'fbtype', 'feedback', 'fb'}
                 MO.FBType = value;
                 % Not yet implemented
                 
             % Gains
+            case {'ks_tau', 'speed_tau', 'tau_speed_gain'}
+                MO.ks_tau = value;
+            case {'ks_out', 'speed_out', 'torque_speed_gain'}
+                MO.ks_out = value;
             
             otherwise
                 error(['Set failed: ',key,' property not found']);
