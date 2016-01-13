@@ -14,8 +14,14 @@ switch nargin
         Generation = GA.Progress;
         ID = varargin{1};
     case 3
-        Generation = varargin{1};
-        ID = varargin{2};
+        if any(isletter(varargin{2}))
+            Generation = GA.Progress;
+            ID = varargin{1};
+            Type = varargin{2};
+        else
+            Generation = varargin{1};
+            ID = varargin{2};
+        end
     case 4
         Generation = varargin{1};
         ID = varargin{2};
@@ -340,7 +346,14 @@ end
         fprintf('Processing data on %.2f degrees slope',end_s);
         
         if start_s == 0
-            sim.IClimCyc = 0*sim.IC;
+            if strcmp(sim.Con.name, 'Matsuoka')
+                sim.IClimCyc = 0*sim.IC;
+                slope = sim.Env.start_slope;
+                sim.IClimCyc(sim.ModCo(1:2)) = [slope, -slope];
+                sim.IClimCyc(sim.ConCo(1)) = 1;
+            else
+                sim.IClimCyc = 0*sim.IC;
+            end
         else
             sim.IClimCyc = Data.IC(1:sim.stDim,Data.Slopes == start_s);
         end

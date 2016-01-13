@@ -44,6 +44,7 @@ classdef MOOGA
         NFit;
         FitFcn;     % Fitness functions handles
         FitIDs;     % Which values to use from within Fit
+        FitMinMax;  % Which fit values to show/find as larger/smaller than
                 
         % External function (called at the end of every generation)
         GenerationFcn;
@@ -95,24 +96,33 @@ classdef MOOGA
         end
         
         function varargaout = Find(GA,varargin)
+            Gnrtn = GA.Progress;
             switch nargin
                 case 1
-                    Max = cell(2,max(cell2mat(GA.FitFcn(:,1)')));
-                    for f=1:GA.NFit
-                        FitInd = GA.FitFcn{f,1};
-                        Max{1,FitInd(1)} = ...
-                            MOOGA.GetFitFcnName(GA.FitFcn{f,2});
-                        Max(2,FitInd) = ...
-                            num2cell(max(GA.Fit(:,FitInd,GA.Progress)));
-                    end
-                    disp(Max)
-                    return
+                    find_max = true; %#ok<NASGU>
                 case 2
                     Reqs = varargin{1};
-                    Gnrtn = GA.Progress;
                 case 3
                     Reqs = varargin{1};
                     Gnrtn = varargin{2};
+            end
+            
+            PFits = repmat(GA.FitMinMax, ...
+                           size(GA.Fit(:,:,Gnrtn), 1), 1) ...
+                    .*GA.Fit(:,:,Gnrtn);
+            MaxFits = GA.FitMinMax.*max(PFits);
+            
+            if exist('find_max','var')
+                Max = cell(2,max(cell2mat(GA.FitFcn(:,1)')));
+                for f=1:size(GA.FitFcn,1)
+                    FitInd = GA.FitFcn{f,1};
+                    Max{1,FitInd(1)} = ...
+                        MOOGA.GetFitFcnName(GA.FitFcn{f,2});
+                    Max(2,FitInd) = ...
+                        num2cell(MaxFits(FitInd));
+                end
+                disp(Max)
+                return
             end
                     
             [R,~] = size(Reqs);
@@ -124,7 +134,7 @@ classdef MOOGA
                     Reqs(varargin{1}(r,1)) = varargin{1}(r,2);
                 end
             else
-                if length(Reqs)~=GA.NFit
+                if length(Reqs)~=size(GA.FitFcn,1)
                     disp('Number of fitness values is incorrect');
                     return;
                 end
@@ -133,7 +143,7 @@ classdef MOOGA
             % Find results that fit the requirements
             Conds = ones(GA.Population,1);
             for f = 1:max(cell2mat(GA.FitFcn(:,1)'))
-                if Reqs(f)>=0
+                if sign(GA.FitMinMax(f)) >= 0
                     Conds = Conds & ...
                         GA.Fit(:,f,Gnrtn)>=Reqs(f);
                 else
@@ -441,7 +451,7 @@ classdef MOOGA
             out = UDSim.JoinOuts(down_out);
         end
         
-        function [max_vel, max_s, out] = DeltaVelFit(Sim, dir, base_vel)
+        function [max_vel, COT, max_s, out] = DeltaVelFit(Sim, dir, base_vel)
             % Starts walking faster/slower at intervals and checks that the
             % simulation converges at each speed before moving forward
             
@@ -464,8 +474,9 @@ classdef MOOGA
                 if VelSim.Out.Type == 6
                     % Simulation GO
                     % Get average velocity
-                    T = 2*sin(Sim.ICstore(1,2))*Sim.Mod.L/Sim.Mod.curSpeed;
-                    n = min(VelSim.Out.nSteps, length(VelSim.ICstore));
+                    per = Sim.GetPeriod(0.6);
+                    T = per(2);
+                    n = min(VelSim.Out.nSteps, size(VelSim.ICstore,2));
                     
                     if n > 5
                         % At least 5 steps should be taken
@@ -487,6 +498,13 @@ classdef MOOGA
                     break;
                 end
             end
+            
+            % Calculate the last COT
+            COT = VelSim.GetCOT([1,0], 0);
+            
+            if isempty(COT)
+                COT = 0;
+            end
         end
         
         function [fit,out] = VelRangeFit(Sim)
@@ -494,20 +512,27 @@ classdef MOOGA
             
             if isempty(Sim.Period)
                 % Weed out results that didn't converge
-                fit = [0 0 0 0 0];
+                fit = [0 0 0 0 0 0 0 0];
                 out = [];
                 return;
             end
             
             % Get last speed achieved with s_in=0
-            base_vel = Sim.Mod.curSpeed;
-            % Run the increased velocity test (s_in>0)
-            [max_vel, max_s, fast_out] = MOOGA.DeltaVelFit(Sim, 1, base_vel);
-            % Run the decreased velocity test (s_in<0)
-            [min_vel, min_s, slow_out] = MOOGA.DeltaVelFit(Sim, -1, base_vel);
+            % Get average velocity
+            per = Sim.GetPeriod(1);
+            T = per(2);
+            n = min(Sim.Out.nSteps, size(Sim.ICstore,2));
+            base_vel = sum(2*sin(Sim.ICstore(1,2:n))*Sim.Mod.L/T) / (n-1);
             
-            fit = [10*(max_vel-base_vel+0.01)*(base_vel-min_vel+0.01), ...
-                    max_vel, max_s, min_vel, min_s];
+            % Run the increased velocity test (s_in>0)
+            [fast_vel, fast_COT, fast_s, fast_out] = ...
+                MOOGA.DeltaVelFit(Sim, 1, base_vel);
+            % Run the decreased velocity test (s_in<0)
+            [slow_vel, slow_COT, slow_s, slow_out] = ...
+                MOOGA.DeltaVelFit(Sim, -1, base_vel);
+            
+            fit = [abs(fast_vel - slow_vel), 1/(1+fast_COT+slow_COT), ...
+                slow_s, fast_s, slow_vel, fast_vel, slow_COT, fast_COT];
             
             % Combine simulation outputs (in case other fitness function
             % needs them)

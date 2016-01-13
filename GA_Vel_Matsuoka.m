@@ -3,12 +3,12 @@ function [  ] = GA_Vel_Matsuoka( gen, pop, file_in, file_out )
 % simulation with a bounded foot size (ZMP threshold)
 
 if nargin<4
-    GA = MOOGA(30,1200);
+    GA = MOOGA(20,1200);
 %     GA = MOOGA(10,100);
     GA = GA.SetFittest(15,15,0.5);
     GA.JOAT = 2; GA.Quant = 0.5;
     % GA.Fittest = [20,20,1];
-    GA.FileIn = 'VGAM_01_10_20_23.mat';
+%     GA.FileIn = 'VGAM_01_10_20_23.mat';
 %     GA.FileOut = GA.FileIn;
 
     GA.FileOut = ['VGAM_',datestr(now,'mm_dd_hh_MM'),'.mat'];
@@ -38,10 +38,10 @@ mwex = 0*Mwex;
 % TorqueFBMin = [-5*ones(1,NAnkleT),-10*ones(1,NHipT)];
 % TorqueFBMax = -TorqueFBMin;
 
-Keys = {'tau','tav','beta','amp','win','wex','IC_matsuoka';
-           1 ,   1 ,    1 , 2*N ,   1 , 2*N ,           0 };
-Range = {0.1 , 0.1 ,   10 , mamp, -20 , Mwex; % Min
-           2 ,   2 ,   30 , Mamp,  -1 , mwex}; % Max
+Keys = {'tau','tav','beta','amp','win','wex','ks_tau',  'ks_out','IC_matsuoka';
+           1 ,   1 ,    1 , 2*N ,   1 , 2*N ,      1 ,      2*N ,           0 };
+Range = {0.1 , 0.1 ,   10 , mamp, -20 , Mwex,   -1e2 , -0.1*Mamp; % Min
+           2 ,   2 ,   30 , Mamp,  -1 , mwex,    1e2 ,  0.1*Mamp}; % Max
 MutDelta0 = 0.04;
 MutDelta1 = 0.02;
 
@@ -74,7 +74,7 @@ GA.Sim.Con.MinSat = [-maxAnkle,-maxHip];
 GA.Sim.Con.MaxSat = [ maxAnkle, maxHip];
 
 % Simulation parameters
-GA.Sim.IC = [start_slope, start_slope, 0, 0, 0];
+GA.Sim.IC = [start_slope, start_slope, 0, 0, zeros(1, GA.Sim.Con.stDim)];
 GA.Sim = GA.Sim.SetTime(0,0.15,40);
 
 % Some more simulation initialization
@@ -84,19 +84,27 @@ GA.Sim.Mod.LegShift = GA.Sim.Mod.Clearance;
 %                                           GA.Sim.IC(GA.Sim.ConCo));
                                 
 % Fitness functions
-GA.FitFcn = {1, @MOOGA.VelFit;
-             2, @MOOGA.NrgEffFit;
-             3, @MOOGA.EigenFit};
+% GA.FitFcn = {1, @MOOGA.VelFit;
+%              2, @MOOGA.NrgEffFit;
+%              3, @MOOGA.EigenFit};
 % GA.FitFcn = {1, @MOOGA.VelFit;
 %              2, @MOOGA.NrgEffFit;
 %              3:7, @MOOGA.VelRangeFit;
 %              8, @MOOGA.EigenFit};
-GA.FitIDs = [1,2,3];
+GA.FitFcn = {1, @MOOGA.VelFit;
+             2, @MOOGA.EigenFit;
+             3:10, @MOOGA.VelRangeFit};
+GA.FitIDs = [3,4]; % Velocity range and average COT
+GA.FitMinMax = [1, 1, 1, 1, -1, 1, -1, 1, -1, 1];
+% Pareto always looks to maximize the fitness value but sometimes we want
+% to check values that don't go into the pareto selection and we want to
+% minimize (or get the maximum negative value, e.g. a negative slope)
 GA.NFit = size(GA.FitIDs,2);
 GA.Sim.PMFull = 1; % Run poincare map on all coords
 
 GA = GA.InitGen();
-GA.Seqs(1,:,1) = [0.5, 0.25,   20, [0,1,3,0],  -5, [-5,-5,-5,-5]];
+GA.Seqs(1,:,1) = [0.45, 0.255, 19.5, [0.08,7.8,3.45,00.5],  -4.66,...
+                    [-3.9,-3.2,-5.2,-5.7], -0.0001, [-0.02 0.02 0.4 0.1]];
 
 % Update MOOGA parameters after each generation
     function GA = GenFcn(GA)

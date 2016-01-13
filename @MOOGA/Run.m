@@ -19,19 +19,10 @@ end
 
 Sim = GA.Sim;
 Gen = GA.Gen;
-NFit = GA.NFit;
+NFit = size(GA.FitFcn,1);
 FitInd = GA.FitFcn(:,1); % Index for fit functions
 FitFcn = GA.FitFcn(:,2); % Handles for fit functions
 lastTime = [0 0];
-for i=1:GA.NFit
-    ThisName = MOOGA.GetFitFcnName(FitFcn{i});
-    if strfind(ThisName,'Up')
-        UpID = FitInd{i};
-    end
-    if strfind(ThisName,'Down')
-        DownID = FitInd{i};
-    end
-end
 
 for g = GA.Progress+1:GA.Generations
     startTime = now();
@@ -103,7 +94,10 @@ for g = GA.Progress+1:GA.Generations
             end
             
             % Postprocessing for VelRangeFit
-            if ~isempty(strfind(func2str(FitFcn{f}),'VelRangeFit'))
+            if ~isempty(strfind(func2str(FitFcn{f}),'VelRangeFit')) && ...
+                ~any(strcmp(Gen.Keys(1,:),'ks_tau'))
+                    % ^ This genome uses a single gain for positive and
+                    % negative s_in, thus a change is irrelevant
                 % If high-level signal only works in one direction,
                 % copy those parameters for the other direction
                 newSeq = gSeqs(i,:);
@@ -122,7 +116,11 @@ for g = GA.Progress+1:GA.Generations
     GA.Seqs(:,:,g) = gSeqs;
     
     % Display top results
-    disp(['Generation ',num2str(g),' results: ',num2str(max(GA.Fit(:,:,g)))]);
+    PFits = repmat(GA.FitMinMax, size(GA.Fit(:,:,g), 1), 1).*GA.Fit(:,:,g);
+    MaxFits = GA.FitMinMax.*max(PFits);
+%     disp(['Generation ',num2str(g),' results: ',num2str(MaxFits, '  %.4f')]);
+    disp(['Generation ',num2str(g),' results:']);
+    GA.Find();
     
     % Display time elapsed
     t_diff = toc(inner_tic);

@@ -5,6 +5,8 @@ classdef Controller < handle & matlab.mixin.Copyable
     % A pair of flexor and extensor LIF oscillator for each leg.
     
     properties
+        name = 'Decoupled CPG'
+        
         % LIF parameters
         P_reset = 0;
         P_th = 1;

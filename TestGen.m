@@ -184,6 +184,7 @@ Sim.Con = Sim.Con.HandleExtFB(Sim.IC(Sim.ModCo),Sim.IC(Sim.ConCo));
 % Simulate
 Sim = Sim.Run();
 
+[fit,out] = MOOGA.VelRangeFit(Sim);
 MOOGA.NrgEffFit(Sim);
 MOOGA.UphillFitRun(Sim);
 

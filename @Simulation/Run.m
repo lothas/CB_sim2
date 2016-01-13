@@ -154,27 +154,6 @@ function [ sim ] = Run( sim )
             sim.ICstore(:,2:end) = sim.ICstore(:,1:end-1);
             sim.ICstore(:,1) = sim.IC';
             sim = sim.CheckConvergence();
-            
-            if sim.Out.Type == 5
-                % Simulation converged, calculate walking period
-                StepTimes = sim.Out.T(diff(SuppPos(:,1))~=0);
-                Periods = diff(StepTimes);
-                
-                % There seems to be a problem calculating
-                % the step period sometimes so we'll try
-                % another "back-up" way
-                if isempty(Periods)
-                    % run the simulation for one step
-                    psim = copy(sim);
-                    psim.EndCond = [1,sim.Period(1)];
-                    psim.IC = sim.IClimCyc;
-                    psim = psim.Init();
-                    psim = psim.Run();
-                    Periods = psim.Out.T(end) - psim.Out.T(1);
-                end
-                
-                sim.Period = [sim.Period, Periods(end)];
-            end                
         end
         
         if sim.StopSim
@@ -240,5 +219,10 @@ function [ sim ] = Run( sim )
     sim.Out.nSteps = sim.StepsTaken;
     sim.Out.StepsSS = sim.stepsSS;
     sim.Out.MaxSlope = [sim.MinSlope, sim.MaxSlope];
+    
+    if sim.Out.Type == 5
+        % Simulation converged, calculate walking period
+        sim.Period = sim.GetPeriod(1);
+    end
 end
 

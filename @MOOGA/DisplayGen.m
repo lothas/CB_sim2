@@ -33,8 +33,8 @@ switch Type
         MinS = -8;
         MaxS = 7;
     case 's_in'
-        MinS = -0.75;
-        MaxS = 4.65;
+        MinS = -7;
+        MaxS = 3;
 end
 Data = LoadRange(AllData,MinS,MaxS);
 
@@ -51,7 +51,8 @@ Data = LoadRange(AllData,MinS,MaxS);
                 i1 = find(AllData.s_in<=MaxS,1,'last');
                 Data.s_in = AllData.s_in(i0:i1);
                 Data.Zones = {{1:length(Data.s_in)}};
-                Data.Param = AllData.Speed(i0:i1);
+                Data.Param = Data.s_in;
+%                 Data.Param = AllData.Speed(i0:i1);
         end
         
         Data.IC = AllData.IC(:,i0:i1);

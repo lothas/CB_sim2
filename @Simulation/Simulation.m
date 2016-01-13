@@ -35,13 +35,13 @@ classdef Simulation < handle & matlab.mixin.Copyable
         CurSpeed; StepsTaken; Steps2Slope;
         MaxSlope; MinSlope;
         ICstore; nICsStored = 10; ICdiff;
-        minDiff = 1e-7; % Min. difference for LC convergence
-        stepsReq = 15; % Steps of minDiff required for convergence
+        minDiff = 5e-7; % Min. difference for LC convergence
+        stepsReq = 6; % Steps of minDiff required for convergence
         stepsSS; % Steps taken since minDiff
         
         % Poincare map calculation parameters
         IClimCyc; Period;
-        PMeps = 5e-6; PMFull = 0;
+        PMeps = 1e-5; PMFull = 0;
         PMeigs; PMeigVs;
         % Check convergence progression
         doGoNoGo = 1; % 0 - OFF, 1 - Extend, 2 - Cut

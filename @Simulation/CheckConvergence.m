@@ -26,6 +26,7 @@ function [ sim ] = CheckConvergence( sim )
             Checked(p:p:end) = 1;
         else
             Converge(p) = 0;
+            sim.stepsSS(p) = 0;
             Checked(p) = 1;
         end
         

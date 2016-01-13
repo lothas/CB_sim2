@@ -1,7 +1,7 @@
 function RunSeq( GA, varargin )
 %RUNSEQ Runs a simulation with the selected genome
 
-tend = 45;
+tend = 90;
 switch nargin 
     case 2
         Generation = GA.Progress;
@@ -26,6 +26,9 @@ Sim = deepcopy(GA.Sim);
 Sim.Graphics = 1;
 Sim.EndCond = 2; % Run until converge
 
+% start_slope = -0.2*pi/180;
+% Sim.IC = [start_slope, start_slope, 0, 0, zeros(1, GA.Sim.Con.stDim)];
+
 Sim = GA.Gen.Decode(Sim, GA.Seqs(ID,:,Generation));
 disp(GA.Gen.seq2str(GA.Seqs(ID,:,Generation)));
 % Simulation parameters
@@ -40,6 +43,7 @@ Sim.Con = Sim.Con.Reset(Sim.IC(Sim.ConCo));
 Sim.Con.FBType = 2;
 % Sim.Con = Sim.Con.HandleExtFB(Sim.IC(Sim.ModCo),...
 %                 Sim.IC(Sim.ConCo),Sim.Env.SurfSlope(Sim.Mod.xS));
+% Sim.Env = GA.Sim.Env.Set('Type','inc','start_slope',start_slope*180/pi);
 
 % Simulate
 Sim = Sim.Run();
@@ -49,8 +53,9 @@ Sim = Sim.Run();
 
 % Calculate the genome's fitness
 thisFit = zeros(1,max(cell2mat(GA.FitFcn(:,1)')));
-thisOuts = cell(1,GA.NFit);
-for f = 1:GA.NFit
+NFit = size(GA.FitFcn,1);
+thisOuts = cell(1,NFit);
+for f = 1:NFit
     % Preprocessing for ZMPFit
     if ~isempty(strfind(func2str(GA.FitFcn{f,2}),'ZMPFit'))
         % Prepare all the required vectors
@@ -90,6 +95,7 @@ for f = 1:GA.NFit
     end
 end
 disp(['Genome ',num2str(ID),' results: ',num2str(thisFit)]);
+disp(Sim.Out.Text)
 
 end
 

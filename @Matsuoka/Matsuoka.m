@@ -4,6 +4,8 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
     % Matsuoka oscillator class
     
     properties
+        name = 'Matsuoka'
+        
         % Parameters
         tau = 1;
         tav = 1;
