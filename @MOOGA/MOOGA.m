@@ -96,7 +96,7 @@ classdef MOOGA
         end
         
         function varargaout = Find(GA,varargin)
-            Gnrtn = GA.Progress;
+            Gnrtn = min(GA.Progress+1,GA.Generations);
             switch nargin
                 case 1
                     find_max = true; %#ok<NASGU>

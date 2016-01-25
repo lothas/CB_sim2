@@ -46,11 +46,12 @@ else
                 end
                 MO.win = blkdiag(D{:});
             case 'wex' % Extra-neuron inhibition (E to E and F to F)
-                MO.wex = zeros(length(value));
+                MO.wex = zeros(2*MO.nPulses);
                 v = 1;
-                for n = 1:length(value)
-                    ids = 2-mod(n,2):2:2*MO.nPulses;
-                    ids(ids == n) = [];
+                for n = 1:2*MO.nPulses
+                    ids = 1:2*MO.nPulses;
+                    i0 = floor((n-1)/2)*2+1;
+                    ids(i0:i0+1) = [];
                     MO.wex(n,ids) = value(v:v+length(ids)-1);
                     v = v+length(ids);
                 end
@@ -59,9 +60,11 @@ else
             case {'amp0', 'amp'} % Base neuron amplitude multiplier
                 N = length(value);
                 if N == MO.nPulses
-                    MO.Amp0 = reshape([value; value], 1, []);
+                    MO.Amp0 = reshape([value; value], [], 1);
+%                     MO.Amp0 = reshape([value; value], 1, []);
                 else
-                    MO.Amp0 = value;
+                    MO.Amp0 = value';
+%                     MO.Amp0 = value;
                 end
                 MO.Amp = MO.Amp0;
                 
@@ -74,7 +77,7 @@ else
             case {'ks_tau', 'speed_tau', 'tau_speed_gain'}
                 MO.ks_tau = value;
             case {'ks_out', 'speed_out', 'torque_speed_gain'}
-                MO.ks_out = value;
+                MO.ks_out = value';
             
             otherwise
                 error(['Set failed: ',key,' property not found']);

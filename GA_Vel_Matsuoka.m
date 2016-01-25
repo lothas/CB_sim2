@@ -32,16 +32,21 @@ maxHip = 20;    % Max hip torque
 Mamp = [maxAnkle*ones(1,2*nAnkle), maxHip*ones(1,2*nHip)];
 mamp = 0*Mamp;
 N = nAnkle+nHip;
-Mwex = -20*ones(1,2*N);
+Mwex = -10*ones(1,4*N);
 mwex = 0*Mwex;
 
 % TorqueFBMin = [-5*ones(1,NAnkleT),-10*ones(1,NHipT)];
 % TorqueFBMax = -TorqueFBMin;
 
+% Keys = {'tau','tav','beta','amp','win','wex','ks_tau',  'ks_out','IC_matsuoka';
+%            1 ,   1 ,    1 , 2*N ,   1 , 2*N ,      1 ,      2*N ,           0 };
+% Range = {0.1 , 0.1 ,   10 , mamp, -20 , Mwex,   -1e2 , -0.1*Mamp; % Min
+%            2 ,   2 ,   30 , Mamp,  -1 , mwex,    1e2 ,  0.1*Mamp}; % Max
 Keys = {'tau','tav','beta','amp','win','wex','ks_tau',  'ks_out','IC_matsuoka';
-           1 ,   1 ,    1 , 2*N ,   1 , 2*N ,      1 ,      2*N ,           0 };
-Range = {0.1 , 0.1 ,   10 , mamp, -20 , Mwex,   -1e2 , -0.1*Mamp; % Min
-           2 ,   2 ,   30 , Mamp,  -1 , mwex,    1e2 ,  0.1*Mamp}; % Max
+           1 ,   1 ,    1 , 2*N ,   1 , 4*N ,      1 ,      2*N ,           0 };
+Range = {0.1 , 0.1 ,    1 , mamp, -10 , Mwex,   -1e2 , -0.1*Mamp; % Min
+           2 ,   2 ,   30 , Mamp, -.5 , mwex,    1e2 ,  0.1*Mamp}; % Max
+
 MutDelta0 = 0.04;
 MutDelta1 = 0.02;
 
@@ -103,8 +108,8 @@ GA.NFit = size(GA.FitIDs,2);
 GA.Sim.PMFull = 1; % Run poincare map on all coords
 
 GA = GA.InitGen();
-GA.Seqs(1,:,1) = [0.45, 0.255, 19.5, [0.08,7.8,3.45,00.5],  -4.66,...
-                    [-3.9,-3.2,-5.2,-5.7], -0.0001, [-0.02 0.02 0.4 0.1]];
+GA.Seqs(1,:,1) = [0.3,  0.6,   15, [1.00,4.00,10.00,1.00],     -1,...
+            [-1, 0, 0,-3,-1, 0, 0,-3], -0.0001, [-0.02 0.02 0.4 0.1]];
 
 % Update MOOGA parameters after each generation
     function GA = GenFcn(GA)

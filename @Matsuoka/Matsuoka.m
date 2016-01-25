@@ -13,6 +13,7 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
         u0 = 1;
         win = [0, 3; 1, 0];
         wex = [];
+        W = [];
         
         stDim = 4; % state dimension
         nEvents = 1; % num. of simulation events
@@ -85,7 +86,8 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
         end
             
         function [Torques] = Output(MO, ~, MOX, ~)
-            y = diag(MO.Amp)*max(MOX(1:2*MO.nPulses,:),0);
+            y = max(MOX(1:2*MO.nPulses,:),0);
+%             y = diag(MO.Amp)*max(MOX(1:2*MO.nPulses,:),0);
             try
                 Torques = MO.OutM*y;
             catch
@@ -120,7 +122,7 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
 %             diff(diff<-Range/2) = diff(diff<-Range/2) + Range;
         end
         
-        function [MO] = Adaptation(MO, Phi)
+        function [MO] = Adaptation(MO, ~)
             if MO.FBType == 0
                 % NO FEEDBACK
 %                 MO.omega = MO.omega0;
@@ -138,6 +140,7 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
             MO.tau = MO.tau + MO.ks_tau*MO.s_in;
             MO.tav = MO.tav + MO.ks_tau*MO.s_in;
             MO.Amp = MO.Amp0 + MO.ks_out*MO.s_in;
+            MO.W = (diag(1./MO.Amp)*(diag(MO.Amp)*(MO.win+MO.wex))')';
         end
         
         % %%%%%% % Derivative % %%%%%% %
@@ -147,8 +150,8 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
             v = X(2*MO.nPulses+1:end);
             y = max(u,0);
             
-            udot = 1/MO.tau*(-u - MO.beta*v + MO.u0 + ...
-                             (MO.win+MO.wex)*y);
+            udot = 1/MO.tau*(-u - MO.beta*v + MO.Amp + ...
+                             MO.W*y);
             vdot = 1/MO.tav*(-v+y);
             
             Xdot = [udot;
@@ -208,7 +211,7 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
             % This function is called when the leg hits the ground
 %             if MO.FBType > 0
 %                 % Perform adaptation based on terrain slope
-%                 MO = MO.Adaptation(Slope);
+                MO = MO.Adaptation(Slope);
 %             end
 %             
 %             if ~isempty(MO.ExtP_reset)
