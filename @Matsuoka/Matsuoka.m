@@ -19,6 +19,7 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
         nEvents = 1; % num. of simulation events
         
         % Controller Output
+        startup_t = 0;
         nPulses = 1;
         OutM = [0, 0; 1 -0.1];
         Amp0 = 10;
@@ -85,7 +86,7 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
             end
         end
             
-        function [Torques] = Output(MO, ~, MOX, ~)
+        function [Torques] = Output(MO, t, MOX, ~)
             y = max(MOX(1:2*MO.nPulses,:),0);
 %             y = diag(MO.Amp)*max(MOX(1:2*MO.nPulses,:),0);
             try
@@ -102,6 +103,8 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
                         min(max(Torques(j,:),MO.MinSat(j)),MO.MaxSat(j));
                 end
             end
+            
+            Torques(:,t<MO.startup_t) = 0*Torques(:,t<MO.startup_t);
         end
 
         function [per] = GetPeriod(MO)
@@ -166,7 +169,7 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
             
             % Check for firing neuron
             Torques = MO.Output(0, X, 0);
-            value(1) = -Torques(2);
+            value(1) = -Torques(2,1);
 % 
 %             % Check for leg extension signal (for clearance)
 % %             value(2) = MO.P_LegE - X;

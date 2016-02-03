@@ -230,9 +230,9 @@ end
 % Simulate
 Sim = Sim.Run();
 
-[fit,out] = MOOGA.VelRangeFit(Sim);
-MOOGA.NrgEffFit(Sim);
-MOOGA.UphillFitRun(Sim);
+% [fit,out] = MOOGA.VelRangeFit(Sim);
+% MOOGA.NrgEffFit(Sim);
+% MOOGA.UphillFitRun(Sim);
 
 % Calculate eigenvalues
 if Sim.Out.Type == 5

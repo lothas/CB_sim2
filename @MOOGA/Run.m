@@ -17,11 +17,11 @@ if ~isempty(GA.BaseSeq)
     GA.Sim = GA.BaseGen.Decode(GA.Sim, GA.BaseSeq);
 end
 
-Sim = GA.Sim;
-Gen = GA.Gen;
-NFit = size(GA.FitFcn,1);
-FitInd = GA.FitFcn(:,1); % Index for fit functions
-FitFcn = GA.FitFcn(:,2); % Handles for fit functions
+% Sim = GA.Sim;
+% Gen = GA.Gen;
+% NFit = size(GA.FitFcn,1);
+% FitInd = GA.FitFcn(:,1); % Index for fit functions
+% FitFcn = GA.FitFcn(:,2); % Handles for fit functions
 lastTime = [0 0];
 
 for g = GA.Progress+1:GA.Generations
@@ -41,83 +41,86 @@ for g = GA.Progress+1:GA.Generations
     inner_tic = tic;
     
     gSeqs = GA.Seqs(:,:,g);
-    gFit = GA.Fit(:,:,g);
+    gFits = GA.Fit(:,:,g);
+    ParRunSeq = @GA.RunSeq;
     
     parfor i = 1:GA.Population
 %     for i = 1:GA.Population
-        if any(gFit(i,:)~=0)
+        if any(gFits(i,:)~=0)
             continue;
         end
-        
-        % Set-up the simulation
-        wSim = deepcopy(Sim);
-        wSim = Gen.Decode(wSim,gSeqs(i,:)); %#ok<PFBNS>
-        wSim = wSim.Init();
-        wSim.Con = wSim.Con.HandleEvent(1, wSim.IC(wSim.ConCo));
-        
-        % Run the simulation
-        wSim = wSim.Run();
-        
-        % Calculate the genome's fitness
-        thisFit = zeros(1,max(cell2mat(FitInd')));
-        thisOuts = cell(1,NFit);
-        for f = 1:NFit
-            % Preprocessing for ZMPFit
-            if ~isempty(strfind(func2str(FitFcn{f}),'ZMPFit')) %#ok<PFBNS>
-                % Prepare all the required vectors
-                % (torques, state, etc) and put them in wSim.Out
                 
-                % ZMP Fit should be the last one as it uses the
-                % output from all previous fitness functions
-                Outs = find(~cellfun(@isempty,thisOuts));
-                for o = 1:length(Outs)
-                    wSim.Out = wSim.JoinOuts(thisOuts{Outs(o)});
-                end
-                wSim.Con.FBType = 2;
-            end
-            
-            % Call the fitness function
-            [thisFit(FitInd{f}),thisOuts{f}] = FitFcn{f}(wSim);
-            
-            % Postprocessing for VelFit
-            if ~isempty(strfind(func2str(FitFcn{f}),'VelFit'))
-                % Switch direction if the model walks backwards
-                if thisFit(FitInd{f})<0
-                    revSeq = Gen.SwitchDir(gSeqs(i,:));
-                    [Res,revSeq] = Gen.CheckGenome(revSeq);
-                    
-                    if Res{1}
-                        gSeqs(i,:) = revSeq;
-                        thisFit(FitInd{f}) = -thisFit(FitInd{f});
-                    end
-                end                    
-            end
-            
-            % Postprocessing for VelRangeFit
-            if ~isempty(strfind(func2str(FitFcn{f}),'VelRangeFit')) && ...
-                ~any(strcmp(Gen.Keys(1,:),'ks_tau'))
-                    % ^ This genome uses a single gain for positive and
-                    % negative s_in, thus a change is irrelevant
-                % If high-level signal only works in one direction,
-                % copy those parameters for the other direction
-                newSeq = gSeqs(i,:);
-                if abs(thisFit(3))>0 && thisFit(5)==0
-                    newSeq(15:18) = 0.33*newSeq(11:14);
-                end
-                if abs(thisFit(5))>0 && thisFit(3)==0
-                    newSeq(11:14) = 0.33*newSeq(15:18);
-                end
-                gSeqs(i,:) = newSeq;
-            end
-        end        
-        gFit(i,:) = thisFit;
+        [gFits(i,:), gSeqs(i,:)] = feval(ParRunSeq, gSeqs(i,:));
+%         % Set-up the simulation
+%         wSim = deepcopy(Sim);
+%         wSim = Gen.Decode(wSim,gSeqs(i,:)); %#ok<PFBNS>
+%         wSim = wSim.Init();
+%         wSim.Con = wSim.Con.HandleEvent(1, wSim.IC(wSim.ConCo));
+%         
+%         % Run the simulation
+%         wSim = wSim.Run();
+%         wSim.Con.startup_t = 0;
+        
+%         % Calculate the genome's fitness
+%         thisFit = zeros(1,max(cell2mat(FitInd')));
+%         thisOuts = cell(1,NFit);
+%         for f = 1:NFit
+%             % Preprocessing for ZMPFit
+%             if ~isempty(strfind(func2str(FitFcn{f}),'ZMPFit')) %#ok<PFBNS>
+%                 % Prepare all the required vectors
+%                 % (torques, state, etc) and put them in wSim.Out
+%                 
+%                 % ZMP Fit should be the last one as it uses the
+%                 % output from all previous fitness functions
+%                 Outs = find(~cellfun(@isempty,thisOuts));
+%                 for o = 1:length(Outs)
+%                     wSim.Out = wSim.JoinOuts(thisOuts{Outs(o)});
+%                 end
+%                 wSim.Con.FBType = 2;
+%             end
+%             
+%             % Call the fitness function
+%             [thisFit(FitInd{f}),thisOuts{f}] = FitFcn{f}(wSim);
+%             
+%             % Postprocessing for VelFit
+%             if ~isempty(strfind(func2str(FitFcn{f}),'VelFit'))
+%                 % Switch direction if the model walks backwards
+%                 if thisFit(FitInd{f})<0
+%                     revSeq = Gen.SwitchDir(gSeqs(i,:));
+%                     [Res,revSeq] = Gen.CheckGenome(revSeq);
+%                     
+%                     if Res{1}
+%                         gSeqs(i,:) = revSeq;
+%                         thisFit(FitInd{f}) = -thisFit(FitInd{f});
+%                     end
+%                 end                    
+%             end
+%             
+%             % Postprocessing for VelRangeFit
+%             if ~isempty(strfind(func2str(FitFcn{f}),'VelRangeFit')) && ...
+%                 ~any(strcmp(Gen.Keys(1,:),'ks_tau'))
+%                     % ^ This genome uses a single gain for positive and
+%                     % negative s_in, thus a change is irrelevant
+%                 % If high-level signal only works in one direction,
+%                 % copy those parameters for the other direction
+%                 newSeq = gSeqs(i,:);
+%                 if abs(thisFit(3))>0 && thisFit(5)==0
+%                     newSeq(15:18) = 0.33*newSeq(11:14);
+%                 end
+%                 if abs(thisFit(5))>0 && thisFit(3)==0
+%                     newSeq(11:14) = 0.33*newSeq(15:18);
+%                 end
+%                 gSeqs(i,:) = newSeq;
+%             end
+%         end        
+%         gFits(i,:) = thisFit;
     end
-    GA.Fit(:,:,g) = gFit;
+    GA.Fit(:,:,g) = gFits;
     GA.Seqs(:,:,g) = gSeqs;
     
     % Display top results
-    PFits = repmat(GA.FitMinMax, size(GA.Fit(:,:,g), 1), 1).*GA.Fit(:,:,g);
-    MaxFits = GA.FitMinMax.*max(PFits);
+%     PFits = repmat(GA.FitMinMax, size(GA.Fit(:,:,g), 1), 1).*GA.Fit(:,:,g);
+%     MaxFits = GA.FitMinMax.*max(PFits);
 %     disp(['Generation ',num2str(g),' results: ',num2str(MaxFits, '  %.4f')]);
     disp(['Generation ',num2str(g),' results:']);
     GA.Find();

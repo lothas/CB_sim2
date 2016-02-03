@@ -7,10 +7,10 @@ function [ sim ] = Run( sim )
     Slopes = [];
     
     if sim.Graphics == 1
-        options=odeset('MaxStep',sim.tstep/10,'RelTol',.5e-7,'AbsTol',.5e-8,...
+        options=odeset('MaxStep',sim.tstep/10,'RelTol',1e-8,'AbsTol',1e-9,...
             'OutputFcn', @sim.Render, 'Events', @sim.Events);
     else
-        options=odeset('MaxStep',sim.tstep/10,'RelTol',.5e-7,'AbsTol',.5e-8,...
+        options=odeset('MaxStep',sim.tstep/10,'RelTol',1e-8,'AbsTol',1e-9,...
             'Events', @sim.Events);
     end
     
@@ -51,6 +51,14 @@ function [ sim ] = Run( sim )
             % Is it a model event?
             ModEvID = find(IE(ev) == sim.ModEv,1,'first');
             if ~isempty(ModEvID)
+                if ModEvID == 1 % Ground contact
+                    % Check contact
+                    [xNS, yNS]=sim.Mod.GetPos(Xa(sim.ModCo),'NS');
+                    if abs(yNS-sim.Env.Surf(xNS))>1e-3
+                        continue
+                    end
+                end
+                        
                 [sim.Mod,Xa(sim.ModCo)] = ...
                     sim.Mod.HandleEvent(ModEvID, ...
                         XTemp(end,sim.ModCo),TTemp(end));
@@ -58,13 +66,13 @@ function [ sim ] = Run( sim )
                 % Handle event interactions
                 if ModEvID == 1 % Ground contact
                     StoreIC = 1; % Store the initial conditions right after impact
-                    
+
                     [sim.Con, Xa(sim.ModCo), Xa(sim.ConCo)] = ...
                         sim.Con.HandleExtFB(Xa(sim.ModCo),...
                         Xa(sim.ConCo),sim.Env.SurfSlope(sim.Mod.xS));
-                    
+
                     sim = sim.UpdateStats(TTemp,XTemp);
-                    
+
                     if ~ischar(sim.Mod.curSpeed)
                         sim.TimeStr = ['t = %.2f s\nOsc.=%.3f\n',...
                          'Slope = %.2f ',char(176)','\nSpeed = %.3f m/s'];
@@ -151,6 +159,7 @@ function [ sim ] = Run( sim )
         % Set new initial conditions
         sim.IC = Xa;
         if StoreIC
+%             disp(['Time: ',num2str(TE)]);
             sim.ICstore(:,2:end) = sim.ICstore(:,1:end-1);
             sim.ICstore(:,1) = sim.IC';
             sim = sim.CheckConvergence();

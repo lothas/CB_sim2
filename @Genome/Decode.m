@@ -89,10 +89,11 @@ for k = 1:size(Ge.Keys,2)
             wfe = mean(mean(abs(Sim.Con.win(Sim.Con.win~=0))));
 %             Sim.Con.u0 = Sim.Con.beta/abs(wfe);
 %             u_ss = Sim.Con.u0/Sim.Con.beta*abs(wfe);
-            u_ss = Sim.Con.Amp(1)/Sim.Con.beta*abs(wfe);
+%             u_ss = Sim.Con.Amp(1)/Sim.Con.beta*abs(wfe);
+            u_ss = max(Sim.Con.Amp)/Sim.Con.beta*abs(wfe);
             MIC = zeros(1,Sim.Con.stDim);
 %             MIC(1) = 10;
-            MIC(1) = u_ss;
+%             MIC(3) = u_ss;
             Sim.IC(Sim.ConCo) = MIC;
             
         

@@ -104,9 +104,17 @@ classdef Genome
                                 (g-1)*Ge.KeyLength.(Ge.Keys{1,k});
                             Seq(Gene) = -Seq(Gene);
                         end
-                    case 'AngVelImp'
-                        Seq(Ge.Segments(k):Ge.Segments(k+1)-1) = ...
-                            -Seq(Ge.Segments(k):Ge.Segments(k+1)-1);
+                    case {'AngVelImp'}
+                        Seq(SeqPos:SeqPos+Ge.Segments(k)-1) = ...
+                            -Seq(SeqPos:SeqPos+Ge.Segments(k)-1);
+                    case {'ks_out','amp'}
+                        temp = Seq(SeqPos:SeqPos+Ge.Segments(k)-1);
+                        for g = 1:Ge.Segments(k)/2
+                            % Switch flexor and extensor signal amplitude
+                            Gene = SeqPos + (g-1)*2;
+                            Seq(Gene) = Seq(Gene+1);
+                            Seq(Gene+1) = temp(1+(g-1)*2);
+                        end 
                 end
                 SeqPos = SeqPos + Ge.Segments(k);
             end

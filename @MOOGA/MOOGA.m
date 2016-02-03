@@ -462,6 +462,8 @@ classdef MOOGA
             VelSim = deepcopy(Sim);
             VelSim.doGoNoGo = 2;
             VelSim.GNGThresh = [5,10];
+            VelSim.MinMaxStore = zeros(length(VelSim.stepsSS), ...
+                                       max(VelSim.GNGThresh)+1);
             out = [];
             
             while 1
@@ -481,13 +483,13 @@ classdef MOOGA
                     if n > 5
                         % At least 5 steps should be taken
                         % (though go-no-go should take care of it as well)
-                        avg_vel = sum(2*sin(VelSim.ICstore(1,2:n))*Sim.Mod.L/T) ...
-                                    / (n-1);
+                        avg_vel = sum(2*sin(abs(VelSim.ICstore(1,2:n))) ...
+                            *Sim.Mod.L/T) / (n-1);
                     else
-                        avg_vel = 0;
+                        avg_vel = max_vel;
                     end
                     
-                    if dir*avg_vel > 1.01*dir*max_vel
+                    if dir*avg_vel > (1+0.01*dir)*dir*max_vel
                         % Expect at least a 1% increase
                         max_vel = avg_vel;
                         max_s = s_in;
@@ -503,7 +505,8 @@ classdef MOOGA
             COT = VelSim.GetCOT([1,0], 0);
             
             if isempty(COT)
-                COT = 0;
+                COT = 1; % The cost of dragging an object with coefficient
+                % of friction = 1
             end
         end
         

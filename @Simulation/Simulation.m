@@ -45,8 +45,9 @@ classdef Simulation < handle & matlab.mixin.Copyable
         PMeigs; PMeigVs;
         % Check convergence progression
         doGoNoGo = 1; % 0 - OFF, 1 - Extend, 2 - Cut
-        GNGThresh = [4,4]; % required steps for go/no-go order
+        GNGThresh = [6,6]; % required steps for go/no-go order
         minMaxDiff = [1,0];
+        MinMaxStore = [];
         ConvProgr = [0,0];
                 
         % Rendering params

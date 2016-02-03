@@ -62,6 +62,9 @@ function [ sim ] = Init( sim )
     sim.ICdiff = ones(1,sim.nICsStored-1);
     sim.stepsSS = zeros(1,sim.nICsStored-1);
     
+    sim.MinMaxStore = zeros(length(sim.stepsSS), ...
+                               max(sim.GNGThresh)+1);
+            
     % Init sim.End result
     sim.Out.Type = 0;
     sim.Out.Text = 'Reached end of tspan';
