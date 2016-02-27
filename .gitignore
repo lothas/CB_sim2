@@ -11,6 +11,7 @@ Old Sims/*
 *.asv
 Test*.mat
 GA*.mat
+VGA*.mat
 Gen*.mat
 LIF*.mat
 EIG*.mat
