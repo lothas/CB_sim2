@@ -70,6 +70,6 @@ function [ sim ] = Init( sim )
     sim.Out.Text = 'Reached end of tspan';
     
     % Adapt CPG (if adaptive)
-    sim.Con = sim.Con.Adaptation(sim.Env.SurfSlope(sim.Mod.xS));
+%     sim.Con = sim.Con.Adaptation(sim.Env.SurfSlope(sim.Mod.xS));
 end
 

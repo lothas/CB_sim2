@@ -19,6 +19,7 @@ classdef Controller < handle & matlab.mixin.Copyable
         
         % Initial phase for oscillator:
         P_0 = 0;
+        startup_t = 0;  % Time before any torque output is available
                 
         stDim = 1; % state dimension
         nEvents = 2; % num. of simulation events
@@ -128,8 +129,9 @@ classdef Controller < handle & matlab.mixin.Copyable
             end 
         end
         
-        function [Torques] = Output(NC, ~, ~, ~)
-            Torques = NC.OutM*NC.Switch;
+        function [Torques] = Output(NC, t, ~, ~)
+            Torques = repmat(NC.OutM*NC.Switch,1,length(t));
+            Torques(:,t<NC.startup_t) = 0*Torques(:,t<NC.startup_t);
         end
 
         function [per] = GetPeriod(NC)
