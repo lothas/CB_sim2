@@ -35,18 +35,19 @@ classdef Simulation < handle & matlab.mixin.Copyable
         CurSpeed; StepsTaken; Steps2Slope;
         MaxSlope; MinSlope;
         ICstore; nICsStored = 10; ICdiff;
-        minDiff = 1e-7; % Min. difference for LC convergence
-        stepsReq = 15; % Steps of minDiff required for convergence
+        minDiff = 5e-7; % Min. difference for LC convergence
+        stepsReq = 6; % Steps of minDiff required for convergence
         stepsSS; % Steps taken since minDiff
         
         % Poincare map calculation parameters
         IClimCyc; Period;
-        PMeps = 5e-6; PMFull = 0;
+        PMeps = 1e-5; PMFull = 0;
         PMeigs; PMeigVs;
         % Check convergence progression
         doGoNoGo = 1; % 0 - OFF, 1 - Extend, 2 - Cut
-        GNGThresh = [4,4]; % required steps for go/no-go order
+        GNGThresh = [6,6]; % required steps for go/no-go order
         minMaxDiff = [1,0];
+        MinMaxStore = [];
         ConvProgr = [0,0];
                 
         % Rendering params
@@ -63,7 +64,7 @@ classdef Simulation < handle & matlab.mixin.Copyable
         % Parameter tweak display
         hParam;
         % Time display
-        hTime; TimeStr = ['t = %.2f s\nOsc.=%.3f\n',...
+        hTime; TimeStr = ['t = %.2f s\nPhase = %.3f\n',...
                          'Slope = %.2f ',char(176)','\nSpeed = %s'];
         % Convergence display
         hConv; ConvStr = 'Diff = %.2e\nPeriod = %s';
@@ -162,7 +163,7 @@ classdef Simulation < handle & matlab.mixin.Copyable
         end
         
         function [Xt] = Derivative(sim,t,X)
-            sim.Mod.Torques=sim.Con.NeurOutput();
+            sim.Mod.Torques=sim.Con.Output(t,X(sim.ConCo),X(sim.ModCo));
 
             Xt = [sim.Mod.Derivative(t,X(sim.ModCo));
                   sim.Con.Derivative(t,X(sim.ConCo))];
@@ -193,13 +194,13 @@ classdef Simulation < handle & matlab.mixin.Copyable
         end  % StopButtonCallback
         
         function PlusButtonCb(sim, hObject, eventdata, handles) %#ok<INUSD>
-            sim.Con.s_in = sim.Con.s_in + 1;
+            sim.Con.s_in = sim.Con.s_in + 0.5;
             sim.Con.Adaptation(0);
             set(sim.hParam,'string',['s_in = ',num2str(sim.Con.s_in)]);
         end  % PlusButtonCallback
         
         function MinusButtonCb(sim, hObject, eventdata, handles) %#ok<INUSD>
-            sim.Con.s_in = sim.Con.s_in - 1;
+            sim.Con.s_in = sim.Con.s_in - 0.5;
             sim.Con.Adaptation(0);
             set(sim.hParam,'string',['s_in = ',num2str(sim.Con.s_in)]);
         end  % MinusButtonCallback

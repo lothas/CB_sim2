@@ -18,7 +18,7 @@ TorqueSlope = 0;
 %            5,... Eigenvalues locus
 %            6,... MOOGA statistics
 %            7]; % Saltation matrix analysis
-DoPlots = 6;
+DoPlots = [1,4];
        
 % Plots format
 AxesFont = 16;
@@ -158,8 +158,8 @@ end
 if ismember(2,DoPlots)
     % Plot the CPG phase and torque signal for a specific slope
 
-    diff = abs(Data.Slopes - TorqueSlope);
-    SlopeID = find(diff == min(diff), 1, 'first');
+    diff_ph = abs(Data.Slopes - TorqueSlope);
+    SlopeID = find(diff_ph == min(diff_ph), 1, 'first');
 %     SlopeID = length(Data.Slopes);
 
     T = Data.LCt{SlopeID};

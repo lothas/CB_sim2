@@ -4,7 +4,7 @@ function [ sim ] = Init( sim )
     sim.stDim = sim.Mod.stDim + sim.Con.stDim; % state dimension
     sim.ModCo = 1:sim.Mod.stDim; % Model coord. indices
     sim.ConCo = sim.Mod.stDim+1:sim.stDim; % Contr. coord. indices
-    sim.nOuts = length(sim.Con.NeurOutput());
+    sim.nOuts = length(sim.Con.Output(0, sim.ConCo', sim.ModCo'));
 
     % Set events
     sim.nEvents = sim.Mod.nEvents + sim.Con.nEvents;
@@ -25,8 +25,8 @@ function [ sim ] = Init( sim )
             % If 2 screens are used in Linux
             scrsz(3) = scrsz(3)/2;
         end
-        sim.FigWidth = (scrsz(3)-250)/2;
-        sim.FigHeight = scrsz(4)-250;
+        sim.FigWidth = (scrsz(3)-350)/2;
+        sim.FigHeight = scrsz(4)-300;
         sim.AR = sim.FigWidth/sim.FigHeight;
         if isempty(sim.IC)
             [sim.COMx0,sim.COMy0] = sim.Mod.GetPos(zeros(1,sim.Mod.stDim),'COM');
@@ -45,7 +45,7 @@ function [ sim ] = Init( sim )
             % Set number of steps so a whole cycle of the oscillator
             % will be included
             sim.nTsteps = ceil(sim.Con.GetPeriod()/sim.tstep);
-            sim.Ttime = linspace(sim.FlMax*0.68,sim.FlMax*0.95,sim.nTsteps);
+            sim.Ttime = linspace(sim.FlMax*0.62,sim.FlMax*0.96,sim.nTsteps);
             sim.Thold = zeros(sim.nOuts,sim.nTsteps);
             sim.Tbase = (sim.HeightMax+sim.HeightMin)/2;
             sim.Tscale = 0.1*(sim.HeightMax-sim.HeightMin)/max(abs(sim.Con.Amp0));
@@ -62,11 +62,14 @@ function [ sim ] = Init( sim )
     sim.ICdiff = ones(1,sim.nICsStored-1);
     sim.stepsSS = zeros(1,sim.nICsStored-1);
     
+    sim.MinMaxStore = zeros(length(sim.stepsSS), ...
+                               max(sim.GNGThresh)+1);
+            
     % Init sim.End result
     sim.Out.Type = 0;
     sim.Out.Text = 'Reached end of tspan';
     
     % Adapt CPG (if adaptive)
-    sim.Con = sim.Con.Adaptation(sim.Env.SurfSlope(sim.Mod.xS));
+%     sim.Con = sim.Con.Adaptation(sim.Env.SurfSlope(sim.Mod.xS));
 end
 
