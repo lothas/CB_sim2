@@ -13,9 +13,10 @@ start_slope = 0;
 Sim.Env = Sim.Env.Set('Type','inc','start_slope',start_slope);
 
 % Impulsive controller
+phi_0 = 0.7759402;
+
 Sim.Con = Sim.Con.ClearTorques(); % no torques
 Sim.Con = Sim.Con.Set('omega0', 1.03333); % 1/T;T =0.8895
-
 
 switch nargin
     case 0
@@ -26,7 +27,7 @@ switch nargin
 %         impulse = theta_dot;
         
         Sim.Con.FBImpulse = 0; % set ang. vel. to certain value
-        Sim.Con.FBType = 0; % set ang. vel. to certain value
+        Sim.Con.FBType = 0;
         Sim.EndZMP = 0;
         
         T = 0.679875183484506; omega = 1/T;
@@ -52,9 +53,26 @@ switch nargin
         alpha = varargin{1};
         theta_dot = varargin{2};
         impulse = varargin{3};
+    case 4
+        Sim.Con.FBImpulse = 0; % No impulse added (only short pulses below)
+        Sim.Con.FBType = 0; % No feedback
+        Sim.EndZMP = 0;
+        
+        T = 0.679875183484506; omega = 1/T;
+        Sim.Con = Sim.Con.Set('omega0', omega);
+        
+        alpha = varargin{1};
+        theta_dot = varargin{2};
+        impulse = varargin{3};
+        delta = varargin{4};
+        delta_phi = delta*omega;
+        amp = impulse/delta_phi;
+        Sim.Con = Sim.Con.AddPulse('joint',1,'amp',amp(1), ...
+                                   'offset','ext','dur',delta_phi);
+        Sim.Con = Sim.Con.AddPulse('joint',2,'amp',amp(2), ...
+                                   'offset','ext','dur',delta_phi);
 end
 theta = [start_slope+alpha,start_slope-alpha];
-phi_0 = 0.7759402;
 Sim.Con.ExtP_reset = phi_0; % enable phase reset for CPG
 Sim.Con.AngVelImp = impulse; % set CPG impulse value
 
@@ -68,13 +86,4 @@ Sim = Sim.Init();
 % Some more simulation initialization
 Sim.Mod.LegShift = Sim.Mod.Clearance;
 Sim.Con.HandleEvent(1, Sim.IC(Sim.ConCo));
-
-% Simulate
-Sim = Sim.Run();
-
-% Calculate eigenvalues
-[EigVal,EigVec] = Sim.Poincare();
-
-% Do some plots
-disp(EigVal);
 end
