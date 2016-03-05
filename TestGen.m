@@ -1,12 +1,13 @@
 function [Sim] = TestGen()
 % close all
 
-GenType = 7;
+GenType = 8;
 
 Sim = Simulation();
 Sim.Graphics = 1;
 Sim.EndCond = 2; % Run until converge
 tend = 60;
+Sim = Sim.SetTime(0,0.05,tend);
 
 % Set up the compass biped model
 Sim.Mod = Sim.Mod.Set('damp',0,'I',0);
@@ -16,10 +17,15 @@ start_slope = 0;
 Sim.Env = Sim.Env.Set('Type','inc','start_slope',start_slope);
 
 % Set up the controller using a genome
-Sim.Con = Sim.Con.ClearTorques();
+if GenType<8
+    Sim.Con = Sim.Con.ClearTorques();
+end
 Sim.Con.FBType = 0;
+
 Sim.IC = [start_slope, start_slope, 0, 0, 0];
+
 KeyLength = [];
+
 switch GenType
     case 1 % Event triggered controller
         Keys = {'IC','omega0','P_LegE','ExtPulses','ExtPulses';...
@@ -130,7 +136,36 @@ switch GenType
         Sim.Con.FBType = 2;
         tend = 10;
         Sim.tstep_small = 0.001;
+    case 8 % Matsuoka controller
+        Sim.Con = Matsuoka;
+        
+        nAnkle = 1; % Number of ankle torques
+        nHip = 1;   % Number of hip torques
+        maxAnkle = 8;   % Max ankle torque
+        maxHip = 20;    % Max hip torque
+        Mamp = [maxAnkle*ones(1,2*nAnkle), maxHip*ones(1,2*nHip)];
+        mamp = 0*Mamp;
+        N = nAnkle+nHip;
+        Mwex = -10*ones(1,4*N);
+        mwex = 0*Mwex;
+        
+        Sim.Con.nPulses = N;
+        Sim.Con.stDim = 4*N;
+        Sim.Con = Sim.Con.SetOutMatrix([nAnkle,nHip]);
+        Sim.Con.MinSat = [-maxAnkle,-maxHip];
+        Sim.Con.MaxSat = [ maxAnkle, maxHip];
+        
+        Keys = {'tau','tav','beta','amp','win','wex','ks_tau',  'ks_out','IC_matsuoka';
+                   1 ,   1 ,    1 , 2*N ,   1 , 4*N ,      1 ,      2*N ,           0 };
+        Range = {0.1 , 0.1 ,    1 , mamp, -20 , Mwex,   -1e2 , -0.1*Mamp; % Min
+                   2 ,   2 ,   30 , Mamp,  -1 , mwex,    1e2 ,  0.1*Mamp}; % Max
+                   
+        %            tau,   tav, beta,                   amp,    win,
+        Sequence = [0.3,  0.6,   15, [1.00,4.00,10.00,1.00],     -1,...
+                    [-1, 0, 0,-3,-1, 0, 0,-3], -0.0001, [-0.02 0.02 0.4 0.1]];
+        %                                 wex,   s_tau,               s_out
 end
+
 if ~isempty(KeyLength)
     Gen = Genome(Keys, KeyLength, Range);
 else
@@ -138,22 +173,66 @@ else
 end
 Sim = Gen.Decode(Sim, Sequence);
 
-% Simulation parameters
-Sim = Sim.SetTime(0,0.15,tend);
-
 % Set internal parameters (state dimensions, events, etc)
 Sim = Sim.Init();
 
 % Some more simulation initialization
 Sim.Mod.LegShift = Sim.Mod.Clearance;
 % Sim.Con = Sim.Con.HandleEvent(1, Sim.IC(Sim.ConCo));
-Sim.Con = Sim.Con.HandleExtFB(Sim.IC(Sim.ModCo),Sim.IC(Sim.ConCo));
+Sim.Con = Sim.Con.HandleExtFB(Sim.IC(Sim.ModCo), ...
+                              Sim.IC(Sim.ConCo), start_slope);
 
+                          
+                          
+                          
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if 0
+    close all
+    % Initial conditions
+    IC0 = Sim.IC(Sim.ConCo);
+
+    % tspan
+    t_start = 0;
+    t_end = 3.5;
+    t_step = 0.03;
+    t_span = t_start:t_step:t_end;
+
+    % Run simulation
+    options = odeset('MaxStep',t_step/10,'RelTol',.5e-7,'AbsTol',.5e-8);
+    [TTemp,XTemp] = ode45(@Derivative,t_span,IC0,options);
+    % options = odeset('MaxStep',t_step/10,'RelTol',.5e-7,'AbsTol',.5e-8,...
+    %             'Events', @MO.Events);
+    % [TTemp,XTemp,TE,YE,IE] = ...
+    %     ode45(@MO.Derivative,t_span,IC0,options); %#ok<ASGLU>
+
+    y = max(XTemp(:,1:2:end),0);
+    figure
+    N = Sim.Con.nPulses;
+    for i = 1:4
+        subplot(4,1,i)
+        plot(TTemp, XTemp(:,N*(i-1)+1:N*i));
+    end
+    figure
+    plot(TTemp, Sim.Con.Output(0, XTemp', 0));
+    grid on
+
+    return
+end
+        
+        function xdot = Derivative(t,x)
+            xdot = Sim.Con.Derivative(t,x);
+        end
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%                     
+                          
+                          
+                          
+                          
 % Simulate
 Sim = Sim.Run();
 
-MOOGA.NrgEffFit(Sim);
-MOOGA.UphillFitRun(Sim);
+% [fit,out] = MOOGA.VelRangeFit(Sim);
+% MOOGA.NrgEffFit(Sim);
+% MOOGA.UphillFitRun(Sim);
 
 % Calculate eigenvalues
 if Sim.Out.Type == 5

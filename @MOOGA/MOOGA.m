@@ -44,6 +44,7 @@ classdef MOOGA
         NFit;
         FitFcn;     % Fitness functions handles
         FitIDs;     % Which values to use from within Fit
+        FitMinMax;  % Which fit values to show/find as larger/smaller than
                 
         % External function (called at the end of every generation)
         GenerationFcn;
@@ -95,24 +96,33 @@ classdef MOOGA
         end
         
         function varargaout = Find(GA,varargin)
+            Gnrtn = min(GA.Progress+1,GA.Generations);
             switch nargin
                 case 1
-                    Max = cell(2,max(cell2mat(GA.FitFcn(:,1)')));
-                    for f=1:GA.NFit
-                        FitInd = GA.FitFcn{f,1};
-                        Max{1,FitInd(1)} = ...
-                            MOOGA.GetFitFcnName(GA.FitFcn{f,2});
-                        Max(2,FitInd) = ...
-                            num2cell(max(GA.Fit(:,FitInd,GA.Progress)));
-                    end
-                    disp(Max)
-                    return
+                    find_max = true; %#ok<NASGU>
                 case 2
                     Reqs = varargin{1};
-                    Gnrtn = GA.Progress;
                 case 3
                     Reqs = varargin{1};
                     Gnrtn = varargin{2};
+            end
+            
+            PFits = repmat(GA.FitMinMax, ...
+                           size(GA.Fit(:,:,Gnrtn), 1), 1) ...
+                    .*GA.Fit(:,:,Gnrtn);
+            MaxFits = GA.FitMinMax.*max(PFits);
+            
+            if exist('find_max','var')
+                Max = cell(2,max(cell2mat(GA.FitFcn(:,1)')));
+                for f=1:size(GA.FitFcn,1)
+                    FitInd = GA.FitFcn{f,1};
+                    Max{1,FitInd(1)} = ...
+                        MOOGA.GetFitFcnName(GA.FitFcn{f,2});
+                    Max(2,FitInd) = ...
+                        num2cell(MaxFits(FitInd));
+                end
+                disp(Max)
+                return
             end
                     
             [R,~] = size(Reqs);
@@ -124,7 +134,7 @@ classdef MOOGA
                     Reqs(varargin{1}(r,1)) = varargin{1}(r,2);
                 end
             else
-                if length(Reqs)~=GA.NFit
+                if length(Reqs)~=size(GA.FitFcn,1)
                     disp('Number of fitness values is incorrect');
                     return;
                 end
@@ -133,7 +143,7 @@ classdef MOOGA
             % Find results that fit the requirements
             Conds = ones(GA.Population,1);
             for f = 1:max(cell2mat(GA.FitFcn(:,1)'))
-                if Reqs(f)>=0
+                if sign(GA.FitMinMax(f)) >= 0
                     Conds = Conds & ...
                         GA.Fit(:,f,Gnrtn)>=Reqs(f);
                 else
@@ -228,47 +238,19 @@ classdef MOOGA
         end
         
         function [fit,out] = NrgEffFit(Sim)
-            X = Sim.Out.X;
-            T = Sim.Out.T;
-            Torques = Sim.Out.Torques;
-            Hip0 = zeros(2,1); Hip1 = zeros(2,1);
-            Sim.Mod.xS = Sim.Out.SuppPos(1,1);
-            Sim.Mod.yS = Sim.Out.SuppPos(1,2);
-            [Hip0(1), Hip0(2)] = Sim.Mod.GetPos(X(1,Sim.ModCo),'Hip');
-            Sim.Mod.xS = Sim.Out.SuppPos(end,1);
-            Sim.Mod.yS = Sim.Out.SuppPos(end,2);
-            [Hip1(1), Hip1(2)] = Sim.Mod.GetPos(X(end,Sim.ModCo),'Hip');
-            Weight = Sim.Mod.GetWeight();
+            % Calculate Cost Of Transport
+            COT = Sim.GetCOT([1,0], 0);
             
-            % Calculate distance travelled
-            DistanceTravelled = abs(Hip1(1)-Hip0(1));
-            
-            if DistanceTravelled<3*Sim.Mod.L
-                fit = 0;
-            else
-                % Calculate absolute control effort
-                StTrq = Torques(:,1)-Torques(:,2);
-%                 StTrq = Torques(:,1);
-                StAngVel = X(:,Sim.ModCo(3));
-                SwTrq = Torques(:,2);
-%                 SwAngVel = X(:,Sim.ModCo(4))-X(:,Sim.ModCo(3));
-                SwAngVel = X(:,Sim.ModCo(4));
-                ControlEffort = trapz(T,abs(StTrq.*StAngVel)) + ...
-                                trapz(T,abs(SwTrq.*SwAngVel));
-
-                % Calculate difference in potential energy
-                dPotentialE = Weight*(Hip1(2)-Hip0(2));
-
-                % Calculate Cost Of Transport
-                COT=(ControlEffort-dPotentialE)/(Weight*DistanceTravelled);
-
-                % Low COT (as low as 0) is best so points are given by
-                fit=1/(1+5*COT);
-                % COT of 0 gives 1
-                % COT of 0.03 gives 0.869
-                % COT of 0.12 gives 0.625
-                % COT of 0.3 gives 0.4
+            if isempty(COT)
+                COT = 0;
             end
+               
+            % Low COT (as low as 0) is best so points are given by
+            fit=1/(1+5*COT);
+            % COT of 0 gives 1
+            % COT of 0.03 gives 0.869
+            % COT of 0.12 gives 0.625
+            % COT of 0.3 gives 0.4
             out = [];
         end
         
@@ -469,7 +451,7 @@ classdef MOOGA
             out = UDSim.JoinOuts(down_out);
         end
         
-        function [max_vel, max_s, out] = DeltaVelFit(Sim, dir, base_vel)
+        function [max_vel, COT, max_s, out] = DeltaVelFit(Sim, dir, base_vel)
             % Starts walking faster/slower at intervals and checks that the
             % simulation converges at each speed before moving forward
             
@@ -480,54 +462,34 @@ classdef MOOGA
             VelSim = deepcopy(Sim);
             VelSim.doGoNoGo = 2;
             VelSim.GNGThresh = [5,10];
+            VelSim.MinMaxStore = zeros(length(VelSim.stepsSS), ...
+                                       max(VelSim.GNGThresh)+1);
             out = [];
             
             while 1
                 % Run a simulation of the robot walking with different speed
                 s_in = s_in + ds_in;
                 
-                % Simulation parameters
-                VelSim = VelSim.SetTime(0,0.15,40);
-                VelSim.EndCond = 2; % Run until converge
-
-                % Some more simulation initialization
-                VelSim.Mod.LegShift = VelSim.Mod.Clearance;
-                VelSim = VelSim.Init();
-
-                VelSim.IC = VelSim.IClimCyc;
-
-                % Apply higher-level velocity signal
-                VelSim.Con.s_in = s_in;
-                VelSim.Con = VelSim.Con.Adaptation(0);
-                
-                VelSim.Con = VelSim.Con.Reset(VelSim.IC(VelSim.ConCo));
-                if all(VelSim.IC) == 0
-                    VelSim.Con = VelSim.Con.HandleEvent(1, VelSim.IC(VelSim.ConCo));
-                else
-                    VelSim.Con = VelSim.Con.HandleExtFB(VelSim.IC(VelSim.ModCo),...
-                        VelSim.IC(VelSim.ConCo),VelSim.Env.SurfSlope(VelSim.Mod.xS));
-                end
-
-                % Simulate
-                VelSim = VelSim.Run();
+                VelSim = VelSim.WalkAtSpeed(s_in, 40);
                 out = VelSim.JoinOuts(out);
                 
                 if VelSim.Out.Type == 6
                     % Simulation GO
                     % Get average velocity
-                    T = 2*sin(Sim.ICstore(1,2))*Sim.Mod.L/Sim.Mod.curSpeed;
-                    n = min(VelSim.Out.nSteps, length(VelSim.ICstore));
+                    per = Sim.GetPeriod(0.6);
+                    T = per(2);
+                    n = min(VelSim.Out.nSteps, size(VelSim.ICstore,2));
                     
                     if n > 5
                         % At least 5 steps should be taken
                         % (though go-no-go should take care of it as well)
-                        avg_vel = sum(2*sin(VelSim.ICstore(1,2:n))*Sim.Mod.L/T) ...
-                                    / (n-1);
+                        avg_vel = sum(2*sin(abs(VelSim.ICstore(1,2:n))) ...
+                            *Sim.Mod.L/T) / (n-1);
                     else
-                        avg_vel = 0;
+                        avg_vel = max_vel;
                     end
                     
-                    if dir*avg_vel > 1.01*dir*max_vel
+                    if dir*avg_vel > (1+0.01*dir)*dir*max_vel
                         % Expect at least a 1% increase
                         max_vel = avg_vel;
                         max_s = s_in;
@@ -538,6 +500,14 @@ classdef MOOGA
                     break;
                 end
             end
+            
+            % Calculate the last COT
+            COT = VelSim.GetCOT([1,0], 0);
+            
+            if isempty(COT)
+                COT = 1; % The cost of dragging an object with coefficient
+                % of friction = 1
+            end
         end
         
         function [fit,out] = VelRangeFit(Sim)
@@ -545,20 +515,27 @@ classdef MOOGA
             
             if isempty(Sim.Period)
                 % Weed out results that didn't converge
-                fit = [0 0 0 0 0];
+                fit = [0 0 0 0 0 0 0 0];
                 out = [];
                 return;
             end
             
             % Get last speed achieved with s_in=0
-            base_vel = Sim.Mod.curSpeed;
-            % Run the increased velocity test (s_in>0)
-            [max_vel, max_s, fast_out] = MOOGA.DeltaVelFit(Sim, 1, base_vel);
-            % Run the decreased velocity test (s_in<0)
-            [min_vel, min_s, slow_out] = MOOGA.DeltaVelFit(Sim, -1, base_vel);
+            % Get average velocity
+            per = Sim.GetPeriod(1);
+            T = per(2);
+            n = min(Sim.Out.nSteps, size(Sim.ICstore,2));
+            base_vel = sum(2*sin(Sim.ICstore(1,2:n))*Sim.Mod.L/T) / (n-1);
             
-            fit = [10*(max_vel-base_vel+0.01)*(base_vel-min_vel+0.01), ...
-                    max_vel, max_s, min_vel, min_s];
+            % Run the increased velocity test (s_in>0)
+            [fast_vel, fast_COT, fast_s, fast_out] = ...
+                MOOGA.DeltaVelFit(Sim, 1, base_vel);
+            % Run the decreased velocity test (s_in<0)
+            [slow_vel, slow_COT, slow_s, slow_out] = ...
+                MOOGA.DeltaVelFit(Sim, -1, base_vel);
+            
+            fit = [abs(fast_vel - slow_vel), 1/(1+fast_COT+slow_COT), ...
+                slow_s, fast_s, slow_vel, fast_vel, slow_COT, fast_COT];
             
             % Combine simulation outputs (in case other fitness function
             % needs them)

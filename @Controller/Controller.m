@@ -5,6 +5,8 @@ classdef Controller < handle & matlab.mixin.Copyable
     % A pair of flexor and extensor LIF oscillator for each leg.
     
     properties
+        name = 'Decoupled CPG'
+        
         % LIF parameters
         P_reset = 0;
         P_th = 1;
@@ -17,6 +19,7 @@ classdef Controller < handle & matlab.mixin.Copyable
         
         % Initial phase for oscillator:
         P_0 = 0;
+        startup_t = 0;  % Time before any torque output is available
                 
         stDim = 1; % state dimension
         nEvents = 2; % num. of simulation events
@@ -130,8 +133,9 @@ classdef Controller < handle & matlab.mixin.Copyable
             end 
         end
         
-        function [Torques] = NeurOutput(NC)
-            Torques = NC.OutM*NC.Switch;
+        function [Torques] = Output(NC, t, ~, ~)
+            Torques = repmat(NC.OutM*NC.Switch,1,length(t));
+            Torques(:,t<NC.startup_t) = 0*Torques(:,t<NC.startup_t);
         end
 
         function [per] = GetPeriod(NC)
@@ -276,10 +280,14 @@ classdef Controller < handle & matlab.mixin.Copyable
         end
         
         function PlotTorques(NC,tstep,mux)
-            if nargin<3
+            if nargin<2
                 [Time,TorqueSig]=NC.GetTorqueSig();
             else
-                [Time,TorqueSig]=NC.GetTorqueSig(tstep,mux);
+                if nargin<3
+                    [Time,TorqueSig]=NC.GetTorqueSig(tstep);
+                else
+                    [Time,TorqueSig]=NC.GetTorqueSig(tstep,mux);
+                end
             end
 
             plot(Time,TorqueSig);
