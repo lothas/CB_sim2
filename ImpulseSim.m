@@ -1,6 +1,4 @@
 function [Sim] = ImpulseSim(varargin)
-close all
-
 Sim = Simulation();
 Sim.Graphics = 1;
 Sim.EndCond = 2; % Run until convergence
@@ -20,6 +18,7 @@ Sim.Con = Sim.Con.Set('omega0', 1.03333); % 1/T;T =0.8895
 
 switch nargin
     case 0
+        % Default test case
 %         Sim.Con.FBImpulse = 2; % set ang. vel. to certain value
 %         alpha = 0.110952073;
 % %         theta_dot = [ -0.4640, -0.5330 ];
@@ -44,21 +43,28 @@ switch nargin
         Sim.Con = Sim.Con.AddPulse('joint',1,'amp',amp(1),'offset','ext','dur',duration);
         Sim.Con = Sim.Con.AddPulse('joint',2,'amp',amp(2),'offset','ext','dur',duration);
     case 2
+        % Full impulse feedback case
+        % Input: Initial alpha and desired ang. vel.
         Sim.Con.FBImpulse = 2; % set ang. vel. to certain value
         alpha = varargin{1};
         theta_dot = varargin{2};
         impulse = theta_dot;
     case 3
+        % Open loop impulse case
+        % Input: Initial alpha, ang. vel. and impulse value
         Sim.Con.FBImpulse = 1; % Add impulse value to ang. vel.
         alpha = varargin{1};
         theta_dot = varargin{2};
         impulse = varargin{3};
     case 4
+        % Open loop quasi-impulse case
+        % Input: Initial alpha, ang. vel., desired impulse value and
+        %        dt = pulse duration
         Sim.Con.FBImpulse = 0; % No impulse added (only short pulses below)
         Sim.Con.FBType = 0; % No feedback
         Sim.EndZMP = 0;
         
-        T = 0.679875183484506; omega = 1/T;
+        T = 1; omega = 1/T;
         Sim.Con = Sim.Con.Set('omega0', omega);
         
         alpha = varargin{1};
@@ -72,6 +78,7 @@ switch nargin
         Sim.Con = Sim.Con.AddPulse('joint',2,'amp',amp(2), ...
                                    'offset','ext','dur',delta_phi);
 end
+
 theta = [start_slope+alpha,start_slope-alpha];
 Sim.Con.ExtP_reset = phi_0; % enable phase reset for CPG
 Sim.Con.AngVelImp = impulse; % set CPG impulse value
@@ -85,5 +92,5 @@ Sim = Sim.Init();
 
 % Some more simulation initialization
 Sim.Mod.LegShift = Sim.Mod.Clearance;
-Sim.Con.HandleEvent(1, Sim.IC(Sim.ConCo));
+Sim.Con.HandleExtFB(Sim.IC(Sim.ModCo), Sim.IC(Sim.ConCo), start_slope);
 end
