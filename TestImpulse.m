@@ -1,9 +1,6 @@
 function TestImpulse()
 Graphics = 0;
 
-Mod = CompassBiped();
-Mod = Mod.Set('damp',0,'I',0); % no damping, point-mass
-
 % Gait parameters
 alpha = 0.1126761;
 theta_dot = [-0.5209123, -0.5055816];
@@ -30,7 +27,8 @@ if exist(filename,'file') ~= 2
     %                     num2str(Sim1.ICstore(4,1)),'];']);
 
     % Model data
-    m = Mod.m; mh = Mod.mh; L = Mod.L; IL = Mod.I; a = Mod.a;
+    m = Sim1.Mod.m; mh = Sim1.Mod.mh; L = Sim1.Mod.L;
+    IL = Sim1.Mod.I; a = Sim1.Mod.a;
     M = zeros(2,2);
     M(1,1) = IL + L^2*(m*a^2 - 2*m*a + mh + 2*m);
     M(1,2) = -L^2*a*m*cos(2*alpha);
@@ -105,7 +103,7 @@ end
             % Get state right before impact, right after impact and
             % after adding the impulse
             Xminus = aSim.Out.X(end,:);
-            Xplus_imp = aSim.Out.X(1,:);
+            Xplus_imp = GetStateAfterImp(aSim);
             Xplus = [aSim.Mod.CalcImpact(Xminus), Xminus(aSim.ConCo)];
             
             % Prepare output structure
@@ -113,14 +111,36 @@ end
             res.delta = Xplus_imp(3:4) - Xplus(3:4);
             res.alpha = (aSim.Out.X(1,1) - aSim.Out.X(1,2))/2;
             res.period = aSim.Out.T(end);
-            res.X = aSim.Out.X;
-            res.T = aSim.Out.T;
+            if aSim.Con.FBImpulse>0
+                % Add the impact state to the LC
+                res.X = [aSim.Out.X; Xplus([2 1 4 3 5])];
+                res.T = [aSim.Out.T; aSim.Out.T(end)];
+            else
+                res.X = aSim.Out.X;
+                res.T = aSim.Out.T;
+            end
             res.discnt = [Xminus; Xplus; Xplus_imp];
 
             if do_plot
                 figure
                 hold on
                 PlotRes(res);
+            end
+        end
+    end
+
+    function x_imp = GetStateAfterImp(sim)
+        if sim.Con.FBImpulse>0
+            % Impulsive case
+            x_imp = sim.Out.X(1,:);
+        else
+            if ~isempty(sim.Con.ExtPulses)
+                % Quasi-impulsive case
+                T_end = ind2sub(size(sim.Out.Torques), ...
+                    find(sim.Out.Torques == 0, 1, 'first'));
+                x_imp = sim.Out.X(T_end,:);
+            else
+                x_imp = sim.Out.X(1,:);
             end
         end
     end
