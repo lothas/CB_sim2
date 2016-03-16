@@ -2,9 +2,13 @@ function TestImpulse()
 Graphics = 0;
 
 % Gait parameters
-alpha = 0.1126761;
-theta_dot = [-0.5209123, -0.5055816];
-delta_theta_dot = [-0.02,  -0.05];
+% alpha = 0.1126761;
+% theta_dot = [-0.5209123, -0.5055816];
+% delta_theta_dot = [-0.02,  -0.05];
+
+alpha = 0.05828347;
+theta_dot = [-0.2718532, -0.1238651];
+delta_theta_dot = 0.1*[0.0871, 1.5031];
 
 % Different pulse durations to try
 dts = [0.001, 0.003, 0.01, 0.03, 0.1];
@@ -15,16 +19,22 @@ if exist(filename,'file') ~= 2
     Sim1 = ImpulseSim(alpha, theta_dot, delta_theta_dot);
 
     res(length(dts)+1) = AnalyzeContr(Sim1);
+    
+    if ~isfield(res(end), 'eig_val')
+        % This will fail if the simulation didn't converge
 
+        frmt_length = 7;
+        disp(['alpha = ',num2str(res(end).Sim.ICstore(1,1), frmt_length),';',10,...
+            'theta_dot = [',num2str(res(end).Sim.ICstore(3,1), frmt_length),', '...
+                            num2str(res(end).Sim.ICstore(4,1), frmt_length),'];']) %;,10,...
+        %     'delta = [',num2str(Sim1.ICstore(3,1)),', '...
+        %                     num2str(Sim1.ICstore(4,1)),'];']);
+        
+        return
+    end
+    
     % Do some plots
     disp(res(end).eig_val);
-
-    frmt_length = 7;
-    disp(['alpha = ',num2str(res(end).Sim.ICstore(1,1), frmt_length),';',10,...
-        'theta_dot = [',num2str(res(end).Sim.ICstore(3,1), frmt_length),', '...
-                        num2str(res(end).Sim.ICstore(4,1), frmt_length),'];']) %;,10,...
-    %     'delta = [',num2str(Sim1.ICstore(3,1)),', '...
-    %                     num2str(Sim1.ICstore(4,1)),'];']);
 
     % Model data
     m = Sim1.Mod.m; mh = Sim1.Mod.mh; L = Sim1.Mod.L;
@@ -76,6 +86,7 @@ else
     
     % Add legend
     legend(h, legends);
+    set(gca,'FontSize',16);
 end
 
     function res = AnalyzeContr(Sim, do_plot)
@@ -126,6 +137,8 @@ end
                 hold on
                 PlotRes(res);
             end
+        else
+            res.Sim = Sim;
         end
     end
 
@@ -146,20 +159,27 @@ end
     end
 
     function h = PlotRes(res, style, lw)
+        MarkerSize = 50;
+        LineWidth = 1.5;
         if nargin == 1
             style = '--';
             lw = 1;
         end
         h = plot([res.X(:,1);res.X(:,2)],[res.X(:,3);res.X(:,4)], ...
-            style,'LineWidth',lw);
-        scatter(res.discnt(1, [1,2]), res.discnt(1, [3,4]), 'o')
-        scatter(res.discnt(2, [1,2]), res.discnt(2, [3,4]), '+')
-        scatter(res.discnt(3, [1,2]), res.discnt(3, [3,4]), '^')
+            style,'LineWidth',LineWidth+lw);
+        scatter(res.discnt(1, [1,2]), res.discnt(1, [3,4]), MarkerSize, ...
+            'o', 'LineWidth', LineWidth);
+        scatter(res.discnt(2, [1,2]), res.discnt(2, [3,4]), MarkerSize, ...
+            '+', 'LineWidth', LineWidth);
+        scatter(res.discnt(3, [1,2]), res.discnt(3, [3,4]), MarkerSize, ...
+            '^', 'LineWidth', LineWidth);
         title(['Limit cycle for:  dth_1_t = ', ...
                 num2str(res.delta(1), 4), ...
                 '  |  dth_2_t = ', ...
-                num2str(res.delta(2), 4)]);
+                num2str(res.delta(2), 4)],...
+                'FontSize',16);
         xlabel(['alpha = ', num2str(res.alpha, 4), ...
-                '  |  T = ', num2str(res.period, 4)]);
+                '  |  T = ', num2str(res.period, 4)],...
+                'FontSize',16);
     end
 end

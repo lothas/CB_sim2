@@ -14,7 +14,7 @@ Sim.Env = Sim.Env.Set('Type','inc','start_slope',start_slope);
 phi_0 = 0.7759402;
 
 Sim.Con = Sim.Con.ClearTorques(); % no torques
-Sim.Con = Sim.Con.Set('omega0', 1.03333); % 1/T;T =0.8895
+Sim.Con = Sim.Con.Set('omega0', 1.0); % 1/T;T =0.8895
 
 switch nargin
     case 0
