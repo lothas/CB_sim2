@@ -86,7 +86,29 @@ else
     
     % Add legend
     legend(h, legends);
-    set(gca,'FontSize',16);
+    set(gca,'FontSize',14);
+    
+    % Plot eigenvalues
+    eig_val = [data.res.eig_val];
+    eig_val = [eig_val(:,end), eig_val(:,1:end-1)];
+    dts = zeros(1, size(eig_val,2));
+    for i = 2:length(dts)
+        dts(i) = mean(data.res(i-1).Sim.Con.Duration);
+    end
+    
+    figure
+    h1 = semilogx(dts, abs(eig_val)','*-.','LineWidth',2);
+    hold on
+    for i = 1:size(eig_val,1)
+        h2 = plot(xlim,repmat(abs(eig_val(i,1)),1,2),'k--');
+    end
+%     plot(dts, abs(eig_val)','*-.','LineWidth',2);
+    ylabel('|\lambda_i|','FontSize',16);
+    xlabel('\Deltat','FontSize',16);
+    set(gca,'FontSize',14);
+    
+    legend([h1(1),h2],{'Quasi-impulsive','Impulsive'})
+    
 end
 
     function res = AnalyzeContr(Sim, do_plot)
@@ -165,7 +187,8 @@ end
             style = '--';
             lw = 1;
         end
-        h = plot([res.X(:,1);res.X(:,2)],[res.X(:,3);res.X(:,4)], ...
+        h = plot([res.X(:,1);res.X(:,2);res.X(1,1)], ...
+                 [res.X(:,3);res.X(:,4);res.X(1,3)], ...
             style,'LineWidth',LineWidth+lw);
         scatter(res.discnt(1, [1,2]), res.discnt(1, [3,4]), MarkerSize, ...
             'o', 'LineWidth', LineWidth);
