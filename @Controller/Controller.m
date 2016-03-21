@@ -122,10 +122,14 @@ classdef Controller < handle & matlab.mixin.Copyable
             else
                 % Find which Torques should be active
                 Start = NC.Offset;
-                End = Start + NC.Duration;
-                [Xperc] = NC.GetPhasePerc(Phase);
-                On = Xperc >= Start & Xperc < End;
-                NC.Switch = (NC.Amp.*On)';
+                if ~isempty(Start)
+                    End = Start + NC.Duration;
+                    [Xperc] = NC.GetPhasePerc(Phase);
+                    On = Xperc >= Start & Xperc < End;
+                    NC.Switch = (NC.Amp.*On)';
+                else
+                    NC.Switch = 0;
+                end
             end 
         end
         

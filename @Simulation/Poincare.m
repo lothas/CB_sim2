@@ -2,6 +2,12 @@ function [EigVal,EigVec] = Poincare( sim )
 % Calculates the Linearized Poincare eigenvalues
 % Version 0.1 - 10/05/2014
 
+if isempty(sim.IClimCyc)
+    EigVal = [];
+    EigVec = [];
+    return
+end
+
 TempG = sim.Graphics;
 sim.Graphics = 0;
 
@@ -38,7 +44,7 @@ for d = Coords
     PMsim.IC = dIC(:,d);
     PMsim = PMsim.Init();
     PMsim.Con = PMsim.Con.Reset(PMsim.IC(PMsim.ConCo));
-    PMsim.Con = PMsim.Con.HandleExtFB(PMsim.IC(PMsim.ModCo),...
+    PMsim.Con = PMsim.Con.HandleExtFB(PMsim.IC(PMsim.ModCo)',...
         PMsim.IC(PMsim.ConCo),Slope);
     PMsim = PMsim.Run();
 
