@@ -14,7 +14,7 @@ function [varargout] = GetCleanPulses(sim, varargin)
     if ~isempty(sim.Con.ExtPulses)
         ImpInd = sim.Con.ExtPulses;
         [ImpJoint,~,~] = find(sim.Con.OutM(:,sim.Con.ExtPulses));
-        Impulses = zeros(size(sim.Out.Torques,1),length(ImpJoint));
+        Impulses = zeros(size(Torques,1),length(ImpJoint));
 
         % Remove "push-off" torques
         NT = length(T);
