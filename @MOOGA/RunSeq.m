@@ -44,6 +44,9 @@ wSim = wSim.Init();
 % start_slope = -0.2*pi/180;
 % Sim.IC = [start_slope, start_slope, 0, 0, zeros(1, GA.Sim.Con.stDim)];
 wSim.Con = wSim.Con.HandleEvent(1, wSim.IC(wSim.ConCo));
+if strcmp(wSim.Con.name, 'Matsuoka')
+    wSim.Con = wSim.Con.Adaptation();
+end
 
 
 %% %%%%%%%%%%%%%% Separate Matsuoka simulation %%%%%%%%%%%%%%%%
