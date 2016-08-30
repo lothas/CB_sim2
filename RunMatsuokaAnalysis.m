@@ -1,0 +1,270 @@
+%% Initialize machine learning object for Matsuoka analysis
+MML = MatsuokaML();
+MML.perLim = [0.68 0.78];
+MML.perLimOut = MML.perLim + [-0.08 0.08]; % Desired period range
+
+%% Phase 1 - Run lots of Matsuoka simulations with different parameters
+filename1 = 'MatsRandomRes.mat';
+nSamples = 500000;
+MML.runRandomSims(nSamples, filename1);
+
+%% Phase 2 - Re-run simulations that converged outside the desired range,
+% this time with scaled temporal parameters
+filename2 = 'MatsScaledRes.mat';
+data = load(filename1);
+reDo_ids = zeros(1, data.nSims);
+reDo_ids(data.id_conv) = 1;
+reDo_ids(data.id_per) = 0;
+inputData = data.results(logical(reDo_ids));
+MML.runScaledSims(inputData, filename2);
+
+%% Phase 2.1 - Check damping condition
+data = load(filename2);
+results = data.results;
+converged = zeros(length(results),1);
+passed_cond1 = zeros(length(results),1);
+tp1 = converged; fp1 = tp1; tn1 = fp1; fn1 = tp1;
+for i = 1:length(results)
+    cr = results(i);
+    if ~any(isnan(cr.periods))
+        converged(i) = 1;
+    end
+%     disp(['(',num2str(cr.Tr,5),' - ',num2str(cr.Ta,5),')^2 = ',...
+%         num2str((cr.Tr-cr.Ta)^2,5)]);
+    if (cr.Tr-cr.Ta)^2 >= 4*cr.Tr*cr.Ta*cr.b
+        passed_cond1(i) = 1;
+%         disp('              >=');
+    else
+%         disp('              <');
+    end
+%     disp(['4*',num2str(cr.Tr,5),'*',num2str(cr.Ta,5),'*',num2str(cr.b,5),' = ',...
+%         num2str(4*cr.Tr*cr.Ta*cr.b,5)]);
+%     disp(' ');
+    
+    if passed_cond1(i)
+        if converged(i)
+            tp1(i) = 1;
+        else
+            fp1(i) = 1;
+        end
+    else
+        if converged(i)
+            fn1(i) = 1;
+        else
+            tn1(i) = 1;
+        end
+    end
+end
+% Show results
+disp(['Converged: ', int2str(sum(converged)), ...
+    ' out of ', int2str(numel(converged))]);
+disp(['Passed condition 1: ', int2str(sum(passed_cond1)), ...
+    ' out of ', int2str(numel(passed_cond1))]);
+disp(['True positives: ', int2str(sum(tp1))]);
+disp(['True negatives: ', int2str(sum(tn1))]);
+disp(['False positives: ', int2str(sum(fp1))]);
+disp(['False negatives: ', int2str(sum(fn1))]);
+
+% Show some cases
+n_cases = 3;
+% True positives
+MML.plotSamples(results, tp1, n_cases, 'Cond. 1 true positive sample #');
+% True negatives
+MML.plotSamples(results, tn1, n_cases, 'Cond. 1 true negative sample #');
+% False positives
+MML.plotSamples(results, fp1, n_cases, 'Cond. 1 false positive sample #');
+% False negatives
+MML.plotSamples(results, fn1, n_cases, 'Cond. 1 false negative sample #');
+
+%% Phase 2.2 - Check tonic input condition
+passed_cond2 = zeros(length(results),length(results(1).c));
+tp2 = 0*converged; fp2 = tp2; tn2 = fp2; fn2 = tp2;
+for i = 1:length(results)
+    cr = results(i);
+    passed_cond2(i, :) = (cr.c > cr.W*cr.c/(1+cr.b))';
+        
+    if all(passed_cond2(i, :))
+        if converged(i)
+            tp2(i) = 1;
+        else
+            fp2(i) = 1;
+        end
+    else
+        if converged(i)
+            fn2(i) = 1;
+        else
+            tn2(i) = 1;
+        end
+    end
+end
+% Show results
+disp(['Converged: ', int2str(sum(converged)), ...
+    ' out of ', int2str(numel(converged))]);
+disp(['Passed condition 2: ', int2str(sum(all(passed_cond2'))), ...
+    ' out of ', int2str(numel(converged))]);
+disp(['True positives: ', int2str(sum(tp2))]);
+disp(['True negatives: ', int2str(sum(tn2))]);
+disp(['False positives: ', int2str(sum(fp2))]);
+disp(['False negatives: ', int2str(sum(fn2))]);
+
+% Show some cases
+n_cases = 3;
+% True positives
+MML.plotSamples(results, tp2, n_cases, 'Cond. 2 true positive sample #');
+% True negatives
+MML.plotSamples(results, tn2, n_cases, 'Cond. 2 true negative sample #');
+% False positives
+MML.plotSamples(results, fp2, n_cases, 'Cond. 2 false positive sample #');
+% False negatives
+MML.plotSamples(results, fn2, n_cases, 'Cond. 2 false negative sample #');
+
+%% Phase 3 - Train NNs using the data from phases 1 and 2
+filename3 = 'MatsNNData.mat';
+filename4 = 'MatsNNRes1.mat';
+filename5 = 'MatsNNRes2.mat';
+filename6 = 'MatsNNRes3.mat';
+if exist(filename3, 'file') ~= 2
+    maxN = 400000;
+    NNSamples = 1000;
+    inFilenames = {filename1, filename2};
+    [samples, targets, normParams] = MML.prepareNNData(inFilenames, maxN);
+    save(filename3, 'maxN', 'NNSamples', ...
+                    'samples', 'targets', 'normParams');
+else
+    load(filename3);
+end
+MML.normParams = normParams;
+
+% Train networks with different architectures and all samples
+if exist(filename4, 'file') ~= 2
+    architectures = {5, 20, 50, [25, 25], [15, 25, 10]};
+    nArch = numel(architectures);
+    
+    net = cell(nArch, 1);           % Cell array to store NNs
+    tr = cell(nArch, 1);            % Cell array to store NNs training res
+    netPerf = zeros(nArch, 4);      % Array to store NN performance
+    % Array to store NN per sample performance
+    desPeriod = zeros(nArch, NNSamples);
+    sampPerf = zeros(nArch, NNSamples);
+    sampPerfSc = zeros(nArch, NNSamples); % re-scaled results
+    
+    for i = 1:nArch
+        [net{i}, tr{i}, netPerf(i,:), desPeriod(i,:), ...
+            sampPerf(i,:), sampPerfSc(i,:)] = ...
+            MML.trainNN(samples, targets, architectures{i}, NNSamples);
+    end
+    save(filename4, 'architectures', 'nArch', 'net', 'tr', ...
+                    'netPerf', 'desPeriod', 'sampPerf', 'sampPerfSc');
+else
+    load(filename4);
+end
+
+% Train network with specific architecture and different number of samples
+if exist(filename5, 'file') ~= 2
+    architecture = architectures{2};
+    nSampleSizes = 20;
+    sampleSizes = floor(logspace(1,3,nSampleSizes))*maxN/1000;
+    
+    net = cell(nSampleSizes, 1);       % Cell array to store NNs
+    tr = cell(nArch, 1);            % Cell array to store NNs training res
+    netPerf = zeros(nSampleSizes, 4);  % Array to store NN performance
+    % Array to store NN per sample performance
+    desPeriod = zeros(nSampleSizes, NNSamples);
+    sampPerf = zeros(nSampleSizes, NNSamples);
+    sampPerfSc = zeros(nArch, NNSamples); % re-scaled results
+    
+    for i = 1:nSampleSizes
+        ids = randsample(maxN, sampleSizes(i));
+        [net{i}, tr{i}, netPerf(i,:), desPeriod(i,:), ...
+            sampPerf(i,:), sampPerfSc(i,:)] = ...
+            MML.trainNN(samples(:, ids), targets(:, ids), ...
+                        architecture, NNSamples);
+    end
+    save(filename5, 'nSampleSizes', 'sampleSizes', 'architecture',...
+                    'net', 'tr', 'netPerf', 'desPeriod', ...
+                    'sampPerf', 'sampPerfSc');
+else
+    load(filename5);
+end
+
+% Train network with specific architecture and different number of samples
+if exist(filename6, 'file') ~= 2
+    architecture = architectures{end};
+    nSampleSizes = 20;
+    sampleSizes = floor(logspace(1,3,nSampleSizes))*maxN/1000;
+    
+    net = cell(nSampleSizes, 1);       % Cell array to store NNs
+    tr = cell(nArch, 1);            % Cell array to store NNs training res
+    netPerf = zeros(nSampleSizes, 4);  % Array to store NN performance
+    % Array to store NN per sample performance
+    desPeriod = zeros(nSampleSizes, NNSamples);
+    sampPerf = zeros(nSampleSizes, NNSamples);
+    sampPerfSc = zeros(nArch, NNSamples); % re-scaled results
+    
+    for i = 1:nSampleSizes
+        ids = randsample(maxN, sampleSizes(i));
+        [net{i}, tr{i}, netPerf(i,:), desPeriod(i,:), ...
+            sampPerf(i,:), sampPerfSc(i,:)] = ...
+            MML.trainNN(samples(:, ids), targets(:, ids), ...
+                        architecture, NNSamples);
+    end
+    save(filename6, 'nSampleSizes', 'sampleSizes', 'architecture',...
+                    'net', 'tr', 'netPerf', 'desPeriod', ...
+                    'sampPerf', 'sampPerfSc');
+else
+    load(filename6);
+end
+
+%% Phase 4 - Train SVMs using the data from phases 1 and 2
+
+%% Phase 5 - ???
+
+%% Phase 6 - Profit! (Plot results)
+data1 = load(filename1); % Random results
+data2 = load(filename2); % Scaled results
+data3 = load(filename4); % NN results - diff. architectures
+data4 = load(filename5); % NN results - diff. number of training samples
+data5 = load(filename6); % NN results - diff. number of training samples
+load(filename3);
+
+MML.plotNNConv(data1, data2, data3, 1);
+MML.plotNNConv(data1, data2, data4, 2);
+MML.plotNNConv(data1, data2, data5, 2);
+
+nBins = 50;
+nDists = 1+size(data3.sampPerf,1);
+rows = max(floor(sqrt(nDists)),1);
+cols = ceil(nDists/rows);
+
+% figure
+% % Plot distribution of random samples
+% subplot(rows, cols, 1);
+% hist(max([data1.results(data1.id_conv).periods]),nBins)
+% for i = 2:nDists
+%     % Plot distribution of NN samples
+%     subplot(rows, cols, i)
+%     hist(data3.sampPerf(i-1,:),nBins)
+% end
+
+figure
+% Plot distribution of random samples
+subplot(rows, cols, 1);
+% hist(max([data1.results(data1.id_conv).periods]),nBins)
+[counts,centers]=hist(max([data1.results(data1.id_conv).periods]),nBins);
+% b1=bar(centers,counts/trapz(centers,counts));
+b1=bar(centers,counts/max(counts));
+hold on
+[counts,centers]=hist(max([data2.results(data2.id_conv).periods]),nBins);
+% b2=bar(centers,counts/trapz(centers,counts));
+b2=bar(centers,counts/max(counts));
+set(get(b1,'Children'),'Facecolor',[0 0 1],'EdgeColor','k','FaceAlpha',0.5);
+set(get(b2,'Children'),'Facecolor',[1 0 0],'EdgeColor','k','FaceAlpha',0.5);
+% h = findobj(gca,'Type','patch');
+% set(h(1),'Facecolor',[1 0 0],'EdgeColor','k','FaceAlpha',0.5);
+% set(h(2),'Facecolor',[0 0 1],'EdgeColor','k','FaceAlpha',0.5);
+
+for i = 2:nDists
+    % Plot distribution of NN samples
+    subplot(rows, cols, i)
+    hist(data3.sampPerf(i-1,:),nBins)
+end
