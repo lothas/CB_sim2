@@ -9,6 +9,7 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
         % Parameters
         tau = 1;
         tav = 1;
+        tau_ratio = 5;
         beta = 0.1;
         u0 = 1;
         win = [0, 3; 1, 0];
@@ -45,10 +46,11 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
         
         % Set keys
         SetKeys = {'npulses', 'nneurons', 'n_pulses', 'n_neurons', ...
-            'tau', 'tau_u', 'tav', 'tau_v', 'beta', 'win', 'wex', ...
-            'amp0', 'amp', 'fbtype', 'feedback', 'fb', ...
-            'ks_tau', 'speed_tau', 'tau_speed_gain', ...
-            'ks_out', 'speed_out', 'torque_speed_gain'};
+            'tau', 'tau_u', 'tav', 'tau_v', 'tau_r', '\tau_r', ...
+            'beta', 'win', 'wex', 'weights', 'amp0', 'amp', ...
+            'fbtype', 'feedback', 'fb', ...
+            'ks_tau', 'speed_tau', 'tau_speed_gain', 'ks_\tau', ...
+            'ks_out', 'speed_out', 'torque_speed_gain', 'ks_c'};
     end
     
     methods
@@ -92,7 +94,7 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
             try
                 Torques = MO.OutM*y;
             catch
-                disp('fuck!')
+                disp('f*ck!')
             end
 %             Torques = MO.OutM*MO.Switch;
 

@@ -8,7 +8,7 @@ if nargin<4
     GA = GA.SetFittest(15,15,0.5);
     GA.JOAT = 2; GA.Quant = 0.5;
     % GA.Fittest = [20,20,1];
-    GA.FileIn = 'VGAM_02_01_21_36.mat';
+%     GA.FileIn = 'VGAM_02_01_21_36.mat';
 %     GA.FileOut = GA.FileIn;
 
     GA.FileOut = ['VGAM_',datestr(now,'mm_dd_hh_MM'),'.mat'];
@@ -32,8 +32,8 @@ maxHip = 20;    % Max hip torque
 Mamp = [maxAnkle*ones(1,2*nAnkle), maxHip*ones(1,2*nHip)];
 mamp = 0*Mamp;
 N = nAnkle+nHip;
-Mwex = -10*ones(1,4*N);
-mwex = 0*Mwex;
+Mw = 10*ones(1,(2*N-1)*2*N);
+mw = -0.1*Mw;
 
 % TorqueFBMin = [-5*ones(1,NAnkleT),-10*ones(1,NHipT)];
 % TorqueFBMax = -TorqueFBMin;
@@ -42,10 +42,10 @@ mwex = 0*Mwex;
 %            1 ,   1 ,    1 , 2*N ,   1 , 2*N ,      1 ,      2*N ,           0 };
 % Range = {0.1 , 0.1 ,   10 , mamp, -20 , Mwex,   -1e2 , -0.1*Mamp; % Min
 %            2 ,   2 ,   30 , Mamp,  -1 , mwex,    1e2 ,  0.1*Mamp}; % Max
-Keys = {'tau','tav','beta','amp','win','wex','ks_tau',  'ks_out','IC_matsuoka';
-           1 ,   1 ,    1 , 2*N ,   1 , 4*N ,      1 ,      2*N ,           0 };
-Range = {0.1 , 0.1 ,    1 , mamp, -10 , Mwex,   -1e2 , -0.1*Mamp; % Min
-           2 ,   2 ,   30 , Mamp, -.5 , mwex,    1e2 ,  0.1*Mamp}; % Max
+Keys = {'\tau_r','amp',   'weights','ks_\tau',     'ks_c','IC_matsuoka';
+              1 , 2*N , (2*N-1)*2*N,       1 ,      2*N ,           0 };
+Range = {   0.1 , mamp,          mw,    -1e2 , -0.1*Mamp; % Min
+              2 , Mamp,          Mw,     1e2 ,  0.1*Mamp}; % Max
 
 MutDelta0 = 0.04;
 MutDelta1 = 0.02;

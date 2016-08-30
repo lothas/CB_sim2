@@ -22,6 +22,9 @@ else
                 MO.tau = value;
             case {'tav', 'tau_v'}
                 MO.tav = value;
+            case {'tau_r','\tau_r'}
+                MO.tau = value;
+                MO.tav = MO.tau_ratio*value;
             case 'beta'
                 MO.beta = value;
             case 'win' % Intra-neuron pair inhibition
@@ -55,9 +58,21 @@ else
                     MO.wex(n,ids) = value(v:v+length(ids)-1);
                     v = v+length(ids);
                 end
+            case 'weights' % Neuron connection weights, general
+                MO.win = 0;
+                v = 1;
+                for i = 1:2*MO.nPulses
+                    % Genes affect the coupling weight from neuron j to
+                    % neuron i, for all j~=i
+                    ids = 1:2*MO.nPulses;
+                    ids(i) = [];
+                    
+                    MO.wex(i,ids) = value(v:v+length(ids)-1);
+                    v = v+length(ids);
+                end
                 
             % Controller Output
-            case {'amp0', 'amp'} % Base neuron amplitude multiplier
+            case {'amp0', 'amp', 'c_i'} % Base neuron amplitude multiplier
                 N = length(value);
                 if N == MO.nPulses
                     MO.Amp0 = reshape([value; value], [], 1);
@@ -74,9 +89,9 @@ else
                 % Not yet implemented
                 
             % Gains
-            case {'ks_tau', 'speed_tau', 'tau_speed_gain'}
+            case {'ks_tau', 'speed_tau', 'tau_speed_gain', 'ks_\tau'}
                 MO.ks_tau = value;
-            case {'ks_out', 'speed_out', 'torque_speed_gain'}
+            case {'ks_out', 'speed_out', 'torque_speed_gain', 'ks_c'}
                 MO.ks_out = value';
             
             otherwise
