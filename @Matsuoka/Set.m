@@ -60,6 +60,7 @@ else
                 end
             case 'weights' % Neuron connection weights, general
                 MO.win = 0;
+                MO.wex = zeros(2*MO.nPulses);
                 v = 1;
                 for i = 1:2*MO.nPulses
                     % Genes affect the coupling weight from neuron j to

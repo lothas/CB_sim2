@@ -3,9 +3,12 @@ MML = MatsuokaML();
 MML.perLim = [0.68 0.78];
 MML.perLimOut = MML.perLim + [-0.08 0.08]; % Desired period range
 
+% Turn off findpeaks warning
+warning('off','signal:findpeaks:largeMinPeakHeight');
+
 %% Phase 1 - Run lots of Matsuoka simulations with different parameters
 filename1 = 'MatsRandomRes.mat';
-nSamples = 500000;
+nSamples = 200000;
 MML.runRandomSims(nSamples, filename1);
 
 %% Phase 2 - Re-run simulations that converged outside the desired range,
@@ -13,22 +16,23 @@ MML.runRandomSims(nSamples, filename1);
 filename2 = 'MatsScaledRes.mat';
 data = load(filename1);
 reDo_ids = zeros(1, data.nSims);
-reDo_ids(data.id_conv) = 1;
-reDo_ids(data.id_per) = 0;
+reDo_ids(~isnan(data.periods)) = 1;
+reDo_ids(data.periods >= MML.perLimOut(1) & ...
+    data.periods <= MML.perLimOut(2)) = 0;
+% reDo_ids(data.id_conv) = 1;
+% reDo_ids(data.id_per) = 0;
 inputData = data.results(logical(reDo_ids));
-MML.runScaledSims(inputData, filename2);
+inputPeriods = data.periods(logical(reDo_ids));
+MML.runScaledSims(inputData, inputPeriods, filename2);
 
 %% Phase 2.1 - Check damping condition
 data = load(filename2);
 results = data.results;
-converged = zeros(length(results),1);
+converged = ~isnan(data.periods);
 passed_cond1 = zeros(length(results),1);
-tp1 = converged; fp1 = tp1; tn1 = fp1; fn1 = tp1;
+tp1 = passed_cond1; fp1 = tp1; tn1 = fp1; fn1 = tp1;
 for i = 1:length(results)
     cr = results(i);
-    if ~any(isnan(cr.periods))
-        converged(i) = 1;
-    end
 %     disp(['(',num2str(cr.Tr,5),' - ',num2str(cr.Ta,5),')^2 = ',...
 %         num2str((cr.Tr-cr.Ta)^2,5)]);
     if (cr.Tr-cr.Ta)^2 >= 4*cr.Tr*cr.Ta*cr.b
@@ -124,7 +128,7 @@ filename4 = 'MatsNNRes1.mat';
 filename5 = 'MatsNNRes2.mat';
 filename6 = 'MatsNNRes3.mat';
 if exist(filename3, 'file') ~= 2
-    maxN = 400000;
+    maxN = 200000;
     NNSamples = 1000;
     inFilenames = {filename1, filename2};
     [samples, targets, normParams] = MML.prepareNNData(inFilenames, maxN);

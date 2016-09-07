@@ -1,10 +1,33 @@
-function [out, signal] = sim(obj, b, c, W, Tr, Ta)
+function [out, sim, signal] = runSim(obj, sequence, beta)
 %SIM Runs a simulation of a CPG with Matsuoka neurons using the given
 %parameters
 
-    [x0, X, T] = runSim();
-    [y, periods, signals, pos_work, neg_work] = obj.processResults(X, T);
+if nargin<3
+    beta = obj.Sim.Con.beta;
+end
 
+%     cond1 = (obj.Sim.Con.tau_ratio + 1)*obj.Sim.Con.beta > max(obj.Sim.Con.W(:))
+%     if ~cond1
+%         obj.Sim.Con.beta = 2*max(obj.Sim.Con.W(:))/(obj.Sim.Con.tau_ratio + 1);
+%     end
+
+    % Instantiate copy of obj.Sim.
+    sim.Mod.SetKeys = {};
+    sim.Env.SetKeys = {};
+    sim.Con = copy(obj.Sim.Con);
+            
+    % Setup tau_r, tau_a, c, W and feedback gains using genome
+    sim = obj.Gen.Decode(sim, sequence);
+    sim.Con.beta = beta;
+    
+    sim.Con.s_in = 0;
+    sim.Con = sim.Con.Adaptation();
+    
+    [x0, X, T] = runMatsuokaSim();
+    [y, periods, signals, pos_work, neg_work] = obj.processResults(X, T);
+%     periods
+    [simFreq, amp] = obj.processResultsFFT(X, T, 0);
+    
     % Plot results
     if obj.doPlot
         delta_y = max(X(:))-min(X(:));
@@ -41,6 +64,8 @@ function [out, signal] = sim(obj, b, c, W, Tr, Ta)
     % Prepare output
     out.x0 = x0;
     out.periods = periods;
+    out.period_Rea = 1/simFreq;
+    out.amp = amp;
     out.pos_work = pos_work;
     out.neg_work = neg_work;
     
@@ -50,26 +75,28 @@ function [out, signal] = sim(obj, b, c, W, Tr, Ta)
     signal.y = y;
     signal.signal = signals;
     
-    function Xt = derivative(~,X)
-        Xt = zeros(size(X));
-        
-        y = max(X(1:2:end),0);
-        Wy = W*y;
-        
-        for i = 1:obj.nNeurons
-            Xt(2*i-1:2*i) = ...
-                [(-X(2*i-1) - Wy(i,:) + c(i) - b*X(2*i))/Tr;
-                 (-X(2*i) + y(i))/Ta];
-        end
+    function Xt = derivative(~, X)
+        Xt = sim.Con.Derivative(0, X);
+%         Xt = zeros(size(X));
+%         
+%         y = max(X(1:2:end),0);
+%         Wy = W*y;
+%         
+%         for i = 1:obj.nNeurons
+%             Xt(2*i-1:2*i) = ...
+%                 [(-X(2*i-1) - Wy(i,:) + c(i) - b*X(2*i))/Tr;
+%                  (-X(2*i) + y(i))/Ta];
+%         end
     end
 
-    function [x0, X, T] = runSim()
+    function [x0, X, T] = runMatsuokaSim()
         % Setup initial conditions
         x0 = zeros(2*obj.nNeurons,1);
 %         x0(1:2:end) = (1-2*rand(obj.nNeurons,1)).*c/(1-b);
-        x0(1:2:end) = randn(obj.nNeurons,1)/6.*c;
+        x0(1:2:end) = randn(obj.nNeurons,1)/6.*sim.Con.Amp0;
 
-        tSpan = 0:obj.tStep:obj.tEnd; % Time span
+        tend = min(3*obj.tEnd, obj.tEnd/sim.Con.tau);
+        tSpan = 0:obj.tStep:tend; % Time span
         
         % Set sim options
         options = odeset('AbsTol',obj.absTol,'RelTol',obj.relTol);

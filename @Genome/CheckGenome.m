@@ -12,7 +12,7 @@ function [ Result, Seq ] = CheckGenome( Ge, Seq )
     end
     
     % Check that it's between the max and min range
-    if any(Seq<Ge.Range(1,:) | Seq>Ge.Range(2,:))
+    if any(Seq<=Ge.Range(1,:) | Seq>=Ge.Range(2,:))
         Result = {0;
         	'Sequence outside allowed genome range'};
         return;

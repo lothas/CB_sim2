@@ -25,30 +25,39 @@ GA.Graphics = 0;
 GA.ReDo = 1;
 
 % Set up the genome
-nAnkle = 1; % Number of ankle torques
-nHip = 1;   % Number of hip torques
-maxAnkle = 8;   % Max ankle torque
-maxHip = 20;    % Max hip torque
-Mamp = [maxAnkle*ones(1,2*nAnkle), maxHip*ones(1,2*nHip)];
-mamp = 0*Mamp;
-N = nAnkle+nHip;
-Mw = 10*ones(1,(2*N-1)*2*N);
-mw = -0.1*Mw;
+genome_file = 'MatsuokaGenome.mat';
+if exist(genome_file, 'file') ~= 2
+    nAnkle = 1; % Number of ankle torques
+    nHip = 1;   % Number of hip torques
+    maxAnkle = 8;   % Max ankle torque
+    maxHip = 20;    % Max hip torque
+    Mamp = [maxAnkle*ones(1,2*nAnkle), maxHip*ones(1,2*nHip)];
+    mamp = 0*Mamp;
+    N = nAnkle+nHip;
+    Mw = 10*ones(1,(2*N-1)*2*N);
+    mw = -0.1*Mw;
 
-% TorqueFBMin = [-5*ones(1,NAnkleT),-10*ones(1,NHipT)];
-% TorqueFBMax = -TorqueFBMin;
+    % TorqueFBMin = [-5*ones(1,NAnkleT),-10*ones(1,NHipT)];
+    % TorqueFBMax = -TorqueFBMin;
 
-% Keys = {'tau','tav','beta','amp','win','wex','ks_tau',  'ks_out','IC_matsuoka';
-%            1 ,   1 ,    1 , 2*N ,   1 , 2*N ,      1 ,      2*N ,           0 };
-% Range = {0.1 , 0.1 ,   10 , mamp, -20 , Mwex,   -1e2 , -0.1*Mamp; % Min
-%            2 ,   2 ,   30 , Mamp,  -1 , mwex,    1e2 ,  0.1*Mamp}; % Max
-Keys = {'\tau_r','amp',   'weights','ks_\tau',     'ks_c','IC_matsuoka';
-              1 , 2*N , (2*N-1)*2*N,       1 ,      2*N ,           0 };
-Range = {   0.1 , mamp,          mw,    -1e2 , -0.1*Mamp; % Min
-              2 , Mamp,          Mw,     1e2 ,  0.1*Mamp}; % Max
+    % Keys = {'tau','tav','beta','amp','win','wex','ks_tau',  'ks_out','IC_matsuoka';
+    %            1 ,   1 ,    1 , 2*N ,   1 , 2*N ,      1 ,      2*N ,           0 };
+    % Range = {0.1 , 0.1 ,   10 , mamp, -20 , Mwex,   -1e2 , -0.1*Mamp; % Min
+    %            2 ,   2 ,   30 , Mamp,  -1 , mwex,    1e2 ,  0.1*Mamp}; % Max
+    Keys = {'\tau_r','amp',   'weights','ks_\tau',     'ks_c','IC_matsuoka';
+                  1 , 2*N , (2*N-1)*2*N,       1 ,      2*N ,           0 };
+    Range = {  0.02 , mamp,          mw,    -1e2 , -0.1*Mamp; % Min
+               0.25 , Mamp,          Mw,     1e2 ,  0.1*Mamp}; % Max
 
-MutDelta0 = 0.04;
-MutDelta1 = 0.02;
+    MutDelta0 = 0.04;
+    MutDelta1 = 0.02;
+    
+    save(genome_file, 'nAnkle', 'nHip', 'maxAnkle', 'maxHip', ...
+        'Mamp', 'mamp', 'N', 'Mw', 'mw', ...
+        'MutDelta0', 'MutDelta1', 'Keys', 'Range');
+else
+    load(genome_file);
+end
 
 GA.Gen = Genome(Keys, Range);
 % KeyLength = GA.Gen.KeyLength;

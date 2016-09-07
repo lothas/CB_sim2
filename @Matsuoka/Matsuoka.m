@@ -152,11 +152,10 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
         function [Xdot] = Derivative(MO, ~, X)
             % X = [u_i; v_i];
             u = X(1:2*MO.nPulses,:);
-            v = X(2*MO.nPulses+1:end);
+            v = X(2*MO.nPulses+1:end,:);
             y = max(u,0);
             
-            udot = 1/MO.tau*(-u - MO.beta*v + MO.Amp + ...
-                             MO.W*y);
+            udot = 1/MO.tau*(-u - MO.beta*v + MO.Amp - MO.W*y);
             vdot = 1/MO.tav*(-v+y);
             
             Xdot = [udot;

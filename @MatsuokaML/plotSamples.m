@@ -3,6 +3,8 @@ function plotSamples( obj, results, mask, n_samples, title_str )
 %   Detailed explanation goes here
 
 tend_temp = obj.tEnd;
+tstep_temp = obj.tStep;
+obj.tStep = 0.01;
 
 if nargin<3
     n_samples = 1;
@@ -38,17 +40,21 @@ for i = 1:n_samples
     end
     
     % Run simulation
-    [~, signal] = obj.sim(sr.b, sr.c, sr.W, sr.Tr, sr.Ta);
+    [~, ~, signal] = obj.runSim(sr.seq, sr.b);    
     
     % Show only the last 2 periods
-    t2periods = 2*max(sr.periods);
+    if isnan(samp_period)
+        t2periods = 5;
+    else
+        t2periods = 2*samp_period;
+    end
     t_id = find(signal.T<signal.T(end)-t2periods, 1, 'last');
     tspan = t_id:length(signal.T);
     
     figure
     hold on
-    for s = 1:size(signal.signal,2)
-        plot(signal.T(tspan),signal.signal(tspan,s));
+    for s = 1:size(signal.signal,1)
+        plot(signal.T(tspan),signal.signal(s,tspan));
     end
     % Show id+period info on title
     title([title_str,int2str(id_samp(i)),10,...
@@ -70,10 +76,13 @@ for i = 1:n_samples
     % (not for publishing)
     figure
     hold on
-    for s = 1:size(signal.signal,2)
-        plot(signal.T,signal.signal(:,s));
+    for s = 1:size(signal.signal,1)
+        plot(signal.T,signal.signal(s,:));
     end
+    
+%     [y, periods, signals, pos_work, neg_work] = obj.processResults(signal.X, signal.T);
 end
 
 obj.tEnd = tend_temp;
+obj.tStep = tstep_temp;
 
