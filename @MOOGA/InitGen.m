@@ -4,6 +4,7 @@ function [ GA ] = InitGen( GA )
 
 % Initialize sequences and fitness
 GA.Seqs = zeros(GA.Population, GA.Gen.Length, GA.Generations);
+GA.Parents = zeros(GA.Population, 2, GA.Generations); % 2 parents
 GA.Fit = zeros(GA.Population, max(cell2mat(GA.FitFcn(:,1)')), GA.Generations);
 
 if exist(GA.FileIn,'file') == 2

@@ -11,6 +11,7 @@ if Res{1} == 0
     % continue running
 %     error('ERROR: Invalid sequence');
 %     return;
+    warning(['Invalid sequence: ', Res{2}, '. Running random sequence...'])
     Seq = Ge.RandSeq();
 end
 

@@ -19,18 +19,37 @@ function [net, tr, netPerf, desPeriod, sampPerf, sampPerfSc] = ...
              
     % Run adaptive simulations using the NN output and see how many
     % converge to the right period
-    getRandFuncHandle = @obj.getRandPar;
+%     getRandFuncHandle = @obj.Gen.RandSeq;
+    genomeObj = obj.Gen;
     getNNFuncHandle = @obj.getNNPar;
-    runSimFuncHandle = @obj.sim;
+    genTauMin = obj.Gen.Range(1,1);
+    genTauMax = obj.Gen.Range(2,1);
+    runSimFuncHandle = @obj.runSim;
     perLimMin = obj.perLim(1);
     perLimMax = obj.perLim(2);
     parfor j = 1:NNSamples
-        % Setup oscillators' parameters
-        [~, b, c, ~, W, ~, ~] = getRandFuncHandle();
-        % Get Tr, Ta estimates from NN
-        [Tr, Ta] = getNNFuncHandle(net, c, W, desPeriod(j));
+        % Setup tau_r, tau_a, c, W and feedback gains using genome
+%         seq = getRandFuncHandle(); % Get random genetic sequence
+        seq = genomeObj.RandSeq(); %#ok<PFBNS> % Get random genetic sequence
+
+        % Set random b
+        if rand()>0.7
+            beta = min(max(0.6+0.1*randn(),0.2),0.8);
+        else
+            beta = min(max(2.5+randn(),0.8),8);
+        end
+        
+        % Get Tr estimates from NN
+        seq(1) = getNNFuncHandle(net, seq, desPeriod(j));
+        if seq(1) < genTauMin || seq(1) > genTauMax
+            warning(['Genetic sequence #', int2str(j), ...
+                ' out of bounds, using bounded tau gene'])
+            % Bound tau gene
+            seq(1) = min(max(seq(1), genTauMin), genTauMax);
+        end
+        
         % Run simulation
-        [out, ~] = runSimFuncHandle(b, c, W, Tr, Ta);
+        [out, ~, ~] = runSimFuncHandle(seq, beta);    
         
         % Save resulting period
         if any(isnan(out.periods))
@@ -43,9 +62,16 @@ function [net, tr, netPerf, desPeriod, sampPerf, sampPerfSc] = ...
         if sampPerf(j) < perLimMin || sampPerf(j) > perLimMax
             % Try rescaling time
             ratio = desPeriod(j)/sampPerf(j);
-            Tr = Tr*ratio;
-            Ta = 5*Tr;
-            [out, ~] = runSimFuncHandle(b, c, W, Tr, Ta);
+            seq(1) = seq(1)*ratio;
+            if seq(1) < genTauMin || seq(1) > genTauMax
+                warning(['Genetic sequence #', int2str(j), ...
+                    ' out of bounds, using bounded tau gene'])
+                % Bound tau gene
+                seq(1) = min(max(seq(1), genTauMin), genTauMax);
+            end
+
+            % Run simulation
+            [out, ~, ~] = runSimFuncHandle(seq, beta);
             % Save resulting period
             if any(isnan(out.periods))
                 sampPerfSc(j) = NaN;

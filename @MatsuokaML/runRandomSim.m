@@ -10,7 +10,7 @@ function [results, signal] = runRandomSim(obj)
     if rand()>0.7
         beta = min(max(0.6+0.1*randn(),0.2),0.8);
     else
-        beta = min(max(2.5+randn(),0.8),8);
+        beta = min(max(5+1.5*randn(),0.8),10);
     end
     
     % Run simulation

@@ -143,8 +143,9 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
             
             % Apply higher-level speed input
             MO.tau = MO.tau + MO.ks_tau*MO.s_in;
-            MO.tav = MO.tav + MO.ks_tau*MO.s_in;
+            MO.tav = MO.tau_ratio*MO.tav;
             MO.Amp = MO.Amp0 + MO.ks_out*MO.s_in;
+            % Update the weight matrix
             MO.W = (diag(1./MO.Amp)*(diag(MO.Amp)*(MO.win+MO.wex))')';
         end
         

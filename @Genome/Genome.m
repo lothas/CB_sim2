@@ -135,6 +135,22 @@ classdef Genome
             end
             seqStr = [seqStr,'];'];
         end
+        
+        function [genes] = GetGenes(Ge, seq, sel_keys)
+            genes = seq;
+            ng = 1;
+            for i = 1:numel(sel_keys)
+                key_id = find(strcmp(sel_keys{i},Ge.Keys(1,:)));
+                if isempty(key_id)
+                    error(['Key "',sel_keys{i},'" not found!']);
+                end
+                start_id = sum(Ge.Segments(1:key_id-1))+1;
+                genes(ng:ng+Ge.Segments(key_id)-1) = ...
+                    seq(start_id:start_id+Ge.Segments(key_id)-1);
+                ng = ng+Ge.Segments(key_id);
+            end
+            genes = genes(1:ng-1);
+        end
     end
     
 end

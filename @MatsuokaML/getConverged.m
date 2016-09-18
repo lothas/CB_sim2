@@ -10,8 +10,9 @@ function [id_conv, id_per, periods] = getConverged(obj, results, nSims)
     nconv = length(id_conv);
     
     % Remove ones where we didn't detect a unique period
-    periods_diff = mod(max(all_periods)-min(all_periods), ...
-                        min(all_periods));
+    mPer = min(all_periods);
+    MPer = max(all_periods);
+    periods_diff = min(mod(MPer-mPer, mPer), mod(mPer-MPer, mPer));
     periods(periods_diff > 0.1*periods) = NaN;
     % Remove ones with too high/low period
     periods(periods<0.05*obj.perLimOut(1) | ...

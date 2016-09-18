@@ -31,6 +31,7 @@ classdef MOOGA
         % Genomes
         Seqs;       % Genome sequences
         Fit;        % Genome fitnesses
+        Parents;    % Parent IDs for each genome
         
         % Additional genes optimized by previous MOOGA
         BaseGen;

@@ -1,13 +1,12 @@
-function [Tr, Ta] = getNNPar(obj, NN, c, W, period)
+function Tr = getNNPar(obj, NN, seq, period)
 %GETNNPAR Use neural network to obtain new values of tau
-    in = [c;
-         W(~logical(eye(size(W))));
-         period];
+    % Get tonic inputs and connection weights from genetic sequence
+    genes = obj.Gen.GetGenes(seq, obj.selected_genes);
+    in = [genes';  period];
 
     % Normalize X
     in = bsxfun(@rdivide, bsxfun(@minus, in, ...
         obj.normParams(:,1)), obj.normParams(:,2));
     NNout = NN(in);
     Tr = NNout(1);
-    Ta = obj.TrTaRatio*NNout(1);
 end

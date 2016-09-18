@@ -2,6 +2,10 @@
 MML = MatsuokaML();
 MML.perLim = [0.68 0.78];
 MML.perLimOut = MML.perLim + [-0.08 0.08]; % Desired period range
+MML.tStep = 0.01;
+MML.tEnd = 15;
+
+nPlotSamples = 0; % 10;
 
 % Turn off findpeaks warning
 warning('off','signal:findpeaks:largeMinPeakHeight');
@@ -70,7 +74,7 @@ disp(['False positives: ', int2str(sum(fp1))]);
 disp(['False negatives: ', int2str(sum(fn1))]);
 
 % Show some cases
-n_cases = 3;
+n_cases = nPlotSamples;
 % True positives
 MML.plotSamples(results, tp1, n_cases, 'Cond. 1 true positive sample #');
 % True negatives
@@ -112,7 +116,7 @@ disp(['False positives: ', int2str(sum(fp2))]);
 disp(['False negatives: ', int2str(sum(fn2))]);
 
 % Show some cases
-n_cases = 3;
+n_cases = nPlotSamples;
 % True positives
 MML.plotSamples(results, tp2, n_cases, 'Cond. 2 true positive sample #');
 % True negatives
@@ -165,9 +169,10 @@ end
 
 % Train network with specific architecture and different number of samples
 if exist(filename5, 'file') ~= 2
+    maxN = size(samples, 2);
     architecture = architectures{2};
     nSampleSizes = 20;
-    sampleSizes = floor(logspace(1,3,nSampleSizes))*maxN/1000;
+    sampleSizes = floor(logspace(1,3,nSampleSizes)*maxN/1000);
     
     net = cell(nSampleSizes, 1);       % Cell array to store NNs
     tr = cell(nArch, 1);            % Cell array to store NNs training res
@@ -193,9 +198,10 @@ end
 
 % Train network with specific architecture and different number of samples
 if exist(filename6, 'file') ~= 2
+    maxN = size(samples, 2);
     architecture = architectures{end};
     nSampleSizes = 20;
-    sampleSizes = floor(logspace(1,3,nSampleSizes))*maxN/1000;
+    sampleSizes = floor(logspace(1,3,nSampleSizes)*maxN/1000);
     
     net = cell(nSampleSizes, 1);       % Cell array to store NNs
     tr = cell(nArch, 1);            % Cell array to store NNs training res

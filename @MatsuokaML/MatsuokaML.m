@@ -7,7 +7,6 @@ classdef MatsuokaML
         NN = [];
         SVM = [];
         normParams = [];
-        TrTaRatio = 5;
         
         doPlot = 0;
         
@@ -22,6 +21,8 @@ classdef MatsuokaML
         
         Sim = [];
         Gen = [];
+        
+        selected_genes = {'weights'};
     end
     
     methods

@@ -3,8 +3,8 @@ function [  ] = GA_Vel_Matsuoka( gen, pop, file_in, file_out )
 % simulation with a bounded foot size (ZMP threshold)
 
 if nargin<4
-    GA = MOOGA(10,6000);
-%     GA = MOOGA(10,100);
+    GA = MOOGA(10,5000);
+%     GA = MOOGA(10,500);
     GA = GA.SetFittest(15,15,0.5);
     GA.JOAT = 2; GA.Quant = 0.5;
     % GA.Fittest = [20,20,1];
@@ -20,6 +20,9 @@ else
     GA.FileIn = file_in;
     GA.FileOut = file_out;
 end
+
+% Use NN?
+use_NN = 0;
 
 GA.Graphics = 0;
 GA.ReDo = 1;
@@ -44,10 +47,16 @@ if exist(genome_file, 'file') ~= 2
     %            1 ,   1 ,    1 , 2*N ,   1 , 2*N ,      1 ,      2*N ,           0 };
     % Range = {0.1 , 0.1 ,   10 , mamp, -20 , Mwex,   -1e2 , -0.1*Mamp; % Min
     %            2 ,   2 ,   30 , Mamp,  -1 , mwex,    1e2 ,  0.1*Mamp}; % Max
+    
     Keys = {'\tau_r','amp',   'weights','ks_\tau',     'ks_c','IC_matsuoka';
                   1 , 2*N , (2*N-1)*2*N,       1 ,      2*N ,           0 };
     Range = {  0.02 , mamp,          mw,    -1e2 , -0.1*Mamp; % Min
                0.25 , Mamp,          Mw,     1e2 ,  0.1*Mamp}; % Max
+
+%     Keys = {'\tau_r','amp',   'weights', 'IC_matsuoka';
+%                   1 , 2*N , (2*N-1)*2*N,            0 };
+%     Range = {  0.02 , mamp,          mw; % Min
+%                0.25 , Mamp,          Mw}; % Max
 
     MutDelta0 = 0.04;
     MutDelta1 = 0.02;
@@ -91,7 +100,7 @@ GA.Sim.Con.MaxSat = [ maxAnkle, maxHip];
 
 % Simulation parameters
 GA.Sim.IC = [start_slope, start_slope, 0, 0, zeros(1, GA.Sim.Con.stDim)];
-GA.Sim = GA.Sim.SetTime(0,0.09,40);
+GA.Sim = GA.Sim.SetTime(0,0.03,20);
 
 % Some more simulation initialization
 GA.Sim.Mod.LegShift = GA.Sim.Mod.Clearance;
@@ -100,16 +109,18 @@ GA.Sim.Mod.LegShift = GA.Sim.Mod.Clearance;
 %                                           GA.Sim.IC(GA.Sim.ConCo));
                                 
 % Fitness functions
-GA.FitFcn = {1, @MOOGA.VelFit;
-             2, @MOOGA.NrgEffFit;
-             3, @MOOGA.EigenFit};
-GA.FitIDs = [1,2]; % Velocity range and average COT
-GA.FitMinMax = [1, 1, 1];
-
 % GA.FitFcn = {1, @MOOGA.VelFit;
 %              2, @MOOGA.NrgEffFit;
-%              3:7, @MOOGA.VelRangeFit;
-%              8, @MOOGA.EigenFit};
+%              3, @MOOGA.EigenFit};
+% GA.FitIDs = [1,2]; % Velocity and average COT
+% GA.FitMinMax = [1, 1, 1];
+
+GA.FitFcn = {1, @MOOGA.VelFit;
+             2, @MOOGA.NrgEffFit;
+             3:10, @MOOGA.VelRangeFit;
+             11, @MOOGA.EigenFit};
+GA.FitIDs = [1,2,3]; % Velocity and average COT
+GA.FitMinMax = [1, 1, 1, 1, -1, 1, -1, 1, -1, 1, 1];
 
 % GA.FitFcn = {1, @MOOGA.VelFit;
 %              2, @MOOGA.EigenFit;
@@ -124,6 +135,10 @@ GA.NFit = size(GA.FitIDs,2);
 GA.Sim.PMFull = 1; % Run poincare map on all coords
 
 GA = GA.InitGen();
+if use_NN
+    % TODO: Add NN code here
+end
+
 % GA.Seqs(1,:,1) = [0.3,  0.6,   15, [1.00,4.00,10.00,1.00],     -1,...
 %             [-1, 0, 0,-3,-1, 0, 0,-3], -0.0001, [-0.02 0.02 0.4 0.1]];
 

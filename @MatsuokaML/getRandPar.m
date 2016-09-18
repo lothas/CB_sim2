@@ -19,7 +19,7 @@ function [a, b, c, Worig, W, Tr, Ta] = getRandPar(obj)
     W = min(max(W, -20), 20); %#ok<UDIM>
 
     Tr = 0.01+rand()*0.36; % 0.01*exp(5.5*rand());
-    Ta = obj.TrTaRatio*Tr; % 0.01*exp(5.5*rand());
+    Ta = obj.Sim.Con.tau_ratio*Tr; % 0.01*exp(5.5*rand());
 end
 
 

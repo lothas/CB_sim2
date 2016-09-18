@@ -9,7 +9,7 @@ if GA.Sim.Graphics == 1
 end
 
 if isempty(gcp('nocreate'))
-    parpool(7) % Work in parallel to finish faster
+    parpool(6) % Work in parallel to finish faster
 end
 
 % Decode base genome if provided
@@ -149,10 +149,14 @@ for g = GA.Progress+1:GA.Generations
             GA.Seqs(TopIDs,:,g);
         GA.Fit(1:GA.Fittest(1),:,g+1) = ...
             GA.Fit(TopIDs,:,g);
+        GA.Parents(1:GA.Fittest(1),:,g+1) = ...
+            GA.Parents(TopIDs,:,g);
 
         % Add a mutated copy of top IDs
         GA.Seqs(GA.Fittest(1)+1:GA.Fittest(1)+GA.Fittest(2),:,g+1) = ...
             GA.Gen.Mutate(GA.Seqs(1:GA.Fittest(2),:,g+1));
+        GA.Parents(GA.Fittest(1)+1:GA.Fittest(1)+GA.Fittest(2),:,g+1) = ...
+            GA.Parents(GA.Fittest(1)+1:GA.Fittest(1)+GA.Fittest(2),:,g);
 
         % Add children (by pairs)
         Child = GA.Fittest(1)+GA.Fittest(2)+1;
@@ -173,6 +177,7 @@ for g = GA.Progress+1:GA.Generations
             for c = 1:2
                 if Res{c,1} ~= 0 && Child <= GA.Population
                     GA.Seqs(Child,:,g+1) = Children(c,:);
+                    GA.Parents(Child,:,g+1) = IDs;
                     Child = Child+1;
                 end
             end

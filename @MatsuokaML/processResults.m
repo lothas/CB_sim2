@@ -47,8 +47,10 @@ function [y, periods, signals, pos_work, neg_work] = ...
             loc_half = locs(1:floor(length(locs)/2));
             k = loc_half'\ac(loc_half)';
             diffs = abs(ac(loc_half)-k*loc_half);
-            outliers = sum(diffs>mean(diffs)+3*std(diffs) | diffs > 0.2);
-            if outliers == 0 || length(loc_half) < 3
+            out_limit = mean(diffs)+3*std(diffs);
+            outliers = sum(diffs>out_limit | diffs > 0.2);
+            if outliers<0.1*length(loc_half) || ...
+                    length(loc_half) < 3
                 % Use normal approach
                 periods(i) = mean(diff(locs))*mean(diff(T));
             else
@@ -57,7 +59,16 @@ function [y, periods, signals, pos_work, neg_work] = ...
                     1 + find(ac(locs(2:end-1)) > ac(locs(1:end-2)) & ...
                     ac(locs(2:end-1)) > ac(locs(3:end))); % Local peak
                 good_peaks = locs(good_peak_ids);
+                % Take out outliers
+                d_good_peaks = diff(good_peaks);
+                if std(d_good_peaks) > 0.5*mean(d_good_peaks)
+                    good_peaks(d_good_peaks > ...
+                        mean(d_good_peaks)+2*std(d_good_peaks)) = [];
+                    good_peaks(end) = [];
+                end
+                
                 periods(i) = mean(diff(good_peaks))*mean(diff(T));
+                
             end
         end
 
