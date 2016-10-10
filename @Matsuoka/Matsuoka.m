@@ -143,7 +143,7 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
             
             % Apply higher-level speed input
             MO.tau = MO.tau + MO.ks_tau*MO.s_in;
-            MO.tav = MO.tau_ratio*MO.tav;
+            MO.tav = MO.tau_ratio*MO.tau;
             MO.Amp = MO.Amp0 + MO.ks_out*MO.s_in;
             % Update the weight matrix
             MO.W = (diag(1./MO.Amp)*(diag(MO.Amp)*(MO.win+MO.wex))')';
@@ -170,8 +170,8 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
             direction = -ones(MO.nEvents,1);
             
             % Check for firing neuron
-            Torques = MO.Output(0, X, 0);
-            value(1) = -Torques(2,1);
+%             Torques = MO.Output(0, X, 0);
+%             value(1) = -Torques(2,1);
 % 
 %             % Check for leg extension signal (for clearance)
 % %             value(2) = MO.P_LegE - X;

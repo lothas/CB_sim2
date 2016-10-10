@@ -45,6 +45,17 @@ else
     end
 end
 
+    function legends = getLegends()
+        legends = cell(GA.NFit,1);
+        for i = 1:GA.NFit
+            fitID = GA.FitIDs(i);
+            nameID = cellfun(@(x)ismember(fitID,x),GA.FitFcn(:,1));
+            funcName = func2str(GA.FitFcn{nameID, 2});
+            funcSplit = strsplit(funcName,{'.','Fit'});
+            legends{i} = ['F_{',funcSplit{2},'}'];
+        end
+    end
+
     function PlotFit(Type)
         % Type 0: Just max
         % Type 1: Max and mean
@@ -52,7 +63,7 @@ end
         hold on
         Generations = 1:GA.Generations;
         h = zeros(1,GA.NFit);
-        legends = cell(1,GA.NFit);
+        legends = getLegends();
         for f = 1:GA.NFit
             FitInd = GA.FitFcn{f,1};
             LF = length(FitInd);
@@ -97,7 +108,7 @@ end
             
 %             legends{f} = MOOGA.GetFitFcnName(GA.FitFcn{f,2});
         end
-        legend(h,mylegends,'Location','SouthEast','FontSize',LabelFont);
+        legend(h,legends,'Location','SouthEast','FontSize',LabelFont);
         xlabel('Generations','FontSize',LabelFont);
         ylabel('Normalized Fitness','FontSize',LabelFont);
         set(gca,'FontSize',AxesFont,'LineWidth',2);

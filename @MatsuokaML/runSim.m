@@ -1,10 +1,10 @@
-function [out, sim, signal] = runSim(obj, sequence, beta)
+function [out, sim, signal] = runSim(obj, sequence)
 %SIM Runs a simulation of a CPG with Matsuoka neurons using the given
 %parameters
 
-if nargin<3
-    beta = obj.Sim.Con.beta;
-end
+% if nargin<3
+%     beta = obj.Sim.Con.beta;
+% end
 
 %     cond1 = (obj.Sim.Con.tau_ratio + 1)*obj.Sim.Con.beta > max(obj.Sim.Con.W(:))
 %     if ~cond1
@@ -17,8 +17,9 @@ end
     sim.Con = copy(obj.Sim.Con);
             
     % Setup tau_r, tau_a, c, W and feedback gains using genome
+    % and beta
     sim = obj.Gen.Decode(sim, sequence);
-    sim.Con.beta = beta;
+%     sim.Con.beta = beta;
     
     sim.Con.s_in = 0;
     sim.Con = sim.Con.Adaptation();

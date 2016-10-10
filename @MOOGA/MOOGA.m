@@ -22,6 +22,14 @@ classdef MOOGA
                     %   population, a.k.a. "master of none".
         Quant = 0.8;    % Drops 20% of the population that are bad at one
                         % or more fitness aspects (for JOAT>0)
+
+        % Use NN to modify some genes, akin to fancy epigenetic gene
+        % expression. How cool is that?
+        NN = [];
+        NNFcn = [];
+        
+        % Rescale some genes to get a certain temporal performance
+        rescaleFcn = [];
         
         % Objects
         Gen;        % Genome
@@ -243,11 +251,11 @@ classdef MOOGA
             COT = Sim.GetCOT([1,0], 0);
             
             if isempty(COT)
-                COT = 0;
+                fit = 0;
+            else
+                % Low COT (as low as 0) is best so points are given by
+                fit=1/(1+5*COT);
             end
-               
-            % Low COT (as low as 0) is best so points are given by
-            fit=1/(1+5*COT);
             % COT of 0 gives 1
             % COT of 0.03 gives 0.869
             % COT of 0.12 gives 0.625

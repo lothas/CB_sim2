@@ -87,15 +87,19 @@ for k = 1:size(Ge.Keys,2)
             % set the simulation's initial condition to a value that aids
             % the oscillators' convergence
             Sim = Sim.Init();
-            wfe = mean(mean(abs(Sim.Con.win(Sim.Con.win~=0))));
-%             Sim.Con.u0 = Sim.Con.beta/abs(wfe);
-%             u_ss = Sim.Con.u0/Sim.Con.beta*abs(wfe);
-%             u_ss = Sim.Con.Amp(1)/Sim.Con.beta*abs(wfe);
-            u_ss = max(Sim.Con.Amp)/Sim.Con.beta*abs(wfe);
-            MIC = zeros(1,Sim.Con.stDim);
-%             MIC(1) = 10;
-%             MIC(3) = u_ss;
-            Sim.IC(Sim.ConCo) = MIC;
+            Sim.IC(Sim.ConCo) = [0.33*Sim.Con.Amp' * ...
+                diag(repmat([1, 0],1,Sim.Con.nPulses)), ...
+                zeros(1, 2*Sim.Con.nPulses)];
+            
+%             wfe = mean(mean(abs(Sim.Con.win(Sim.Con.win~=0))));
+% %             Sim.Con.u0 = Sim.Con.beta/abs(wfe);
+% %             u_ss = Sim.Con.u0/Sim.Con.beta*abs(wfe);
+% %             u_ss = Sim.Con.Amp(1)/Sim.Con.beta*abs(wfe);
+%             u_ss = max(Sim.Con.Amp)/Sim.Con.beta*abs(wfe);
+%             MIC = zeros(1,Sim.Con.stDim);
+% %             MIC(1) = 10;
+% %             MIC(3) = u_ss;
+%             Sim.IC(Sim.ConCo) = MIC;
             
         
         %% %%%%%%%%%% Model keys %%%%%%%%%% %%

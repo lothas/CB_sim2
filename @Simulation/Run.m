@@ -72,6 +72,9 @@ function [ sim ] = Run( sim )
                         Xa(sim.ConCo),sim.Env.SurfSlope(sim.Mod.xS));
 
                     sim = sim.UpdateStats(TTemp,XTemp);
+                    
+                    % Shorten new swing leg (for ground clearance)
+                    sim.Mod.LegShift = sim.Mod.Clearance;
 
                     if ~ischar(sim.Mod.curSpeed)
                         sim.TimeStr = ['t = %.2f s\nOsc.=%.3f\n',...

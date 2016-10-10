@@ -22,7 +22,8 @@ classdef MatsuokaML
         Sim = [];
         Gen = [];
         
-        selected_genes = {'weights'};
+        sample_genes = {'beta','weights'};
+        target_genes = {'\tau_r'};
     end
     
     methods

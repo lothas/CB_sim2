@@ -3,8 +3,9 @@ function [results, signal] = runScaledSim(obj, inputData, inputPeriod)
 % rescaled to obtain a desired period
 
     % Setup tau_r, tau_a, c, W and feedback gains using genome
+    % and beta
     seq = inputData.seq;
-    beta = inputData.b;
+%     beta = inputData.b;
     
     % Select new random period within desired range
     des_period = obj.perLim(1) + rand()*(obj.perLim(2)-obj.perLim(1));
@@ -19,12 +20,14 @@ function [results, signal] = runScaledSim(obj, inputData, inputPeriod)
     end
     
     % Run simulation
-    [out, sim, signal] = obj.runSim(seq, beta);
+    [out, sim, signal] = obj.runSim(seq);
+%     [out, sim, signal] = obj.runSim(seq, beta);
 
     % Prepare output:
     % Parameters
     results.seq = seq;
-    results.b = beta;
+%     results.b = beta;
+    results.b = sim.Con.beta;
     results.c = sim.Con.Amp0;
     results.Worig = sim.Con.wex;
     results.W = sim.Con.W;

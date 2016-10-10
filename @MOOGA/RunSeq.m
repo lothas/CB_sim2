@@ -30,6 +30,13 @@ end
 
 % Set-up the simulation
 wSim = deepcopy(GA.Sim);
+
+if ~isempty(GA.NN) && ~isempty(GA.NNFcn) ...
+        && strcmp(wSim.Con.name, 'Matsuoka')
+    % Use NN to select best value for tau gene
+    thisSeq = GA.NNFcn(GA.Gen, GA.NN, thisSeq);
+end
+    
 wSim = GA.Gen.Decode(wSim,thisSeq);
 
 if nargout == 0
@@ -46,50 +53,53 @@ wSim = wSim.Init();
 wSim.Con = wSim.Con.HandleEvent(1, wSim.IC(wSim.ConCo));
 if strcmp(wSim.Con.name, 'Matsuoka')
     wSim.Con = wSim.Con.Adaptation();
+    
+    %%%%%%%%%%%%%%% Separate Matsuoka simulation %%%%%%%%%%%%%%%%
+    % Run this code to see how the neuronal controller converges
+    wMOSim = deepcopy(wSim);
+    
+    % Initial conditions
+    IC0 = wMOSim.IC(wMOSim.ConCo);
+    wMOSim.Con.startup_t = 0;
+%     wMOSim.Con.s_in = 3;
+%     wMOSim.Con = wMOSim.Con.Adaptation(0);
+    
+    % tspan
+    t_start = 0;
+    t_end = 10;
+    t_step = 0.025;
+    t_span = t_start:t_step:t_end;
+    
+    % Run simulation
+    options = odeset('MaxStep',t_step/10,'RelTol',.5e-7,'AbsTol',.5e-8);
+    [TTemp,XTemp] = ode45(@MatsDerivative,t_span,IC0,options);
+    % options = odeset('MaxStep',t_step/10,'RelTol',.5e-7,'AbsTol',.5e-8,...
+    %             'Events', @MO.Events);
+    % [TTemp,XTemp,TE,YE,IE] = ...
+    %     ode45(@MO.Derivative,t_span,IC0,options); %#ok<ASGLU>
+    
+%     figure
+%     for i = 1:4
+%         subplot(4,1,i)
+%         plot(TTemp, XTemp(:,wMOSim.ConCo));
+%     end
+%     figure
+%     plot(TTemp, wMOSim.Con.Output(TTemp, XTemp', 0));
+%     grid on
+    
+    if ~isempty(GA.rescaleFcn)
+        thisSeq = GA.rescaleFcn(GA.Gen, thisSeq, XTemp, TTemp);
+        wSim = GA.Gen.Decode(wSim,thisSeq);
+        wSim.Con = wSim.Con.HandleEvent(1, wSim.IC(wSim.ConCo));
+        wSim.Con = wSim.Con.Adaptation();
+    end
 end
 
+    function xdot = MatsDerivative(t,x)
+        xdot = wSim.Con.Derivative(t,x);
+    end
 
-%% %%%%%%%%%%%%%% Separate Matsuoka simulation %%%%%%%%%%%%%%%%
-% Run this code to see how the neuronal controller converges
-%     close all
-% % Initial conditions
-% IC0 = wSim.IC(wSim.ConCo);
-% wSim.Con.startup_t = 1;
-% wSim.Con.s_in = 3;
-% wSim.Con = wSim.Con.Adaptation(0);
-% 
-% % tspan
-% t_start = 0;
-% t_end = 3.5;
-% t_step = 0.03;
-% t_span = t_start:t_step:t_end;
-% 
-% % Run simulation
-% options = odeset('MaxStep',t_step/10,'RelTol',.5e-7,'AbsTol',.5e-8);
-% [TTemp,XTemp] = ode45(@Derivative,t_span,IC0,options);
-% % options = odeset('MaxStep',t_step/10,'RelTol',.5e-7,'AbsTol',.5e-8,...
-% %             'Events', @MO.Events);
-% % [TTemp,XTemp,TE,YE,IE] = ...
-% %     ode45(@MO.Derivative,t_span,IC0,options); %#ok<ASGLU>
-% 
-% y = max(XTemp(:,1:2:end),0);
-% figure
-% N = wSim.Con.nPulses;
-% for i = 1:4
-%     subplot(4,1,i)
-%     plot(TTemp, XTemp(:,N*(i-1)+1:N*i));
-% end
-% figure
-% plot(TTemp, wSim.Con.Output(TTemp, XTemp', 0));
-% grid on
-% 
-% return
-% 
-%     function xdot = Derivative(t,x)
-%         xdot = wSim.Con.Derivative(t,x);
-%     end
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%   
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%   
 
 % Run the simulation
 wSim = wSim.Run();

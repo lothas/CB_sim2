@@ -4,17 +4,19 @@ function [results, signal] = runRandomSim(obj)
 %     [a, b, c, Worig, W, Tr, Ta] = obj.getRandPar();
 
     % Setup tau_r, tau_a, c, W and feedback gains using genome
+    % and beta
     seq = obj.Gen.RandSeq();
     
-    % Set random b
-    if rand()>0.7
-        beta = min(max(0.6+0.1*randn(),0.2),0.8);
-    else
-        beta = min(max(5+1.5*randn(),0.8),10);
-    end
+%     % Set random b
+%     if rand()>0.7
+%         beta = min(max(0.6+0.1*randn(),0.2),0.8);
+%     else
+%         beta = min(max(5+1.5*randn(),0.8),10);
+%     end
     
     % Run simulation
-    [out, sim, signal] = obj.runSim(seq, beta);
+    [out, sim, signal] = obj.runSim(seq);
+%     [out, sim, signal] = obj.runSim(seq, beta);
 
     % Prepare output:
     % Parameters

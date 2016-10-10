@@ -1,9 +1,6 @@
 function [ samples, targets, normParams ] = ...
     prepareNNData(obj, filenames, maxN)
 %PREPARENNDATA Prepares data to train a neural network using stored results
-%     obj.selected_genes = {'amp','weights'};
-    obj.selected_genes = {'weights'};
-    
     % Load data from files
     data = load(filenames{1});
     
@@ -32,9 +29,10 @@ function [ samples, targets, normParams ] = ...
     end
     
     % Number of inputs [(c), W and period]
-    genes = obj.Gen.GetGenes(results(ids(1)).seq, obj.selected_genes);
+    genes = obj.Gen.GetGenes(results(ids(1)).seq, obj.sample_genes);
     n_in = length(genes)+1;
-    n_out = 1; % Number of outputs (Tau_r)
+    genes = obj.Gen.GetGenes(results(ids(1)).seq, obj.target_genes);
+    n_out = length(genes); % Number of outputs
     
     samples = zeros(n_in, maxN);
     targets = zeros(n_out, maxN);
@@ -42,9 +40,9 @@ function [ samples, targets, normParams ] = ...
         sample = results(ids(i));
         period = periods(ids(i));
         
-        % Get tonic inputs and connection weights from genetic sequence
-        genes = obj.Gen.GetGenes(sample.seq, selected_genes);
-        Tr = obj.Gen.GetGenes(sample.seq, {'\tau_r'});
+        % Get selected genes from genetic sequence
+        genes = obj.Gen.GetGenes(sample.seq, obj.sample_genes);
+        Tr = obj.Gen.GetGenes(sample.seq, obj.target_genes);
         
         % Build sample and target vectors
         samples(:,i) = [genes';  period];

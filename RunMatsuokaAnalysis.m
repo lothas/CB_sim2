@@ -5,6 +5,9 @@ MML.perLimOut = MML.perLim + [-0.08 0.08]; % Desired period range
 MML.tStep = 0.01;
 MML.tEnd = 15;
 
+MML.sample_genes = {'amp','weights'};
+MML.target_genes = {'\tau_r','beta'};
+
 nPlotSamples = 0; % 10;
 
 % Turn off findpeaks warning
@@ -126,6 +129,56 @@ MML.plotSamples(results, fp2, n_cases, 'Cond. 2 false positive sample #');
 % False negatives
 MML.plotSamples(results, fn2, n_cases, 'Cond. 2 false negative sample #');
 
+%% Phase pre-3 - Train NNs using different features and targets
+
+sample_genes = {{'amp','weights'};
+                {'beta','amp','weights'};
+                {'weights'};
+                {'beta','weights'};
+                {'\tau_r','weights'}};
+target_genes = {{'\tau_r'};
+                {'\tau_r','beta'};
+                {'beta'}};
+combos = [1,1; % {'amp','weights'}          -> {'\tau_r'}           0.50    0.19
+          1,2; % {'amp','weights'}          -> {'\tau_r','beta'}    0.80    0.14 ++
+          1,3; % {'amp','weights'}          -> {'beta'}             0.81    0.08 +
+          2,1; % {'beta','amp','weights'}   -> {'\tau_r'}           0.49    0.16
+          3,1; % {'weights'}                -> {'\tau_r'}           0.52    0.18
+          3,2; % {'weights'}                -> {'\tau_r','beta'}    0.81    0.18 +++
+          3,3; % {'weights'}                -> {'beta'}             0.79    0.09 +
+          4,1; % {'beta','weights'}         -> {'\tau_r'}           0.52    0.19 
+          5,3]; % {'\tau_r','weights'}      -> {'beta'}             0.83    0.08 +
+
+maxN = 200000;
+NNSamples = 500;
+inFilenames = {filename1, filename2};
+
+nCombos = size(combos,1);
+net = cell(nCombos, 1);           % Cell array to store NNs
+tr = cell(nCombos, 1);            % Cell array to store NNs training res
+netPerf = zeros(nCombos, 4);      % Array to store NN performance
+% Array to store NN per sample performance
+desPeriod = zeros(nCombos, NNSamples);
+sampPerf = zeros(nCombos, NNSamples);
+sampPerfSc = zeros(nCombos, NNSamples); % re-scaled results
+    
+for i = 1:nCombos
+    MML.sample_genes = sample_genes{combos(i,1)};
+    MML.target_genes = target_genes{combos(i,2)};
+    
+    [samples, targets, normParams] = MML.prepareNNData(inFilenames, maxN);
+    MML.normParams = normParams;
+    
+    [net{i}, tr{i}, netPerf(i,:), desPeriod(i,:), ...
+            sampPerf(i,:), sampPerfSc(i,:)] = ...
+            MML.trainNN(samples, targets, 20, NNSamples);
+end
+
+save('MatsNNTests', 'sample_genes', 'target_genes', 'combos', ...
+     'nCombos', 'net', 'tr', 'netPerf', 'desPeriod', ...
+     'sampPerf', 'sampPerfSc');
+ 
+ 
 %% Phase 3 - Train NNs using the data from phases 1 and 2
 filename3 = 'MatsNNData.mat';
 filename4 = 'MatsNNRes1.mat';
