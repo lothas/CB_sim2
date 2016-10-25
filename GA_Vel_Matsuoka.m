@@ -40,16 +40,31 @@ if exist(genome_file, 'file') ~= 2
     % TorqueFBMin = [-5*ones(1,NAnkleT),-10*ones(1,NHipT)];
     % TorqueFBMax = -TorqueFBMin;
 
+    % Original genome with tau_u and tau_v + beta
     % Keys = {'tau','tav','beta','amp','win','wex','ks_tau',  'ks_out','IC_matsuoka';
     %            1 ,   1 ,    1 , 2*N ,   1 , 2*N ,      1 ,      2*N ,           0 };
     % Range = {0.1 , 0.1 ,   10 , mamp, -20 , Mwex,   -1e2 , -0.1*Mamp; % Min
     %            2 ,   2 ,   30 , Mamp,  -1 , mwex,    1e2 ,  0.1*Mamp}; % Max
     
+    % Final genome with tau_r + beta (constant tau_u/tau_v ratio)
     Keys = {'\tau_r', 'beta', 'amp',   'weights', 'ks_\tau',     'ks_c', 'IC_matsuoka';
                   1 ,      1,  2*N , (2*N-1)*2*N,        1 ,      2*N ,            0 };
     Range = {  0.02 ,    0.2,  mamp,          mw,      -10 , -0.1*Mamp; % Min
                0.25 ,   10.0,  Mamp,          Mw,       10 ,  0.1*Mamp}; % Max
+           
+	% Genome with variable tau_r, ratio and beta
+%     Keys = {'\tau_ratio', '\tau_r', 'beta', 'amp',   'weights', 'ks_\tau',    'ks_c', 'IC_matsuoka';
+%                       1 ,       1 ,      1,  2*N , (2*N-1)*2*N,        1 ,      2*N ,            0 };
+%     Range = {         2 ,    0.02 ,    0.2,  mamp,          mw,      -10 , -0.1*Mamp; % Min
+%                      10 ,    0.25 ,   10.0,  Mamp,          Mw,       10 ,  0.1*Mamp}; % Max
+           
+    % Genome with constant ratio and beta
+%     Keys = {'\tau_r',  'amp',   'weights', 'ks_\tau',     'ks_c', 'IC_matsuoka';
+%                   1 ,   2*N , (2*N-1)*2*N,        1 ,      2*N ,            0 };
+%     Range = {  0.02 ,   mamp,          mw,      -10 , -0.1*Mamp; % Min
+%                0.25 ,   Mamp,          Mw,       10 ,  0.1*Mamp}; % Max
 
+    % Genome with constant ratio and beta. No FB parameters
 %     Keys = {'\tau_r','amp',   'weights', 'IC_matsuoka';
 %                   1 , 2*N , (2*N-1)*2*N,            0 };
 %     Range = {  0.02 , mamp,          mw; % Min
@@ -122,7 +137,7 @@ GA.rescaleFcn = @rescaleFcn;
         ratio = des_period/inputPeriod;
         seq(1) = seq(1)*ratio;
         if seq(1) < Gen.Range(1,1) || seq(1) > Gen.Range(2,1)
-            warning('Genetic sequence out of bounds, using bounded tau gene')
+%             warning('Genetic sequence out of bounds, using bounded tau gene')
             % Bound tau gene
             seq(1) = min(max(seq(1), Gen.Range(1,1)), Gen.Range(2,1));
         end

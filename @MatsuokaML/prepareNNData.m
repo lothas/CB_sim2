@@ -34,6 +34,16 @@ function [ samples, targets, normParams ] = ...
     genes = obj.Gen.GetGenes(results(ids(1)).seq, obj.target_genes);
     n_out = length(genes); % Number of outputs
     
+%     % Normalize weights
+%     weight_id = find(strcmp(obj.sample_genes,'weights'),1,'first');
+%     norm_weights = 0;
+%     if ~isempty(weight_id)
+%         norm_weights = 1;
+%         sample_genes1 = {'weights'};
+%         sample_genes2 = obj.sample_genes;
+%         sample_genes2(weight_id) = [];
+%     end
+    
     samples = zeros(n_in, maxN);
     targets = zeros(n_out, maxN);
     for i = 1:maxN
@@ -41,13 +51,27 @@ function [ samples, targets, normParams ] = ...
         period = periods(ids(i));
         
         % Get selected genes from genetic sequence
-        genes = obj.Gen.GetGenes(sample.seq, obj.sample_genes);
-        Tr = obj.Gen.GetGenes(sample.seq, obj.target_genes);
+%         if norm_weights
+%             genes1 = obj.Gen.GetGenes(sample.seq, sample_genes1); % weights
+%             amp = obj.Gen.GetGenes(sample.seq, {'amp'}); % weights
+%             for r = 1:obj.nNeurons
+%                 range = (obj.nNeurons-1)*(r-1)+1:(obj.nNeurons-1)*r;
+%                 this_amp = amp(r);
+%                 amps = amp; amps(r) = [];
+%                 genes1(range) = genes1(range)*this_amp./amps;
+%             end
+%             genes1 = min(max(genes1, -10),100); % Bound the weights
+%             genes2 = obj.Gen.GetGenes(sample.seq, sample_genes2);
+%             genes = [genes1, genes2];
+%         else
+            genes = obj.Gen.GetGenes(sample.seq, obj.sample_genes);
+%         end
+        target = obj.Gen.GetGenes(sample.seq, obj.target_genes);
         
         % Build sample and target vectors
         samples(:,i) = [genes';  period];
         %              Tau mem. pot.
-        targets(:,i) = Tr;
+        targets(:,i) = target;
     end
     
     % Normalize samples

@@ -2,11 +2,11 @@
 MML = MatsuokaML();
 MML.perLim = [0.68 0.78];
 MML.perLimOut = MML.perLim + [-0.08 0.08]; % Desired period range
-MML.tStep = 0.01;
-MML.tEnd = 15;
+MML.tStep = 0.01; % 0.01
+MML.tEnd = 15; % 15
 
-MML.sample_genes = {'amp','weights'};
-MML.target_genes = {'\tau_r','beta'};
+% % Set constant beta
+% MML.Sim.Con.beta = 7;
 
 nPlotSamples = 0; % 10;
 
@@ -15,7 +15,7 @@ warning('off','signal:findpeaks:largeMinPeakHeight');
 
 %% Phase 1 - Run lots of Matsuoka simulations with different parameters
 filename1 = 'MatsRandomRes.mat';
-nSamples = 200000;
+nSamples = 250000;
 MML.runRandomSims(nSamples, filename1);
 
 %% Phase 2 - Re-run simulations that converged outside the desired range,
@@ -131,6 +131,7 @@ MML.plotSamples(results, fn2, n_cases, 'Cond. 2 false negative sample #');
 
 %% Phase pre-3 - Train NNs using different features and targets
 
+% Combinations for genome with tau, beta, amp and weights.
 sample_genes = {{'amp','weights'};
                 {'beta','amp','weights'};
                 {'weights'};
@@ -148,8 +149,64 @@ combos = [1,1; % {'amp','weights'}          -> {'\tau_r'}           0.50    0.19
           3,3; % {'weights'}                -> {'beta'}             0.79    0.09 +
           4,1; % {'beta','weights'}         -> {'\tau_r'}           0.52    0.19 
           5,3]; % {'\tau_r','weights'}      -> {'beta'}             0.83    0.08 +
+      
+% Combinations for genome with tau, tau_ratio, beta, amp and weights.
+% sample_genes = {{'amp','weights'};
+%                 {'beta','amp','weights'};
+%                 {'weights'};
+%                 {'beta','weights'};
+%                 {'\tau_r','weights'};
+%                 {'amp','weights','\tau_ratio'};
+%                 {'beta','amp','weights','\tau_ratio'};
+%                 {'weights','\tau_ratio'};
+%                 {'beta','weights','\tau_ratio'};
+%                 {'\tau_r','weights','\tau_ratio'}};
+% target_genes = {{'\tau_r'};
+%                 {'\tau_r','beta'};
+%                 {'beta'};
+%                 {'\tau_r','\tau_ratio'};
+%                 {'\tau_r','beta','\tau_ratio'};
+%                 {'beta','\tau_ratio'}};
+% combos = [1,1; % {'amp','weights'}          -> {'\tau_r'}           0.50    0.19
+%           1,2; % {'amp','weights'}          -> {'\tau_r','beta'}    0.80    0.14 ++
+%           1,3; % {'amp','weights'}          -> {'beta'}             0.81    0.08 +
+%           1,4;
+%           1,5;
+%           1,6; % **** 6
+%           2,1; % {'beta','amp','weights'}   -> {'\tau_r'}           0.49    0.16
+%           2,4;
+%           3,1; % {'weights'}                -> {'\tau_r'}           0.52    0.18
+%           3,2; % **** 10 {'weights'}                -> {'\tau_r','beta'}    0.81    0.18 +++
+%           3,3; % **** 11 {'weights'}                -> {'beta'}             0.79    0.09 +
+%           3,4;
+%           3,5; % **** 13
+%           3,6; % **** 14
+%           4,1; % {'beta','weights'}         -> {'\tau_r'}           0.52    0.19 
+%           4,4;
+%           5,3; % **** 17 {'\tau_r','weights'}      -> {'beta'}             0.83    0.08 +
+%           5,6;
+%           6,1; % {'amp','weights'}          -> {'\tau_r'}           0.50    0.19
+%           6,2; % **** 20 {'amp','weights'}          -> {'\tau_r','beta'}    0.80    0.14 ++
+%           6,3; % **** 21{'amp','weights'}          -> {'beta'}             0.81    0.08 +
+%           7,1; % {'beta','amp','weights'}   -> {'\tau_r'}           0.49    0.16
+%           8,1; % {'weights'}                -> {'\tau_r'}           0.52    0.18
+%           8,2; % {'weights'}                -> {'\tau_r','beta'}    0.81    0.18 +++
+%           8,3; % **** 25 {'weights'}                -> {'beta'}             0.79    0.09 +
+%           9,1; % {'beta','weights'}         -> {'\tau_r'}           0.52    0.19 
+%           10,3]; % **** 27 {'\tau_r','weights'}      -> {'beta'}             0.83    0.08 +
+      
+% Combinations for genome with tau, amp and weights (no beta)
+% sample_genes = {{'amp','weights'};
+%                 {'weights'}};
+% target_genes = {{'\tau_r'};
+%                 {'\tau_r','amp'};
+%                 {'amp'}};
+% combos = [1,1; % {'amp','weights'}          -> {'\tau_r'}           0.50    0.19
+%           2,1; % {'weights'}                -> {'\tau_r'}           0.52    0.18
+%           2,2; % {'weights'}                -> {'\tau_r','amp'}    0.81    0.18 +++
+%           2,3]; % {'weights'}                -> {'amp'}             0.79    0.09 +
 
-maxN = 200000;
+maxN = min(nSamples, 250000);
 NNSamples = 500;
 inFilenames = {filename1, filename2};
 
@@ -180,13 +237,31 @@ save('MatsNNTests', 'sample_genes', 'target_genes', 'combos', ...
  
  
 %% Phase 3 - Train NNs using the data from phases 1 and 2
+
+% Pick best features
+score = netPerf(:,2) + netPerf(:,3);
+best_comb = find(score == max(score));
+if length(best_comb) > 1
+    best_scores = netPerf(best_comb,2);
+    id = find(best_scores == max(best_scores), 1, 'first');
+    best_best = best_comb(id);
+    best_comb = best_best;
+end
+disp('Best features/target combo:');
+disp(['Features', sample_genes{combos(best_comb,1)}]);
+disp(['Targets', target_genes{combos(best_comb,2)}]);
+disp(netPerf(best_comb,:));
+
+MML.sample_genes = sample_genes{combos(best_comb,1)};
+MML.target_genes = target_genes{combos(best_comb,2)};
+    
 filename3 = 'MatsNNData.mat';
 filename4 = 'MatsNNRes1.mat';
 filename5 = 'MatsNNRes2.mat';
 filename6 = 'MatsNNRes3.mat';
 if exist(filename3, 'file') ~= 2
-    maxN = 200000;
-    NNSamples = 1000;
+    maxN = min(nSamples, 250000);
+    NNSamples = 500;
     inFilenames = {filename1, filename2};
     [samples, targets, normParams] = MML.prepareNNData(inFilenames, maxN);
     save(filename3, 'maxN', 'NNSamples', ...
@@ -224,7 +299,7 @@ end
 if exist(filename5, 'file') ~= 2
     maxN = size(samples, 2);
     architecture = architectures{2};
-    nSampleSizes = 20;
+    nSampleSizes = 10;
     sampleSizes = floor(logspace(1,3,nSampleSizes)*maxN/1000);
     
     net = cell(nSampleSizes, 1);       % Cell array to store NNs
@@ -253,7 +328,7 @@ end
 if exist(filename6, 'file') ~= 2
     maxN = size(samples, 2);
     architecture = architectures{end};
-    nSampleSizes = 20;
+    nSampleSizes = 10;
     sampleSizes = floor(logspace(1,3,nSampleSizes)*maxN/1000);
     
     net = cell(nSampleSizes, 1);       % Cell array to store NNs

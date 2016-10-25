@@ -14,7 +14,7 @@ function [results, signal] = runScaledSim(obj, inputData, inputPeriod)
     ratio = des_period/inputPeriod;
     seq(1) = seq(1)*ratio;
     if seq(1) < obj.Gen.Range(1,1) || seq(1) > obj.Gen.Range(2,1)
-        warning('Genetic sequence out of bounds, using bounded tau gene')
+%         warning('Genetic sequence out of bounds, using bounded tau gene')
         % Bound tau gene
         seq(1) = min(max(seq(1), obj.Gen.Range(1,1)), obj.Gen.Range(2,1));
     end

@@ -15,6 +15,7 @@ VGA*.mat
 Gen*.mat
 LIF*.mat
 EIG*.mat
+Mats*.mat
 
 #################
 ## Eclipse

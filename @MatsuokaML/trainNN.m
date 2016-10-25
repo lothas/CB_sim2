@@ -11,7 +11,8 @@ function [net, tr, netPerf, desPeriod, sampPerf, sampPerfSc] = ...
         
     % Calculate mean squared estimation error
     estTargets = net(samples);
-    netPerf(1) = sum(sum((estTargets - targets).^2))/size(targets,2);
+    relDiff = (estTargets - targets)./targets;
+    netPerf(1) = sum(sum(relDiff.^2))/numel(targets);
                 
     % Generate array of desired period outputs for the simulations
     desPeriod = obj.perLim(1) + ...
@@ -67,8 +68,8 @@ function [net, tr, netPerf, desPeriod, sampPerf, sampPerfSc] = ...
             seq(1) = seq(1)*ratio;
             if seq(1) < genomeObj.Range(1,1) || ...
                     seq(1) > genomeObj.Range(2,1)
-                warning(['Genetic sequence #', int2str(j), ...
-                    ' out of bounds, using bounded tau gene'])
+%                 warning(['Genetic sequence #', int2str(j), ...
+%                     ' out of bounds, using bounded tau gene'])
                 % Bound tau gene
                 seq(1) = min(max(seq(1), genomeObj.Range(1,1)), ...
                              genomeObj.Range(2,1));
@@ -96,7 +97,7 @@ function [net, tr, netPerf, desPeriod, sampPerf, sampPerfSc] = ...
         & sampPerf <= obj.perLimOut(2));
     netPerf(3) = length(id_per)/NNSamples;
     % How close was the period to the desired period?
-    sampDiff = sampPerf - desPeriod;
+    sampDiff = (sampPerf - desPeriod)./desPeriod;
     netPerf(4) = sum(sampDiff(id_conv).^2)/NNSamples;
 end
 

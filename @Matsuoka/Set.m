@@ -22,6 +22,8 @@ else
                 MO.tau = value;
             case {'tav', 'tau_v'}
                 MO.tav = value;
+            case {'tau_ratio','\tau_ratio'}
+                MO.tau_ratio = value;
             case {'tau_r','\tau_r'}
                 MO.tau = value;
                 MO.tav = MO.tau_ratio*value;
