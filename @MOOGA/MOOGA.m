@@ -482,7 +482,8 @@ classdef MOOGA
                 VelSim = VelSim.WalkAtSpeed(s_in, 40);
                 out = VelSim.JoinOuts(out);
                 
-                if VelSim.Out.Type == 6
+                if any(VelSim.Out.Type == [0,5,6])
+                    % Time ran out, sim converged or was converging
                     % Simulation GO
                     % Get average velocity
                     per = Sim.GetPeriod(0.6);
@@ -498,8 +499,8 @@ classdef MOOGA
                         avg_vel = max_vel;
                     end
                     
-                    if dir*avg_vel > (1+0.01*dir)*dir*max_vel
-                        % Expect at least a 1% increase
+                    if dir*avg_vel > (1+0.001*dir)*dir*max_vel
+                        % Expect at least a 0.1% increase
                         max_vel = avg_vel;
                         max_s = s_in;
                     else
@@ -520,9 +521,9 @@ classdef MOOGA
         end
         
         function [fit,out] = VelRangeFit(Sim)
-            % Combines the upslope and downslope fitness results
+            % Combines the faster and slower velocity fitness results
             
-            if isempty(Sim.Period)
+            if isempty(Sim.Period) && Sim.StepsTaken < 10
                 % Weed out results that didn't converge
                 fit = [0 0 0 0 0 0 0 0];
                 out = [];

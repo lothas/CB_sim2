@@ -20,12 +20,15 @@ else
             % neuron parameters
             case {'tau', 'tau_u'}
                 MO.tau = value;
+                MO.tau0 = value;
             case {'tav', 'tau_v'}
                 MO.tav = value;
+                MO.tav0 = value;
             case {'tau_ratio','\tau_ratio'}
                 MO.tau_ratio = value;
             case {'tau_r','\tau_r'}
                 MO.tau = value;
+                MO.tau0 = value;
                 MO.tav = MO.tau_ratio*value;
             case 'beta'
                 MO.beta = value;

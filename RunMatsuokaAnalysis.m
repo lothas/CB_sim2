@@ -136,19 +136,21 @@ sample_genes = {{'amp','weights'};
                 {'beta','amp','weights'};
                 {'weights'};
                 {'beta','weights'};
-                {'\tau_r','weights'}};
+                {'\tau_r','weights'};
+                {'\tau_r','amp','weights'}};
 target_genes = {{'\tau_r'};
                 {'\tau_r','beta'};
                 {'beta'}};
-combos = [1,1; % {'amp','weights'}          -> {'\tau_r'}           0.50    0.19
-          1,2; % {'amp','weights'}          -> {'\tau_r','beta'}    0.80    0.14 ++
-          1,3; % {'amp','weights'}          -> {'beta'}             0.81    0.08 +
-          2,1; % {'beta','amp','weights'}   -> {'\tau_r'}           0.49    0.16
-          3,1; % {'weights'}                -> {'\tau_r'}           0.52    0.18
-          3,2; % {'weights'}                -> {'\tau_r','beta'}    0.81    0.18 +++
-          3,3; % {'weights'}                -> {'beta'}             0.79    0.09 +
-          4,1; % {'beta','weights'}         -> {'\tau_r'}           0.52    0.19 
-          5,3]; % {'\tau_r','weights'}      -> {'beta'}             0.83    0.08 +
+combos = [1,1; % {'amp','weights'}          -> {'\tau_r'}           0.52    0.18
+          1,2; % {'amp','weights'}          -> {'\tau_r','beta'}    0.81    0.14 ++
+          1,3; % {'amp','weights'}          -> {'beta'}             0.83    0.10 +gr
+          2,1; % {'beta','amp','weights'}   -> {'\tau_r'}           0.52    0.18
+          3,1; % {'weights'}                -> {'\tau_r'}           0.54    0.20
+          3,2; % {'weights'}                -> {'\tau_r','beta'}    0.78    0.12 +++
+          3,3; % {'weights'}                -> {'beta'}             0.80    0.06 +
+          4,1; % {'beta','weights'}         -> {'\tau_r'}           0.50    0.20 
+          5,3; % {'\tau_r','weights'}       -> {'beta'}             0.85    0.09 +
+          6,3];% {'\tau_r','amp','weights'} -> {'beta'}             0.85    0.09 +
       
 % Combinations for genome with tau, tau_ratio, beta, amp and weights.
 % sample_genes = {{'amp','weights'};
@@ -228,13 +230,22 @@ for i = 1:nCombos
     
     [net{i}, tr{i}, netPerf(i,:), desPeriod(i,:), ...
             sampPerf(i,:), sampPerfSc(i,:)] = ...
-            MML.trainNN(samples, targets, 20, NNSamples);
+            MML.trainNN(samples, targets, [30, 30], NNSamples);
+        
+%     [net1, tr1, netPerf1, desPeriod1, sampPerf1, sampPerfSc1] = ...
+%             MML.trainNN(samples, targets, 20, NNSamples);
 end
 
 save('MatsNNTests', 'sample_genes', 'target_genes', 'combos', ...
      'nCombos', 'net', 'tr', 'netPerf', 'desPeriod', ...
      'sampPerf', 'sampPerfSc');
  
+ % Display results
+ for i = 1:nCombos
+     disp([num2cell(netPerf(i,:)), ...
+         'Feat:', cellstr(sample_genes{combos(i,1)}), ...
+         'Target:', cellstr(target_genes{combos(i,2)})])
+ end
  
 %% Phase 3 - Train NNs using the data from phases 1 and 2
 

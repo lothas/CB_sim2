@@ -6,6 +6,8 @@ function [ sim ] = Run( sim )
     Torques = [];
     Slopes = [];
     
+    last_t = 1;
+    
     if sim.Graphics == 1
         options=odeset('MaxStep',sim.tstep/10,'RelTol',1e-8,'AbsTol',1e-9,...
             'OutputFcn', @sim.Render, 'Events', @sim.Events);
@@ -215,6 +217,32 @@ function [ sim ] = Run( sim )
                        ThisTorques];
             Slopes = [Slopes; %#ok<AGROW>
                       repmat(ThisSlope,length(TTemp),1)];
+                  
+            if StoreIC % Check that torque isn't 0 or constant
+                new_t = length(sim.Out.T);
+%                 figure
+%                 plot(sim.Out.T(last_t:new_t), ...
+%                      Torques(last_t:new_t,:))
+%                 figure(1)
+%                 disp(mean(abs(Torques(last_t:new_t,:)),1))
+%                 disp(std(Torques(last_t:new_t,:),1))
+%                 disp([sim.Con.tau, sim.Con.Amp']);
+                if all(mean(abs(Torques(last_t:new_t,:)),1) < 1e-2)
+                    % Torque output is 0 for the whole step
+                    sim.Out.Type = 9;
+                    sim.Out.Text = 'Torque signal is zero';
+                    sim.StopSim = 1;
+                    break
+                end
+                if all(std(Torques(last_t:new_t,:),1) < 1e-2)
+                    % Torque output is constant for the whole step
+                    sim.Out.Type = 9;
+                    sim.Out.Text = 'Torque signal is constant';
+                    sim.StopSim = 1;
+                    break
+                end
+                last_t = new_t+1;
+            end
         end
     end
     

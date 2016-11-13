@@ -7,8 +7,8 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
         name = 'Matsuoka'
         
         % Parameters
-        tau = 1;
-        tav = 1;
+        tau0 = 1; tau = 1;
+        tav0 = 1; tav = 1;
         tau_ratio = 5;
         beta = 0.1;
         u0 = 1;
@@ -143,9 +143,11 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
             end
             
             % Apply higher-level speed input
-            MO.tau = MO.tau + MO.ks_tau*MO.s_in;
+            MO.tau = MO.tau0 + MO.ks_tau*MO.s_in;
+            MO.tau = max(MO.tau, 0.01); % Tau has to be > 0
             MO.tav = MO.tau_ratio*MO.tau;
             MO.Amp = MO.Amp0 + MO.ks_out*MO.s_in;
+            MO.Amp = max(MO.Amp, 0.01); % Amp has to be > 0
             % Update the weight matrix
             MO.W = (diag(1./MO.Amp)*(diag(MO.Amp)*(MO.win+MO.wex))')';
 %             MO.W = min(max(MO.W, -10),100); % Bound the weights

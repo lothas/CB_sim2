@@ -3,7 +3,7 @@ function [  ] = GA_Vel_Matsuoka( gen, pop, file_in, file_out )
 % simulation with a bounded foot size (ZMP threshold)
 
 if nargin<4
-    GA = MOOGA(20,1500);
+    GA = MOOGA(50,200);
 %     GA = MOOGA(10,500);
     GA = GA.SetFittest(15,15,0.5);
     GA.JOAT = 2; GA.Quant = 0.5;
@@ -48,9 +48,9 @@ if exist(genome_file, 'file') ~= 2
     
     % Final genome with tau_r + beta (constant tau_u/tau_v ratio)
     Keys = {'\tau_r', 'beta', 'amp',   'weights', 'ks_\tau',     'ks_c', 'IC_matsuoka';
-                  1 ,      1,  2*N , (2*N-1)*2*N,        1 ,      2*N ,            0 };
-    Range = {  0.02 ,    0.2,  mamp,          mw,      -10 , -0.1*Mamp; % Min
-               0.25 ,   10.0,  Mamp,          Mw,       10 ,  0.1*Mamp}; % Max
+                  1 ,      1,  2*N , (2*N-1)*2*N,        1 ,       2*N ,            0 };
+    Range = {  0.02 ,    0.2,  mamp,          mw,   -0.001 ,  -0.2*Mamp; % Min
+               0.25 ,   10.0,  Mamp,          Mw,    0.001 ,   0.2*Mamp}; % Max
            
 	% Genome with variable tau_r, ratio and beta
 %     Keys = {'\tau_ratio', '\tau_r', 'beta', 'amp',   'weights', 'ks_\tau',    'ks_c', 'IC_matsuoka';
@@ -93,15 +93,28 @@ MML.nNeurons = 2*N;
 
 % Use NN?
 if 1
-    normParams = [];
-    load('MatsNNData.mat');
+    GANN_file = 'MatsGANN.mat';
+    
+    maxN = 250000;
+    NNSamples = 500;
+    inFilenames = {'MatsRandomRes.mat', 'MatsScaledRes.mat'};
+
+    MML.sample_genes = {'weights'};
+    MML.target_genes = {'\tau_r','beta'};
+
+    [samples, targets, normParams] = MML.prepareNNData(inFilenames, maxN);
     MML.normParams = normParams;
     
-    netPerf = []; net = {};
-    load('MatsNNRes1.mat');
-    % Get best performing NN
-    perf = (netPerf(:,2)+netPerf(:,3))./netPerf(:,4);
-    GA.NN = net{perf == max(perf)};
+    if exist(GANN_file, 'file') ~= 2
+        [net, ~, ~, ~, ~, ~] = ...
+                MML.trainNN(samples, targets, 50, NNSamples);
+        save(GANN_file,'net');
+    else
+        GANN_net = load(GANN_file);
+        net = GANN_net.net;
+    end
+
+    GA.NN = net;
     GA.NNFcn = @NNFcn;
 end
 
