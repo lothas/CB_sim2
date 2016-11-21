@@ -3,12 +3,12 @@ function [  ] = GA_Vel_Matsuoka( gen, pop, file_in, file_out )
 % simulation with a bounded foot size (ZMP threshold)
 
 if nargin<4
-    GA = MOOGA(50,200);
+    GA = MOOGA(25,500);
 %     GA = MOOGA(10,500);
     GA = GA.SetFittest(15,15,0.5);
-    GA.JOAT = 2; GA.Quant = 0.5;
+    GA.JOAT = 0; GA.Quant = 0.8;
     % GA.Fittest = [20,20,1];
-%     GA.FileIn = 'VGAM_02_01_21_36.mat';
+    GA.FileIn = 'VGAM_11_20_20_52.mat';
 %     GA.FileOut = GA.FileIn;
 
     GA.FileOut = ['VGAM_',datestr(now,'mm_dd_hh_MM'),'.mat'];
@@ -20,6 +20,11 @@ else
     GA.FileIn = file_in;
     GA.FileOut = file_out;
 end
+
+% Use NN?
+use_NN = 0;
+% Rescale?
+% GA.rescaleFcn = @rescaleFcn;
 
 GA.Graphics = 0;
 GA.ReDo = 1;
@@ -92,7 +97,7 @@ MML.perLimOut = MML.perLim + [-0.08 0.08]; % Desired period range
 MML.nNeurons = 2*N;
 
 % Use NN?
-if 1
+if use_NN
     GANN_file = 'MatsGANN.mat';
     
     maxN = 250000;
@@ -123,18 +128,20 @@ end
         desPeriod = MML.perLim(1) + ...
                      rand()*(MML.perLim(2)-MML.perLim(1));
     
-        seqNN = MML.getNNPar(net, seq, desPeriod);
-        [res, seqNN] = Gen.CheckGenome(seqNN);
-        if (res{1})
-            seq = seqNN;
-        else
-            warning(['Genetic sequence out of bounds,'...
-                'keeping original sequence'])
-        end
+        seq = MML.getNNPar(net, seq, desPeriod);
+        
+        ids = seq < Gen.Range(1,:) | seq > Gen.Range(2,:);
+        seq(ids) = min(max(seq(ids),Gen.Range(1,ids)),Gen.Range(2,ids));
+        
+%         seqNN = MML.getNNPar(net, seq, desPeriod);
+%         [res, seqNN] = Gen.CheckGenome(seqNN);
+%         if (res{1})
+%             seq = seqNN;
+%         else
+%             warning(['Genetic sequence out of bounds,'...
+%                 'keeping original sequence'])
+%         end
     end
-
-% Rescale?
-GA.rescaleFcn = @rescaleFcn;
 
     function seq = rescaleFcn(Gen, seq, X, T)
         [~, periods, ~, ~, ~] = MML.processResults(X, T);

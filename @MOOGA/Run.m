@@ -118,6 +118,19 @@ for g = GA.Progress+1:GA.Generations
     GA.Fit(:,:,g) = gFits;
     GA.Seqs(:,:,g) = gSeqs;
     
+    % Check outliers
+    ids = [];
+    for n = 1:length(GA.FitIDs)
+        ids = [ids; find(GA.Fit(:,n,g) > ...
+                    mean(GA.Fit(:,n,g))+3.5*std(GA.Fit(:,n,g)))]; %#ok<AGROW>
+    end
+    ids = unique(ids);
+    newFits = GA.Fit(ids,:,g);
+    parfor i = 1:length(ids)  
+        [newFits(i,:), ~] = feval(ParRunSeq, gSeqs(i,:));
+    end
+    GA.Fit(ids,:,g) = min(GA.Fit(ids,:,g), newFits);
+    
     % Display top results
 %     PFits = repmat(GA.FitMinMax, size(GA.Fit(:,:,g), 1), 1).*GA.Fit(:,:,g);
 %     MaxFits = GA.FitMinMax.*max(PFits);

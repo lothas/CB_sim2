@@ -475,11 +475,24 @@ classdef MOOGA
                                        max(VelSim.GNGThresh)+1);
             out = [];
             
+            maxSingleT = 20; % Time alloted for a single run
+            maxAllT = 20*maxSingleT; % Time alloted for all runs
+            elapsedT = 0;    % Time elapsed in all runs
+            
             while 1
                 % Run a simulation of the robot walking with different speed
                 s_in = s_in + ds_in;
+                if abs(s_in) > 20
+                    % Stop increasing after 20 resoultion steps
+                    break;
+                end
                 
-                VelSim = VelSim.WalkAtSpeed(s_in, 40);
+                VelSim = VelSim.WalkAtSpeed(s_in, maxSingleT);
+                elapsedT = elapsedT + VelSim.Out.T(end) - VelSim.Out.T(1);
+                if elapsedT > maxAllT
+                    break
+                end
+                
                 out = VelSim.JoinOuts(out);
                 
                 if any(VelSim.Out.Type == [0,5,6])
@@ -499,8 +512,10 @@ classdef MOOGA
                         avg_vel = max_vel;
                     end
                     
-                    if dir*avg_vel > (1+0.001*dir)*dir*max_vel
+%                     if dir*avg_vel > (1+0.005*dir)*dir*max_vel
                         % Expect at least a 0.1% increase
+                    if abs(max_vel - avg_vel) >= 0.015
+                        % Expect at least a 2% change in the range [0-0.5]
                         max_vel = avg_vel;
                         max_s = s_in;
                     else

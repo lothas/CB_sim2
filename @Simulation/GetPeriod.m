@@ -32,7 +32,11 @@ Periods = diff(StepTimes);
 if isempty(Periods)
     % run the simulation for one step
     psim = copy(sim);
-    psim.EndCond = [1,sim.Period(1)];
+    if isempty(sim.Period)
+        psim.EndCond = [1,10];
+    else
+        psim.EndCond = [1,sim.Period(1)];
+    end
     psim.IC = sim.IClimCyc;
     psim = psim.Init();
     psim = psim.Run();

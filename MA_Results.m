@@ -358,9 +358,22 @@ grid minor
 
 
 % Show GA results
-GA1 = load('VGAM_11_09_13_55.mat');
-GA2 = load('VGAM_11_09_06_37_RS.mat');
-GA3 = load('VGAM_11_08_10_55_NNRS.mat');
+% GA1 = load('VGAM_11_09_13_55.mat');
+% GA2 = load('VGAM_11_09_06_37_RS.mat');
+% GA3 = load('VGAM_11_08_10_55_NNRS.mat');
+
+% GA1 = load('VGAM_11_15_08_27_good.mat');
+% GA2 = load('VGAM_11_15_00_09_good_RS.mat');
+% GA3 = load('VGAM_11_14_09_46_good_NNRS.mat');
+
+% GA1 = load('VGAM_11_15_17_02_good.mat');
+% GA2 = load('VGAM_11_16_09_05_good_RS.mat');
+% GA3 = load('VGAM_11_16_23_27_good_NNRS.mat');
+
+GA1 = load('VGAM_11_18_11_30_good.mat');
+GA2 = load('VGAM_11_18_00_50_good_RS.mat');
+GA3 = load('VGAM_11_17_09_30_good_NNRS.mat');
+
 x_data = 1:GA1.GA.Generations;
 y_data1 = squeeze(max(GA1.GA.Fit(:,3,:),[],1));
 y_data2 = squeeze(max(GA2.GA.Fit(:,3,:),[],1));

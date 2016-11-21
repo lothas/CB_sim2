@@ -112,6 +112,7 @@ end
         xlabel('Generations','FontSize',LabelFont);
         ylabel('Normalized Fitness','FontSize',LabelFont);
         set(gca,'FontSize',AxesFont,'LineWidth',2);
+        ylim([0 1])
     end
         
 end
