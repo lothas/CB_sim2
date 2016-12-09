@@ -23,7 +23,7 @@ else
                 NC.P_0 = value;
             case 'P_LegE'
                 NC.P_LegE = value; % timed leg extension
-            case 'omega0' % Oscillator's frequency
+            case {'omega0','Freq'} % Oscillator's frequency
                 NC.omega0 = value;
                 NC.omega = value;
                 
@@ -50,7 +50,7 @@ else
                 % 0 - no feedback, 1 - single gain for omega and each joint
                 % 2 - individual gains for each pulse
 
-            % Gains
+            % Uphill/downhill gains
             case 'kOmega_u'
                 NC.kOmega_u = value;
             case 'kOmega_d'
@@ -66,6 +66,14 @@ else
             case 'sTorques_f'
                 NC.sTorques_f = value;
             case 'sTorques_s'
+                NC.sTorques_s = value;
+                
+            % Single speed gains
+            case 'kFreq'
+                NC.sOmega_f = value;
+                NC.sOmega_s = value;
+            case 'kTorques'
+                NC.sTorques_f = value;
                 NC.sTorques_s = value;
             
             otherwise

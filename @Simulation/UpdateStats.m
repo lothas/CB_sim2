@@ -21,7 +21,7 @@ if abs(Xmod(2)-Xmod(1))<0.5*pi % leg aperture < 90 degrees
 end
 
 % Check "end-game" conditions
-if abs(Xmod(2)-Xmod(1))<0.000001
+if abs(Xmod(2)-Xmod(1))<0.00000001
     sim.Out.Type = 2;
     sim.Out.Text = 'Step length too small';
     sim.StopSim = 1;

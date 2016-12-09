@@ -48,7 +48,8 @@ function [ sim ] = Init( sim )
             sim.Ttime = linspace(sim.FlMax*0.62,sim.FlMax*0.96,sim.nTsteps);
             sim.Thold = zeros(sim.nOuts,sim.nTsteps);
             sim.Tbase = (sim.HeightMax+sim.HeightMin)/2;
-            sim.Tscale = 0.1*(sim.HeightMax-sim.HeightMin)/max(abs(sim.Con.Amp0));
+            sim.Tscale = 0.1*(sim.HeightMax-sim.HeightMin) / ...
+                max(max(sim.Con.MaxSat),-min(sim.Con.MinSat));
         end
         
         sim.Mod.curSpeed = 'Computing...';

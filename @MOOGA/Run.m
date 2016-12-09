@@ -152,6 +152,7 @@ for g = GA.Progress+1:GA.Generations
     
     % Finished processing generation
     GA.Progress = g;
+    GA.CompTime = GA.CompTime + t_diff;
     
     if g<GA.Generations
         % Finished running tests, create new generation

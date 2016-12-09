@@ -31,6 +31,8 @@ classdef Simulation < handle & matlab.mixin.Copyable
         EndZMP = 1;
         % If EndZMP = 1 the simulation will stop if the
         % limits defined in the CB model are crossed
+        CheckTorque = 1;
+        % Check that torque isn't 0 or constant
         
         CurSpeed; StepsTaken; Steps2Slope;
         MaxSlope; MinSlope;

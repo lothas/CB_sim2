@@ -47,6 +47,7 @@ classdef MOOGA
         
         % Optimization progress
         Progress = 0;   % Last generation calculated
+        CompTime = 0;   % Computation time elapsed
         ReDo = 0;       % Start optimization from generation 1
         
         % Fitness functions
@@ -179,6 +180,31 @@ classdef MOOGA
                         varargaout = out;
                 end
             end
+        end
+        
+        function ShowFinalDist(GA,only_best,gen)
+            if nargin<2
+                only_best = 1;
+            end
+            if nargin<3
+                gen = GA.Progress;
+            end
+            
+            if only_best == 1
+                top_ids = GA.GetTopPop(GA.Fittest(1));
+                data = GA.Seqs(top_ids,:,gen);
+            else
+                data = GA.Seqs(:,:,gen);
+            end
+            
+            Nfeat = size(data,2);
+            cols = ceil(sqrt(Nfeat));
+            rows = ceil(Nfeat/cols);
+            Nsamp = size(data,2); Nbins = max(10,ceil(Nsamp/20));
+            for i = 1:Nfeat
+                subplot(rows,cols,i);
+                hist(data(:,i),Nbins);
+            end                
         end
     end
     
@@ -514,8 +540,10 @@ classdef MOOGA
                     
 %                     if dir*avg_vel > (1+0.005*dir)*dir*max_vel
                         % Expect at least a 0.1% increase
-                    if abs(max_vel - avg_vel) >= 0.015
+                    d_vel = dir*(avg_vel - max_vel);
+                    if d_vel >= 0.01 && d_vel < 0.125
                         % Expect at least a 2% change in the range [0-0.5]
+                        % and at most 25%
                         max_vel = avg_vel;
                         max_s = s_in;
                     else

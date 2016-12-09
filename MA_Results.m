@@ -370,9 +370,19 @@ grid minor
 % GA2 = load('VGAM_11_16_09_05_good_RS.mat');
 % GA3 = load('VGAM_11_16_23_27_good_NNRS.mat');
 
-GA1 = load('VGAM_11_18_11_30_good.mat');
-GA2 = load('VGAM_11_18_00_50_good_RS.mat');
-GA3 = load('VGAM_11_17_09_30_good_NNRS.mat');
+% GA1 = load('VGAM_11_18_11_30_good.mat');
+% GA2 = load('VGAM_11_18_00_50_good_RS.mat');
+% GA3 = load('VGAM_11_17_09_30_good_NNRS.mat');
+
+GA1 = load('VGAM_11_22_13_19_good.mat');
+GA2 = load('VGAM_11_19_21_34_good_RS.mat');
+GA3 = load('VGAM_11_21_14_24_better_NNRS.mat');
+GA12 = load('VGAM_11_22_22_42_good.mat');
+GA22 = load('VGAM_11_23_17_08_good_RS.mat');
+GA32 = load('VGAM_11_24_11_40_good_NNRS.mat');
+GA13 = load('VGAM_11_22_13_19_good.mat');
+GA23 = load('VGAM_11_26_19_47_good_RS.mat');
+GA33 = load('VGAM_11_25_10_25_good_NNRS.mat');
 
 x_data = 1:GA1.GA.Generations;
 y_data1 = squeeze(max(GA1.GA.Fit(:,3,:),[],1));
@@ -381,32 +391,81 @@ y_data3 = squeeze(max(GA3.GA.Fit(:,3,:),[],1));
 y_data1m = squeeze(mean(GA1.GA.Fit(:,3,:),1));
 y_data2m = squeeze(mean(GA2.GA.Fit(:,3,:),1));
 y_data3m = squeeze(mean(GA3.GA.Fit(:,3,:),1));
+
+y_data12 = squeeze(max(GA12.GA.Fit(:,3,:),[],1));
+y_data22 = squeeze(max(GA22.GA.Fit(:,3,:),[],1));
+y_data32 = squeeze(max(GA32.GA.Fit(:,3,:),[],1));
+y_data12m = squeeze(mean(GA12.GA.Fit(:,3,:),1));
+y_data22m = squeeze(mean(GA22.GA.Fit(:,3,:),1));
+y_data32m = squeeze(mean(GA32.GA.Fit(:,3,:),1));
+
+y_data13 = squeeze(max(GA13.GA.Fit(:,3,:),[],1));
+y_data23 = squeeze(max(GA23.GA.Fit(:,3,:),[],1));
+y_data33 = squeeze(max(GA33.GA.Fit(:,3,:),[],1));
+y_data13m = squeeze(mean(GA13.GA.Fit(:,3,:),1));
+y_data23m = squeeze(mean(GA23.GA.Fit(:,3,:),1));
+y_data33m = squeeze(mean(GA33.GA.Fit(:,3,:),1));
+
+y_data1 = [y_data1, y_data12, y_data13];
+y_data2 = [y_data2, y_data22, y_data23];
+y_data3 = [y_data3, y_data32, y_data33];
+y_data1m = [y_data1m, y_data12m, y_data13m];
+y_data2m = [y_data2m, y_data22m, y_data23m];
+y_data3m = [y_data3m, y_data32m, y_data33m];
+
+y_data1s = std(y_data1,[],2);
+y_data2s = std(y_data2,[],2);
+y_data3s = std(y_data3,[],2);
+y_data1 = mean(y_data1,2);
+y_data2 = mean(y_data2,2);
+y_data3 = mean(y_data3,2);
 legends = {'MOGA','MOGA + re-scaling','MOGA + NN + re-scaling'};
 
 figure
 hold on
-plot(x_data, y_data1);
-plot(x_data, y_data2);
-plot(x_data, y_data3);
+h1=plot(x_data, y_data1);
+h2=plot(x_data, y_data2);
+h3=plot(x_data, y_data3);
+% plot(x_data, y_data1+y_data1s,'r--');
+% plot(x_data, y_data2+y_data2s,'b--');
+% plot(x_data, y_data3+y_data3s,'y--');
+% plot(x_data, y_data1-y_data1s,'r--');
+% plot(x_data, y_data2-y_data2s,'b--');
+% plot(x_data, y_data3-y_data3s,'y--');
 % plot(x_data, y_data1m,'--');
 % plot(x_data, y_data2m,'--');
 % plot(x_data, y_data3m,'--');
-legend(legends, 'Location', 'Southeast');
+legend([h1,h2,h3], legends, 'Location', 'Southeast');
+set(gca,'FontSize',12, 'FontWeight','bold');
 
 % Show GA distance
 diversity_file = 'MatsDisversity.mat';
 if exist(diversity_file, 'file') ~= 2
     NGens = GA1.GA.Generations;
-    Nn = GA1.GA.Population;
+%     Nn = GA1.GA.Population;
+    Nn = GA1.GA.Fittest(1);
     dist1 = zeros(Nn,NGens);
     dist2 = zeros(Nn,NGens);
     dist3 = zeros(Nn,NGens);
+    dist12 = zeros(Nn,NGens);
+    dist22 = zeros(Nn,NGens);
+    dist32 = zeros(Nn,NGens);
+    dist13 = zeros(Nn,NGens);
+    dist23 = zeros(Nn,NGens);
+    dist33 = zeros(Nn,NGens);
     for i = 1:NGens
         dist1(:,i) = GA1.GA.GetDistance(i);
         dist2(:,i) = GA2.GA.GetDistance(i);
         dist3(:,i) = GA3.GA.GetDistance(i);
+        dist12(:,i) = GA12.GA.GetDistance(i);
+        dist22(:,i) = GA22.GA.GetDistance(i);
+        dist32(:,i) = GA32.GA.GetDistance(i);
+        dist13(:,i) = GA13.GA.GetDistance(i);
+        dist23(:,i) = GA23.GA.GetDistance(i);
+        dist33(:,i) = GA33.GA.GetDistance(i);
     end
-    save(diversity_file,'NGens','Nn','dist1','dist2','dist3');
+    save(diversity_file,'NGens','Nn','dist1','dist2','dist3',...
+        'dist12','dist22','dist32','dist13','dist23','dist33');
 else
     load(diversity_file);
 end
@@ -419,18 +478,22 @@ figure
 hold on
 for i = 1:3
     if i == 1
-        dist = dist1;
+%         dist = dist1;
+        dist = [dist1; dist12; dist13];
     end
     if i == 2
-        dist = dist2;
+%         dist = dist2;
+        dist = [dist2; dist22; dist23];
     end
     if i == 3
-        dist = dist3;
+%         dist = dist3;
+        dist = [dist3; dist32; dist33];
     end
     min_dist = min(dist,[],1);
     max_dist = max(dist,[],1);
     mean_dist = mean(dist,1);
     std_dist = std(dist,1);
+    
     if do_patch
         patch('XData', [x_data, fliplr(x_data)], ...
             'YData', [mean_dist-std_dist, fliplr(mean_dist+std_dist)], ...
@@ -445,6 +508,109 @@ for i = 1:3
 end
 legend(h,legends);
 set(gca,'FontSize',12,'FontWeight','bold');
+
+% Get top controllers from all GA runs
+N = 50;
+best_seq = zeros(9*N,size(GA1.GA.Seqs,2));
+fits = 1:3;
+best_fit = zeros(9*N,length(fits));
+i = 1; ids = GA1.GA.GetTopPop(N);
+best_seq(N*(i-1)+1:N*i,:) = GA1.GA.Seqs(ids,:,GA1.GA.Progress);
+best_fit(N*(i-1)+1:N*i,fits) = GA1.GA.Fit(ids,fits,GA1.GA.Progress);
+i = 2; ids = GA2.GA.GetTopPop(N);
+best_seq(N*(i-1)+1:N*i,:) = GA2.GA.Seqs(ids,:,GA2.GA.Progress);
+best_fit(N*(i-1)+1:N*i,fits) = GA2.GA.Fit(ids,fits,GA2.GA.Progress);
+i = 3; ids = GA3.GA.GetTopPop(N);
+best_seq(N*(i-1)+1:N*i,:) = GA3.GA.Seqs(ids,:,GA3.GA.Progress);
+best_fit(N*(i-1)+1:N*i,fits) = GA3.GA.Fit(ids,fits,GA3.GA.Progress);
+i = 4; ids = GA12.GA.GetTopPop(N);
+best_seq(N*(i-1)+1:N*i,:) = GA12.GA.Seqs(ids,:,GA12.GA.Progress);
+best_fit(N*(i-1)+1:N*i,fits) = GA12.GA.Fit(ids,fits,GA12.GA.Progress);
+i = 5; ids = GA22.GA.GetTopPop(N);
+best_seq(N*(i-1)+1:N*i,:) = GA22.GA.Seqs(ids,:,GA22.GA.Progress);
+best_fit(N*(i-1)+1:N*i,fits) = GA22.GA.Fit(ids,fits,GA22.GA.Progress);
+i = 6; ids = GA32.GA.GetTopPop(N);
+best_seq(N*(i-1)+1:N*i,:) = GA32.GA.Seqs(ids,:,GA32.GA.Progress);
+best_fit(N*(i-1)+1:N*i,fits) = GA32.GA.Fit(ids,fits,GA32.GA.Progress);
+i = 7; ids = GA13.GA.GetTopPop(N);
+best_seq(N*(i-1)+1:N*i,:) = GA13.GA.Seqs(ids,:,GA13.GA.Progress);
+best_fit(N*(i-1)+1:N*i,fits) = GA13.GA.Fit(ids,fits,GA13.GA.Progress);
+i = 8; ids = GA23.GA.GetTopPop(N);
+best_seq(N*(i-1)+1:N*i,:) = GA23.GA.Seqs(ids,:,GA23.GA.Progress);
+best_fit(N*(i-1)+1:N*i,fits) = GA23.GA.Fit(ids,fits,GA23.GA.Progress);
+i = 9; ids = GA33.GA.GetTopPop(N);
+best_seq(N*(i-1)+1:N*i,:) = GA33.GA.Seqs(ids,:,GA33.GA.Progress);
+best_fit(N*(i-1)+1:N*i,fits) = GA33.GA.Fit(ids,fits,GA33.GA.Progress);
+
+% % Get top controllers from all GA runs with NN+RS
+% N = 50;
+% best_seq = zeros(3*N,size(GA1.GA.Seqs,2));
+% fits = 1:3;
+% best_fit = zeros(3*N,length(fits));
+% i = 1; ids = GA3.GA.GetTopPop(N);
+% best_seq(N*(i-1)+1:N*i,:) = GA3.GA.Seqs(ids,:,GA3.GA.Progress);
+% best_fit(N*(i-1)+1:N*i,fits) = GA3.GA.Fit(ids,fits,GA3.GA.Progress);
+% i = 2; ids = GA32.GA.GetTopPop(N);
+% best_seq(N*(i-1)+1:N*i,:) = GA32.GA.Seqs(ids,:,GA32.GA.Progress);
+% best_fit(N*(i-1)+1:N*i,fits) = GA32.GA.Fit(ids,fits,GA32.GA.Progress);
+% i = 3; ids = GA33.GA.GetTopPop(N);
+% best_seq(N*(i-1)+1:N*i,:) = GA33.GA.Seqs(ids,:,GA33.GA.Progress);
+% best_fit(N*(i-1)+1:N*i,fits) = GA33.GA.Fit(ids,fits,GA33.GA.Progress);
+
+% % Get top controllers from all GA runs with RS only
+% N = 50;
+% best_seq = zeros(3*N,size(GA1.GA.Seqs,2));
+% fits = 1:3;
+% best_fit = zeros(3*N,length(fits));
+% i = 1; ids = GA2.GA.GetTopPop(N);
+% best_seq(N*(i-1)+1:N*i,:) = GA2.GA.Seqs(ids,:,GA2.GA.Progress);
+% best_fit(N*(i-1)+1:N*i,fits) = GA2.GA.Fit(ids,fits,GA2.GA.Progress);
+% i = 2; ids = GA22.GA.GetTopPop(N);
+% best_seq(N*(i-1)+1:N*i,:) = GA22.GA.Seqs(ids,:,GA22.GA.Progress);
+% best_fit(N*(i-1)+1:N*i,fits) = GA22.GA.Fit(ids,fits,GA22.GA.Progress);
+% i = 3; ids = GA23.GA.GetTopPop(N);
+% best_seq(N*(i-1)+1:N*i,:) = GA23.GA.Seqs(ids,:,GA23.GA.Progress);
+% best_fit(N*(i-1)+1:N*i,fits) = GA23.GA.Fit(ids,fits,GA23.GA.Progress);
+
+binres = 20;
+figure
+subplot(2,3,1)
+hist(best_seq(:,1),binres)
+xlim([0 0.25])
+xlabel('\tau_r')
+set(gca,'FontSize',12,'FontWeight','bold');
+
+subplot(2,3,2)
+hist(best_seq(:,2),binres)
+xlabel('b')
+set(gca,'FontSize',12,'FontWeight','bold');
+
+subplot(2,3,3)
+data = [best_seq(:,3); best_seq(:,4)];
+hist(data,binres)
+xlabel('c_{ankle}')
+set(gca,'FontSize',12,'FontWeight','bold');
+
+subplot(2,3,4)
+data = [best_seq(:,5); best_seq(:,6)];
+hist(data,binres)
+xlabel('c_{hip}')
+set(gca,'FontSize',12,'FontWeight','bold');
+
+subplot(2,3,5)
+data = reshape(best_seq(:,[7:18]),[],1);
+hist(data,binres)
+xlabel('W_{ij}')
+set(gca,'FontSize',12,'FontWeight','bold');
+xlim([-1,10])
+
+figure
+subplot(1,3,1)
+hist(best_fit(:,1),binres);
+subplot(1,3,2)
+hist(best_fit(:,2),binres);
+subplot(1,3,3)
+hist(best_fit(:,3),binres);
 
 %%%%%%%%%%%%%%%%%%%%%%%%
 

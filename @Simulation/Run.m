@@ -101,7 +101,7 @@ function [ sim ] = Run( sim )
                 % Handle event interactions
                 switch ConEvID
                     case 1 % Neuron fired
-                        sim.Mod.LegShift = sim.Mod.Clearance;
+%                         sim.Mod.LegShift = sim.Mod.Clearance;
                     case 2 % Leg extension
                         sim.Mod.LegShift = 0;
                 end 
@@ -218,15 +218,9 @@ function [ sim ] = Run( sim )
             Slopes = [Slopes; %#ok<AGROW>
                       repmat(ThisSlope,length(TTemp),1)];
                   
-            if StoreIC % Check that torque isn't 0 or constant
+            if StoreIC && sim.CheckTorque == 1
                 new_t = length(sim.Out.T);
-%                 figure
-%                 plot(sim.Out.T(last_t:new_t), ...
-%                      Torques(last_t:new_t,:))
-%                 figure(1)
-%                 disp(mean(abs(Torques(last_t:new_t,:)),1))
-%                 disp(std(Torques(last_t:new_t,:),1))
-%                 disp([sim.Con.tau, sim.Con.Amp']);
+                % Check that torque isn't 0 or constant
                 if all(mean(abs(Torques(last_t:new_t,:)),1) < 1e-2)
                     % Torque output is 0 for the whole step
                     sim.Out.Type = 9;
@@ -241,6 +235,15 @@ function [ sim ] = Run( sim )
                     sim.StopSim = 1;
                     break
                 end
+                
+%                 figure
+%                 plot(sim.Out.T(last_t:new_t), ...
+%                      Torques(last_t:new_t,:))
+%                 figure(1)
+%                 disp(mean(abs(Torques(last_t:new_t,:)),1))
+%                 disp(std(Torques(last_t:new_t,:),1))
+%                 disp([sim.Con.tau, sim.Con.Amp']);
+
                 last_t = new_t+1;
             end
         end

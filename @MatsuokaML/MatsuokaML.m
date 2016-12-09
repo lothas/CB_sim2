@@ -24,6 +24,11 @@ classdef MatsuokaML
         
         sample_genes = {'beta','weights'};
         target_genes = {'\tau_r'};
+        
+        % For normalizing the Matsuoka weights by c before NN input
+        norm_weights = 0;
+        sample_genes1 = {};
+        sample_genes2 = {};
     end
     
     methods

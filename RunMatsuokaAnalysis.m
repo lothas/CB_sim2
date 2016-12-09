@@ -224,19 +224,30 @@ sampPerfSc = zeros(nCombos, NNSamples); % re-scaled results
 for i = 1:nCombos
     MML.sample_genes = sample_genes{combos(i,1)};
     MML.target_genes = target_genes{combos(i,2)};
+
+    % Normalize weights
+%     weight_id = [];
+    weight_id = find(strcmp(MML.sample_genes,'weights'),1,'first');
+    MML.norm_weights = 0;
+    if ~isempty(weight_id)
+        MML.norm_weights = 1;
+        MML.sample_genes1 = {'weights'};
+        MML.sample_genes2 = MML.sample_genes;
+        MML.sample_genes2(weight_id) = [];
+    end
     
     [samples, targets, normParams] = MML.prepareNNData(inFilenames, maxN);
     MML.normParams = normParams;
     
     [net{i}, tr{i}, netPerf(i,:), desPeriod(i,:), ...
             sampPerf(i,:), sampPerfSc(i,:)] = ...
-            MML.trainNN(samples, targets, [30, 30], NNSamples);
+            MML.trainNN(samples, targets, 50, NNSamples);
         
 %     [net1, tr1, netPerf1, desPeriod1, sampPerf1, sampPerfSc1] = ...
 %             MML.trainNN(samples, targets, 20, NNSamples);
 end
 
-save('MatsNNTests', 'sample_genes', 'target_genes', 'combos', ...
+save('MatsNNTests2', 'sample_genes', 'target_genes', 'combos', ...
      'nCombos', 'net', 'tr', 'netPerf', 'desPeriod', ...
      'sampPerf', 'sampPerfSc');
  

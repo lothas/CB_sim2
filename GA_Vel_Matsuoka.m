@@ -8,7 +8,7 @@ if nargin<4
     GA = GA.SetFittest(15,15,0.5);
     GA.JOAT = 0; GA.Quant = 0.8;
     % GA.Fittest = [20,20,1];
-    GA.FileIn = 'VGAM_11_20_20_52.mat';
+%     GA.FileIn = 'VGAM_11_22_00_00.mat';
 %     GA.FileOut = GA.FileIn;
 
     GA.FileOut = ['VGAM_',datestr(now,'mm_dd_hh_MM'),'.mat'];
@@ -24,7 +24,7 @@ end
 % Use NN?
 use_NN = 0;
 % Rescale?
-% GA.rescaleFcn = @rescaleFcn;
+GA.rescaleFcn = @rescaleFcn;
 
 GA.Graphics = 0;
 GA.ReDo = 1;
