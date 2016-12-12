@@ -25,7 +25,8 @@ function [out, sim, signal] = runSim(obj, sequence)
     sim.Con = sim.Con.Adaptation();
     
     [x0, X, T] = runMatsuokaSim();
-    [y, periods, signals, pos_work, neg_work] = obj.processResults(X, T);
+    [y, periods, signals, pos_work, neg_work, perOK] = ...
+        obj.processResults(X, T);
 %     periods
     [simFreq, amp] = obj.processResultsFFT(X, T, 0);
     
@@ -66,6 +67,8 @@ function [out, sim, signal] = runSim(obj, sequence)
     out.x0 = x0;
     out.periods = periods;
     out.period_Rea = 1/simFreq;
+    out.perOK = perOK;
+    % ^ Returns 1 if the  calculated period was verified to be correct
     out.amp = amp;
     out.pos_work = pos_work;
     out.neg_work = neg_work;

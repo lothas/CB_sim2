@@ -12,7 +12,7 @@ if nargin<3
              
     % If we only permutate W
     if ~doPermC
-        new_order = perms(1:4);
+        new_order = perms(1:obj.nNeurons);
     end
 end
 

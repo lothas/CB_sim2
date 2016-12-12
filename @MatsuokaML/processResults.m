@@ -1,4 +1,4 @@
-function [y, periods, signals, pos_work, neg_work] = ...
+function [y, periods, signals, pos_work, neg_work, perOK] = ...
         processResults(obj, X, T)
 %PROCESSRESULTS Calculates the output signals, CPG period, positive and
 %negative work using the simulation results
@@ -77,6 +77,35 @@ function [y, periods, signals, pos_work, neg_work] = ...
         neg_signal = min(signal,0);
         pos_work(i) = trapz(T,pos_signal);
         neg_work(i) = trapz(T,neg_signal);
+    end
+    
+    % Verify period calculation
+    if any(isnan(periods))
+        % Get the last 10% of the signal
+        N = size(signals, 2);
+        shortSig = signals(:,ceil(N/10):end);
+        error = max(abs(std(shortSig,[],2)./mean(shortSig,2)));
+        if error < 1e-3
+            % Stationary signal confirmed
+            perOK = 1;
+        else
+            perOK = 0;
+        end
+    else
+        % Get N = 10 periods from the simulated state X
+        [sigT, perSignal] = obj.getNcycles(T, X', periods, 10);
+    %     steps = floor(max(periods)/mean(diff(T)));
+    %     Xsamp = perSignal(:,1:steps:end);
+        % Sample the signal at the expected period
+        Xsamp2 = interp1(sigT,perSignal',(1:10)*max(periods));
+        Xsamp2(isnan(Xsamp2(:,1)),:) = [];
+        % Calculate the error as the relative std (std/mean)
+        error = max(abs(std(Xsamp2)./mean(Xsamp2)));
+        if error < 0.1
+            perOK = 1;
+        else
+            perOK = 0;
+        end
     end
 end
 

@@ -91,7 +91,7 @@ GA.FitFcn = {1, @MOOGA.VelFit;
              2, @MOOGA.NrgEffFit;
              3:10, @MOOGA.VelRangeFit;
              11, @MOOGA.EigenFit};
-GA.FitIDs = [1,2,3,11]; % Velocity and average COT
+GA.FitIDs = [1,2,3]; % Velocity and average COT
 GA.FitMinMax = [1, 1, 1, 1, -1, 1, -1, 1, -1, 1, 1];
 % Pareto always looks to maximize the fitness value but sometimes we want
 % to check values that don't go into the pareto selection and we want to
@@ -125,10 +125,5 @@ GA.GenerationFcn = @GenFcn;
 
 GA = GA.Run();
 GA.Plot('Fit');
-
-CompTime = GA.CompTime;
-hours = floor(CompTime/3600); CompTime = CompTime - hours*3600;
-minutes = floor(CompTime/60); CompTime = CompTime - minutes*60;
-disp(['Total runtime: ',int2str(hours),' hour(s), ',int2str(minutes), ...
-    ' minute(s) and ',num2str(CompTime),' second(s).'])
+GA.PrintRuntime();
 end

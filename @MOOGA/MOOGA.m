@@ -206,6 +206,49 @@ classdef MOOGA
                 hist(data(:,i),Nbins);
             end                
         end
+        
+        function varargout = PrintRuntime(GA)         
+            if GA.CompTime > 0
+                Time = GA.CompTime;
+                hours = floor(Time/3600); Time = Time - hours*3600;
+                minutes = floor(Time/60); Time = Time - minutes*60;
+                seconds = Time;
+                % Prepare output
+                outStr = 'Total runtime: ';
+                if hours > 1
+                    outStr = [outStr, int2str(hours),' hours, '];
+                else
+                    if hours == 1
+                        outStr = [outStr, '1 hour, '];
+                    end
+                end
+                if minutes > 1
+                    outStr = [outStr, int2str(minutes),' minutes, '];
+                else
+                    if minutes == 1
+                        outStr = [outStr, '1 minute, '];
+                    end
+                end
+                if seconds == 1
+                    outStr = [outStr, '1 second'];               
+                else
+                    if seconds > 0
+                        outStr = [outStr, num2str(seconds),' seconds'];
+                    else
+                        % no seconds, remove ', '
+                        outStr = outStr(1:end-2);
+                    end
+                end
+            else
+                outStr = 'Total runtime: unknown';
+            end
+            
+            if nargout == 0
+                disp(outStr)
+            else
+                varargout = {outStr};
+            end
+        end
     end
     
     methods(Static)

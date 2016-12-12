@@ -13,6 +13,42 @@ nPlotSamples = 0; % 10;
 % Turn off findpeaks warning
 warning('off','signal:findpeaks:largeMinPeakHeight');
 
+%% Test effect of permutating genes
+while 1
+    seq = MML.Gen.RandSeq(1);
+    [out, ~, ~] = MML.runSim(seq);
+    if all(~isnan(out.periods))
+        break
+    end
+end
+permSeqs = MML.permSeq(seq);
+nPerms = size(permSeqs,1);
+out = cell(1,nPerms); sim = cell(1,nPerms); signal = cell(1,nPerms);
+for i = 1:nPerms
+    [out{i}, sim{i}, signal{i}] = MML.runSim(permSeqs(i,:));
+end
+
+% Show results
+figure
+hold on
+periods = zeros(nPerms,1);
+perSignal = signal;
+for i = 1:nPerms
+    if any(isnan(out{i}.periods))
+        periods(i) = NaN;
+    else
+        periods(i) = max(out{i}.periods);
+    end
+    
+    % Get last N cycles
+    [sigT, perSignal{i}] = MML.getNcycles(signal{i}.T, ...
+        signal{i}.signal, periods(i), 5);
+    plot(sigT, perSignal{i});
+end
+disp(['Converged: ', int2str(sum(~isnan(periods))), ...
+    ' out of ', int2str(nPerms)])
+    
+
 %% Phase 1 - Run lots of Matsuoka simulations with different parameters
 filename1 = 'MatsRandomRes.mat';
 nSamples = 250000;
