@@ -31,8 +31,8 @@ function [results, signal] = runRandomSim(obj)
 
     % Results
     results.periods = out.periods;
-    results.period_Rea = out.period_Rea;
-    results.amp = out.amp;
+%     results.period_Rea = out.period_Rea;
+%     results.amp = out.amp;
     results.pos_work = out.pos_work;
     results.neg_work = out.neg_work;
 end
