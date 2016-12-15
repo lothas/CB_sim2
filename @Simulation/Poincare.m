@@ -37,8 +37,9 @@ end
 
 % Run the simulations
 PMsim = copy(sim);
-PMsim.EndCond = [1,sim.Period(1)];
-PMsim = PMsim.SetTime(0,2*sim.Period(1)*sim.Period(2));
+Period = sim.GetPeriod();
+PMsim.EndCond = [1,Period(1)];
+PMsim = PMsim.SetTime(0,2*Period(1)*Period(2));
 Slope = PMsim.Env.SurfSlope(PMsim.Mod.xS);
 for d = Coords
     PMsim.IC = dIC(:,d);

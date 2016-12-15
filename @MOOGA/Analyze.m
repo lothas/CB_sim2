@@ -136,7 +136,7 @@ while ~Data.Done
                                             start_s_in+ds_in);
         end
 
-        if Asim.Out.Type == 5
+        if any(Asim.Out.Type == [0,5,6])
             % Simulation converged
             fprintf(' - ');
             cprintf('*green','OK!\n')
@@ -385,11 +385,12 @@ end
                 Slope = 0;
                 sim.Con.s_in = S;
         end
-        Data.Period(end+1,1) = sim.Period(1);
+        Period = sim.GetPeriod();
+        Data.Period(end+1,1) = Period(1);
         % Initial conditions (for each step until a full period)
-        Coords = 1:sim.stDim*sim.Period(1);
+        Coords = 1:sim.stDim*Period(1);
         Data.IC(Coords,end+1) = ...
-            reshape(sim.ICstore(:,1:sim.Period(1)),[],1); 
+            reshape(sim.ICstore(:,1:Period(1)),[],1); 
         
         % Calculate eigenvalues
         if sim.PMFull
@@ -397,8 +398,8 @@ end
         else
             EachP = length(sim.ModCo);
         end
-        EigV = zeros(EachP*sim.Period(1),1);
-        for p = 1:sim.Period(1)
+        EigV = zeros(EachP*Period(1),1);
+        for p = 1:Period(1)
             sim.IClimCyc = sim.ICstore(:,p);
             Coords = 1+EachP*(p-1):EachP*p;
             [EigV(Coords),~] = sim.Poincare();
@@ -409,7 +410,7 @@ end
         sim = sim.SetTime(0,0.003,5);
         sim.Mod.xS = 0; sim.Mod.yS = 0;
         sim.Env = sim.Env.Set('Type','inc','start_slope',Slope);
-        sim.EndCond = [1,sim.Period(1)]; % Run for one full period
+        sim.EndCond = [1,Period(1)]; % Run for one full period
         sim = sim.Init();
         sim.Mod.LegShift = sim.Mod.Clearance;
         sim.IC = Data.IC(1:sim.stDim,end); % sim.IClimCyc;
@@ -613,7 +614,8 @@ end
         dPotentialE = Weight*(Hip1(2)-Hip0(2));
 
         % Calculate kinetic energy lost to impact
-        if ESim.Period(1)>1
+        Period = ESim.GetPeriod();
+        if Period(1)>1
             warning('Period doubling calculation not implemented')
             dKineticEIm = 0;
         else

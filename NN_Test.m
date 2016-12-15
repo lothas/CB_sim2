@@ -48,17 +48,21 @@ one_over = 0;
 for s = 1:length(targets)
     weights = sSeqs(s,7:18);
     
-    W = zeros(4, 4);
+    W0 = zeros(4, 4);
     k = 1;
     for i = 1:4
         for j = 1:4
             if i == j
                 continue
             end
-            W(i,j) = weights(k);
+            W0(i,j) = weights(k);
             k = k+1;
         end
     end
+    % Normalize weights
+    c = sSeqs(s,3:6);
+    W = (diag(1./c)*(diag(c)*W0)')';
+    weights = reshape(W',1,[]); weights(weights == 0) = [];
     
     res1 = 0;
     res2 = 1;

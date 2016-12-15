@@ -547,6 +547,7 @@ classdef MOOGA
             maxSingleT = 20; % Time alloted for a single run
             maxAllT = 20*maxSingleT; % Time alloted for all runs
             elapsedT = 0;    % Time elapsed in all runs
+            COT = [];
             
             while 1
                 % Run a simulation of the robot walking with different speed
@@ -595,14 +596,33 @@ classdef MOOGA
                 else
                     break;
                 end
+                
+                % Calculate the COT of this run
+                this_COT = VelSim.GetCOT([1,0], 0);
+
+                if isempty(COT)
+                    if isempty(this_COT)
+                        COT = 1; % The cost of dragging an object with coefficient
+                                 % of friction = 1
+                    else
+                        COT = this_COT;
+                    end
+                else
+                    if isempty(this_COT)
+                        if VelSim.Out.nSteps<3
+                            % Sim failed quickly on new speed, don't update
+                        else
+                            COT = this_COT;
+                        end
+                    else
+                        COT = this_COT;
+                    end
+                end   
             end
-            
-            % Calculate the last COT
-            COT = VelSim.GetCOT([1,0], 0);
             
             if isempty(COT)
                 COT = 1; % The cost of dragging an object with coefficient
-                % of friction = 1
+                         % of friction = 1
             end
         end
         

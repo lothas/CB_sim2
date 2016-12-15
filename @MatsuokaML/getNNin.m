@@ -10,7 +10,7 @@ function in = getNNin(obj, seq, period)
             amps = amp; amps(r) = [];
             genes1(range) = genes1(range)*this_amp./amps;
         end
-        genes1 = min(max(genes1, -10),100); % Bound the weights
+%         genes1 = min(max(genes1, -10),100); % Bound the weights
         genes2 = obj.Gen.GetGenes(seq, obj.sample_genes2);
         genes = [genes1, genes2];
     else

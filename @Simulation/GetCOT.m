@@ -33,7 +33,7 @@ Weight = sim.Mod.GetWeight();
 % Calculate distance travelled
 DistanceTravelled = abs(Hip1(1)-Hip0(1));
 
-if DistanceTravelled<3*sim.Mod.L
+if DistanceTravelled<3*sim.Mod.L && sim.Out.nSteps<5
     % Robot didn't walk a minimum of 3 body lengths
     return;
 else
