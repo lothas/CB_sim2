@@ -73,7 +73,7 @@ function [out, sim, signal] = runSim(obj, sequence)
     % ^ Returns 1 if the calculated period was verified to be correct
     out.perError2 = perError2;
     out.perOK2 = perOK2;
-    out.amp = amp;
+%     out.amp = amp;
     out.pos_work = pos_work;
     out.neg_work = neg_work;
     

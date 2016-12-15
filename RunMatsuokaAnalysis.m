@@ -51,7 +51,7 @@ disp(['Converged: ', int2str(sum(~isnan(periods))), ...
 
 %% Phase 1 - Run lots of Matsuoka simulations with different parameters
 filename1 = 'MatsRandomRes.mat';
-nSamples = 250000;
+nSamples = 200000;
 MML.runRandomSims(nSamples, filename1);
 
 %% Phase 2 - Re-run simulations that converged outside the desired range,
