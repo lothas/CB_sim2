@@ -1,5 +1,6 @@
-function [y, periods, signals, pos_work, neg_work, perOK] = ...
-        processResults(obj, X, T)
+function [y, periods, signals, pos_work, neg_work, neuronActive, ...
+    neuronOsc, perError1, perOK1, perError2, perOK2] = ...
+    processResults(obj, X, T)
 %PROCESSRESULTS Calculates the output signals, CPG period, positive and
 %negative work using the simulation results
 
@@ -9,14 +10,24 @@ function [y, periods, signals, pos_work, neg_work, perOK] = ...
     signals = obj.Sim.Con.OutM*y';
     pos_work = zeros(obj.nNeurons/2,1);
     neg_work = zeros(obj.nNeurons/2,1);
-
+%     perError1 = zeros(obj.nNeurons/2,1);
+    perOK1 = false;
+    perError2 = nan(obj.nNeurons,1);
+    perOK2 = false(obj.nNeurons,1);
+    
+    sig2proc = 0.3; % start calculating period after 30% of the signal
+    % to skip transient
+    sig_idx = floor(sig2proc*size(signals,2)):size(signals,2);
+    
+    ycheck = y(sig_idx,:);
+    % checking if neuron is active:
+    neuronActive = mean(ycheck) > 1e-6;
+    neuronOsc = std(ycheck) > 1e-4;
+    
     for i = 1:obj.nNeurons/2
         signal = signals(i,:);
 
         % Calculate signal period
-        sig2proc = 0.3; % start calculating period after 30% of the signal
-        % to skip transient
-        sig_idx = floor(sig2proc*length(signal)):length(signal);
         ac = xcorr(signal(sig_idx),signal(sig_idx),'coeff');
         [~,locs]=findpeaks(ac, 'MinPeakheight',0.3, ...
                     'MinPeakProminence', 0.05);
@@ -83,13 +94,23 @@ function [y, periods, signals, pos_work, neg_work, perOK] = ...
     if any(isnan(periods))
         % Get the last 10% of the signal
         N = size(signals, 2);
-        shortSig = signals(:,ceil(N/10):end);
-        error = max(abs(std(shortSig,[],2)./mean(shortSig,2)));
+        shortSig = signals(:,ceil(0.9*N):end);
+        % Check if signal is stationary
+        perError1 = abs(std(shortSig,[],2)./mean(shortSig,2));
+        error = max(perError1);
         if error < 1e-3
             % Stationary signal confirmed
-            perOK = 1;
-        else
-            perOK = 0;
+            perOK1 = true;
+        end
+        
+        for i = 1:obj.nNeurons
+            shorty = y(ceil(0.9*N):end,i);
+            shorty = (shorty - min(shorty))./(max(shorty)-min(shorty));
+            [pks,~] = findpeaks(shorty, 'MinPeakheight',0.5, ...
+                    'MinPeakProminence', 0.05);
+            if isempty(pks)
+                perOK2(i) = true;
+            end
         end
     else
         % Get N = 10 periods from the simulated state X
@@ -99,12 +120,45 @@ function [y, periods, signals, pos_work, neg_work, perOK] = ...
         % Sample the signal at the expected period
         Xsamp2 = interp1(sigT,perSignal',(1:10)*max(periods));
         Xsamp2(isnan(Xsamp2(:,1)),:) = [];
+        Xsamp2 = 1e-4+Xsamp2;
         % Calculate the error as the relative std (std/mean)
-        error = max(abs(std(Xsamp2)./mean(Xsamp2)));
+        perError1 = abs(std(Xsamp2)./mean(Xsamp2));
+        error = max(perError1);
         if error < 0.1
-            perOK = 1;
-        else
-            perOK = 0;
+            perOK1 = true;
+        end
+        
+        % Get the last 33% of the signal
+        N = size(signals, 2);
+        for i = 1:obj.nNeurons
+            shorty = y(ceil(0.66*N):end,i);
+            if abs(std(shorty)) < 1e-6
+                perOK2(2) = false;
+                continue;
+            end
+                
+            shorty = (shorty - min(shorty))./(max(shorty)-min(shorty));
+            [~,locs] = findpeaks(shorty, 'MinPeakheight',0.5, ...
+                    'MinPeakProminence', 0.05);
+
+            % Calculate expected index of next peak 
+            dT = mean(diff(T));
+            i_p = round(max(periods)/dT);
+
+            if (~isempty(locs))
+                if (locs(1)+i_p) < length(shorty)
+                    perError2(i) = (shorty(locs(1))-shorty(locs(1)+i_p))^2;
+                    if abs(perError2(i)<1e-2)
+                        perOK2(i) = true;
+                    end
+                else
+                    % Expected peak is beyond signal length
+                    perError2(i) = NaN;
+                end
+            else
+                % No peaks found
+                perError2(i) = NaN;
+            end
         end
     end
 end

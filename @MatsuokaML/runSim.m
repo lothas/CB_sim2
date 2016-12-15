@@ -25,10 +25,11 @@ function [out, sim, signal] = runSim(obj, sequence)
     sim.Con = sim.Con.Adaptation();
     
     [x0, X, T] = runMatsuokaSim();
-    [y, periods, signals, pos_work, neg_work, perOK] = ...
+    [y, periods, signals, pos_work, neg_work, neuronActive, ...
+        neuronOsc, perError1, perOK1, perError2, perOK2] = ...
         obj.processResults(X, T);
 %     periods
-    [simFreq, amp] = obj.processResultsFFT(X, T, 0);
+%     [simFreq, amp] = obj.processResultsFFT(X, T, 0);
     
     % Plot results
     if obj.doPlot
@@ -66,12 +67,18 @@ function [out, sim, signal] = runSim(obj, sequence)
     % Prepare output
     out.x0 = x0;
     out.periods = periods;
-    out.period_Rea = 1/simFreq;
-    out.perOK = perOK;
-    % ^ Returns 1 if the  calculated period was verified to be correct
+%     out.period_Rea = 1/simFreq;
+    out.perError1 = perError1;
+    out.perOK1 = perOK1;
+    % ^ Returns 1 if the calculated period was verified to be correct
+    out.perError2 = perError2;
+    out.perOK2 = perOK2;
     out.amp = amp;
     out.pos_work = pos_work;
     out.neg_work = neg_work;
+    
+    out.neuronActive = neuronActive;
+    out.neuronOsc = neuronOsc;
     
     clear signal
     signal.T = T;
