@@ -35,5 +35,11 @@ function [results, signal] = runRandomSim(obj)
 %     results.amp = out.amp;
     results.pos_work = out.pos_work;
     results.neg_work = out.neg_work;
+    results.perError1 = out.perError1;
+    results.perOK1 = out.perOK1;
+    results.perError2 = out.perError2;
+    results.perOK2 = out.perOK2;
+    results.neuronActive = out.neuronActive;
+    results.neuronOsc = out.neuronOsc;
 end
 
