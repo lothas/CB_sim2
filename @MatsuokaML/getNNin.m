@@ -17,7 +17,8 @@ function in = getNNin(obj, seq, period)
         genes = obj.Gen.GetGenes(seq, obj.sample_genes);
     end
     
-    in = [genes';  period];
+    in = [genes';  1/period];
+%     in = [genes';  period];
 
     % Normalize X
     if ~isempty(obj.normParams)

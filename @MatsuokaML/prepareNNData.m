@@ -12,7 +12,7 @@ function [ samples, targets, normParams ] = ...
         data = load(filenames{i});
         new_periods = data.periods;
         results = [results, data.results(~isnan(new_periods))]; %#ok<AGROW>
-        periods = [periods, new_periods(~isnan(new_periods))]; %#ok<AGROW>
+        periods = [periods; new_periods(~isnan(new_periods))]; %#ok<AGROW>
     end
     nSamples = numel(results);
     
@@ -41,7 +41,8 @@ function [ samples, targets, normParams ] = ...
         period = periods(ids(i));
         
         % Build sample and target vectors
-        samples(:,i) = obj.getNNin(sample.seq, period);
+        samples(:,i) = obj.getNNin(sample.seq, 1/period);
+%         samples(:,i) = obj.getNNin(sample.seq, period);
         targets(:,i) = obj.Gen.GetGenes(sample.seq, obj.target_genes);
     end
 
