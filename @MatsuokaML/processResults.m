@@ -105,6 +105,11 @@ function [y, periods, signals, pos_work, neg_work, neuronActive, ...
         
         for i = 1:obj.nNeurons
             shorty = y(ceil(0.9*N):end,i);
+            if abs(std(shorty)) < 1e-6
+                % Signal is stationary
+                perOK2(i) = true;
+                continue;
+            end
             shorty = (shorty - min(shorty))./(max(shorty)-min(shorty));
             [pks,~] = findpeaks(shorty, 'MinPeakheight',0.5, ...
                     'MinPeakProminence', 0.05);
@@ -133,7 +138,7 @@ function [y, periods, signals, pos_work, neg_work, neuronActive, ...
         for i = 1:obj.nNeurons
             shorty = y(ceil(0.66*N):end,i);
             if abs(std(shorty)) < 1e-6
-                perOK2(2) = false;
+                perOK2(i) = false;
                 continue;
             end
                 

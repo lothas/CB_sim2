@@ -50,14 +50,183 @@ disp(['Converged: ', int2str(sum(~isnan(periods))), ...
     
 
 %% Phase 1 - Run lots of Matsuoka simulations with different parameters
-filename1 = 'MatsRandomRes.mat';
+filename1 = 'MatsRandomRes_16_12_2016.mat';
+% filename1 = 'MatsRandomRes_test.mat';
 nSamples = 200000;
 MML.runRandomSims(nSamples, filename1);
+
+%% Phase 1.1 - Show period calculation errors
+
+data = load(filename1);
+conv = true(data.nSims,1);
+for i = 1:data.nSims
+    if any(isnan(data.results(i).periods))
+        conv(i) = false;
+    end
+end
+id_conv = find(conv == true);
+id_not_conv = find(conv == false);
+disp(['Detected period in ', int2str(length(id_conv)), ' out of ', ...
+    int2str(data.nSims), ' simulations (', ...
+    num2str(length(id_conv)/data.nSims*100,'%.1f'), '%)'])
+
+perOK1 = vertcat(data.results.perOK1);
+perError1_1 = zeros(length(id_conv), 2*MML.nNeurons);
+nw = 0;
+for i = 1:length(id_conv)
+    if length(data.results(id_conv(i)).perError1) ~= 2*MML.nNeurons
+        disp(id_conv(i))
+        nw = nw+1;
+    end
+    perError1_1(i,:) = data.results(id_conv(i)).perError1;
+end
+perError1_2 = horzcat(data.results(id_not_conv).perError1)';
+
+perOK2 = vertcat(data.results.perOK2);
+perError2_1 = horzcat(data.results(id_conv).perError2)';
+perError2_2 = horzcat(data.results(id_not_conv).perError2)';
+% When no period was detected Error2 is always NaN.
+% So perError2_2 is useless, but perOK2 still contains helpful info
+% (the threshold used was also 1e-6)
+
+perError1_1_thresh = 0.1;
+disp([num2str(sum(any(perError1_1'<perError1_1_thresh)) ...
+    / length(id_conv) * 100, '%.1f'), ...
+    '% of oscillatory CPGS have period detection error under ', ...
+    num2str(perError1_1_thresh)])
+
+perError1_2_thresh = 1e-6;
+disp([num2str(sum(any(perError1_2'<perError1_2_thresh)) ...
+    / length(id_not_conv) * 100, '%.1f'), ...
+    '% of non oscillatory CPGS have period detection error under ', ...
+    num2str(perError1_2_thresh)])
+
+perError2_1_thresh = 0.0001;
+disp([num2str(sum(any(perError2_1'<perError2_1_thresh)) ...
+    / length(id_conv) * 100, '%.1f'), ...
+    '% of oscillatory CPGS have period detection error under ', ...
+    num2str(perError2_1_thresh)])
+
+% show histograms
+perError1_1(any(perError1_1'>2*perError1_1_thresh),:) = [];
+perError1_2(any(perError1_2'>2*perError1_2_thresh),:) = [];
+perError2_1(any(perError2_1'>2*perError2_1_thresh),:) = [];
+figure
+subplot(1,3,1)
+hist(perError1_1(:),50)
+title('Error of oscillatory')
+subplot(1,3,2)
+hist(perError1_2(:),50)
+title('Error of non oscillatory')
+subplot(1,3,3)
+hist(perError2_1(:),50)
+title('Error of oscillatory (Rea)')
+
+neuronAct = vertcat(data.results.neuronActive);
+neuronOsc = vertcat(data.results.neuronOsc);
+
+% Definitely wrong:
+% Only one neuron is oscillatory
+ids1 = find(sum(neuronOsc,2)==1);
+% One output signal is 0 (pair of neurons not oscillatory)
+ids2 = find(neuronOsc(:,1)==0 & neuronOsc(:,3)==0 | neuronOsc(:,2)==0 & neuronOsc(:,4)==0);
+
+% Could be OK:
+ids3 = find(neuronOsc(:,1)==1 & neuronOsc(:,2)==1 | neuronOsc(:,3)==1 & neuronOsc(:,4)==1);
+
+% Problematic detections (different period for out1 and out2)
+ids4 = find(all(~isnan(per')) & diff(per')>1e-3);
+
+% Sum it all up
+detOsc = false(data.nSims,1); % Oscillations detected
+perOK1 = false(data.nSims,1); % Period calculation error 1
+perOK2 = false(data.nSims,1); % Period calculation error 2
+perOK3 = false(data.nSims,1); % Periodic neurons
+for i = 1:data.nSims
+    detOsc(i) = all(~isnan(data.results(i).periods));
+    if detOsc(i)
+        perOK1(i) = max(data.results(i).perError1)<perError1_1_thresh;
+        perOK2(i) = max(data.results(i).perError2)<perError2_1_thresh;
+    else
+        % No period was detected
+        perOK1(i) = max(data.results(i).perError1)<perError1_2_thresh;
+        perOK2(i) = all(data.results(i).perOK2);
+    end
+    
+    oscN = data.results(i).neuronOsc;
+    perOK3(i) = true;
+    % Good combinations
+    for j = 1:MML.nNeurons/2
+        % If these pairs are non-oscillatory, their corresponding output
+        % will be stationary
+        perOK3(i) = perOK3(i) & (oscN(2*(j-1)+1) | oscN(2*j));
+    end
+end
+
+disp(['Detected period in ', int2str(sum(detOsc)), ' out of ', ...
+    int2str(data.nSims), ' simulations (', ...
+    num2str(sum(detOsc)/data.nSims*100,'%.1f'), '%)'])
+disp(['Should have period based on detected oscillatory neurons: ', ...
+    int2str(sum(perOK3)), ' out of ', int2str(data.nSims), ' simulations (', ...
+    num2str(sum(perOK3)/data.nSims*100,'%.1f'), '%)'])
+disp(['Correctly detected: ', int2str(sum(detOsc & perOK3))])
+disp(['Falsely detected: ', int2str(sum(detOsc & ~perOK3))])
+disp(['Missed: ', int2str(sum(~detOsc & perOK3))])
+disp(' ')
+
+disp('Correctly detected oscillations:')
+disp(['* Jonathan method: ', int2str(sum(perOK1)), ' out of ', ...
+   int2str(data.nSims), ' simulations (', ...
+    num2str(sum(perOK1)/data.nSims*100,'%.1f'), '%)'])
+disp(['* Rea method: ', int2str(sum(perOK2)), ' out of ', ...
+   int2str(data.nSims), ' simulations (', ...
+    num2str(sum(perOK2)/data.nSims*100,'%.1f'), '%)'])
+disp(['* Both methods: ', int2str(sum(perOK1 & perOK2)), ' out of ', ...
+   int2str(data.nSims), ' simulations (', ...
+    num2str(sum(perOK1 & perOK2)/data.nSims*100,'%.1f'), '%)'])
+disp(' ')
+
+% We define good results as those confirmed by both methods,
+% correctly detected (period detected and neurons are oscillatory),
+% and all signals have the same period
+periods = horzcat(data.results.periods);
+good_ids = find(perOK1 & perOK2 & ...
+    (detOsc & perOK3 | ~detOsc & ~perOK3) & ...
+    (~detOsc | abs(diff(periods))' < 0.5*min(periods(:))));
+results = data.results(good_ids);
+nSims = length(results);
+gOsc = detOsc(good_ids);
+gPer = perOK3(good_ids);
+
+disp(['Detected period in ', int2str(sum(gOsc)), ' out of ', ...
+    int2str(nSims), ' simulations (', ...
+    num2str(sum(gOsc)/nSims*100,'%.1f'), '%)'])
+disp(['Should have period based on detected oscillatory neurons: ', ...
+    int2str(sum(gPer)), ' out of ', int2str(nSims), ' simulations (', ...
+    num2str(sum(gPer)/nSims*100,'%.1f'), '%)'])
+disp(['Correctly detected: ', int2str(sum(gOsc & gPer))])
+disp(['Falsely detected: ', int2str(sum(gOsc & ~gPer))])
+disp(['Missed: ', int2str(sum(~gOsc & gPer))])
+disp(' ')
+
+periods = horzcat(results.periods)';
+% speriods = sortrows(periods,-1);
+% plot(speriods(:,1),speriods(:,2))
+periods = max(periods,[],2);
+id_conv = find(gOsc);
+id_per = find(periods >= MML.perLimOut(1) & periods <= MML.perLimOut(2));
+disp(['Produced desired period range: ', int2str(length(id_per)), ' out of ', ...
+    int2str(nSims), ' simulations (', ...
+    num2str(length(id_per)/nSims*100,'%.1f'), '%)'])
+save('MatsRandomChkRes.mat','nSims','results','id_conv','id_per','periods');
+data.nSims = nSims;
+data.results = results;
+data.periods = max(periods,[],2);
 
 %% Phase 2 - Re-run simulations that converged outside the desired range,
 % this time with scaled temporal parameters
 filename2 = 'MatsScaledRes.mat';
-data = load(filename1);
+% data = load(filename1);
 reDo_ids = zeros(1, data.nSims);
 reDo_ids(~isnan(data.periods)) = 1;
 reDo_ids(data.periods >= MML.perLimOut(1) & ...
@@ -68,8 +237,96 @@ inputData = data.results(logical(reDo_ids));
 inputPeriods = data.periods(logical(reDo_ids));
 MML.runScaledSims(inputData, inputPeriods, filename2);
 
-%% Phase 2.1 - Check damping condition
+%% Phase 2.1 - check results
+
 data = load(filename2);
+detOsc = false(data.nSims,1); % Oscillations detected
+perOK1 = false(data.nSims,1); % Period calculation error 1
+perOK2 = false(data.nSims,1); % Period calculation error 2
+perOK3 = false(data.nSims,1); % Periodic neurons
+for i = 1:data.nSims
+    detOsc(i) = all(~isnan(data.results(i).periods));
+    if detOsc(i)
+        perOK1(i) = max(data.results(i).perError1)<perError1_1_thresh;
+        perOK2(i) = max(data.results(i).perError2)<10*perError2_1_thresh;
+    else
+        % No period was detected
+        perOK1(i) = max(data.results(i).perError1)<perError1_2_thresh;
+        perOK2(i) = all(data.results(i).perOK2);
+    end
+    
+    oscN = data.results(i).neuronOsc;
+    perOK3(i) = true;
+    % Good combinations
+    for j = 1:MML.nNeurons/2
+        % If these pairs are non-oscillatory, their corresponding output
+        % will be stationary
+        perOK3(i) = perOK3(i) & (oscN(2*(j-1)+1) | oscN(2*j));
+    end
+end
+
+disp(['Detected period in ', int2str(sum(detOsc)), ' out of ', ...
+    int2str(data.nSims), ' simulations (', ...
+    num2str(sum(detOsc)/data.nSims*100,'%.1f'), '%)'])
+disp(['Should have period based on detected oscillatory neurons: ', ...
+    int2str(sum(perOK3)), ' out of ', int2str(data.nSims), ' simulations (', ...
+    num2str(sum(perOK3)/data.nSims*100,'%.1f'), '%)'])
+disp(['Correctly detected: ', int2str(sum(detOsc & perOK3))])
+disp(['Falsely detected: ', int2str(sum(detOsc & ~perOK3))])
+disp(['Missed: ', int2str(sum(~detOsc & perOK3))])
+disp(' ')
+
+disp('Correctly detected oscillations:')
+disp(['* Jonathan method: ', int2str(sum(perOK1)), ' out of ', ...
+   int2str(data.nSims), ' simulations (', ...
+    num2str(sum(perOK1)/data.nSims*100,'%.1f'), '%)'])
+disp(['* Rea method: ', int2str(sum(perOK2)), ' out of ', ...
+   int2str(data.nSims), ' simulations (', ...
+    num2str(sum(perOK2)/data.nSims*100,'%.1f'), '%)'])
+disp(['* Both methods: ', int2str(sum(perOK1 & perOK2)), ' out of ', ...
+   int2str(data.nSims), ' simulations (', ...
+    num2str(sum(perOK1 & perOK2)/data.nSims*100,'%.1f'), '%)'])
+disp(' ')
+
+% We define good results as those confirmed by both methods,
+% correctly detected (period detected and neurons are oscillatory),
+% and all signals have the same period
+periods = horzcat(data.results.periods);
+good_ids = find(perOK1 & perOK2 & ...
+    (detOsc & perOK3 | ~detOsc & ~perOK3) & ...
+    (~detOsc | abs(diff(periods))' < 0.1*min(periods(:))));
+results = data.results(good_ids);
+nSims = length(results);
+gOsc = detOsc(good_ids);
+gPer = perOK3(good_ids);
+
+disp(['Detected period in ', int2str(sum(gOsc)), ' out of ', ...
+    int2str(nSims), ' simulations (', ...
+    num2str(sum(gOsc)/nSims*100,'%.1f'), '%)'])
+disp(['Should have period based on detected oscillatory neurons: ', ...
+    int2str(sum(gPer)), ' out of ', int2str(nSims), ' simulations (', ...
+    num2str(sum(gPer)/nSims*100,'%.1f'), '%)'])
+disp(['Correctly detected: ', int2str(sum(gOsc & gPer))])
+disp(['Falsely detected: ', int2str(sum(gOsc & ~gPer))])
+disp(['Missed: ', int2str(sum(~gOsc & gPer))])
+disp(' ')
+
+periods = horzcat(results.periods)';
+speriods = sortrows(periods,-1);
+plot(speriods(:,1),speriods(:,2))
+periods = max(periods,[],2);
+id_conv = find(gOsc);
+id_per = find(periods >= MML.perLimOut(1) & periods <= MML.perLimOut(2));
+disp(['Produced desired period range: ', int2str(length(id_per)), ' out of ', ...
+    int2str(nSims), ' simulations (', ...
+    num2str(length(id_per)/nSims*100,'%.1f'), '%)'])
+save('MatsScaledChkRes.mat','nSims','results','id_conv','id_per','periods');
+data.nSims = nSims;
+data.results = results;
+data.periods = max(periods,[],2);
+
+%% Phase 2.2 - Check damping condition
+% data = load(filename2);
 results = data.results;
 converged = ~isnan(data.periods);
 passed_cond1 = zeros(length(results),1);
@@ -246,7 +503,8 @@ combos = [1,1; % {'amp','weights'}          -> {'\tau_r'}           0.52    0.18
 
 maxN = min(nSamples, 250000);
 NNSamples = 500;
-inFilenames = {filename1, filename2};
+% inFilenames = {filename1, filename2};
+inFilenames = {'MatsRandomChkRes.mat', 'MatsScaledChkRes.mat'};
 
 nCombos = size(combos,1);
 net = cell(nCombos, 1);           % Cell array to store NNs
