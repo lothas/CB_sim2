@@ -530,6 +530,7 @@ for i = 1:nCombos
         MML.sample_genes2(weight_id) = [];
     end
     
+    MML.normParams = [];
     [samples, targets, normParams] = MML.prepareNNData(inFilenames, maxN);
     MML.normParams = normParams;
     
