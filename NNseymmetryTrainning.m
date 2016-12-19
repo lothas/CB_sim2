@@ -1,33 +1,6 @@
 
-clc; close all; clear all;
-
-%% Load varibles:
-load('MatsRandomRes_4_11_2016.mat','nSims','results','periods')
-
-%%
-
-% ids = find(periods>0.05 & periods<3);
-ids = find(~isnan(periods));
-sampl=vertcat(results(ids).seq)';
-sampl = sampl(1:18,:);
-targ = periods(ids);
-
-clear results periods
-
-%% Normalize samples
-normParams = zeros(size(sampl, 1), 2);
-for i = 1:size(sampl, 1)
-    feat = sampl(i, :);
-    normParams(i, :) = [mean(feat), std(feat)];
-    sampl(i, :) = (feat - normParams(i, 1))/normParams(i, 2);
-    
-end
-
-normTarg = [mean(targ), std(targ)];
-targ = (targ - normTarg(1, 1))/normTarg(1, 2);
-
 %% prepare the data points that we want
-dataPointsNum = 10000;
+dataPointsNum = 50000;
 
 dataInd4Train = randsample(length(targ),dataPointsNum);
 sampl4train = sampl(:,dataInd4Train);
@@ -50,16 +23,16 @@ for j=1:length(mixingVectos)
     for i=1:dataPointsNum
 
         newSampl(1:2,i) = sampl4train(1:2,i);
-        newSampl(3:6,i) = sampl4train(mixVector+2,i);
+%         newSampl(3:6,i) = sampl4train(mixVector+2,i); % no C
 
-        mat = [0             ,sampl4train(7,i)  ,sampl4train(8,i) ,sampl4train(9,i);
-            sampl4train(10,i),0                 ,sampl4train(11,i),sampl4train(12,i);
-            sampl4train(13,i),sampl4train(14,i) ,0                ,sampl4train(15,i);
-            sampl4train(16,i),sampl4train(17,i) ,sampl4train(18,i),0               ];
+        mat = [0             ,sampl4train(3,i)   ,sampl4train(4,i) ,sampl4train(5,i);
+             sampl4train(6,i),0                  ,sampl4train(7,i) ,sampl4train(8,i);
+             sampl4train(9,i),sampl4train(10,i)  ,0                ,sampl4train(11,i);
+             sampl4train(12,i),sampl4train(13,i) ,sampl4train(14,i),0               ];
 
         mat = mat(mixVector,mixVector);
 
-        newSampl(7:18,i) = [mat(1,2);mat(1,3);mat(1,4);...
+        newSampl(3:14,i) = [mat(1,2);mat(1,3);mat(1,4);...
                             mat(2,1);mat(2,3);mat(2,4);...
                             mat(3,1);mat(3,2);mat(3,4);...
                             mat(4,1);mat(4,2);mat(4,3)];
@@ -94,11 +67,11 @@ for i=1:dataPointsNum
     
     biggestWeights = max(mat,[],1);
     [~,sortedWeightsIND] = sort(biggestWeights,2);
-    newSampl(3:6,i) = sampl4train(sortedWeightsIND+2,i);
+%     newSampl(2+(1:4),i) = sampl4train(sortedWeightsIND+2,i); % no C_i
     
     mat = mat(sortedWeightsIND',sortedWeightsIND');
 
-    newSampl(7:18,i) = [mat(1,2);mat(1,3);mat(1,4);...
+    newSampl(3:14,i) = [mat(1,2);mat(1,3);mat(1,4);...
                         mat(2,1);mat(2,3);mat(2,4);...
                         mat(3,1);mat(3,2);mat(3,4);...
                         mat(4,1);mat(4,2);mat(4,3)];

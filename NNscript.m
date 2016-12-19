@@ -25,7 +25,7 @@ parametersCells = {'\tau','b',...
 
 %% preprocess the data (get rid off unwnted periods)
 ids_period = ~isnan(periods); % only ones with period
-ids_error = (max(horzcat(results(:).perError2)',[],2) < 0.01)'; % only ones with low enought error
+ids_error = (max(horzcat(results(:).perError2)',[],2) < 0.001)'; % only ones with low enought error
 
 ids = find(ids_period & ids_error);
 
@@ -97,7 +97,7 @@ for i=1:length(HiddenN)
 
 end
 %
-save('NNdata.mat','netMseTrain','netMseValidation','netMseTest','HiddenN')
+% save('NNdata.mat','netMseTrain','netMseValidation','netMseTest','HiddenN')
 meanMseTrain = mean(netMseTrain,1);
 meanMseValidation = mean(netMseValidation,1);
 meanMseTest = mean(netMseTest,1);
@@ -111,7 +111,7 @@ errorbar(HiddenN,meanMseTrain,stdMseTrain); hold on
 errorbar(HiddenN,meanMseValidation,stdMseValidation);
 errorbar(HiddenN,meanMseTest,stdMseTest);
 legend('Train group','validation group','Test group');
-title('network performance over hidden neurons num MSE BEST');
+title('network performance (MSE) over hidden neurons num (target=frequency)');
 xlabel('Hidden Neuron Num');
 ylabel('MSE');
 
@@ -191,19 +191,53 @@ set(gca,'XTick',1:size(weights,2),...     %# Change the axes tick marks
         'YTickLabel',HiddenNumCells,...
         'TickLength',[0 0]);
     
-% figure;
-% % colormap cool
-% imagesc(abs(weights));
-% title(['Weights in a NN with',num2str(HiddenN),'hidden neurons']);
-% hStrings = text(x(:),y(:),textStrings(:),'HorizontalAlignment','center');
-% textColors = repmat(abs(weights(:)) < midValue,1,3);
-% set(gca,'XTick',1:size(weights,2),...                         %# Change the axes tick marks
-%         'XTickLabel',parametersCells,...  %#   and tick labels
-%         'YTick',1:size(weights,1),...
-%         'YTickLabel',HiddenNumCells,...
-%         'TickLength',[0 0]);
-    
 
+%% visualiesd the results in the W matrix 4X4 for each neuron
+
+ % multiply the output weights with the neurons outputs
+weightsInput = net.IW;  weightsInput = cell2mat(weightsInput);
+weightsOutput = net.LW;  weightsOutput = cell2mat(weightsOutput);
+bias = net.b;  bias = cell2mat(bias);
+weights = horzcat(diag(weightsOutput)*weightsInput); 
+
+[x,y] = meshgrid(1:4,1:4);   %# Create x and y coordinates for the strings
+HiddenNumCells = num2cell(1:4);
+textStrings = num2str(weights(:),'%0.2f');  %# Create strings from the matrix values
+textStrings = strtrim(cellstr(textStrings));  %# Remove any space padding
+%
+figure;
+n = 3; % the offset in which the W_ij starts (if we have c_i or not). '3' = no c_i, '7' = with c_i 
+for i=1:size(weights,1)
+    h=subplot(2,5,i);
+    N_i_weights = [0              ,weights(i,n)    ,weights(i,n+1) ,weights(i,n+2);
+                   weights(i,n+3) ,0               ,weights(i,n+4) ,weights(i,n+5);
+                   weights(i,n+6) ,weights(i,n+7)  ,0              ,weights(i,n+8);
+                   weights(i,n+9) ,weights(i,n+10) ,weights(i,n+11),0             ];
+    N_i_weights_T = N_i_weights';
+    imagesc(abs(N_i_weights));
+    colormap(flipud(gray));
+    title(['Neuron ',num2str(i), ' weights']);
+    start_index = 2*size(weights,1)+i;
+    jumps = size(weights,1);
+    N_i_textStrings = textStrings(start_index:jumps:end); % get the weights as text
+    N_i_textStrings = vertcat(' ',N_i_textStrings(1:3),...
+                        N_i_textStrings(4),' ',N_i_textStrings(5:6),...
+                        N_i_textStrings(7:8),' ',N_i_textStrings(9),...
+                        N_i_textStrings(10:12),' ');
+    hStrings = text(y(:),x(:),N_i_textStrings,'HorizontalAlignment','center');
+    midValue1 = mean(get(gca,'CLim'));  %# Get the middle value of the color range
+    textColors = repmat(abs(N_i_weights_T(:)) > abs(midValue1),1,3);%# Choose white or black for the
+                                             %#   text color of the strings so
+                                             %#   they can be easily seen over
+                                             %#   the background color
+    set(hStrings,{'Color'},num2cell(textColors,2));  %# Change the text colors
+    set(gca,'XTick',1:4,...     %# Change the axes tick marks
+        'XTickLabel',HiddenNumCells,...  %#   and tick labels
+        'YTick',1:4,...
+        'YTickLabel',HiddenNumCells,...
+        'TickLength',[0 0]);
+end
+    
 %% Train NN with 1 layer
 HiddenN = 10;
 net = feedforwardnet(HiddenN);
