@@ -15,7 +15,7 @@ if maxW > 10
     W = W/maxW*10;
 end
 
-figure
+% figure
 
 % Draw weights
 Wmat = zeros(nNeurons, nNeurons);
