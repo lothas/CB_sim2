@@ -10,12 +10,12 @@ conColor = [0 0 0];
 conrad = 0.2*radius;
 
 maxW = max(abs(W));
-if maxW > 10
-    % Normalize weights between -10 and 10
-    W = W/maxW*10;
-end
+% if maxW > 10
+    % Normalize weights between -8 and 8
+    W = W/maxW*8;
+% end
 
-figure
+% figure
 
 % Draw weights
 Wmat = zeros(nNeurons, nNeurons);
@@ -43,7 +43,7 @@ text(centers(:,1), centers(:,2), {'1','2','3','4'}, ...
     'HorizontalAlignment', 'center', ...
     'FontSize', 24, 'FontWeight', 'bold')
 
-axis_lim = 1.5;
+axis_lim = 1.3;
 axis([-axis_lim, axis_lim, -axis_lim, axis_lim])
 axis equal
 axis off

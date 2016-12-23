@@ -40,7 +40,7 @@ if exist(genome_file, 'file') ~= 2
     mamp = 0*Mamp;
     N = nAnkle+nHip;
     Mw = 10*ones(1,(2*N-1)*2*N);
-    mw = 0*Mw; %-0.1*Mw;
+    mw = -0.1*Mw;
 
     % TorqueFBMin = [-5*ones(1,NAnkleT),-10*ones(1,NHipT)];
     % TorqueFBMax = -TorqueFBMin;
