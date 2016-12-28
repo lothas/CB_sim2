@@ -149,6 +149,7 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
             MO.Amp = MO.Amp0 + MO.ks_out*MO.s_in;
             MO.Amp = max(MO.Amp, 0.01); % Amp has to be > 0
             % Update the weight matrix
+            MO.W = MO.win+MO.wex;
             MO.W = (diag(1./MO.Amp)*(diag(MO.Amp)*(MO.win+MO.wex))')';
 %             MO.W = min(max(MO.W, -10),100); % Bound the weights
         end

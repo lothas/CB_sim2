@@ -10,10 +10,11 @@ if exist(filename, 'file') ~= 2
     end
     toc
     
-    [id_conv, id_per, periods] = ...
+    [id_corr, id_conv, id_per, periods] = ...
         getConverged(obj, results, nSims); %#ok<ASGLU>
     
-    save(filename,'results', 'nSims', 'id_conv', 'id_per', 'periods');
+    save(filename,'results', 'nSims', 'id_corr', ...
+        'id_conv', 'id_per', 'periods');
 else
     disp(['Random results already exist in ',filename])
 end

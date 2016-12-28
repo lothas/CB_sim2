@@ -1,29 +1,48 @@
 function [ samples, targets, normParams ] = ...
-    prepareNNData(obj, filenames, maxN)
+    prepareNNData(obj, input, maxN)
 %PREPARENNDATA Prepares data to train a neural network using stored results
     % Load data from files
-    data = load(filenames{1});
+    if ischar(input{1})
+        data = load(input{1});
+    else
+        data = input{1};
+    end
     
-    % Keep only results that converged
+    new_results = data.results(data.id_corr);
     new_periods = data.periods;
-    results = data.results(~isnan(new_periods));
+    % Keep only results that converged
+    results = new_results(~isnan(new_periods));
     periods = new_periods(~isnan(new_periods));
-    for i = 2:numel(filenames)
-        data = load(filenames{i});
+    for i = 2:numel(input)
+        if ischar(input{i})
+            data = load(input{i});
+        else
+            data = input{i};
+        end
+    
+        new_results = data.results(data.id_corr);
         new_periods = data.periods;
-        results = [results, data.results(~isnan(new_periods))]; %#ok<AGROW>
+        % Keep only results that converged
+        results = [results, new_results(~isnan(new_periods))]; %#ok<AGROW>
         periods = [periods; new_periods(~isnan(new_periods))]; %#ok<AGROW>
     end
     nSamples = numel(results);
     
-    if nargin < 3
-        maxN = nSamples;
+    if ismember('weights',obj.sample_genes)
+        pSeq = obj.permSeq(results(1).seq);
+        permMult = size(pSeq,1);
     else
-        maxN = min(maxN, nSamples);
+        permMult = 1;
+    end
+    
+    if nargin < 3
+        maxN = permMult*nSamples;
+    else
+        maxN = min(maxN, permMult*nSamples);
     end
 
-    if maxN<nSamples
-        ids = randsample(nSamples, maxN);
+    if maxN<permMult*nSamples
+        ids = randsample(nSamples, ceil(maxN/permMult));
     else
         ids = 1:nSamples;
     end
@@ -34,16 +53,23 @@ function [ samples, targets, normParams ] = ...
     genes = obj.Gen.GetGenes(results(ids(1)).seq, obj.target_genes);
     n_out = length(genes); % Number of outputs
        
+    obj.normParams = [];
+    
     samples = zeros(n_in, maxN);
     targets = zeros(n_out, maxN);
-    for i = 1:maxN
+    for i = 1:length(ids)
         sample = results(ids(i));
         period = periods(ids(i));
         
         % Build sample and target vectors
-        samples(:,i) = obj.getNNin(sample.seq, 1/period);
-%         samples(:,i) = obj.getNNin(sample.seq, period);
-        targets(:,i) = obj.Gen.GetGenes(sample.seq, obj.target_genes);
+        pSeq = obj.permSeq(sample.seq);
+        for j = 1:permMult
+            samples(:,(i-1)*permMult+j) = ...
+                obj.getNNin(pSeq(j,:), 1/period);
+    %         samples(:,i) = obj.getNNin(sample.seq, period);
+            targets(:,(i-1)*permMult+j) = ...
+                obj.Gen.GetGenes(pSeq(j,:), obj.target_genes);
+        end
     end
 
 % Normalize samples

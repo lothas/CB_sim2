@@ -54,8 +54,8 @@ if exist(genome_file, 'file') ~= 2
     % Final genome with tau_r + beta (constant tau_u/tau_v ratio)
     Keys = {'\tau_r', 'beta', 'amp',   'weights', 'ks_\tau',     'ks_c', 'IC_matsuoka';
                   1 ,      1,  2*N , (2*N-1)*2*N,        1 ,       2*N ,            0 };
-    Range = {  0.02 ,    0.2,  mamp,          mw,   -0.001 ,  -0.2*Mamp; % Min
-               0.25 ,   10.0,  Mamp,          Mw,    0.001 ,   0.2*Mamp}; % Max
+    Range = {  0.02 ,    2.0,  mamp,          mw,   -0.001 ,  -0.2*Mamp; % Min
+               0.25 ,   20.0,  Mamp,          Mw,    0.001 ,   0.2*Mamp}; % Max
            
 	% Genome with variable tau_r, ratio and beta
 %     Keys = {'\tau_ratio', '\tau_r', 'beta', 'amp',   'weights', 'ks_\tau',    'ks_c', 'IC_matsuoka';

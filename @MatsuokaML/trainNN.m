@@ -7,6 +7,7 @@ function [net, tr, netPerf, desPeriod, sampPerf, sampPerfSc] = ...
 
     % Create and train the NN
     net = feedforwardnet(architecture);
+    net.trainParam.max_fail = 15;
     [net, tr] = train(net, samples, targets);
         
     % Calculate mean squared estimation error
