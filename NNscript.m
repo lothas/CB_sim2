@@ -9,7 +9,6 @@ load('MatsRandomRes_16_12_2016.mat','nSims','results','periods')
 %% 
 ids_period = ~isnan(periods); % only ones with period
 ids_error = (max(horzcat(results(:).perError2)',[],2) < 0.001)'; % only ones with low enought error
-
 ids = find(ids_period & ids_error);
 
 % parametersCells = {'tau','b',...
@@ -17,11 +16,15 @@ ids = find(ids_period & ids_error);
 %     'w_{21}','w_{23}','w_{24}',...
 %     'w_{31}','w_{32}','w_{34}',...
 %     'w_{41}','w_{42}','w_{43}'};
+% parametersCells = {'tau','b',...
+%     'prodW','sumW'};
+% parametersCells = {'tau','b'};
+% parametersCells = {'tau'};
 parametersCells = {'tau','b',...
-    'prodW','sumW'};
+    'W123','W124','W132','W134','W142','W143','W234','W243'};
 
 targetCells = {'freq'};
-[ sampl,targ ] = prepareData( results,periods,ids,parametersCells,targetCells );
+[ sampl,targ ] = prepareData( results,periods,ids,parametersCells,targetCells,0 );
 
 figure;
 histogram(max(horzcat(results(ids).perError2)',[],2),1000);
@@ -29,14 +32,6 @@ title('Hist of period error'); xlabel('period error');
 
 clear ids_period ids_error nSims
 clear results periods
-%%
-figure;
-histogram(targ,100);
-title('Hist of period'); xlabel('period [sec]');
-
-figure;
-histogram(sampl(1,:),100);
-title('Hist of \tau'); xlabel('\tau [sec]');
 
 %% Normalize samples
 normParams = zeros(size(sampl, 1), 2);
@@ -47,37 +42,37 @@ for i = 1:size(sampl, 1)
     
 end
 
-targnotnorm = targ;
-normParams_targ = zeros(size(sampl, 1), 2);
-for i = 1:size(targ, 1)
-    feat = targ(i, :);
-    normParams_targ(i, :) = [mean(feat), std(feat)];
-    targ(i, :) = (feat - normParams_targ(i, 1))/normParams_targ(i, 2);
-    
-end
-% normTarg = [mean(targ), std(targ)];
-% targ = (targ - normTarg(1, 1))/normTarg(1, 2);
-    
-figure; hold on;
-for i=1:size(targ,1)
-    subplot(size(targ,1),1,i)
-    h1 = histogram(targ(i,:),100); hold on;
-    h2 = histogram(targnotnorm(i,:),100);
-    legend('normalized','not normalized');
-    title(['Hist of normalized ',targetCells{1,i}]); xlabel([targetCells{1,i},'[units]']);
-end
-hold off;
+% targnotnorm = targ;
+% normParams_targ = zeros(size(sampl, 1), 2);
+% for i = 1:size(targ, 1)
+%     feat = targ(i, :);
+%     normParams_targ(i, :) = [mean(feat), std(feat)];
+%     targ(i, :) = (feat - normParams_targ(i, 1))/normParams_targ(i, 2);
+%     
+% end
+%     
+% figure; hold on;
+% for i=1:size(targ,1)
+%     subplot(size(targ,1),1,i)
+%     h1 = histogram(targ(i,:),100); hold on;
+%     h2 = histogram(targnotnorm(i,:),100);
+%     legend('normalized','not normalized');
+%     title(['Hist of normalized ',targetCells{1,i}]); xlabel([targetCells{1,i},'[units]']);
+% end
+% hold off;
+
 %% Performance over Hidden neuron Number
 % NumOfRepeats = 10;
 % HiddenN = [2,5,10,15,20,25,30,35,38,40,42,45,50,55,60];
-NumOfRepeats = 2;
-HiddenN = [2,5];
+NumOfRepeats = 10;
+HiddenN = [5,10,15,20];
 [ NN_Mean_over_HN_num,NN_stdev_over_HN_num ] = NN_Perf_over_HNnum( NumOfRepeats,HiddenN,sampl,targ,1 );
 
 %% Performance over samples quantity
-NumOfRepeats = 10;
-HiddenN = 30;
-dataPointsNum = [1000,5000,10000,20000,30000,40000,50000,60000,70000,80000,90000];
+NumOfRepeats = 7;
+HiddenN = 10;
+dataPointsNum = [10000,30000,50000,80000,100000,120000,180000,220000,320000,420000,...
+    520000,591000];
 [ NN_Mean_over_sampl_num,NN_stdev_over_sampl_num ] = NN_Perf_over_sampl_num( NumOfRepeats,HiddenN,dataPointsNum,sampl,targ,1 );
 
 
@@ -147,10 +142,10 @@ net = feedforwardnet(HiddenN);
 [net, tr] = train(net, samplNewSymmetric, TargetNewSymmetric);
 bestNet = net;
 bestValidSoFar = tr.best_vperf;
-for i=1:5  
+for i=1:10
     net = feedforwardnet(HiddenN);
     [net, tr] = train(net, samplNewSymmetric, TargetNewSymmetric);
-    if (tr.best_vperf > bestValidSoFar)
+    if ((tr.best_vperf > bestValidSoFar) && (tr.best_vperf>tr.best_perf))
         bestNet = net;
         bestValidSoFar = tr.best_vperf;
     end

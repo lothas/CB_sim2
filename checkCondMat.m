@@ -48,6 +48,7 @@ for i=1:nSims
         a(4) ,0    ,a(5) ,a(6);
         a(7) ,a(8) ,0    ,a(9);
         a(10),a(11),a(12),0   ];
+    
    A = (diag(1./c)*(diag(c)*Aorig)')';
    % TODO: use getGenes for better performance!!
     
