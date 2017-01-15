@@ -66,27 +66,30 @@ else
             case 'weights' % Neuron connection weights, general
                 MO.win = 0;
                 MO.wex = zeros(2*MO.nPulses);
-                v = 1;
-                for i = 1:2*MO.nPulses
-                    % Genes affect the coupling weight from neuron j to
-                    % neuron i, for all j~=i
-                    ids = 1:2*MO.nPulses;
-                    ids(i) = [];
-                    
-                    MO.wex(i,ids) = value(v:v+length(ids)-1);
-                    v = v+length(ids);
-                end
+%                 v = 1;
+%                 for i = 1:2*MO.nPulses
+%                     % Genes affect the coupling weight from neuron j to
+%                     % neuron i, for all j~=i
+%                     ids = 1:2*MO.nPulses;
+%                     ids(i) = [];
+%                     
+%                     MO.wex(i,ids) = value(v:v+length(ids)-1);
+%                     v = v+length(ids);
+%                 end
+                MO.wex = [0,value;value,0];
                 
             % Controller Output
             case {'amp0', 'amp', 'c_i'} % Base neuron amplitude multiplier
-                N = length(value);
-                if N == MO.nPulses
-                    MO.Amp0 = reshape([value; value], [], 1);
-%                     MO.Amp0 = reshape([value; value], 1, []);
-                else
-                    MO.Amp0 = value';
-%                     MO.Amp0 = value;
-                end
+%                 N = length(value);
+%                 if N == MO.nPulses
+%                     MO.Amp0 = reshape([value; value], [], 1);
+% %                     MO.Amp0 = reshape([value; value], 1, []);
+%                 else
+%                     MO.Amp0 = value';
+% %                     MO.Amp0 = value;
+%                 end
+%                 MO.Amp = MO.Amp0;
+                MO.Amp0 = reshape([value(1); value(1)], [], 1);
                 MO.Amp = MO.Amp0;
                 
             % Feedback

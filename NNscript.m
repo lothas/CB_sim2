@@ -11,6 +11,7 @@ ids_period = ~isnan(periods); % only ones with period
 ids_error = (max(horzcat(results(:).perError2)',[],2) < 0.001)'; % only ones with low enought error
 ids = find(ids_period & ids_error);
 
+%% For 4 neurons:
 % parametersCells = {'tau','b',...
 %     'w_{12}','w_{13}','w_{14}',...
 %     'w_{21}','w_{23}','w_{24}',...
@@ -26,6 +27,7 @@ parametersCells = {'tau','b',...
 targetCells = {'freq'};
 [ sampl,targ ] = prepareData( results,periods,ids,parametersCells,targetCells,0 );
 
+%%
 figure;
 histogram(max(horzcat(results(ids).perError2)',[],2),1000);
 title('Hist of period error'); xlabel('period error');
@@ -64,15 +66,15 @@ end
 %% Performance over Hidden neuron Number
 % NumOfRepeats = 10;
 % HiddenN = [2,5,10,15,20,25,30,35,38,40,42,45,50,55,60];
-NumOfRepeats = 10;
-HiddenN = [5,10,15,20];
+NumOfRepeats = 20;
+HiddenN = [2,3,4,5,6,7,8,9,10,15,20];
 [ NN_Mean_over_HN_num,NN_stdev_over_HN_num ] = NN_Perf_over_HNnum( NumOfRepeats,HiddenN,sampl,targ,1 );
 
 %% Performance over samples quantity
-NumOfRepeats = 7;
-HiddenN = 10;
-dataPointsNum = [10000,30000,50000,80000,100000,120000,180000,220000,320000,420000,...
-    520000,591000];
+NumOfRepeats = 20;
+HiddenN = 5;
+dataPointsNum = [1000,5000,7000,10000,15000,20000,30000,50000,70000,...
+    100000,120000,150000,164000];
 [ NN_Mean_over_sampl_num,NN_stdev_over_sampl_num ] = NN_Perf_over_sampl_num( NumOfRepeats,HiddenN,dataPointsNum,sampl,targ,1 );
 
 
@@ -154,7 +156,7 @@ end
 dataPointsNum = 50000;
 [ samplNewUniq,TargetNewUniq ] = matsuoka_uniq( dataPointsNum,sampl,targ )
 %% Train NN with 1 layer
-HiddenN = 10;
+HiddenN = 5;
 net = feedforwardnet(HiddenN);
 % net = fitnet(HiddenN);
 [net, tr] = train(net, sampl, targ);

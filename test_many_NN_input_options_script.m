@@ -151,9 +151,9 @@ hold off
 % ylabel('MSE');
 
 %% Statistical test
-x = netMseTest(:,1);
-y = netMseTest(:,2);
-[h,p,ci,stats] = ttest(x,y);
-
+x = netMseTest(:,3);
+y = netMseTest(:,7);
+[h_ttest,p_ttest,ci_ttest,stats_ttest] = ttest(x,y);
+[p_stest,h_stest,stats_stest] = signtest(x,y);
 
 

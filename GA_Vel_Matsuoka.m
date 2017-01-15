@@ -32,15 +32,15 @@ GA.ReDo = 1;
 % Set up the genome
 genome_file = 'MatsuokaGenome.mat';
 if exist(genome_file, 'file') ~= 2
-    nAnkle = 1; % Number of ankle torques
-    nHip = 1;   % Number of hip torques
+    nAnkle = 1;%1; % Number of ankle torques
+    nHip = 0;   % Number of hip torques
     maxAnkle = 8;   % Max ankle torque
     maxHip = 20;    % Max hip torque
     Mamp = [maxAnkle*ones(1,2*nAnkle), maxHip*ones(1,2*nHip)];
     mamp = 0*Mamp;
     N = nAnkle+nHip;
     Mw = 10*ones(1,(2*N-1)*2*N);
-    mw = 0*Mw; %-0.1*Mw;
+    mw = 0*Mw;
 
     % TorqueFBMin = [-5*ones(1,NAnkleT),-10*ones(1,NHipT)];
     % TorqueFBMax = -TorqueFBMin;
@@ -50,13 +50,19 @@ if exist(genome_file, 'file') ~= 2
     %            1 ,   1 ,    1 , 2*N ,   1 , 2*N ,      1 ,      2*N ,           0 };
     % Range = {0.1 , 0.1 ,   10 , mamp, -20 , Mwex,   -1e2 , -0.1*Mamp; % Min
     %            2 ,   2 ,   30 , Mamp,  -1 , mwex,    1e2 ,  0.1*Mamp}; % Max
-    
-    % Final genome with tau_r + beta (constant tau_u/tau_v ratio)
+  
+    %%%%%%%%%%%%% For the 4-neuron case!!!
+% %     % Final genome with tau_r + beta (constant tau_u/tau_v ratio) 
+%     Keys = {'\tau_r', 'beta', 'amp',   'weights', 'ks_\tau',     'ks_c', 'IC_matsuoka';
+%                   1 ,      1,  2*N , (2*N-1)*2*N,        1 ,       2*N ,            0 };
+%     Range = {  0.02 ,    0.2,  mamp,          mw,   -0.001 ,  -0.2*Mamp; % Min
+%                0.25 ,   10.0,  Mamp,          Mw,    0.001 ,   0.2*Mamp}; % Max
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% %     % Final genome with tau_r + beta (constant tau_u/tau_v ratio) 
     Keys = {'\tau_r', 'beta', 'amp',   'weights', 'ks_\tau',     'ks_c', 'IC_matsuoka';
-                  1 ,      1,  2*N , (2*N-1)*2*N,        1 ,       2*N ,            0 };
-    Range = {  0.02 ,    0.2,  mamp,          mw,   -0.001 ,  -0.2*Mamp; % Min
-               0.25 ,   10.0,  Mamp,          Mw,    0.001 ,   0.2*Mamp}; % Max
-           
+                  1 ,      1,   2*N,           1,        1 ,       2*N ,            0 };
+    Range = {  0.02 ,    0.2,  mamp,           1,   -0.001 ,  -0.2*Mamp; % Min
+               0.25 ,   10.0,  Mamp,          10,   0.001 ,   0.2*Mamp}; % Max
 	% Genome with variable tau_r, ratio and beta
 %     Keys = {'\tau_ratio', '\tau_r', 'beta', 'amp',   'weights', 'ks_\tau',    'ks_c', 'IC_matsuoka';
 %                       1 ,       1 ,      1,  2*N , (2*N-1)*2*N,        1 ,      2*N ,            0 };

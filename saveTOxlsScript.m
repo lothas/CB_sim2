@@ -36,4 +36,4 @@ for i=1:N
 end
 
 filename = 'dataMatrixXLSX.xlsx';
-xlswrite = (filename,dataMatrix);
+xlswrite(filename,dataMatrix);
