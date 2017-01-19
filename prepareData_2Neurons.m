@@ -23,8 +23,10 @@ MatsuokaParam = MatsuokaParam(1:5,:); % get rid of the the unimportant 'gen' (th
 
 tau = MatsuokaParam(1,:);
 b = MatsuokaParam(2,:);
-c_i = MatsuokaParam(3,:); % ignore  MatsuokaParam(4,:) (not relevant!)
-W_ij = MatsuokaParam(5,:);
+c_i = MatsuokaParam(3,:); % ignore  MatsuokaParam(4,:) (not relevant! for the 2neuron symmetric case)
+a = MatsuokaParam(5,:);
+
+% W_ij = MatsuokaParam(5,:);
 
 Period = periods(ids);
 freq = 1./periods(ids);
@@ -39,7 +41,7 @@ for i=1:length(NNinput)
        case 's'
            inputs(i,:) = c_i;
        case 'a'
-           inputs(i,:) = W_ij;
+           inputs(i,:) = a;
        case 'period'
            inputs(i,:) = Period;
        case 'freq'
@@ -59,7 +61,7 @@ for i=1:length(NNtarget)
        case 's'
            targ(i,:) = c_i;
        case 'a'
-           targ(i,:) = W_ij;
+           targ(i,:) = a;
        case 'period'
            targ(i,:) = Period;
        case 'freq'

@@ -146,7 +146,7 @@ T = 5*tau;
 b = b(good_ids);
 a = a(good_ids);
 
-w_n = (1./T).*sqrt(((tau+T).*b-a.*tau)./(a.*tau));
+w_n = ((1./T).*sqrt(((tau+T).*b-a.*tau)./(a.*tau)))/(2*pi); % in [Hz]
 w_n_fromCode = targ(:,good_ids);
 w_n_fromNN = net(sampl(:,good_ids));
 errMSE_estVScode = immse(w_n,w_n_fromCode); % calculate MSE error
@@ -172,7 +172,10 @@ xlabel('\omega_{n} from Matsuokas estimation'); ylabel('\omega_{n} from NN');
 
 clear tau T b a w_n w_n_fromCode w_n_fromNN
 clear cond1 cond2
-%% checking populations in each "cloud" or "Lobe"
+
+
+%% for the 2Neuron symetrical case: analyzing the two groups (or "lobes")
+% checking populations in each "cloud" or "Lobe"
 % attention: check how you defined the NN inputs and outputs.
 % define the inputs order as: 'tau','b','a','s'
 % define the output as: 'frequency'
@@ -231,65 +234,171 @@ xlabel('\omega_{n} from code'); ylabel('\omega_{n} from NN');
 legend('blue: 1+\tau/T<a but no a<1+b','green: a<1+b but no 1+\tau/T<a',...
     'black: both condition exist','red: none of them');
 
-%% plotting one gene from each group:
+if false
+    % plotting one gene from each group:
+    randUP_gene = randsample(upper_lobe,1); %the index taken from NN data group
+    randLOW_gene = randsample(lower_lobe,1);%the index taken from NN data group
 
-randUP_gene = randsample(upper_lobe,1); %the index taken from NN data group
-randLOW_gene = randsample(lower_lobe,1);%the index taken from NN data group
+    period_fromCode_UP = 1/targ(1,randUP_gene); % taking NN estimation
+    period_fromNN_UP = 1/net(sampl(:,randUP_gene));
+    period_fromCode_LOW = 1/targ(1,randLOW_gene);
+    period_fromNN_LOW = 1/net(sampl(:,randLOW_gene));
 
-period_fromCode_UP = 1/targ(1,randUP_gene); % taking NN estimation
-period_fromNN_UP = 1/net(sampl(:,randUP_gene));
-period_fromCode_LOW = 1/targ(1,randLOW_gene);
-period_fromNN_LOW = 1/net(sampl(:,randLOW_gene));
+    upperGroupCPG = ids(randUP_gene); % convert the index to the indexing of all data ('results')
+    lowerGroupCPG = ids(randLOW_gene); % convert the index to the indexing of all data ('results')
 
-upperGroupCPG = ids(randUP_gene); % convert the index to the indexing of all data ('results')
-lowerGroupCPG = ids(randLOW_gene); % convert the index to the indexing of all data ('results')
+    MML = MatsuokaML(); % calling Matsuoka class
+    MML.perLim = [0.68 0.78];
+    MML.perLimOut = MML.perLim + [-0.08 0.08]; % Desired period range
+    MML.tStep = 0.01; % 0.01
+    MML.tEnd = 15; % 15
 
+    [outUP, ~, signalUP] = MML.runSim(results(upperGroupCPG).seq);
+    [outLOW, ~, signalLOW] = MML.runSim(results(lowerGroupCPG).seq);
+
+    figure; 
+    subplot(2,2,1);
+    plot(signalUP.T,signalUP.y);
+    xlabel('time [sec]'); ylabel('y_i');
+    title('neurons output from the upper group');
+    subplot(2,2,2);
+    plot(signalLOW.T,signalLOW.y);
+    xlabel('time [sec]'); ylabel('y_i');
+    title('neurons output from the lower group');
+    subplot(2,2,3);
+    plot(signalUP.T,signalUP.signal'); %axis([20,22,-1,1]); 
+    xlabel('time [sec]'); ylabel('y_2-y_1');
+    title({'CPG output from the upper group',['geneNum: ',...
+        num2str(upperGroupCPG)],...
+        [' period_{code} = ',num2str(outUP.periods),'[sec]   '...
+        '   period_{NN} ',num2str(period_fromNN_UP),'[sec]']});
+    subplot(2,2,4);
+    plot(signalLOW.T,signalLOW.signal');% axis([20,22,-2,2])
+    xlabel('time [sec]'); ylabel('y_2-y_1');
+    title({'CPG output from the lower group',['geneNum: ',...
+        num2str(lowerGroupCPG)],...
+        [' period_{code} = ',num2str(outLOW.periods),'[sec]   '...
+        '   period_{NN} ',num2str(period_fromNN_LOW),'[sec]']});
+end
+% rum one gene (from the upper lobe) many times and check distribution of the period
+if false
+    N = 1000;
+    periodsSim = zeros(1,N);
+
+    for i=1:N
+        [outUP, ~, ~] = MML.runSim(results(upperGroupCPG).seq);
+        periodsSim(1,i) = outUP.periods;
+        clear outUP
+    end
+
+    figure;
+    subplot(2,1,1);
+    scatter(1:N,periodsSim);
+    subplot(2,1,2)
+    histogram(periodsSim,10);
+end
+
+%% run many genes with similar tau,T,b,c and different a and check the period
+% in this section I will check Matsuoka's approximation compare to the NN approximation.
+% given the same tau,b,c and different 'a'.
+
+% attention change the genome file to match
+genome_file = 'MatsuokaGenome.mat';
+if false
+    nAnkle = 1;%1; % Number of ankle torques
+    nHip = 0;   % Number of hip torques
+    maxAnkle = 20;   % Max ankle torque
+    maxHip = 20;    % Max hip torque
+    Mamp = [maxAnkle*ones(1,2*nAnkle), maxHip*ones(1,2*nHip)];
+    mamp = 0*Mamp;
+    N = nAnkle+nHip;
+    Mw = 10*ones(1,(2*N-1)*2*N);
+    mw = 0*Mw;
+% %    % for comparing a specific Matsuoka CPG to the NN
+    Keys = {'tau'   ,   'tav','tau_ratio', 'beta', 'amp_2n',    '2neuron_symm_weights' , 'ks_\tau',     'ks_c', 'IC_matsuoka';
+               1    ,       1,          1,      1,      2*N,                          1,        1 ,       2*N ,            0 };
+    Range = {  0.02 ,    0.01,        0.1,    0.2,     mamp,                        0.1,   -0.001 ,  -0.2*Mamp; % Min
+                   2,       2,         10,   10.0,     Mamp,                         10,   0.001 ,   0.2*Mamp}; % Max
+
+    MutDelta0 = 0.04;   MutDelta1 = 0.02;
+    
+    save(genome_file, 'nAnkle', 'nHip', 'maxAnkle', 'maxHip', ...
+        'Mamp', 'mamp', 'N', 'Mw', 'mw', ...
+        'MutDelta0', 'MutDelta1', 'Keys', 'Range');
+end
+    
+close all; clc; %clear all;
+MML = MatsuokaML(); % calling Matsuoka class
+MML.perLim = [0.68 0.78];
+MML.perLimOut = MML.perLim + [-0.08 0.08]; % Desired period range
+MML.tStep = 0.01
+MML.tEnd = 30; % 15
+
+N = 100;
+freq_Matsuoka = zeros(1,N);
+freq_fromNN = zeros(1,N);
+freq_fromCode = zeros(1,N);
+tau = 0.25;
+tau_ratio = 5;%2;
+T = tau*tau_ratio;
+b = 2.5;
+c = 5;
+a = linspace(1.6,3.4,N);
+tic
+for i=1:N
+    seq = [tau,T,tau_ratio,b,c,0,a(1,i),0,0,0];
+    [out, ~, ~] = MML.runSim(seq);
+        % Prepare output:
+    % Parameters
+    results(i).seq = seq;
+    results(i).tau = tau;
+    results(i).T = T;
+    results(i).b = b;
+    results(i).c = c;
+    results(i).a = a(1,i);
+    results(i).x0 = out.x0;
+
+    % Results
+    results(i).periods = out.periods;
+    results(i).pos_work = out.pos_work;
+    results(i).neg_work = out.neg_work;
+    results(i).perError1 = out.perError1;
+    results(i).perOK1 = out.perOK1;
+    results(i).perError2 = out.perError2;
+    results(i).perOK2 = out.perOK2;
+    results(i).neuronActive = out.neuronActive;
+    results(i).neuronOsc = out.neuronOsc;
+    
+    freq_Matsuoka(1,i) = ((1/T)*sqrt(((tau+T)*b - a(1,i)*tau)/(a(1,i)*tau)))/(2*pi); % in [Hz[
+    freq_fromNN(1,i) = net([tau;b;a(1,i);c]);
+    freq_fromCode(1,i)= 1/out.periods;
+end
+toc
+
+figure;
+scatter(vertcat(results(:).a),freq_Matsuoka,'b','x'); hold on;
+scatter(vertcat(results(:).a),freq_fromNN,'r','d');
+scatter(vertcat(results(:).a),freq_fromCode,'g','o');
+xlabel('a');    ylabel('freq [Hz]'); grid on;
+legend('blue: Matsuoka estimation','red: freq from NN','green: freq from Code');
+title('frequency over a');
+% [out, sim, signal] = MML.runSim(results(1).seq);
+% (1/sim.Con.tav)*sqrt(((sim.Con.tau+sim.Con.tav)*sim.Con.beta - sim.Con.W(1,2)*sim.Con.tau) / (sim.Con.W(1,2)*sim.Con.tau) )
+%% IDEA
+% idea: try to train the NN to learn the exact waveform of the Matsuoka
+% neuron output. run many simulations and train the network to learn the
+% first 'n' harmonic in the furrier syries.
 MML = MatsuokaML(); % calling Matsuoka class
 MML.perLim = [0.68 0.78];
 MML.perLimOut = MML.perLim + [-0.08 0.08]; % Desired period range
 MML.tStep = 0.01; % 0.01
 MML.tEnd = 15; % 15
-
-[outUP, ~, signalUP] = MML.runSim(results(upperGroupCPG).seq);
-[outLOW, ~, signalLOW] = MML.runSim(results(lowerGroupCPG).seq);
-
-
-figure; 
-subplot(2,2,1);
-plot(signalUP.T,signalUP.y);
-xlabel('time [sec]'); ylabel('y_i');
-title('neurons output from the upper group');
-subplot(2,2,2);
-plot(signalLOW.T,signalLOW.y);
-xlabel('time [sec]'); ylabel('y_i');
-title('neurons output from the lower group');
-subplot(2,2,3);
-plot(signalUP.T,signalUP.signal'); %axis([20,22,-1,1]); 
-xlabel('time [sec]'); ylabel('y_2-y_1');
-title({'CPG output from the upper group',['geneNum: ',...
-    num2str(upperGroupCPG)],...
-    [' period_{code} = ',num2str(outUP.periods),'[sec]   '...
-    '   period_{NN} ',num2str(period_fromNN_UP),'[sec]']});
-subplot(2,2,4);
-plot(signalLOW.T,signalLOW.signal');% axis([20,22,-2,2])
-xlabel('time [sec]'); ylabel('y_2-y_1');
-title({'CPG output from the lower group',['geneNum: ',...
-    num2str(lowerGroupCPG)],...
-    [' period_{code} = ',num2str(outLOW.periods),'[sec]   '...
-    '   period_{NN} ',num2str(period_fromNN_LOW),'[sec]']});
-
-%% rum one gene (from the upper lobe) many times and check distribution of the period
-N = 1000;
-periodsSim = zeros(1,N);
-
-for i=1:N
-    [outUP, ~, ~] = MML.runSim(results(upperGroupCPG).seq);
-    periodsSim(1,i) = outUP.periods;
-    clear outUP
-end
+[out, ~, signal] = MML.runSim(results(ids(1)).seq);
 
 figure;
 subplot(2,1,1);
-scatter(1:N,periodsSim);
+plot(signal.T,signal.X);
+xlabel('time[sec]');    ylabel('X_i');
+title('X_i over time');
 subplot(2,1,2)
-histogram(periodsSim,10);
+plot(signal.T,signal.signal(1,:));

@@ -2,9 +2,32 @@
 
 clc; close all; clear all;
 
-%% Load varibles:
-load('MatsRandomRes_16_12_2016.mat','nSims','results','periods')
+%% Load varibles: for 4 neuron data
+load('MatsRandomRes_16_12_2016.mat','results','periods')
+results1 = results; periods1 = periods;
+clear results periods
+load('MatsRandomRes_18_12_2016.mat','results','periods')
+results2 = results; periods2 = periods;
+clear results periods
+load('MatsRandomRes_19_12_2016.mat','results','periods')
+results3 = results; periods3 = periods;
+clear results periods
+load('MatsRandomRes_20_12_2016.mat','results','periods')
+results4 = results; periods4 = periods;
+clear results periods
+load('MatsRandomRes_21_12_2016.mat','results','periods')
+results5 = results; periods5 = periods;
+clear results periods
+load('MatsRandomRes_25_12_2016.mat','results','periods')
+results6 = results; periods6 = periods;
+clear results periods
 
+% concetrate the data:
+results = horzcat(results1,results2,results3,results4,results5,results6);
+periods = horzcat(periods1,periods2,periods3,periods4,periods5,periods6);
+
+clear results1 results2 results3 results4 results5 results6
+clear periods1 periods2 periods3 periods4 periods5 periods6
 
 %% 
 ids_period = ~isnan(periods); % only ones with period
@@ -12,17 +35,17 @@ ids_error = (max(horzcat(results(:).perError2)',[],2) < 0.001)'; % only ones wit
 ids = find(ids_period & ids_error);
 
 %% For 4 neurons:
-% parametersCells = {'tau','b',...
-%     'w_{12}','w_{13}','w_{14}',...
-%     'w_{21}','w_{23}','w_{24}',...
-%     'w_{31}','w_{32}','w_{34}',...
-%     'w_{41}','w_{42}','w_{43}'};
+parametersCells = {'tau','b',...
+    'w_{12}','w_{13}','w_{14}',...
+    'w_{21}','w_{23}','w_{24}',...
+    'w_{31}','w_{32}','w_{34}',...
+    'w_{41}','w_{42}','w_{43}'};
 % parametersCells = {'tau','b',...
 %     'prodW','sumW'};
 % parametersCells = {'tau','b'};
 % parametersCells = {'tau'};
-parametersCells = {'tau','b',...
-    'W123','W124','W132','W134','W142','W143','W234','W243'};
+% parametersCells = {'tau','b',...
+%     'W123','W124','W132','W134','W142','W143','W234','W243'};
 
 targetCells = {'freq'};
 [ sampl,targ ] = prepareData( results,periods,ids,parametersCells,targetCells,0 );
@@ -43,7 +66,7 @@ for i = 1:size(sampl, 1)
     sampl(i, :) = (feat - normParams(i, 1))/normParams(i, 2);
     
 end
-
+clear i
 % targnotnorm = targ;
 % normParams_targ = zeros(size(sampl, 1), 2);
 % for i = 1:size(targ, 1)
@@ -156,7 +179,7 @@ end
 dataPointsNum = 50000;
 [ samplNewUniq,TargetNewUniq ] = matsuoka_uniq( dataPointsNum,sampl,targ )
 %% Train NN with 1 layer
-HiddenN = 5;
+HiddenN = 10;
 net = feedforwardnet(HiddenN);
 % net = fitnet(HiddenN);
 [net, tr] = train(net, sampl, targ);
@@ -166,10 +189,66 @@ HiddenN = 10;
 net = feedforwardnet([HiddenN,HiddenN]);
 [net, tr] = train(net, sampl, targ);
 %% Train NN with 3 layers
-HiddenN = 12;
+HiddenN = 6;
 net = feedforwardnet([HiddenN,HiddenN,HiddenN]);
 [net, tr] = train(net, sampl, targ);
 
+%% rectified linear unit training
+HiddenN = 6;
+net = feedforwardnet([HiddenN,HiddenN,HiddenN]);
+% net.layers{1:3}.transferFcn = 'poslin';   %"Rectified Linear Unit"
+% net.layers{1:3}.transferFcn = 'satlin';
+[net, tr] = train(net, sampl, targ);
+
+%% comparing 1 hidlayer NN to 3 hidLayer NN
+NumOfRepeats = 5;
+netMseTrain = zeros(NumOfRepeats,2);
+netMseValidation = zeros(NumOfRepeats,2);
+netMseTest = zeros(NumOfRepeats,2);
+
+for i=1:2
+    for j=1:NumOfRepeats
+        switch i
+            case 1 
+                net = feedforwardnet(10);
+            case 2
+                net = feedforwardnet([6,6,6]);
+        end
+        [net, tr] = train(net, sampl, targ);
+        netMseTrain(j,i) = tr.best_perf;
+        netMseValidation(j,i) = tr.best_vperf;
+        netMseTest(j,i) = tr.best_tperf;
+        clear net tr
+    end
+end
+meanMseTrain = mean(netMseTrain,1);
+meanMseValidation = mean(netMseValidation,1);
+meanMseTest = mean(netMseTest,1);
+means = [meanMseTrain;meanMseValidation;meanMseTest];
+
+stdMseTrain = std(netMseTrain,0,1);
+stdMseValidation = std(netMseValidation,0,1);
+stdMseTest = std(netMseTest,0,1);
+stdevs = [stdMseTrain;stdMseValidation;stdMseTest];
+Names={' ';'1 hidden layer';' ';' ';' ';' ';' ';' ';' ''3 hidden layer              '};
+ 
+numgroups = size(means, 2); 
+numbars = size(means, 1); 
+groupwidth = min(0.8, numbars/(numbars+1.5));
+
+figure; hold on
+h=bar(means');
+set(gca,'XTickLabel',Names);
+set(h,'BarWidth',1);
+for k=1:numbars
+    % Based on barweb.m by Bolu Ajiboye from MATLAB File Exchange
+    x = (1:numgroups) - groupwidth/2 + (2*k-1) * groupwidth / (2*numbars);  % Aligning error bar with individual bar
+    errorbar(x, means(k,:), stdevs(k,:), 'k', 'linestyle', 'none');
+end
+legend('train','valid','test');
+ylabel('MSE');
+title('MSE over different NN (target=frequency)');
+hold off
 %% Calculating the R^2:
 
 inputs = sampl;

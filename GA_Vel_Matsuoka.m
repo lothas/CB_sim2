@@ -34,7 +34,7 @@ genome_file = 'MatsuokaGenome.mat';
 if exist(genome_file, 'file') ~= 2
     nAnkle = 1;%1; % Number of ankle torques
     nHip = 0;   % Number of hip torques
-    maxAnkle = 8;   % Max ankle torque
+    maxAnkle = 20;   % Max ankle torque
     maxHip = 20;    % Max hip torque
     Mamp = [maxAnkle*ones(1,2*nAnkle), maxHip*ones(1,2*nHip)];
     mamp = 0*Mamp;
@@ -44,42 +44,35 @@ if exist(genome_file, 'file') ~= 2
 
     % TorqueFBMin = [-5*ones(1,NAnkleT),-10*ones(1,NHipT)];
     % TorqueFBMax = -TorqueFBMin;
-
-    % Original genome with tau_u and tau_v + beta
-    % Keys = {'tau','tav','beta','amp','win','wex','ks_tau',  'ks_out','IC_matsuoka';
-    %            1 ,   1 ,    1 , 2*N ,   1 , 2*N ,      1 ,      2*N ,           0 };
-    % Range = {0.1 , 0.1 ,   10 , mamp, -20 , Mwex,   -1e2 , -0.1*Mamp; % Min
-    %            2 ,   2 ,   30 , Mamp,  -1 , mwex,    1e2 ,  0.1*Mamp}; % Max
   
-    %%%%%%%%%%%%% For the 4-neuron case!!!
+%     %%%%%%%%%%%% For the 4-neuron case!!!
 % %     % Final genome with tau_r + beta (constant tau_u/tau_v ratio) 
 %     Keys = {'\tau_r', 'beta', 'amp',   'weights', 'ks_\tau',     'ks_c', 'IC_matsuoka';
 %                   1 ,      1,  2*N , (2*N-1)*2*N,        1 ,       2*N ,            0 };
 %     Range = {  0.02 ,    0.2,  mamp,          mw,   -0.001 ,  -0.2*Mamp; % Min
 %                0.25 ,   10.0,  Mamp,          Mw,    0.001 ,   0.2*Mamp}; % Max
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% %     % Final genome with tau_r + beta (constant tau_u/tau_v ratio) 
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% %     % Final genome with tau_r + beta (constant tau_u/tau_v ratio) %%
+%                        symmetric 2neuron case
     Keys = {'\tau_r', 'beta', 'amp',   'weights', 'ks_\tau',     'ks_c', 'IC_matsuoka';
                   1 ,      1,   2*N,           1,        1 ,       2*N ,            0 };
     Range = {  0.02 ,    0.2,  mamp,           1,   -0.001 ,  -0.2*Mamp; % Min
-               0.25 ,   10.0,  Mamp,          10,   0.001 ,   0.2*Mamp}; % Max
-	% Genome with variable tau_r, ratio and beta
-%     Keys = {'\tau_ratio', '\tau_r', 'beta', 'amp',   'weights', 'ks_\tau',    'ks_c', 'IC_matsuoka';
-%                       1 ,       1 ,      1,  2*N , (2*N-1)*2*N,        1 ,      2*N ,            0 };
-%     Range = {         2 ,    0.02 ,    0.2,  mamp,          mw,      -10 , -0.1*Mamp; % Min
-%                      10 ,    0.25 ,   10.0,  Mamp,          Mw,       10 ,  0.1*Mamp}; % Max
-           
-    % Genome with constant ratio and beta
-%     Keys = {'\tau_r',  'amp',   'weights', 'ks_\tau',     'ks_c', 'IC_matsuoka';
-%                   1 ,   2*N , (2*N-1)*2*N,        1 ,      2*N ,            0 };
-%     Range = {  0.02 ,   mamp,          mw,      -10 , -0.1*Mamp; % Min
-%                0.25 ,   Mamp,          Mw,       10 ,  0.1*Mamp}; % Max
+               0.6  ,   10.0,  Mamp,          10,   0.001 ,   0.2*Mamp}; % Max
 
-    % Genome with constant ratio and beta. No FB parameters
-%     Keys = {'\tau_r','amp',   'weights', 'IC_matsuoka';
-%                   1 , 2*N , (2*N-1)*2*N,            0 };
-%     Range = {  0.02 , mamp,          mw; % Min
-%                0.25 , Mamp,          Mw}; % Max
+% % %    % for comparing a specific Matsuoka CPG to the NN
+%     Keys = {'tau'   ,   'tav', 'beta', 'amp',   'weights', 'ks_\tau',     'ks_c', 'IC_matsuoka';
+%                1    ,       1,      1,   2*N,           1,        1 ,       2*N ,            0 };
+%     Range = {  0.02 ,    0.01,    0.2,  mamp,           1,   -0.001 ,  -0.2*Mamp; % Min
+%                    1,       1,   10.0,  Mamp,          10,   0.001 ,   0.2*Mamp}; % Max
+           
+% % % %     % Final genome with tau_r + beta (constant tau_u/tau_v ratio) %%
+% % %                        general 2neuron case
+%     Keys = {'\tau_r', 'beta', 'amp',   'weights', 'ks_\tau',     'ks_c', 'IC_matsuoka';
+%                   1 ,      1,   2*N,           2,        1 ,       2*N ,            0 };
+%     Range = {  0.02 ,    0.2   mamp,           1,   -0.001 ,  -0.2*Mamp; % Min
+%                0.25 ,   10.0,  Mamp,          10,    0.001 ,   0.2*Mamp}; % Max
+           %
 
     MutDelta0 = 0.04;
     MutDelta1 = 0.02;

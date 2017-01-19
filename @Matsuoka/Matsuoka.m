@@ -7,14 +7,24 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
         name = 'Matsuoka'
         
         % Parameters
-        tau0 = 1; tau = 1;
-        tav0 = 1; tav = 1;
-        tau_ratio = 5;
-        beta = 0.1;
+%         tau0 = 1; tau = 1;
+%         tav0 = 1; tav = 1;
+%         tau_ratio = 5;
+%         beta = 0.1;
+%         u0 = 1;
+%         win = [0, 3; 1, 0];
+%         wex = [];
+%         W = [];
+        tau0 = 0.25; tau = 0.25;
+        tav0 = 0.5; tav = 0.5;
+        tau_ratio = 2;
+        beta = 2.5;
         u0 = 1;
-        win = [0, 3; 1, 0];
+        win = [];
         wex = [];
         W = [];
+
+
         
         stDim = 4; % state dimension
         nEvents = 1; % num. of simulation events
@@ -23,8 +33,8 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
         startup_t = 0;
         nPulses = 1;
         OutM = [0, 0; 1 -0.1];
-        Amp0 = 10;
-        Amp = 10;
+        Amp0 = 1.5;%10
+        Amp = 1.5;%10
         ExtPulses = [];
         
         % Saturation
@@ -51,7 +61,8 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
             'beta', 'win', 'wex', 'weights', 'amp0', 'amp', ...
             'fbtype', 'feedback', 'fb', ...
             'ks_tau', 'speed_tau', 'tau_speed_gain', 'ks_\tau', ...
-            'ks_out', 'speed_out', 'torque_speed_gain', 'ks_c'};
+            'ks_out', 'speed_out', 'torque_speed_gain', 'ks_c',...
+            '2neuron_symm_weights','amp_2n','2neuron_general_weights'};
     end
     
     methods
