@@ -7,7 +7,7 @@ function [ samplNewUniq,TargetNewUniq ] = matsuoka_uniq( dataPointsNum,NNinput,N
 
 % inputs:
 % 1) 'dataPointsNum' - the amount of points the we want to use
-% 2) 'NNinput' - NN inputs
+% 2) 'NNinput' - NN inputs [tau, b, 12 x w_ij] (no c_i !!)
 % 3) 'NNtarg' - NN targets
 
 % outputs:
@@ -25,10 +25,10 @@ for i=1:dataPointsNum
 
     newSampl(1:2,i) = sampl4train(1:2,i);
 
-    mat = [0             ,sampl4train(7,i)  ,sampl4train(8,i) ,sampl4train(9,i);
-        sampl4train(10,i),0                 ,sampl4train(11,i),sampl4train(12,i);
-        sampl4train(13,i),sampl4train(14,i) ,0                ,sampl4train(15,i);
-        sampl4train(16,i),sampl4train(17,i) ,sampl4train(18,i),0               ];
+    mat = [0             ,sampl4train(3,i)  ,sampl4train(4,i) ,sampl4train(5,i);
+        sampl4train(6,i),0                 ,sampl4train(7,i),sampl4train(8,i);
+        sampl4train(9,i),sampl4train(10,i) ,0                ,sampl4train(11,i);
+        sampl4train(12,i),sampl4train(13,i) ,sampl4train(14,i),0               ];
     
     biggestWeights = max(mat,[],1);
     [~,sortedWeightsIND] = sort(biggestWeights,2);
@@ -43,6 +43,7 @@ for i=1:dataPointsNum
 
 
 end
-
+    samplNewUniq = newSampl;
+    TargetNewUniq = targ4train;
 end
 

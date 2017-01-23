@@ -15,11 +15,11 @@ load('MatsRandomRes_2Neurons_general_16_01_2017_D_narrowRange.mat','results')
 results4 = results; periods4 = horzcat(results(:).periods);
 clear results
 % concetrate the data:
-results = horzcat(results1,results2,results3,results4);
-periods = horzcat(periods1,periods2,periods3,periods4);
+results = horzcat(results1,results2,results3);%,results4);
+periods = horzcat(periods1,periods2,periods3);%,periods4);
 
-clear results1 results2 results3 results4
-clear periods1 periods2 periods3 periods4
+clear results1 results2 results3% results4
+clear periods1 periods2 periods3% periods4
 
 %% identify which neurons have periods
 ids_period = ~isnan(periods); % only ones with period
@@ -66,7 +66,7 @@ HiddenN = [2,3,4,5,6,7,8,9,10,11,12];
 [ NN_Mean_over_HN_num,NN_stdev_over_HN_num ] = NN_Perf_over_HNnum( NumOfRepeats,HiddenN,sampl,targ,1 );
 
 %% Performance over samples quantity
-NumOfRepeats = 5;
+NumOfRepeats = 7;
 HiddenN = 10;
 dataPointsNum = [1000,5000,7000,10000,15000,20000,30000,50000,70000,...
     100000];
