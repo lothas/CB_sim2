@@ -3,6 +3,15 @@ clear all; close all; clc;
 
 %% Load data: 4 neuron CPG
 load('MatsRandomRes_16_12_2016.mat','results','periods')
+results1 = results; periods1 = periods;
+clear results periods
+load('MatsRandomRes_18_12_2016.mat','results','periods')
+results2 = results; periods2 = periods;
+clear results periods
+results = horzcat(results1,results2);
+periods = horzcat(periods1,periods2);
+clear results1 results2 periods1 periods2
+
 ids_period = ~isnan(periods); % only ones with period
 ids_error = (max(horzcat(results(:).perError2)',[],2) < 0.001)'; % only ones with low enought error
 ids = find(ids_period & ids_error);
@@ -15,7 +24,6 @@ parametersCells = {'tau','b',...
 
 targetCells = {'freq'};
 [ sampl,targ ] = prepareData( results,periods,ids,parametersCells,targetCells,0 );
-
 [sampl,targ ] = matsuoka_uniq(size(sampl,2),sampl,targ );
 
 clear results periods ids_period ids_error ids
@@ -28,206 +36,78 @@ clear results periods ids_period ids_error ids
 %     
 % end
 % clear i feat normParams
-%% Prepare the NN (="Experts")
-learningRate = 0.5*10^-5;
-decay = 0.9999;
-
-expertCount = 5;      % how many "experts" (fitting NN)
+%%
+expertCount = 3;      % how many "experts" (fitting NN)
 numOfInputs = size(parametersCells,2); %how many inputs to each expert
 maxEphocs = 200;      % max number of ephocs for each NN training
 numOfIteretions = 50;  % number of loop interations
-
-clusterCOG = cell(1,expertCount);  
-dm_i = zeros(numOfInputs,expertCount);
-expert_i_GroupSize = zeros(expertCount,numOfIteretions);
-cluster_i__ind = cell(1,expertCount);
-outMat = zeros(expertCount,size(sampl,2));
-errMat = zeros(expertCount,size(sampl,2));
-gateNN_perf_vec = zeros(1,numOfIteretions);
-gateNet_targ = zeros(expertCount,size(sampl,2));
-emptyGroupCounter = zeros(expertCount,1);
-
-% initialize parameters, use first points for m
-m = rand(expertCount, numOfInputs);
-
-% define experts:
-HiddenN = 10;
-expertsNN = cell(2,expertCount);
-for i=1:expertCount
-    expertsNN{1,i} = feedforwardnet(HiddenN);
-    expertsNN{1,i}.trainParam.showWindow = 0; % dont show training window
-    expertsNN{1,i}.trainParam.epochs = maxEphocs;
-end
-
-% initial training (to initilazied the NN)
-for j=1:expertCount
-    initTrain = randsample(1:size(sampl,2),1000);
-    [expertsNN{1,j}, expertsNN{2,j}] = train(expertsNN{1,j}, sampl(:,initTrain), targ(:,initTrain));
-end
-
-% define and initialize gate Network:
-initTrain = randsample(1:size(sampl,2),10);
-for j=1:expertCount
-    tempNet = expertsNN{1,j};
-    outMat(j,:) = tempNet(sampl);
-    errMat(j,:) = outMat(j,:) - targ;
-end
-seMat = errMat.^2; % squar error
-[~,best_expert_ind] = min(seMat,[],1);
-for j=1:expertCount % find targets based on experts perf
-    gateNet_targ(j,:) = (best_expert_ind == j);
-end
-% gate_init_targ = ones(expertCount,length(initTrain));
-gateNet = patternnet(10); % view(gateNet);
-gateNet.trainParam.showWindow = 0;
-gateNet = train(gateNet,sampl,gateNet_targ);
-
-%% Train the experts and the gate NN:
-disp('runTime of training:');
-tic
-for i=1:numOfIteretions
-    
-    % devide to clusters with the gate network:
-    gateOut = gateNet(sampl);
-    gateOut_inx = vec2ind(gateOut); % indecies of points to #clusters
-    
-    % clustering to different experts
-    for j=1:expertCount
-        cluster_i__ind{1,j} = find(gateOut_inx == j);
-        expert_i_GroupSize(j,i) = length(cluster_i__ind{1,j}); % check the size of each cluster
-        
-    end
-    
-    % training the experts;
-    for j=1:expertCount
-        tempNet = expertsNN{1,j};
-        if expert_i_GroupSize(j,i) > 0 % only train if the cluster is not empty
-            [expertsNN{1,j}, expertsNN{2,j}] = train(tempNet,...
-                sampl(:,cluster_i__ind{1,j}), targ(:,cluster_i__ind{1,j}));
-            % TODO: think what to do if the cluster is empty
-        else
-            % if the expert's cluster is empty, train the expert on the 'n'
-            % points with the best probability
-            [~,tempGroup] = sort(gateOut(j,:));
-            best_tempGroup = tempGroup(1,1:1000);
-            [expertsNN{1,j}, expertsNN{2,j}] = train(tempNet,...
-                sampl(:,best_tempGroup), targ(:,best_tempGroup));
-            emptyGroupCounter(j,1) = emptyGroupCounter(j,1) + 1;
-        end
-    end
-    
-    % run each expert on the entire data:
-    for j=1:expertCount
-        tempNet = expertsNN{1,j};
-        outMat(j,:) = tempNet(sampl);
-        errMat(j,:) = outMat(j,:) - targ;
-    end
-    seMat = errMat.^2; % squar error
-    [~,best_expert_ind] = min(seMat,[],1);
-    
-    % retrain gate network:
-    for j=1:expertCount % find targets based on experts perf
-        gateNet_targ(j,:) = (best_expert_ind == j);
-    end
-    gateNet = train(gateNet,sampl,gateNet_targ);
-    
-end
-toc
-
-inx = vec2ind(gateNet(sampl));
-    
-for j=1:expertCount
-   figure;
-   groupInd = cluster_i__ind{1,j};
-   tempNet = expertsNN{1,j};
-   Outputs = tempNet(sampl);
-   trOut = Outputs(:,groupInd);
-   trTarg = targ(groupInd);
-   plotregression(trTarg,trOut,'Train');
-   clear groupInd tempNet Outputs trOut
-end
-
-expertsNames = cell(1,expertCount);
-for j=1:expertCount
-    expertsNames{1,j} = ['#',num2str(j),' expert'];
-end
-figure;
-plot(1:numOfIteretions,expert_i_GroupSize); hold on;
-xlabel('#iteretion');   ylabel('group size [#points]');
-legend(expertsNames);
+ExpertHidLayer = 1; % num of hidden layer in each expert
+ExpertHidNueron = 10; % num of neurons in each hidden layer
+GateHidLayer = 1; % num of hidden layer in gateNN
+GateHidNueron = 10; % num of neurons in each hidden layer
+GraphicsFlag = 1; % if to plot or not
+competetiveFlag = 0; %if 1'- than the clustering is being done
+%                       by highest P takes all. if not '0' than
+%                       each sample as a chance to go to each cluster based
+%                       on the probability from the gate network
+[ expertsNN,gateNet,gateNet_perf,...
+    expert_i_GroupSize,gateNN_perf_vec,Experts_perf_mat,...
+    R_squar,errMSE,emptyGroupIndecator ] = ...
+    my_MoE_train(sampl,targ,expertCount,...
+    numOfIteretions,maxEphocs,ExpertHidLayer,ExpertHidNueron,...
+    GateHidLayer,GateHidNueron,GraphicsFlag,competetiveFlag);
 
 %% Visualized results of NN weights:
 for j=1:expertCount
     NN_weights_matrix_plot(expertsNN{1,j},parametersCells);
 end
-%% clustering the data: devide for experts:
-close all;
-if false  % NN classifier for data gating: (pattern regongnition NN)
-    percep_targ = zeros(expertCount,size(sampl,2));
-    for j=1:expertCount
-        percep_targ(j,:) = (best_expert_ind == j);
-    end
-    gateNet = patternnet(30); % view(gateNet);
-    gateNet = train(gateNet,sampl,percep_targ);
-    inx1 = gateNet(sampl);
-%     [~,inx] = min(inx1,[],1);
-    inx = vec2ind(inx1);
-end
 
-if false % NN classifier for data gating: (competetive NN)
-    gateNet = competlayer(expertCount);
-    gateNet = train(gateNet,sampl);
-    inx1 = gateNet(sampl);
-    inx = vec2ind(inx1);
-end
-
-if false % NN classifier for data gating gating using 'g':
-    
-    N = size(sampl,2);
-    g = zeros(expertCount,N);
-    for i=1:N
-        input = sampl(:,i);
-        g(:,i) = exp(m*input)/sum(exp(m*input));
-%         g(:,i) = softmax(m*input);
-        g(:,i) = round(g(:,i),4);
-    end
-    [~,inx] = max(g,[],1);
-    clear N
-end
-
-bestExpertsInx = [inx;-best_expert_ind];
-disp(['the number of train points correctly classify: ',...
-    num2str(length(find(~(sum(bestExpertsInx,1))))),...
-    ' out of ',num2str(length(bestExpertsInx))]);
-%% check train results:
-cluster_i_train_ind = cell(1,expertCount);
-out_train = zeros(size(targ));
-targ_train = [];
-outM_train = [];
+%% more plots:
+expertsNames = cell(1,expertCount);
 for j=1:expertCount
-    cluster_i_train_ind{1,j} = find(inx == j);
-    tempNet = expertsNN{1,j};
-    out_train_temp = tempNet(sampl(:,cluster_i_train_ind{1,j}));
-    targ_temp = targ(:,cluster_i_train_ind{1,j});
-    targ_train = [targ_train,targ_temp];
-    outM_train = [outM_train,out_train_temp];
-    clear targ_temp out_train_temp
+    expertsNames{1,j} = ['#',num2str(j),' expert'];
 end
-
 figure;
-plotregression(targ_train,outM_train,'Train');
+subplot(2,2,1)
+plot(1:numOfIteretions,expert_i_GroupSize,'-o'); hold on;
+title('cluster size over #iteration');
+xlabel('#iteretion');   ylabel('group size [#points]');
+legend(expertsNames);
 
-% calc R^2
-err = targ_train-outM_train;
-errVar = var(err,0,2);
-inputVar = var(targ_train,0,2);
+subplot(2,2,2) % expert perf over #interation
+plot(1:numOfIteretions,Experts_perf_mat,'-o'); hold on;
+title('expert MSE over #interation');
+xlabel('#iteretion');   ylabel('performance [MSE]');
 
-R_squar = 1-(errVar/inputVar);
-disp(['the R^2 is: ',num2str(R_squar)]);
+subplot(2,2,3) % expert perf over #interation
+plot(1:numOfIteretions,double(emptyGroupIndecator),'-o'); hold on;
+title('indication on empty clusters: "1" means empty');
+xlabel('#iteretion');   ylabel('"1"=empty   "0"-not empty');
 
-err = immse(outM_train,targ_train);
-disp(['the MSE is: ',num2str(err)]);
+subplot(2,2,4) % gateNet perf over #interation
+plot(1:numOfIteretions,gateNN_perf_vec,'-o'); hold on;
+title('gateNet perf (crossEntropy) over #interation');
+xlabel('#iteretion');   ylabel('performance [MSE]');
 
+%% test group analysis:
+load('MatsRandomRes_21_12_2016.mat','results','periods');
+ids_period = ~isnan(periods); % only ones with period
+ids_error = (max(horzcat(results(:).perError2)',[],2) < 0.001)'; % only ones with low enought error
+ids = find(ids_period & ids_error);
+[ test_sampl,test_targ ] = prepareData( results,periods,ids,parametersCells,targetCells,0 );
+[test_sampl,test_targ ] = matsuoka_uniq(size(test_sampl,2),test_sampl,targ );
+clear results periods ids_period ids_error ids
+
+[R_squar_test,errMSE_test] = my_MoE_testing(test_sampl,test_targ,expertsNN,...
+    gateNet,GraphicsFlag,competetiveFlag);
+
+%% many training cross validation
+GraphicsFlag = 0;
+for i=1:10
+    [~,~,~,~,~,~,R_squar,errMSE,~] = my_MoE_train(sampl,targ,expertCount,...
+    numOfIteretions,maxEphocs,ExpertHidLayer,ExpertHidNueron,...
+    GateHidLayer,GateHidNueron,GraphicsFlag,competetiveFlag);
+end
 %% for symmetric 2neuron CPG "knee checking"
 % % run many genes with similar tau,T,b,c and different a and check the period
 % % in this section I will check Matsuoka's approximation compare to the NN approximation.
