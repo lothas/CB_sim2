@@ -16,10 +16,9 @@ function [ samplNewUniq,TargetNewUniq ] = matsuoka_uniq( dataPointsNum,NNinput,N
 
 
 % prepare the data points that we want
-dataInd4Train = randsample(length(NNtarg),dataPointsNum);
-sampl4train = NNinput(:,dataInd4Train);
-targ4train = NNtarg(1,dataInd4Train);
-newSampl = zeros(size(sampl4train,1),dataPointsNum);
+sampl4train = NNinput;
+targ4train = NNtarg;
+newSampl = zeros(size(sampl4train));
 
 for i=1:dataPointsNum
 

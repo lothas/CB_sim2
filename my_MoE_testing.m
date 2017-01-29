@@ -31,7 +31,7 @@ if competetiveFlag
 else
    % cluster by probability and not by highest chance
    for k=1:size(gateOut,2)
-        acumulativeProb = gateOut(:,k)*tril(ones(expertCount,expertCount));
+        acumulativeProb = tril(ones(expertCount,expertCount))*gateOut(:,k);
         gateOut_inx(1,k) = find(acumulativeProb > rand(1),1);
    end
 end
@@ -68,21 +68,7 @@ for j=1:expertCount
     clear targ_temp out_train_temp
 end
 
-% calc R^2
-err = targ_train-outM_train;
-errVar = var(err,0,2);
-inputVar = var(targ_train,0,2);
-
-R_squar = 1-(errVar/inputVar);
-errMSE = immse(outM_train,targ_train);
-
-disp('checking the Test performance:');
-disp(['the R^2 is: ',num2str(R_squar)]);
-disp(['the MSE is: ',num2str(errMSE)]);
-
-if GraphicsFlag
-    figure;
-    plotregression(targ_train,outM_train,'Train');
-end
+% show performance:
+[errMSE,R_squar] = NN_perf_calc(Targets,NNoutput,1,GraphicsFlag );
 end
 

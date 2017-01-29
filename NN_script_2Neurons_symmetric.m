@@ -118,17 +118,7 @@ net = feedforwardnet([HiddenN,HiddenN,HiddenN]);
 [net, tr] = train(net, sampl, targ);
 
 %% Calculating the R^2:
-
-inputs = sampl;
-outputs = targ;
-netOut = net(inputs);
-err = outputs-netOut;
-errVar = var(err,0,2);
-inputVar = var(outputs,0,2);
-
-R_squar = 1-(errVar/inputVar);
-
-clear inputs outputs netOut err errVar inputVar
+[~,~] = NN_perf_calc(targ,net(sampl),1,0);
 %% coparing NN outputs to Matsuoka's estimation:
 % attention: check how you defined the NN inputs.
 % define the inputs order as: 'tau','b','a','s'

@@ -250,15 +250,6 @@ ylabel('MSE');
 title('MSE over different NN (target=frequency)');
 hold off
 %% Calculating the R^2:
-
-inputs = sampl;
-outputs = targ;
-netOut = net(inputs);
-err = outputs-netOut;
-errVar = var(err,0,2);
-inputVar = var(outputs,0,2);
-
-R_squar = 1-(errVar/inputVar);
-
+[~,~] = NN_perf_calc(targ,net(sampl),1,0); 
 
 
