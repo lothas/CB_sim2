@@ -70,7 +70,7 @@ while true
     learningRate = learningRate * decay;
     
     % calculate training set error
-    err = paper_MoE_test((sampl(:,2:dim))', targ', ExpertsWeights, gateWeights);
+    err = paper_MoE_test((sampl(:,2:dim))', targ', ExpertsWeights, gateWeights,0);
     
     disp(['at itre num ',num2str(iters),': Error = ', num2str(err),' learning rate is: ',num2str(learningRate)]);
     errs(iters, 1) = err;
@@ -83,10 +83,10 @@ while true
         fprintf('Max Iterations Reached\n');
         break;
     end
-    if err < 1e-6 || sum( errs(si:li,:) ) < sum( errs(si+1:li+1,:) )
-        fprintf('Error reached minimum\n');
-        break;
-    end
+%     if err < 1e-6 || sum( errs(si:li,:) ) < sum( errs(si+1:li+1,:) )
+%         fprintf('Error reached minimum\n');
+%         break;
+%     end
 end
 
 

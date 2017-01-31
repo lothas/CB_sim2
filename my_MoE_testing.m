@@ -1,4 +1,4 @@
-function [R_squar,errMSE] = my_MoE_testing(NNinputs,NNtargets,expertsNN,...
+function [R_squar,errMSE,netOut,belongToExpert] = my_MoE_testing(NNinputs,NNtargets,expertsNN,...
     gateNet,GraphicsFlag,competetiveFlag)
 %this function train a "Mixture of Experts" newural networks
 
@@ -17,58 +17,66 @@ function [R_squar,errMSE] = my_MoE_testing(NNinputs,NNtargets,expertsNN,...
 % outputs:
 % 1) R_squar - R^2 after rechecking the training data
 % 2) errMSE - MSE after rechecking the training data
+% 3) netOut - output from MoE
+% 4) belongToExpert - which expert's cluster the sample is belong.
 
 expertCount = size(expertsNN,2);
 
-disp('start testing...');
-tic
-
-% check the final clustering after training (used for MoE train perf checking)
-gateOut_inx = zeros(1,size(NNinputs,2));
+% check the final clustering after training:
+belongToExpert = zeros(1,size(NNinputs,2));
 gateOut = gateNet(NNinputs);
 if competetiveFlag
-    gateOut_inx = vec2ind(gateOut); % indecies of points to #clusters
+    [~,belongToExpert] = max(gateOut,[],1); % indecies of points to #clusters
 else
    % cluster by probability and not by highest chance
    for k=1:size(gateOut,2)
         acumulativeProb = tril(ones(expertCount,expertCount))*gateOut(:,k);
-        gateOut_inx(1,k) = find(acumulativeProb > rand(1),1);
+        belongToExpert(1,k) = find(acumulativeProb > rand(1),1);
    end
 end
-disp('total runTime of testing:');
-toc
 
-% run each expert on the entire data: check how many were clusify correctly
-% based on minimum squar error.
-outMat = zeros(expertCount,size(NNinputs,2)); % Experts output matrix 
-errMat = zeros(size(outMat)); % error matrix (each row - targets)
-for j=1:expertCount
-    tempNet = expertsNN{1,j};
-    outMat(j,:) = tempNet(NNinputs);
-    errMat(j,:) = outMat(j,:) - NNtargets;
+if size(NNinputs,2) > 1 % many samples, performance analisys
+    cluster_i_train_ind = cell(1,expertCount);
+    targ_train = [];
+    netOut = [];
+    if  GraphicsFlag 
+        colors = rand(expertCount,3);
+        legendNames = cell(1,expertCount);
+        for j=1:expertCount
+            legendNames{1,j} = ['#',num2str(j),' expert'];
+        end
+        figure; hold on
+    end
+
+    for j=1:expertCount
+        cluster_i_train_ind{1,j} = find(gateOut_inx == j);
+        tempNet = expertsNN{1,j};
+        out_train_temp = tempNet(NNinputs(:,cluster_i_train_ind{1,j}));
+        targ_temp = NNtargets(:,cluster_i_train_ind{1,j});
+        targ_train = [targ_train,targ_temp];
+        netOut = [netOut,out_train_temp];
+
+        if GraphicsFlag
+            h = plot(targ_temp,out_train_temp,'Color',colors(j,:),'LineStyle','none');
+            h.Marker = 'o';
+        end
+        clear targ_temp out_train_temp
+    end
+
+    if GraphicsFlag
+        hold off;
+        xlabel('targets'); ylabel('ouput'); legend(legendNames);
+    end
+
+    % show performance:
+    [errMSE,R_squar] = NN_perf_calc(targ_train,netOut,1,GraphicsFlag );
+    
+else % single sample, return MoE output
+    tempNet = expertsNN{1,belongToExpert};
+    netOut = tempNet(NNinputs(:,1));
+    errMSE = [];
+    R_squar = [];
 end
-seMat = errMat.^2; % squar error
-[~,best_expert_ind] = min(seMat,[],1); 
-bestExpertsInx = [gateOut_inx;-best_expert_ind];
-disp(['the number of train points correctly classify: ',...
-    num2str(length(find(~(sum(bestExpertsInx,1))))),...
-    ' out of ',num2str(length(bestExpertsInx))]);
 
-%% check test results:
-cluster_i_train_ind = cell(1,expertCount);
-targ_train = [];
-outM_train = [];
-for j=1:expertCount
-    cluster_i_train_ind{1,j} = find(gateOut_inx == j);
-    tempNet = expertsNN{1,j};
-    out_train_temp = tempNet(NNinputs(:,cluster_i_train_ind{1,j}));
-    targ_temp = NNtargets(:,cluster_i_train_ind{1,j});
-    targ_train = [targ_train,targ_temp];
-    outM_train = [outM_train,out_train_temp];
-    clear targ_temp out_train_temp
-end
-
-% show performance:
-[errMSE,R_squar] = NN_perf_calc(Targets,NNoutput,1,GraphicsFlag );
 end
 

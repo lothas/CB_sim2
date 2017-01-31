@@ -47,13 +47,13 @@ clear i feat normParams
 expertCount = 3;      % how many "experts" (fitting NN)
 numOfInputs = size(parametersCells,2); %how many inputs to each expert
 maxEphocs = 200;      % max number of ephocs for each NN training
-numOfIteretions = 50;  % number of loop interations
+numOfIteretions = 5;  % number of loop interations
 ExpertHidLayer = 1; % num of hidden layer in each expert
 ExpertHidNueron = 5; % num of neurons in each hidden layer
 GateHidLayer = 1; % num of hidden layer in gateNN
 GateHidNueron = 5; % num of neurons in each hidden layer
 GraphicsFlag = 1; % if to plot or not
-competetiveFlag = 0; %if 1'- than the clustering is being done
+competetiveFlag = 1; %if 1'- than the clustering is being done
 %                       by highest P takes all. if not '0' than
 %                       each sample as a chance to go to each cluster based
 %                       on the probability from the gate network
@@ -64,37 +64,36 @@ competetiveFlag = 0; %if 1'- than the clustering is being done
     numOfIteretions,maxEphocs,ExpertHidLayer,ExpertHidNueron,...
     GateHidLayer,GateHidNueron,GraphicsFlag,competetiveFlag);
 
-%% Visualized results of NN weights:
-for j=1:expertCount
-    NN_weights_matrix_plot(expertsNN{1,j},parametersCells);
-end
+[~,~,~,~] = my_MoE_testing(sampl,targ,expertsNN,...
+    gateNet,1,1);
 
-%% more plots:
-expertsNames = cell(1,expertCount);
-for j=1:expertCount
-    expertsNames{1,j} = ['#',num2str(j),' expert'];
-end
-figure;
-subplot(2,2,1)
-plot(1:numOfIteretions,expert_i_GroupSize,'-o'); hold on;
-title('cluster size over #iteration');
-xlabel('#iteretion');   ylabel('group size [#points]');
-legend(expertsNames);
+if false % more plots:
+    expertsNames = cell(1,expertCount);
+    for j=1:expertCount
+        expertsNames{1,j} = ['#',num2str(j),' expert'];
+    end
+    figure;
+    subplot(2,2,1)
+    plot(1:numOfIteretions,expert_i_GroupSize,'-o'); hold on;
+    title('cluster size over #iteration');
+    xlabel('#iteretion');   ylabel('group size [#points]');
+    legend(expertsNames);
 
-subplot(2,2,2) % expert perf over #interation
-plot(1:numOfIteretions,Experts_perf_mat,'-o'); hold on;
-title('expert MSE over #interation');
-xlabel('#iteretion');   ylabel('performance [MSE]');
+    subplot(2,2,2) % expert perf over #interation
+    plot(1:numOfIteretions,Experts_perf_mat,'-o'); hold on;
+    title('expert MSE over #interation');
+    xlabel('#iteretion');   ylabel('performance [MSE]');
 
-subplot(2,2,3) % expert perf over #interation
-plot(1:numOfIteretions,double(emptyGroupIndecator),'-o'); hold on;
-title('indication on empty clusters: "1" means empty');
-xlabel('#iteretion');   ylabel('"1"=empty   "0"-not empty');
+    subplot(2,2,3) % expert perf over #interation
+    plot(1:numOfIteretions,double(emptyGroupIndecator),'-o'); hold on;
+    title('indication on empty clusters: "1" means empty');
+    xlabel('#iteretion');   ylabel('"1"=empty   "0"-not empty');
 
-subplot(2,2,4) % gateNet perf over #interation
-plot(1:numOfIteretions,gateNN_perf_vec,'-o'); hold on;
-title('gateNet perf (crossEntropy) over #interation');
-xlabel('#iteretion');   ylabel('performance [MSE]');
+    subplot(2,2,4) % gateNet perf over #interation
+    plot(1:numOfIteretions,gateNN_perf_vec,'-o'); hold on;
+    title('gateNet perf (crossEntropy) over #interation');
+    xlabel('#iteretion');   ylabel('performance [MSE]');
+end 
 
 %% test group analysis:
 load('MatsRandomRes_21_12_2016.mat','results','periods');
@@ -105,8 +104,12 @@ ids = find(ids_period & ids_error);
 [test_sampl,test_targ ] = matsuoka_uniq(size(test_sampl,2),test_sampl,test_targ );
 clear results periods ids_period ids_error ids
 
-[R_squar_test,errMSE_test] = my_MoE_testing(test_sampl,test_targ,expertsNN,...
+[R_squar_test,errMSE_test,~,belongToExpert] = my_MoE_testing(test_sampl,test_targ,expertsNN,...
     gateNet,GraphicsFlag,competetiveFlag);
+%% Visualized results of NN weights:
+for j=1:expertCount
+    NN_weights_matrix_plot(expertsNN{1,j},parametersCells);
+end
 
 %% many training cross validation
 % compare two methodes of my MoE code. 1st method is completely competetive
@@ -163,16 +166,12 @@ title('MoE with different amount of Experts');
 hold off
 
 %% regression graphs for the paper's algorithm:
-expertCount = 100;
-numOfIteretions = 5;
+expertCount = 3;
+numOfIteretions = 10;
 
 [ExpertsWeights, gateWeights] = paper_MoE_train(sampl, targ, expertCount, numOfIteretions, 0.001, 0.95);
 
-[~, freq_fromNN] = paper_MoE_test(sampl,targ, ExpertsWeights, gateWeights);
-
-% [ExpertsWeights, gateWeights] = paper_MoE_train_nonlinear(sampl, targ, expertCount, numOfIteretions, 0.0001, 0.9995);
-% 
-% [~, freq_fromNN] = paper_MoE_test_nonlinear(sampl,targ, ExpertsWeights, gateWeights);
+[~, freq_fromNN,~] = paper_MoE_test(sampl,targ, ExpertsWeights, gateWeights,1);
 
 [errMSE,R_squar] = NN_perf_calc(targ,freq_fromNN',1,1);
 
@@ -190,7 +189,7 @@ MML.perLimOut = MML.perLim + [-0.08 0.08]; % Desired period range
 MML.tStep = 0.01;
 MML.tEnd = 30; % 15
 
-N = 20;
+N = 30;
 
 % CPG parameters:
 tau = 0.25;
@@ -202,8 +201,9 @@ a = linspace(1.6,3.4,N);
 
 % MoE parameters:
 paper_MoE_flag = true;
-expertCount = 20;%[2,3,4,5]; 
-numOfIteretions = 100;
+competetiveFlag = 1;
+expertCount = 3;%[2,3,4]; 
+numOfIteretions = 10;
 
 if false
     genome_file = 'MatsuokaGenome.mat';
@@ -229,73 +229,115 @@ if false
         'MutDelta0', 'MutDelta1', 'Keys', 'Range');
 end   % define the genome file structure for matsuokaML.runSim
 
-for n=1:length(expertCount)
-    disp('start with the sim:');
-    freq_Matsuoka = zeros(1,N);
-    freq_fromCode = zeros(1,N);
-    for i=1:N % Simulate and calculate the frequecy (also calc from Matsuoka extimation) 
-        seq = [tau,T,tau_ratio,b,c,0,a(1,i),0,0,0];
-        [out, ~, ~] = MML.runSim(seq);
-            % Prepare output:
-        % Parameters
-        results_2N_sim(i).seq = seq;
-        results_2N_sim(i).tau = tau;
-        results_2N_sim(i).T = T;
-        results_2N_sim(i).b = b;
-        results_2N_sim(i).c = c;
-        results_2N_sim(i).a = a(1,i);
-        results_2N_sim(i).x0 = out.x0;
+disp('start with the sim:');
+freq_Matsuoka = zeros(1,N);
+freq_fromCode = zeros(1,N);
+for i=1:N % Simulate and calculate the frequecy (also calc from Matsuoka extimation)
+    disp(['at sim #',num2str(i)]);
+    seq = [tau,T,tau_ratio,b,c,0,a(1,i),0,0,0];
+    [out, ~, ~] = MML.runSim(seq);
+        % Prepare output:
+    % Parameters
+    results_2N_sim(i).seq = seq;
+    results_2N_sim(i).tau = tau;
+    results_2N_sim(i).T = T;
+    results_2N_sim(i).b = b;
+    results_2N_sim(i).c = c;
+    results_2N_sim(i).a = a(1,i);
+    results_2N_sim(i).x0 = out.x0;
 
-        % Results
-        results_2N_sim(i).periods = out.periods;
-        results_2N_sim(i).pos_work = out.pos_work;
-        results_2N_sim(i).neg_work = out.neg_work;
-        results_2N_sim(i).perError1 = out.perError1;
-        results_2N_sim(i).perOK1 = out.perOK1;
-        results_2N_sim(i).perError2 = out.perError2;
-        results_2N_sim(i).perOK2 = out.perOK2;
-        results_2N_sim(i).neuronActive = out.neuronActive;
-        results_2N_sim(i).neuronOsc = out.neuronOsc;
+    % Results
+    results_2N_sim(i).periods = out.periods;
+    results_2N_sim(i).pos_work = out.pos_work;
+    results_2N_sim(i).neg_work = out.neg_work;
+    results_2N_sim(i).perError1 = out.perError1;
+    results_2N_sim(i).perOK1 = out.perOK1;
+    results_2N_sim(i).perError2 = out.perError2;
+    results_2N_sim(i).perOK2 = out.perOK2;
+    results_2N_sim(i).neuronActive = out.neuronActive;
+    results_2N_sim(i).neuronOsc = out.neuronOsc;
 
-        freq_Matsuoka(1,i) = ((1/T)*sqrt(((tau+T)*b - a(1,i)*tau)/(a(1,i)*tau)))/(2*pi); % in [Hz]
-        
-        freq_fromCode(1,i)= 1/out.periods;
-    end 
-      
-    if paper_MoE_flag %train the MoE and
-        [ExpertsWeights, gateWeights] = paper_MoE_train(sampl, targ, expertCount(1,n), numOfIteretions, 0.00001, 0.9995);
-    else
+    freq_Matsuoka(1,i) = ((1/T)*sqrt(((tau+T)*b - a(1,i)*tau)/(a(1,i)*tau)))/(2*pi); % in [Hz]
+
+    freq_fromCode(1,i)= 1/out.periods;
+end 
+disp('sim end...');
+%% for symmetric 2neuron CPG "knee checking"
+% check MoE results, 'tau','b' and 'c' fixed 
+% 'a' is changing within a certain range
+expertsWeights_store = cell(1,length(expertCount));
+gateWeights_store = cell(1,length(expertCount));
+g = cell(1,length(expertCount));
+freq_fromNN = zeros(length(expertCount),N);
+belongToExpert_vec = zeros(length(expertCount),N);
+
+for n=1:length(expertCount)   
+    if paper_MoE_flag %train the MoE with the paper's method
+        [ExpertsWeights, gateWeights] = paper_MoE_train(sampl, targ, expertCount(1,n), numOfIteretions, 0.001, 0.9995);
+        expertsWeights_store{1,n} = ExpertsWeights;
+        gateWeights_store{1,n} = gateWeights;
+    else %train the MoE with our method
         [ expertsNN,gateNet,~,~,~,~,~,~,~] = my_MoE_train(sampl,targ,...
         expertCount(1,n),numOfIteretions,maxEphocs,ExpertHidLayer,ExpertHidNueron,...
         GateHidLayer,GateHidNueron,GraphicsFlag,competetiveFlag);
-    end
-    %
-    freq_fromNN = zeros(1,N);
+    end 
+    
     if paper_MoE_flag
-        v = [ones(1,N)*tau;
-            ones(1,N)*b;
-            a;
-            ones(1,N)*c];
-        [~, freq_fromNN] = paper_MoE_test(v, (1./horzcat(results_2N_sim(:).periods)), ExpertsWeights, gateWeights);
+        v = [ones(1,N)*tau; ones(1,N)*b; a; ones(1,N)*c];
+        [~, freq_fromNN(n,:),g] = paper_MoE_test(v, (1./horzcat(results_2N_sim(:).periods)), ExpertsWeights, gateWeights,0);
         clear v
     else
         for i=1:N
-                gateOut_2N = gateNet([tau;b;a(1,i);c]);
-                [~,maxGateOut_2N] = max(gateOut_2N,[],1);
-                tempNet = expertsNN{1,maxGateOut_2N};
-                freq_fromNN(1,i) = tempNet([tau;b;a(1,i);c]);
-    %             plotMarkets = {'b-o','r-o','g-o'};
-    %             h = plot(a(1,i),freq_fromNN(1,i),plotMarkets(1,maxGateOut_2N));
-            clear tempNet maxGateOut_2N gateOut_2N           
+            targ_temp = (1./horzcat(results_2N_sim(:).periods));
+            [~,~,freq_fromNN(n,i),belongToExpert_vec(n,i)] = my_MoE_testing([tau;b;a(1,i);c],targ_temp,expertsNN,...
+                                 gateNet,0,competetiveFlag);
+            clear targ_temp        
         end
     end
-    
-    figure;
-    plot(vertcat(results_2N_sim(:).a),freq_Matsuoka,'b-o'); hold on;
-    plot(vertcat(results_2N_sim(:).a),freq_fromNN,'r-o');
-    plot(vertcat(results_2N_sim(:).a),freq_fromCode,'g-o');
-    xlabel('a');    ylabel('freq [Hz]'); grid on;
-    legend('Matsuoka estimation','freq from NN','freq from Code');
-    title('frequency over a');
-    
 end
+
+figure;
+plot(vertcat(results_2N_sim(:).a),freq_fromCode,'g-o'); hold on
+plot(vertcat(results_2N_sim(:).a),freq_Matsuoka,'b-o');
+plot(vertcat(results_2N_sim(:).a),freq_fromNN);
+xlabel('a');    ylabel('freq [Hz]'); grid on;
+legendNames = {'real freq','Matsuoka estimation',cell(1,length(expertCount))};
+for j=3:(length(expertCount)+2)
+    legendNames{1,j} = ['#',num2str(expertCount(1,j-2)),' expert'];
+end
+legend(legendNames);
+title('frequency over "a" with different #experts');
+
+[~,~] = NN_perf_calc(freq_fromCode,(freq_fromNN(n,:)),1,1);
+
+legendNames = cell(1,expertCount);
+for j=1:expertCount
+    legendNames{1,j} = ['#',num2str(j),' expert'];
+end
+    
+figure;
+if paper_MoE_flag
+    subplot(2,1,1);
+    plot(vertcat(results_2N_sim(:).a),freq_fromCode,'g-o'); hold on
+    plot(vertcat(results_2N_sim(:).a),freq_Matsuoka,'b-o');
+    plot(vertcat(results_2N_sim(:).a),freq_fromNN(n,:),'r-o'); grid minor;
+    xlabel('a'); ylabel('\omega_{n}');
+    title('frequency over "a"');
+
+    subplot(2,1,2);
+    bar(g','stacked'); xlabel('#sample');
+    legend(legendNames);
+else
+    plot(vertcat(results_2N_sim(:).a),freq_fromCode,'g-o'); hold on
+    colors = rand(expertCount,3);
+    for j=1:N
+        expertNum = belongToExpert_vec(n,j);
+        h = plot(vertcat(results_2N_sim(j).a),freq_fromNN(n,j),'Color',colors(expertNum,:),'LineStyle','none');
+        h.Marker = 'o';
+    end
+    xlabel('a'); ylabel('\omega_{n}');
+    legend(legendNames)
+    title('frequency over "a"');
+end
+
+

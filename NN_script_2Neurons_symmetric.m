@@ -71,6 +71,16 @@ title('Hist of period error'); xlabel('period error');
 clear ids_period ids_error nSims
 % clear results periods
 
+%% load data in a specific range (1.6 < a < 3.4)
+load('specificRangeData_30_1_2017.mat');
+periodsA = horzcat(results_2N_sim(:).periods);
+MatsuokaParam = vertcat(results_2N_sim(:).seq)';
+samplA = [MatsuokaParam(1,:);MatsuokaParam(4,:);MatsuokaParam(7,:);MatsuokaParam(3,:)];
+
+sampl = [sampl,samplA];
+targ = [targ,1./periodsA];
+
+clear MatsuokaParam periodsA samplA results_2N_sim
 %% save to xlse file for eureqa:
 filename = 'dataMatrixXLSX_2neurons_updated.xlsx';
 dataMatrix = [sampl;targ];
