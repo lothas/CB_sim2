@@ -2,32 +2,10 @@
 
 clc; close all; clear all;
 
-%% Load varibles: for 4 neuron data
-load('MatsRandomRes_16_12_2016.mat','results','periods')
-results1 = results; periods1 = periods;
-clear results periods
-load('MatsRandomRes_18_12_2016.mat','results','periods')
-results2 = results; periods2 = periods;
-clear results periods
-load('MatsRandomRes_19_12_2016.mat','results','periods')
-results3 = results; periods3 = periods;
-clear results periods
-load('MatsRandomRes_20_12_2016.mat','results','periods')
-results4 = results; periods4 = periods;
-clear results periods
-load('MatsRandomRes_21_12_2016.mat','results','periods')
-results5 = results; periods5 = periods;
-clear results periods
-load('MatsRandomRes_25_12_2016.mat','results','periods')
-results6 = results; periods6 = periods;
-clear results periods
-
-% concetrate the data:
-results = horzcat(results1,results2,results3,results4,results5,results6);
-periods = horzcat(periods1,periods2,periods3,periods4,periods5,periods6);
-
-clear results1 results2 results3 results4 results5 results6
-clear periods1 periods2 periods3 periods4 periods5 periods6
+%% Load data: 4 neuron CPG
+howMuchData = 600000;
+disp(['Loading approx ',num2str(howMuchData),' samples...']);
+[results,periods]=load_data_4N_CPG(howMuchData);
 
 %% 
 ids_period = ~isnan(periods); % only ones with period

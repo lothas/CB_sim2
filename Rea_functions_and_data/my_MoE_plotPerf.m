@@ -1,5 +1,7 @@
 function my_MoE_plotPerf(NNoutput,NNtargets,gateOut,...
-    cluster_i_train_ind,Moe_perf_over_iter,gateNN_perf_vec,testOrTrain,competetiveFlag )
+    cluster_i_train_ind,Moe_perf_over_iter,gateNN_perf_vec,...
+    expert_i_GroupSize,Experts_perf_mat,emptyGroupIndecator,...
+    testOrTrain,competetiveFlag )
 
 % inputs:
 % 1) testOrTrain - plot graphs from training or test sessions
@@ -19,9 +21,8 @@ if strcmp(testOrTrain,'test') || strcmp(testOrTrain,'both')
             % plot the regression graph and color each expert's cluster in a different color 
             figure; hold on
             for j=1:expertCount
-                lengthGroup_j = size(cluster_i_train_ind{1,j},2);
-                out_temp = NNoutput(:,1:lengthGroup_j);
-                targ_temp = NNtargets(:,1:lengthGroup_j);
+                out_temp = NNoutput(:,cluster_i_train_ind{1,j});
+                targ_temp = NNtargets(:,cluster_i_train_ind{1,j});
 
                 h = plot(targ_temp,out_temp,'Color',colors(j,:),'LineStyle','none');
                 h.Marker = 'o';
@@ -57,7 +58,7 @@ if strcmp(testOrTrain,'train') || strcmp(testOrTrain,'both')
             plot(1:numOfIteretions,expert_i_GroupSize,'-o'); hold on;
             title('cluster size over #iteration');
             xlabel('#iteretion');   ylabel('group size [#points]');
-            legend(expertsNames);
+            legend(legendNames);
 
             subplot(2,2,2) % expert perf over #interation
             plot(1:numOfIteretions,Experts_perf_mat,'-o'); hold on;

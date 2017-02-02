@@ -1,4 +1,4 @@
-function [ExpertsWeights, gateWeights] = paper_MoE_train(sampl, targ, expertCount, maxIter, learningRate, decay)
+function [ExpertsWeights, gateWeights,errs] = paper_MoE_train(sampl, targ, expertCount, maxIter, learningRate, decay)
 % based on code from the internet: https://goker.wordpress.com/2011/07/01/mixture-of-experts/
 
 % Trains a mixture of experts logistic discriminator with given number of
@@ -89,7 +89,7 @@ while true
 %     end
 end
 
-
+errs = errs';
 
 end
 

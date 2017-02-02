@@ -2,22 +2,9 @@
 clear all; close all; clc;
 
 %% Load data: 4 neuron CPG
-load('MatsRandomRes_16_12_2016.mat','results','periods')
-results1 = results; periods1 = periods;
-clear results periods
-load('MatsRandomRes_18_12_2016.mat','results','periods')
-results2 = results; periods2 = periods;
-clear results periods
-load('MatsRandomRes_19_12_2016.mat','results','periods')
-results3 = results; periods3 = periods;
-clear results periods
-load('MatsRandomRes_20_12_2016.mat','results','periods')
-results4 = results; periods4 = periods;
-clear results periods
-results = horzcat(results1,results2,results3,results4);
-periods = horzcat(periods1,periods2,periods3,periods4);
-clear results1 results2 results3 results4...
-    periods1 periods2 periods3 periods4
+howMuchData = 600000;
+disp(['Loading approx ',num2str(howMuchData),' samples...']);
+[results,periods]=load_data_4N_CPG(howMuchData);
 
 ids_period = ~isnan(periods); % only ones with period
 ids_error = (max(horzcat(results(:).perError2)',[],2) < 0.001)'; % only ones with low enought error
@@ -34,6 +21,40 @@ targetCells = {'freq'};
 [sampl,targ ] = matsuoka_uniq(size(sampl,2),sampl,targ );
 
 clear results periods ids_period ids_error ids
+
+%% Load Data: 2neurons symmetric case
+howMuchData = 400000;
+[results,periods]=load_data_2N_Symm_CPG(howMuchData);
+
+% identify which neurons have periods
+ids_period = ~isnan(periods); % only ones with period
+ids_error = (max(horzcat(results(:).perError2)',[],2) < 0.001)'; % only ones with low enought error
+ids = find(ids_period & ids_error);
+
+% prepare NN inputs and outputs:
+parametersCells = {'tau','b','a','s'};
+targetCells = {'freq'};
+[ sampl,targ ] = prepareData_2Neurons( results,periods,ids,parametersCells,targetCells);
+
+clear ids_period ids_error
+
+%% Load Data: 2neurons general case
+howMuchData = 400000;
+[results,periods]=load_data_2N_Symm_CPG(howMuchData);
+
+% identify which neurons have periods
+ids_period = ~isnan(periods); % only ones with period
+ids_error = (max(horzcat(results(:).perError2)',[],2) < 0.001)'; % only ones with low enought error
+ids = find(ids_period & ids_error);
+
+parametersCells = {'tau','b','w12','w21'};
+targetCells = {'freq'};
+sampl = vertcat(results(ids).seq)'; % extracting the parameters from the structure to a matrix
+sampl = sampl([1,2,5,6],:); % get rid of the the unimportant 'gen' (the k's for the control).
+targ= 1./periods(ids);
+
+clear ids_period ids_error nSims
+
 %% norm inputs - not necessary! NN toolbox already normalize!
 normParams = zeros(size(sampl, 1), 2);
 for i = 1:size(sampl, 1)
@@ -63,38 +84,11 @@ competetiveFlag = 3; % if '1'- "winner takes all"
     gateNet,competetiveFlag);
 
 my_MoE_plotPerf(netOut,targ,gateOut,cluster_i_train_ind,Moe_perf_over_iter,...
-    gateNN_perf_vec,'both',competetiveFlag);
+    gateNN_perf_vec,expert_i_GroupSize,Experts_perf_mat,emptyGroupIndecator,...
+    'both',competetiveFlag);
 
 
 [~,~] = NN_perf_calc(targ,netOut,1,0);
-
-if false % more plots:
-    expertsNames = cell(1,expertCount);
-    for j=1:expertCount
-        expertsNames{1,j} = ['#',num2str(j),' expert'];
-    end
-    figure;
-    subplot(2,2,1)
-    plot(1:numOfIteretions,expert_i_GroupSize,'-o'); hold on;
-    title('cluster size over #iteration');
-    xlabel('#iteretion');   ylabel('group size [#points]');
-    legend(expertsNames);
-
-    subplot(2,2,2) % expert perf over #interation
-    plot(1:numOfIteretions,Experts_perf_mat,'-o'); hold on;
-    title('expert MSE over #interation');
-    xlabel('#iteretion');   ylabel('performance [MSE]');
-
-    subplot(2,2,3) % expert perf over #interation
-    plot(1:numOfIteretions,double(emptyGroupIndecator),'-o'); hold on;
-    title('indication on empty clusters: "1" means empty');
-    xlabel('#iteretion');   ylabel('"1"=empty   "0"-not empty');
-
-    subplot(2,2,4) % gateNet perf over #interation
-    plot(1:numOfIteretions,gateNN_perf_vec,'-o'); hold on;
-    title('gateNet perf (crossEntropy) over #interation');
-    xlabel('#iteretion');   ylabel('performance [MSE]');
-end 
 
 %% test group analysis:
 load('MatsRandomRes_21_12_2016.mat','results','periods');
@@ -159,14 +153,14 @@ graph_legend = {'winner takes all','chance for everybody','out = expertsOut * ga
 
 plotBars_with_errBars( means',stdevs',Names,label_Y,graph_title,graph_legend)
 %% regression graphs for the paper's algorithm:
-expertCount = 3;
-numOfIteretions = 10;
+expertCount = 10;
+numOfIteretions = 1000;
 
-[ExpertsWeights, gateWeights] = paper_MoE_train(sampl, targ, expertCount, numOfIteretions, 0.001, 0.95);
+[ExpertsWeights, gateWeights,errs] = paper_MoE_train(sampl, targ, expertCount, numOfIteretions,0.001, 0.995);
 
-[~, freq_fromNN,~] = paper_MoE_test(sampl,targ, ExpertsWeights, gateWeights,1);
+[~, freq_fromNN,g] = paper_MoE_test(sampl,targ, ExpertsWeights, gateWeights,1);
 
-[errMSE,R_squar] = NN_perf_calc(targ,freq_fromNN',1,1);
+paper_MoE_plotPerf(sampl,targ,freq_fromNN,g,errs);
 
 %% for symmetric 2neuron CPG "knee checking"
 % run many genes with similar tau,T,b,c and different a and check the period
@@ -265,27 +259,24 @@ freq_fromNN = zeros(length(expertCount),N);
 belongToExpert_vec = zeros(length(expertCount),N);
 
 for n=1:length(expertCount)   
-    if paper_MoE_flag %train the MoE with the paper's method
-        [ExpertsWeights, gateWeights] = paper_MoE_train(sampl, targ, expertCount(1,n), numOfIteretions, 0.001, 0.9995);
-        expertsWeights_store{1,n} = ExpertsWeights;
-        gateWeights_store{1,n} = gateWeights;
-    else %train the MoE with our method
-        [ expertsNN,gateNet,~,~,~,~,~,~,~] = my_MoE_train(sampl,targ,...
-        expertCount(1,n),numOfIteretions,maxEphocs,ExpertHidLayer,ExpertHidNueron,...
-        GateHidLayer,GateHidNueron,GraphicsFlag,competetiveFlag);
-    end 
-    
-    if paper_MoE_flag
-        v = [ones(1,N)*tau; ones(1,N)*b; a; ones(1,N)*c];
-        [~, freq_fromNN(n,:),g] = paper_MoE_test(v, (1./horzcat(results_2N_sim(:).periods)), ExpertsWeights, gateWeights,0);
-        clear v
-    else
-        for i=1:N
-            targ_temp = (1./horzcat(results_2N_sim(:).periods));
-            [~,~,freq_fromNN(n,i),belongToExpert_vec(n,i)] = my_MoE_testing([tau;b;a(1,i);c],targ_temp,expertsNN,...
-                                 gateNet,0,competetiveFlag);
-            clear targ_temp        
-        end
+    switch paper_MoE_flag
+        case 1 %train the MoE with the paper's method
+            [ExpertsWeights, gateWeights] = paper_MoE_train(sampl, targ, expertCount(1,n), numOfIteretions, 0.001, 0.9995);
+            expertsWeights_store{1,n} = ExpertsWeights;
+            gateWeights_store{1,n} = gateWeights;
+                    v = [ones(1,N)*tau; ones(1,N)*b; a; ones(1,N)*c];
+            [~, freq_fromNN(n,:),~] = paper_MoE_test(v, (1./horzcat(results_2N_sim(:).periods)), ExpertsWeights, gateWeights,0);
+            clear v
+        case 0  %train the MoE with our method
+            [ expertsNN,gateNet,~,~,~,Moe_perf_over_iter,~]= ...
+                my_MoE_train(sampl,targ,expertCount,numOfIteretions,maxEphocs,ExpertHidLayer,ExpertHidNueron,...
+                             GateHidLayer,GateHidNueron,competetiveFlag);
+            for i=1:N
+                targ_temp = (1./horzcat(results_2N_sim(:).periods));
+                [freq_fromNN(n,i),~,~,~,~] =...
+                    my_MoE_testNet(sampl,targ_temp,expertsNN,gateNet,competetiveFlag);
+                clear targ_temp        
+            end
     end
 end
 

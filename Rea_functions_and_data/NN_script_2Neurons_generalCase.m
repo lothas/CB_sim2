@@ -2,39 +2,13 @@ clear all; close all; clc
 
 
 %% Load Data
-load('MatsRandomRes_2Neurons_general_16_01_2017_A.mat','results')
-results1 = results; periods1 = horzcat(results(:).periods);
-clear results
-load('MatsRandomRes_2Neurons_general_16_01_2017_B.mat','results')
-results2 = results; periods2 = horzcat(results(:).periods);
-clear results
-load('MatsRandomRes_2Neurons_general_16_01_2017_C.mat','results')
-results3 = results; periods3 = horzcat(results(:).periods);
-clear results
-load('MatsRandomRes_2Neurons_general_16_01_2017_D_narrowRange.mat','results')
-results4 = results; periods4 = horzcat(results(:).periods);
-clear results
-% concetrate the data:
-results = horzcat(results1,results2,results3);%,results4);
-periods = horzcat(periods1,periods2,periods3);%,periods4);
-
-clear results1 results2 results3% results4
-clear periods1 periods2 periods3% periods4
+howMuchData = 400000;
+[results,periods]=load_data_2N_Symm_CPG(howMuchData);
 
 %% identify which neurons have periods
 ids_period = ~isnan(periods); % only ones with period
 ids_error = (max(horzcat(results(:).perError2)',[],2) < 0.001)'; % only ones with low enought error
 ids = find(ids_period & ids_error);
-
-%% prepare NN inputs and outputs:
-% parametersCells = {'tau','b','a','s'};
-% % parametersCells = {'tau','b'};
-% targetCells = {'freq'};
-% [ sampl,targ ] = prepareData_2Neurons( results,periods,ids,parametersCells,targetCells);
-% %
-% figure;
-% histogram(max(horzcat(results(ids).perError2)',[],2),1000);
-% title('Hist of period error'); xlabel('period error');
 
 parametersCells = {'tau','b','w12','w21'};
 targetCells = {'freq'};
@@ -43,7 +17,6 @@ sampl = sampl([1,2,5,6],:); % get rid of the the unimportant 'gen' (the k's for 
 targ= 1./periods(ids);
 
 clear ids_period ids_error nSims
-% clear results periods
 
 %% save to xlse file for eureqa:
 filename = 'dataMatrixXLSX_2neurons_updated.xlsx';
