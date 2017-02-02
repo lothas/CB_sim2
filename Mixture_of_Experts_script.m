@@ -46,26 +46,27 @@ clear i feat normParams
 %%
 expertCount = 3;      % how many "experts" (fitting NN)
 numOfInputs = size(parametersCells,2); %how many inputs to each expert
-maxEphocs = 200;      % max number of ephocs for each NN training
-numOfIteretions = 5;  % number of loop interations
+maxEphocs = 5;      % max number of ephocs for each NN training
+numOfIteretions = 10;  % number of loop interations
 ExpertHidLayer = 1; % num of hidden layer in each expert
-ExpertHidNueron = 5; % num of neurons in each hidden layer
+ExpertHidNueron = 10; % num of neurons in each hidden layer
 GateHidLayer = 1; % num of hidden layer in gateNN
-GateHidNueron = 5; % num of neurons in each hidden layer
-GraphicsFlag = 1; % if to plot or not
-competetiveFlag = 1; %if 1'- than the clustering is being done
-%                       by highest P takes all. if not '0' than
-%                       each sample as a chance to go to each cluster based
-%                       on the probability from the gate network
-[ expertsNN,gateNet,gateNet_perf,...
-    expert_i_GroupSize,gateNN_perf_vec,Experts_perf_mat,...
-    R_squar,errMSE,emptyGroupIndecator ] = ...
-    my_MoE_train(sampl,targ,expertCount,...
-    numOfIteretions,maxEphocs,ExpertHidLayer,ExpertHidNueron,...
-    GateHidLayer,GateHidNueron,GraphicsFlag,competetiveFlag);
+GateHidNueron = 10; % num of neurons in each hidden layer
+competetiveFlag = 3; % if '1'- "winner takes all"
+                     %    '2'- "chance for everybody"
+                     %    '3'- out = expertsOut * gateOut
+[ expertsNN,gateNet,expert_i_GroupSize,gateNN_perf_vec,Experts_perf_mat,Moe_perf_over_iter,emptyGroupIndecator ] = ...
+    my_MoE_train(sampl,targ,expertCount,numOfIteretions,maxEphocs,ExpertHidLayer,ExpertHidNueron,...
+                GateHidLayer,GateHidNueron,competetiveFlag);
 
-[~,~,~,~] = my_MoE_testing(sampl,targ,expertsNN,...
-    gateNet,1,1);
+[netOut,gateOut,targ,~,cluster_i_train_ind] = my_MoE_testNet(sampl,targ,expertsNN,...
+    gateNet,competetiveFlag);
+
+my_MoE_plotPerf(netOut,targ,gateOut,cluster_i_train_ind,Moe_perf_over_iter,...
+    gateNN_perf_vec,'both',competetiveFlag);
+
+
+[~,~] = NN_perf_calc(targ,netOut,1,0);
 
 if false % more plots:
     expertsNames = cell(1,expertCount);
@@ -104,8 +105,12 @@ ids = find(ids_period & ids_error);
 [test_sampl,test_targ ] = matsuoka_uniq(size(test_sampl,2),test_sampl,test_targ );
 clear results periods ids_period ids_error ids
 
-[R_squar_test,errMSE_test,~,belongToExpert] = my_MoE_testing(test_sampl,test_targ,expertsNN,...
-    gateNet,GraphicsFlag,competetiveFlag);
+[netOut_test,gateOut_test,targ_test,~,cluster_i_train_ind] = my_MoE_testNet(test_sampl,test_targ,expertsNN,...
+    gateNet,competetiveFlag);
+
+my_MoE_plotPerf(netOut_test,targ_test,gateOut,cluster_i_train_ind,competetiveFlag);
+
+% [errMSE,R_squar] = NN_perf_calc(targ_test,netOut_test,dispFlag,GraphicsFlag);
 %% Visualized results of NN weights:
 for j=1:expertCount
     NN_weights_matrix_plot(expertsNN{1,j},parametersCells);
@@ -115,56 +120,44 @@ end
 % compare two methodes of my MoE code. 1st method is completely competetive
 % (winner takes all) and th 2nd one is more probabilistic.
 numOfrepeats = 5;
-GraphicsFlag = 0;
 numOfIteretions = 50;  % number of loop interations
 expertCount = [2,3,4,5];      % how many "experts" (fitting NN)
-R_squar_vec_competetive = zeros(numOfrepeats,1);
-errMSE_vec_competetive = zeros(numOfrepeats,1);
-R_squar_vec_prob = zeros(numOfrepeats,length(expertCount));
-errMSE_vec_prob = zeros(numOfrepeats,length(expertCount));
-competetiveFlag = 1;
-for n=1:length(expertCount)
-    for i=1:numOfrepeats
-        [~,~,~,~,~,~,R_squar_vec_competetive(i,n),errMSE_vec_competetive(i,n),~]...
-            = my_MoE_train(sampl,targ,expertCount(1,n),...
-        numOfIteretions,maxEphocs,ExpertHidLayer,ExpertHidNueron,...
-        GateHidLayer,GateHidNueron,GraphicsFlag,competetiveFlag);
-    end
+competetiveFlag_vec = [1,2,3];
+R_squar_mat = zeros(length(competetiveFlag_vec),length(expertCount),numOfrepeats);
+errMSE_mat = zeros(length(competetiveFlag_vec),length(expertCount),numOfrepeats);
 
-    competetiveFlag = 0; 
-    for i=1:numOfrepeats
-        [~,~,~,~,~,~,R_squar_vec_prob(i,n),errMSE_vec_prob(i,n),~]...
-            = my_MoE_train(sampl,targ,expertCount(1,n),...
-        numOfIteretions,maxEphocs,ExpertHidLayer,ExpertHidNueron,...
-        GateHidLayer,GateHidNueron,GraphicsFlag,competetiveFlag);
+for k=1:length(competetiveFlag_vec)
+    competetiveFlag = competetiveFlag_vec(1,k);
+    for n=1:length(expertCount)
+        for i=1:numOfrepeats
+            [expertsNN,gateNet,~,~,~,~,~] = my_MoE_train(sampl,targ,expertCount(1,n),...
+                numOfIteretions,maxEphocs,ExpertHidLayer,ExpertHidNueron,...
+                        GateHidLayer,GateHidNueron,competetiveFlag);
+                    
+            [netOutt,gateOut,targ_temp,~,~] = my_MoE_testNet(sampl,targ,expertsNN,gateNet,competetiveFlag);
+            
+            [errMSE_mat(k,n,i),R_squar_mat(k,n,i)] = NN_perf_calc(targ_temp,netOut,0,0);                    
+        end
     end
 end
+
 % plotting bar graphs of avarge MSE + errorbars
-meanMse_comp = mean(errMSE_vec_competetive,1);
-stdMse_comp = std(errMSE_vec_competetive,0,1);
-meanMse_prob = mean(errMSE_vec_prob,1);
-stdMse_prob = std(errMSE_vec_prob,0,1);
-stdevs = [stdMse_comp;stdMse_prob];
-means = [meanMse_comp;meanMse_prob];
-% means = means';     stdevs = stdevs';
-Names={' ';'2 Experts';' ';'3 Experts';'  ';'4 Experts';' ';'5 Experts'};
-numgroups = size(means, 2); 
-numbars = size(means, 1); 
-groupwidth = min(0.8, numbars/(numbars+1.5));
-figure; hold on
-h=bar(means');
-set(gca,'XTickLabel',Names);
-set(h,'BarWidth',1);
-for k=1:numbars
-    % Based on barweb.m by Bolu Ajiboye from MATLAB File Exchange
-    x = (1:numgroups) - groupwidth/2 + (2*k-1) * groupwidth / (2*numbars);  % Aligning error bar with individual bar
-    errorbar(x, means(k,:), stdevs(k,:), 'k', 'linestyle', 'none');
-end
-legend('competetive','prob');
-ylabel('MSE');
-title('MoE with different amount of Experts');
-hold off
+meanMse_CF1 = mean(R_squar_mat(1,:,:),2); % "CF"=Competetive Flag
+stdMse_CF1 = std(errMSE_mat(1,:,:),0,2);
+meanMse_CF2 = mean(R_squar_mat(1,:,:),2); 
+stdMse_CF2 = std(errMSE_mat(1,:,:),0,2);
+meanMse_CF3 = mean(R_squar_mat(1,:,:),2);
+stdMse_CF3 = std(errMSE_mat(1,:,:),0,2);
 
+stdevs = [stdMse_CF1;stdMse_CF2;stdMse_CF3];
+means = [meanMse_CF1;meanMse_CF2;meanMse_CF3];
+
+Names={' ';'2 Experts';' ';'3 Experts';'  ';'4 Experts';' ';'5 Experts'};
+label_Y = {'MSE'};
+graph_title = {'performance over different #experts and different methods'};
+graph_legend = {'winner takes all','chance for everybody','out = expertsOut * gateOut'};
+
+plotBars_with_errBars( means',stdevs',Names,label_Y,graph_title,graph_legend)
 %% regression graphs for the paper's algorithm:
 expertCount = 3;
 numOfIteretions = 10;

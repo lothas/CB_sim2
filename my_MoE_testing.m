@@ -1,5 +1,11 @@
 function [R_squar,errMSE,netOut,belongToExpert] = my_MoE_testing(NNinputs,NNtargets,expertsNN,...
     gateNet,GraphicsFlag,competetiveFlag)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% NOTE: as from 1/2/2017 this function is obsolete!
+% DO NOT USE. use instead "my_MoE_testNet"
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 %this function train a "Mixture of Experts" newural networks
 
 % inputs:
