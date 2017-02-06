@@ -6,7 +6,8 @@ function [results_temp,periods_temp]=load_data_2N_Symm_CPG(howMuchData)
 % checking which ones hace periods!
 
 
-fileNames = {'MatsRandomRes_2Neurons_10_01_2017.mat'};
+fileNames = {'MatsRandomRes_2Neurons_symm_10_01_2017.mat';
+             'MatsRandomRes_2Neurons_symm_02_02_2017.mat'};
 
 for i=1:ceil((howMuchData/450000))
     if i>size(fileNames,1)

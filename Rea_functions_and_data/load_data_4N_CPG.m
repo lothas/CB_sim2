@@ -11,7 +11,15 @@ fileNames = {'MatsRandomRes_16_12_2016.mat';
     'MatsRandomRes_20_12_2016.mat';
     'MatsRandomRes_21_12_2016.mat';
     'MatsRandomRes_25_12_2016.mat';
-    'MatsRandomRes_27_12_2016.mat'};
+    'MatsRandomRes_27_12_2016.mat';
+    'MatsRandomRes_01_01_2016.mat';
+    'MatsRandomRes_02_01_2016.mat';
+    'MatsRandomRes_30_01_2016.mat';
+    'MatsRandomRes_31_01_2016.mat';
+    'MatsRandomRes_01_02_2016.mat';
+    'MatsRandomRes_02_02_2016.mat';
+    'MatsRandomRes_03_02_2016.mat';
+    'MatsRandomRes_04_02_2016.mat';};
 
 for i=1:ceil((howMuchData/200000))
     load(fileNames{i,1},'results','periods');

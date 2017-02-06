@@ -103,11 +103,11 @@ for i=1:numOfIteretions
     
     % calc MoE performance:
     [Moe_perf_over_iter(1,i),~] = NN_perf_calc(MoE_targ,MoE_out,0,0);
-    if Moe_perf_over_iter(1,i) < 0.001 % stopping condition on error
+    if Moe_perf_over_iter(1,i) < 0.000000001 % stopping condition on error
         disp('reached below the desired error');
         break;
     end
-    if (i > 11) && (mean(Moe_perf_over_iter(1,(i-10):i)) < 0.00001) % stopping condition on error gradient
+    if (i > 11) && (mean(Moe_perf_over_iter(1,(i-10):i)) < 0.001) % stopping condition on error gradient
         disp('reached below the desired error gradient');
         break;
     end

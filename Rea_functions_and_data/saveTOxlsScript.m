@@ -35,5 +35,5 @@ for i=1:N
     dataMatrix(i,19) = periods(v(i),1);
 end
 
-filename = 'dataMatrixXLSX.xlsx';
-xlswrite(filename,dataMatrix);
+filename = 'dataMatrixXLSX_2Nsymm.csv';
+csvwrite(filename,dataMatrix);
