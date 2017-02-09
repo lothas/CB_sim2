@@ -17,7 +17,7 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
 %         W = [];
         tau0 = 0.25; tau = 0.25;
         tav0 = 0.5; tav = 0.5;
-        tau_ratio = 2;
+        tau_ratio = 5;
         beta = 2.5;
         u0 = 1;
         win = [];

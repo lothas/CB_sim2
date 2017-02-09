@@ -1,5 +1,7 @@
-function [errMSE,R_squar] = NN_perf_calc(Targets,NNoutput,dispFlag,GraphicsFlag )
+function [errMSE,R_squar] = NN_perf_calc(Targets,NNoutput,dispFlag,GraphicsFlag,trainOrTest )
 % calculate the R^2 and MSE of a fitting neural net
+
+% trainOrTest- either 'train' or 'test'
 
 % calc R^2
 err = Targets-NNoutput;
@@ -18,7 +20,7 @@ end
 
 if GraphicsFlag
     figure;
-    plotregression(Targets,NNoutput,'Train');
+    plotregression(Targets,NNoutput,trainOrTest);
 end
 
 end

@@ -1,4 +1,4 @@
-function [ExpertsWeights, gateWeights,errs] = paper_MoE_train(sampl, targ, expertCount, maxIter, learningRate, decay)
+function [ExpertsWeights, gateWeights,errs,trainingIds,testingIds] = paper_MoE_train(sampl, targ, expertCount, maxIter, learningRate, decay)
 % based on code from the internet: https://goker.wordpress.com/2011/07/01/mixture-of-experts/
 
 % Trains a mixture of experts logistic discriminator with given number of
@@ -13,21 +13,25 @@ function [ExpertsWeights, gateWeights,errs] = paper_MoE_train(sampl, targ, exper
 
 % TODO: add option to insert initial weights for fast retraining of exsiting networks  
 
-sampl = sampl';
-targ = targ';
- 
-sampleCount = size(sampl,1);
-dim = size(sampl,2) + 1; % hidden neurons num?
-outputCount = size(targ, 2);
+[sampl_train,targ_train,trainingIds,...
+    sampl_test,targ_test,testingIds ] = divide_train_and_test(sampl,targ,0.8);
+
+sampl_train = sampl_train';
+targ_train = targ_train'; 
+
+sampleCount = size(sampl_train,1);
+dim = size(sampl_train,2) + 1; % hidden neurons num?
+outputCount = size(targ_train, 2);
  
 % add bias unit to x
-sampl = [ones(sampleCount,1) sampl];
+sampl_train = [ones(sampleCount,1) sampl_train];
  
 % initialize parameters:
+% initilize random weights by taking a random number from -1 to 1 devide by number of weights.
 % gateNet weights-
-gateWeights = (rand(expertCount, dim)*0.02)-0.01;
+gateWeights = (2*rand(expertCount, dim)-1)/size(sampl_train,2); 
 % experts weights-
-ExpertsWeights = (rand(expertCount,dim, outputCount)*0.02)-0.01;
+ExpertsWeights = (2*rand(expertCount,dim, outputCount)-1)/size(sampl_train,2);
  
 iters = 1;
 errs = zeros(maxIter, 1);
@@ -36,8 +40,8 @@ while true
     trSeq = randperm(sampleCount);
     for i=1:sampleCount
         k = trSeq(i);
-        train_sampl = sampl(k,:);
-        train_targ = targ(k,:);
+        train_sampl = sampl_train(k,:);
+        train_targ = targ_train(k,:);
         % calculate intermediate values
         g = (exp(gateWeights*train_sampl'))';
         g = g ./ sum(g);
@@ -70,7 +74,7 @@ while true
     learningRate = learningRate * decay;
     
     % calculate training set error
-    err = paper_MoE_test((sampl(:,2:dim))', targ', ExpertsWeights, gateWeights,0);
+    err = paper_MoE_test(sampl_test, targ_test, ExpertsWeights, gateWeights,0);
     
     disp(['at itre num ',num2str(iters),': Error = ', num2str(err),' learning rate is: ',num2str(learningRate)]);
     errs(iters, 1) = err;

@@ -23,7 +23,7 @@ function [err, r, g] = paper_MoE_test(sampl, targ, ExpertsWeights, gateWeights,G
     end
 
     err = sum((y - targ).^2) ./ sampleCount;
-    r = y;
+    r = y';
     
     if GraphicsFlag
         figure;

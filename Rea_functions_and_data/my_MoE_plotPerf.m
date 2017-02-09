@@ -42,11 +42,31 @@ if strcmp(testOrTrain,'test') || strcmp(testOrTrain,'both')
             subplot(2,1,2);
             bar(gateOut','stacked'); xlabel('#sample');
             legend(legendNames);
+            
+            % figure with different filled color for each "dominant expert
+            % (based on "g")
+            [g_max,g_max_ind] = max(gateOut,[],1);
+            colors = rand(expertCount,3);
+            figure; hold on
+            for j=1:expertCount
+                for i=1:size(NNoutput,2)
+                    if g_max_ind(1,i) == j
+                        if g_max(1,i) > 0.5
+                            plot(NNoutput(1,i),NNtargets(1,i),'k-o','MarkerFaceColor',colors(j,:));
+                        else
+                            plot(NNoutput(1,i),NNtargets(1,i),'k-o');
+                        end
+                    end
+                end
+            end
+            xlabel('target');    ylabel('output'); grid on;
+            title({'regression graph with different color for every dominant expert';'empty circle mean g<0.5'});
+            hold off
 
-        otherwise
-            error('wrong "competetiveFlag", try again');   
-    end
-end
+                    otherwise
+                        error('wrong "competetiveFlag", try again');   
+                end
+            end
 
 if strcmp(testOrTrain,'train') || strcmp(testOrTrain,'both')
     
@@ -84,7 +104,9 @@ if strcmp(testOrTrain,'train') || strcmp(testOrTrain,'both')
     xlabel('#iteretion');   ylabel('performance [crossentropy]');
 end
 
-[~,~] = NN_perf_calc(NNtargets,NNoutput,1,1);
+if strcmp(testOrTrain,'train') || strcmp(testOrTrain,'test')
+    [~,~] = NN_perf_calc(NNtargets,NNoutput,1,1,testOrTrain);
+end
 
 end
 

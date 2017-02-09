@@ -1,4 +1,4 @@
-function [ expertsNN,gateNet,expert_i_GroupSize,gateNN_perf_vec,Experts_perf_mat,Moe_perf_over_iter,emptyGroupIndecator ] = ...
+function [ expertsNN,gateNet,expert_i_GroupSize,gateNN_perf_vec,Experts_perf_mat,Moe_perf_over_iter,emptyGroupIndecator,trainingIds,testingIds ] = ...
     my_MoE_train(NNinputs,NNtargets,expertCount,numOfIteretions,maxEphocs,ExpertHidLayer,ExpertHidNueron,...
                 GateHidLayer,GateHidNueron,competetiveFlag)
 %this function train a "Mixture of Experts" newural networks
@@ -38,6 +38,14 @@ disp(['preparing ' ,num2str(expertCount),' Experts with ',...
 disp(['preparing gate NN with ',...
     num2str(GateHidLayer),' hidden layers and ',num2str(GateHidNueron),...
     ' neurons in each layer...']);
+
+% divide to train and test data:
+[sampl_train,targ_train,trainingIds,...
+    sampl_test,targ_test,testingIds ] = divide_train_and_test(NNinputs,NNtargets,0.8);
+NNinputs = sampl_train;
+NNtargets = targ_train; %TODO: change the names later
+NNinputs_test = sampl_test;
+NNtargets_test = targ_test;
 
 expert_i_GroupSize = zeros(expertCount,numOfIteretions); % num of samples in each expert's cluster
 outMat = zeros(expertCount,size(NNinputs,2)); % Experts output matrix 
@@ -93,26 +101,29 @@ toc
 
 disp('start training...');
 %% Train the experts and the gate NN:
+
 tic
 for i=1:numOfIteretions
     disp(['at iteration num: #',num2str(i)]);
     
-    % devide to clusters with the gate network:
-    [MoE_out,gateOut,MoE_targ,~,cluster_i__ind] = my_MoE_testNet(NNinputs,NNtargets,expertsNN,...
+    % test network to check  test_error:
+    [MoE_out,~,MoE_targ,~,~] = my_MoE_testNet(NNinputs_test,NNtargets_test,expertsNN,...
     gateNet,competetiveFlag);
-    
     % calc MoE performance:
     [Moe_perf_over_iter(1,i),~] = NN_perf_calc(MoE_targ,MoE_out,0,0);
-    if Moe_perf_over_iter(1,i) < 0.000000001 % stopping condition on error
+    if Moe_perf_over_iter(1,i) < 0.000000000001 % stopping condition on error
         disp('reached below the desired error');
         break;
     end
-    if (i > 11) && (mean(Moe_perf_over_iter(1,(i-10):i)) < 0.001) % stopping condition on error gradient
+    if (i > 11) && (mean(Moe_perf_over_iter(1,(i-10):i)) < 0.00000000001) % stopping condition on error gradient
         disp('reached below the desired error gradient');
         break;
     end
     
-    
+    % devide to clusters with the gate network:
+    [~,gateOut,~,~,cluster_i__ind] = my_MoE_testNet(NNinputs,NNtargets,expertsNN,...
+    gateNet,competetiveFlag);
+
     switch competetiveFlag
         case {1,2}
            for j=1:expertCount % check the size of each cluster

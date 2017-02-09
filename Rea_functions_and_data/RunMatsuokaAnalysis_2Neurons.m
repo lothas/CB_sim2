@@ -10,11 +10,11 @@ mamp = 0*Mamp;
 N = nAnkle+nHip;
 Mw = 10*ones(1,(2*N-1)*2*N);
 mw = 0*Mw;
-% %     % 2neuron symmetric specific range%%
-%     Keys = {'\tau_r', 'beta',     'amp_2n',        '2neuron_symm_weights', 'ks_\tau',     'ks_c', 'IC_matsuoka';
-%                   1 ,      1,          2*N,                             1,        1 ,       2*N ,            0 };
-%     Range = {  0.02 ,      1,         mamp,                             1,   -0.001 ,  -0.2*Mamp; % Min
-%                0.6  ,    8.0,         Mamp,                             6,   0.001 ,   0.2*Mamp}; % Max
+%     % 2neuron symmetric specific range%%
+    Keys = {'\tau_r', 'beta',     'amp_2n',        '2neuron_symm_weights', 'ks_\tau',     'ks_c', 'IC_matsuoka';
+                  1 ,      1,          2*N,                             1,        1 ,       2*N ,            0 };
+    Range = {  0.02 ,      1,         mamp,                             1,   -0.001 ,  -0.2*Mamp; % Min
+               0.6  ,    8.0,         Mamp,                             6,   0.001 ,   0.2*Mamp}; % Max
 
 % % %     % 2neuron general specific range%%
 % Mamp = [5,5];
