@@ -44,9 +44,36 @@ classdef myCode
                  %      net = 'feedfarward neural network;
                  %      net_perf = perfurmance structure ('tr')
                  %      hiddenNeuronNum = hidden neurons vector\
-                 
-        % parameters for use in our MoE method:
         
+        % parameters for all MoE methods:
+        expertCount = []; % the number of "experts" (each one is a NN)
+        numOfIteretions = 100; % number of training cycles
+        
+        % parameters for use in our MoE method:
+        my_MoE_out = []; % structure with fields:
+                            %   'maxEphocs' - max number of ephocs for each NN training cycle
+                            %   'ExpertHidLayer'- num of hidden layer in each expert
+                            %   'ExpertHidNueron' - num of neurons in each hidden layer
+                            %   'GateHidLayer' -num of hidden layer in gateNN
+                            %   'GateHidNueron' - num of neurons in each hidden layer
+                            %   'competetiveFlag' - our methods of training
+                            %   'expertsNN' - contains all of the experts as NN structures
+                            %   'gateNet' - contains the GateNN as a structure
+                            %   'expertsTrainData' - structure contain the training data of the experts
+                            %   'Moe_perf_over_iter' - overall MoE perf
+                            %                           over interation num
+                            %   'gateTraniData' - contain the training data of the gate
+                            %   'out_from_train' - net outputs on train group
+                            %   'out_from_test' - net outputs on test group
+                            
+                    % 'expertsTrainData' and 'gateTraniData' structure:
+                            % 'expert_i_GroupSize' - the expert cluster size over interation num
+                            % 'gateNN_perf_vec' - gateNet performance over iteration
+                            % 'Experts_perf_mat' - experts best perf (MSE) over iteration num
+                            % 'emptyGroupIndecator' - bolean matrix, '1'- every iteration that we have
+                            %                           an empty group. for comparing the perf matrix
+                            %                           sudden changes.
+
         % parameters for use in the paper MoE method:
         
         
