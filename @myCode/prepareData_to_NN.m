@@ -11,7 +11,15 @@ function [obj] = prepareData_to_NN(obj)
 % 5) 'inputsNames' - cell array contain the names of the inputs
 % 6) 'outputNames' - cell array contain the names of the outputs
 
-period = obj.periods(obj.ids);
+period = obj.periods(:,obj.ids);
+
+if (size(period,1)>1) % for the 4Nuerons case:
+    % take the periods as the mean between ankle and hip.
+    % note: a periods is selected only if they similar:
+    %   meaning, P_ankle-P_hip < epsilon
+    period = mean(period,1);
+end
+
 freq = 1./period;
 
 seqMatrix = vertcat(obj.results(obj.ids).seq)'; % extracting the parameters from the structure to a matrix

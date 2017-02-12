@@ -3,7 +3,7 @@ classdef MatsuokaML
     %   Detailed explanation goes here
     
     properties
-        nNeurons = 2;%nNeurons = 4;
+        nNeurons = 4;%nNeurons = 2;
         NN = [];
         SVM = [];
         normParams = [];

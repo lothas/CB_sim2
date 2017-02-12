@@ -84,12 +84,13 @@ else
                 MO.win = 0;
                 MO.wex = zeros(2*MO.nPulses);
                 MO.wex = [0,value(1);value(2),0];
-               
-%              case 'sym_2n_weights' % Neuron connection weights, symmetric, 2 neurons
-%                 MO.win = 0;
-%                 MO.wex = zeros(2*MO.nPulses);
-%                 MO.wex = [0,value;value,0];
-                
+                MO.win = 0;
+                MO.wex = zeros(2*MO.nPulses);
+                MO.wex = [0       ,value(1),value(2),value(3);
+                          value(1),0       ,value(4),value(5);
+                          value(2),value(4),0       ,value(6);
+                          value(3),value(5),value(6),0       ];
+
             % Controller Output
             case {'amp0', 'amp', 'c_i'} % Base neuron amplitude multiplier
                 N = length(value);
@@ -104,8 +105,11 @@ else
                 
              case 'amp_2n' % Base neuron amplitude multiplier, symmetric, 2 neurons
                 MO.Amp0 = reshape([value(1); value(1)], [], 1);
-                MO.Amp = MO.Amp0;    
+                MO.Amp = MO.Amp0;
                 
+            case 'amp_4n_symm'
+                MO.Amp0 = [value;value;value;value];
+                MO.Amp = MO.Amp0;
             % Feedback
             case {'fbtype', 'feedback', 'fb'}
                 MO.FBType = value;
