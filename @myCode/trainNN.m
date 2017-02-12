@@ -7,7 +7,9 @@ function [obj] = trainNN(obj,showWindow)
 
 obj.NN.net.trainParam.showWindow = showWindow; % dont show training window
 
-[obj.NN.net, obj.NN.net_perf] = train(obj.NN.net, obj.sampl, obj.targ);
+[obj.NN.net, obj.NN.net_perf] = train(obj.NN.net, obj.sampl_train, obj.targ_train);
 
+obj.NN.out_from_train = obj.NN.net(obj.sampl_train);
+obj.NN.out_from_test = obj.NN.net(obj.sampl_test);
 end
 
