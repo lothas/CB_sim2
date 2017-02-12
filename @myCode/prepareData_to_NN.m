@@ -36,6 +36,17 @@ w_34 = seqMatrix(strcmp('w_34',obj.seqOrder),:);
 w_41 = seqMatrix(strcmp('w_41',obj.seqOrder),:);
 w_42 = seqMatrix(strcmp('w_42',obj.seqOrder),:);
 w_43 = seqMatrix(strcmp('w_43',obj.seqOrder),:);
+
+if obj.Worig_or_What % if we want to work with the normalize Matsuoka weights:
+    Worig = [w_12;w_13;w_14;w_21;w_23;w_24;w_31;w_32;w_34;w_41;w_42;w_43];
+    c = [c_1,c_2,c_3,c_4];
+    [W_hat] = obj.Worig_to_W_hat(Worig,c);
+    w_12 = W_hat(1,:);  w_13 = W_hat(2,:);  w_14 = W_hat(3,:);
+    w_21 = W_hat(4,:);  w_23 = W_hat(5,:);  w_24 = W_hat(6,:);
+    w_31 = W_hat(7,:);  w_32 = W_hat(8,:);  w_34 = W_hat(9,:);
+    w_41 = W_hat(10,:);  w_42 = W_hat(11,:);  w_43 = W_hat(12,:);
+end
+
 sumW = sum([w_12;w_13;w_14;w_21;w_23;w_24;w_31;w_32;w_34;w_41;w_42;w_43],1);
 prodW = (prod([w_12;w_13;w_14;w_21;w_23;w_24;w_31;w_32;w_34;w_41;w_42;w_43],1)).^(1/12);
 

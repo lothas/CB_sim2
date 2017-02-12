@@ -22,7 +22,11 @@ switch varargin{1}
         end
         
     case {'paper_MoE','Jordan_papers'}
-        %
+        obj.numOfIteretions = varargin{2};
+        obj.expertCount = varargin{3};
+        obj.paper_MoE_out.learningRate = varargin{4};
+        obj.paper_MoE_out.decay = varargin{5};
+        
     otherwise
         error('input not valid!');
 end

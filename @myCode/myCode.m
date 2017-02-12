@@ -5,6 +5,7 @@ classdef myCode
         
         % data from MatsuokaML sim
         data_file_name = [];
+        Worig_or_What = false % if 'true' than training on the normalized weights
         results = []; 
         periods = [];
         ids = []; % indecies of samples with not 'NaN' period
@@ -75,7 +76,9 @@ classdef myCode
                             %                           sudden changes.
 
         % parameters for use in the paper MoE method:
-        
+        paper_MoE_out = []; % structure with fields:
+                            %   'learningRate' - the learning rate 
+                            %   'decay'- the decay of the learning rate 
         
     end
     
