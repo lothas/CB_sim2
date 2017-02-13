@@ -84,6 +84,7 @@ else
                 MO.win = 0;
                 MO.wex = zeros(2*MO.nPulses);
                 MO.wex = [0,value(1);value(2),0];
+           case '4neuron_symm_weights' % Neuron connection weights, symmetric 2neuron CPG
                 MO.win = 0;
                 MO.wex = zeros(2*MO.nPulses);
                 MO.wex = [0       ,value(1),value(2),value(3);

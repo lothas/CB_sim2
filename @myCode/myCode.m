@@ -44,7 +44,10 @@ classdef myCode
         NN = []; % structure with fields:
                  %      net = 'feedfarward neural network;
                  %      net_perf = perfurmance structure ('tr')
-                 %      hiddenNeuronNum = hidden neurons vector\
+                 %      hiddenNeuronNum = hidden neurons vector
+                 %      out_from_train = NN output from train group
+                 %      out_from_test = NN output from test group
+                 %      MSE_test_perf = NN perf (MSE) on test group
         
         % parameters for all MoE methods:
         expertCount = []; % the number of "experts" (each one is a NN)
@@ -117,6 +120,16 @@ classdef myCode
             % get the Ids of only the ones with period (not 'NaN')
             ids_period = ~isnan(periods); 
             ids_error = (max(horzcat(results(:).perError2)',[],2) < 0.001)'; % only ones with low enought error
+            
+            if (size(periods,1)>1) % for the 4Nuerons case:
+                % take only sample with the same periods in ankle and hip
+                ids_similiar_periods = (periods(1,:)-periods(2,:)) < 0.1;
+                % take only samples that don't have NaN in any joint
+                ids_period = ids_period(1,:) & ids_period(2,:);
+                % combain the two:
+                ids_period = ids_similiar_periods & ids_period;
+                
+            end
             obj.ids = find(ids_period & ids_error);
         end
         

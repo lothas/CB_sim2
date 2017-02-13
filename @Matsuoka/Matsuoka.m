@@ -6,7 +6,7 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
     properties
         name = 'Matsuoka'
         
-        % Parameters
+        % Parameters fo 4 nueons CPG
 %         tau0 = 1; tau = 1;
 %         tav0 = 1; tav = 1;
 %         tau_ratio = 5;
@@ -15,6 +15,8 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
 %         win = [0, 3; 1, 0];
 %         wex = [];
 %         W = [];
+        
+        % Parameters fo 2 nueons CPG
         tau0 = 0.25; tau = 0.25;
         tav0 = 0.5; tav = 0.5;
         tau_ratio = 5;
@@ -62,7 +64,8 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
             'fbtype', 'feedback', 'fb', ...
             'ks_tau', 'speed_tau', 'tau_speed_gain', 'ks_\tau', ...
             'ks_out', 'speed_out', 'torque_speed_gain', 'ks_c',...
-            '2neuron_symm_weights','amp_2n','2neuron_general_weights'};
+            '2neuron_symm_weights','amp_2n','2neuron_general_weights'...
+            '4neuron_symm_weights','amp_4n_symm'};
     end
     
     methods

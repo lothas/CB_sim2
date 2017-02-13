@@ -56,6 +56,27 @@ for i=1:length(graphKeys)
             legend(legendNames);
             title('gate output over sample num - train');
             
+        case{'reg_with_color'}
+            % figure with different filled color for each "dominant expert
+            % (based on "g")
+            [g_max,g_max_ind] = max(gateOut_test,[],1);
+            colors = rand(expertCount,3);
+            figure; hold on
+            for j=1:expertCount
+                for i=1:size(targ_test,2)
+                    if g_max_ind(1,i) == j
+                        if g_max(1,i) > 0.5
+                            plot(targ_test(1,i),netOut_test(1,i),'k-o','MarkerFaceColor',colors(j,:));
+                        else
+                            plot(targ_test(1,i),netOut_test(1,i),'k-o');
+                        end
+                    end
+                end
+            end
+            xlabel('target');    ylabel('output'); grid on;
+            title({'regression graph with different color for every dominant expert';'empty circle mean g<0.5'});
+            hold off
+            
         case {'reg_graph_from_NNtoolbox'}
             % regression as plotted from NN toolbox
                 figure;
