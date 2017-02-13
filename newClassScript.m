@@ -3,7 +3,9 @@ clear all; close all; clc
 
 
 %% 2N symmetric
-fileName = 'MatsRandomRes_2Neurons_change_only_a.mat';
+% fileName = 'MatsRandomRes_2Neurons_change_only_a.mat';
+fileName = {'MatsRandomRes_2Neurons_symm_trainData_wide_range.mat',...
+    'MatsRandomRes_2Neurons_symm_testData.mat'};
 parametersCells = {'tau','b','a','s'};
 targetCells = {'freq'};
 seqOrder = {'tau','b','s','_','a'}; %'_' - dont care parameter
@@ -34,12 +36,12 @@ clear fileName parametersCells targetCells seqOrder
 
 problemType = '4N_symm';
 %% with NN:
-myCode = myCode.Set('NN',[5],100);
+myCode = myCode.Set('NN',[2],100);
 myCode = myCode.trainNN(0);
 myCode.plot_fit_data('NN',problemType);
 %% with my_MoE
 competetiveflag = 3;
-myCode = myCode.Set('our_MoE',5,3,[2],[2],5,competetiveflag);
+myCode = myCode.Set('our_MoE',15,5,[2],[5],5,competetiveflag);
 myCode = myCode.my_MoE_train();
 myCode.my_MoE_plot_train_perf();
 myCode.my_MoE_testNet(myCode.sampl_test,myCode.targ_test,myCode.my_MoE_out.expertsNN,...

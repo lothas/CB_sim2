@@ -5,6 +5,7 @@ classdef myCode
         
         % data from MatsuokaML sim
         data_file_name = [];
+        sampl_num_in_files = []; % if more than one file. than contain the number of samples in each file
         Worig_or_What = false % if 'true' than training on the normalized weights
         results = []; 
         periods = [];
@@ -109,8 +110,23 @@ classdef myCode
         end
         
         % %%% % load data to class % %%% %
-        function [obj] = load_data(obj,fileName)
-            load(fileName,'results');
+        function [obj] = load_data(obj,fileName) 
+            if size(fileName,2)==2
+                % we give 2 file names then the 1st one will be the train
+                % and the 2nd one will be the test.
+                load(fileName{1,1},'results')
+                results1 = results;     clear results
+                
+                load(fileName{1,2},'results')
+                results2 = results;     clear results
+                
+                results = horzcat(results1,results2);
+                
+            else
+                load(fileName,'results');
+                obj.sampl_num_in_files = length(results);
+            end
+            
             obj.results = results;
             periods = horzcat(results(:).periods);
             obj.periods = periods;
@@ -131,6 +147,14 @@ classdef myCode
                 
             end
             obj.ids = find(ids_period & ids_error);
+            
+            if size(fileName,2)==2
+                % get the number of samples in each group
+                sampl_num_in_files = zeros(1,2);
+                sampl_num_in_files(1,1) = length(find(obj.ids < length(results1)));
+                sampl_num_in_files(1,2) = length(find(obj.ids > length(results1)));
+                obj.sampl_num_in_files = sampl_num_in_files;
+            end
         end
         
         % normalize the data by ( x_norm = (x-x_mean)/stdev(x) )  

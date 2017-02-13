@@ -60,6 +60,14 @@ for i=1:numOfIteretions
     [netOut_train,gateOut,~,cluster_i__ind] = obj.my_MoE_testNet(sampl_train,targ_train,expertsNN,...
     gateNet,competetiveFlag,0);
 
+    % run each expert on the entire data:
+    for j=1:expertCount
+        tempNet = expertsNN{1,j};
+        outMat(j,:) = tempNet(sampl_train);
+        errMat(j,:) = outMat(j,:) - targ_train;
+    end
+    seMat = errMat.^2; % squar error
+            
     switch competetiveFlag
         case {1,2}
            for j=1:expertCount % check the size of each cluster
@@ -86,13 +94,6 @@ for i=1:numOfIteretions
                 Experts_perf_mat(j,i) = trExpertPerf_temp.best_perf;
             end
             
-            % run each expert on the entire data:
-            for j=1:expertCount
-                tempNet = expertsNN{1,j};
-                outMat(j,:) = tempNet(sampl_train);
-                errMat(j,:) = outMat(j,:) - targ_train;
-            end
-            seMat = errMat.^2; % squar error
             [~,best_expert_ind] = min(seMat,[],1);
 
             % retrain gate network:
@@ -106,14 +107,10 @@ for i=1:numOfIteretions
             % change the importance of each Target based on the probability
             % of this sample to belong to a certain expert.
             % note: exprimental code, use with caution!
-            ExpertsOuts = zeros(expertCount,num_of_train_samples);
             fh = zeros(expertCount,num_of_train_samples);
             g = gateOut;
-            for j=1:expertCount
-                tempNet = expertsNN{1,j};
-                ExpertsOuts(j,:) = tempNet(sampl_train);
-            end
-            yStar_yi = (repmat(targ_train,expertCount,1) - ExpertsOuts).^2;
+
+            yStar_yi = seMat;
             
             for k=1:size(targ_train,2)
                 fh(:,k) = g(:,k) .* exp(-0.5 .* yStar_yi(:,k) );
@@ -125,16 +122,19 @@ for i=1:numOfIteretions
                 [expertsNN{1,j}, expertsNN{2,j}] = train(tempNet,...
                         sampl_train, targ_train,[],[],errorWeights);
             end
-            [fhMax,fhMaxIndex] = max(fh,[],1);
-            % 'fh' becomes the target of the gate network by taking the max
-            % of 'fh' => '1' all other in row => '0'
-            gateNet_targ = zeros(expertCount,num_of_train_samples);
-            gateNet_targ(:,fhMaxIndex) = 1;
+%             [fhMax,fhMaxIndex] = max(fh,[],1);
+%             % 'fh' becomes the target of the gate network by taking the max
+%             % of 'fh' => '1' all other in row => '0'
+%             gateNet_targ = zeros(expertCount,num_of_train_samples);
+%             gateNet_targ(:,fhMaxIndex) = 1;
+%             
+%             % 'fh' is also the "errorWeigths" for the training of the gate
+%             % network.
+%             
+%             [gateNet,gateNet_perf] = train(gateNet,sampl_train,gateNet_targ,[],[],fhMax);
+%             gateNN_perf_vec(1,i) = gateNet_perf.best_perf;
             
-            % 'fh' is also the "errorWeigths" for the training of the gate
-            % network.
-            
-            [gateNet,gateNet_perf] = train(gateNet,sampl_train,gateNet_targ,[],[],fhMax);
+            [gateNet,gateNet_perf] = train(gateNet,sampl_train,fh);
             gateNN_perf_vec(1,i) = gateNet_perf.best_perf;
             
         otherwise

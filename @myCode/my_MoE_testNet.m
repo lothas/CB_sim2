@@ -60,7 +60,7 @@ switch competetiveFlag
             tempNet = expertsNN{1,j};
             expertsOut(j,:) = tempNet(NNinputs);
         end
-        for j=1:size(NNtargets,2)
+        for j=1:num_of_samples
             netOut(1,j) = (expertsOut(:,j))'*gateOut(:,j);
         end
     otherwise

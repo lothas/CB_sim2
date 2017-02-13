@@ -10,18 +10,18 @@ mamp = 0*Mamp;
 N = nAnkle+nHip;
 Mw = 10*ones(1,(2*N-1)*2*N);
 mw = 0*Mw;
-% % %     % 2neuron symmetric specific range%%
-% %     Keys = {'\tau_r', 'beta',     'amp_2n',        '2neuron_symm_weights', 'ks_\tau',     'ks_c', 'IC_matsuoka';
-% %                   1 ,      1,          2*N,                             1,        1 ,       2*N ,            0 };
-% %     Range = {  0.02 ,      1,         mamp,                             1,   -0.001 ,  -0.2*Mamp; % Min
-% %                0.6  ,    8.0,         Mamp,                             6,   0.001 ,   0.2*Mamp}; % Max
+%     % 2neuron symmetric specific range%%
+    Keys = {'\tau_r', 'beta',     'amp_2n',        '2neuron_symm_weights', 'ks_\tau',     'ks_c', 'IC_matsuoka';
+                  1 ,      1,          2*N,                             1,        1 ,       2*N ,            0 };
+    Range = {  0.02 ,      1,         mamp,                             1,   -0.001 ,  -0.2*Mamp; % Min
+               0.6  ,    5.0,         Mamp,                             6,   0.001 ,   0.2*Mamp}; % Max
 
-% %     % 2neuron general specific range%%
-Keys = {'\tau_r', 'beta',        'amp',        '2neuron_general_weights', 'ks_\tau',     'ks_c', 'IC_matsuoka';
-              1 ,      1,          2*N,                                2,        1 ,       2*N ,            0 };
-Range = {  0.1 ,       0,         mamp,                            [1,1],   -0.001 ,  -0.2*Mamp; % Min
-           0.5  ,      5,         Mamp,                            [4,4],   0.001 ,   0.2*Mamp}; % Max
-           
+% % %     % 2neuron general specific range%%
+% Keys = {'\tau_r', 'beta',        'amp',        '2neuron_general_weights', 'ks_\tau',     'ks_c', 'IC_matsuoka';
+%               1 ,      1,          2*N,                                2,        1 ,       2*N ,            0 };
+% Range = {  0.1 ,       0,         mamp,                            [1,1],   -0.001 ,  -0.2*Mamp; % Min
+%            0.5  ,      5,         Mamp,                            [4,4],   0.001 ,   0.2*Mamp}; % Max
+%            
 MutDelta0 = 0.04;   MutDelta1 = 0.02;
 
 save(genome_file, 'nAnkle', 'nHip', 'maxAnkle', 'maxHip', ...
