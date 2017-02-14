@@ -11,6 +11,11 @@ function [obj] = paper_MoE_train(obj)
 sampl_train = (obj.sampl_train)';
 targ_train = (obj.targ_train)';
 
+% the validation samples were not transposed becasuse they are transposed in the
+% test function.
+sampl_valid = obj.sampl_valid;
+targ_valid = obj.targ_valid;
+
 % the test samples were not transposed becasuse they are transposed in the
 % test function.
 sampl_test = obj.sampl_test;
@@ -69,7 +74,7 @@ while true
     learningRate = learningRate * decay;
     
     % calculate training set error
-    err = obj.paper_MoE_test(sampl_test, targ_test, ExpertsWeights, gateWeights,0);
+    err = obj.paper_MoE_test(sampl_valid, targ_valid, ExpertsWeights, gateWeights,0);
     
     disp(['at itre num ',num2str(iters),': Error = ', num2str(err),' learning rate is: ',num2str(learningRate)]);
     errs(iters, 1) = err;
@@ -88,12 +93,15 @@ while true
 %     end
 end
 
-[~, netOut_test, gateOut_test] = obj.paper_MoE_test(sampl_test, targ_test, ExpertsWeights, gateWeights,0);
 [~, netOut_train, gateOut_train] = obj.paper_MoE_test(obj.sampl_train, obj.targ_train, ExpertsWeights, gateWeights,0);
+[~, netOut_valid, gateOut_valid] = obj.paper_MoE_test(obj.sampl_valid, obj.targ_valid, ExpertsWeights, gateWeights,0);
+[~, netOut_test, gateOut_test] = obj.paper_MoE_test(sampl_test, targ_test, ExpertsWeights, gateWeights,0);
 
 obj.paper_MoE_out.out_from_train = netOut_train;
+obj.paper_MoE_out.out_from_valid = netOut_valid;
 obj.paper_MoE_out.out_from_test = netOut_test;
 obj.paper_MoE_out.gateOut_from_train = gateOut_train;
+obj.paper_MoE_out.gateOut_from_valid = gateOut_valid;
 obj.paper_MoE_out.gateOut_from_test = gateOut_test;
 
 obj.paper_MoE_out.Moe_perf_over_iter = errs';

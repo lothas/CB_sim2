@@ -7,7 +7,6 @@ switch varargin{1}
         obj.NN.net = feedforwardnet(varargin{2});
         obj.numOfIteretions = varargin{3};
         obj.NN.net.trainParam.epochs = varargin{3};
-        obj.NN.net.divideMode = 'none'; % all data to training
         
     case {'my_MoE','our_MoE'}
         if nargin == 8

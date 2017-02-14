@@ -1,4 +1,4 @@
-function my_MoE_plot_test_perf(obj,expertCount,NNoutput,NNtargets,cluster_i_train_ind,gateOut,competetiveFlag)
+function my_MoE_plot_test_perf(expertCount,NNoutput,NNtargets,cluster_i_train_ind,gateOut,competetiveFlag)
 % plot only graphs which are relevant to training sessions:
 
 switch expertCount

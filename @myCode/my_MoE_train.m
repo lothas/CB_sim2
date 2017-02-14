@@ -3,6 +3,8 @@ function [obj] = my_MoE_train(obj)
 
 sampl_train = obj.sampl_train;
 targ_train = obj.targ_train;
+sampl_valid = obj.sampl_valid;
+targ_valid = obj.targ_valid;
 sampl_test = obj.sampl_test;
 targ_test = obj.targ_test;
 
@@ -41,12 +43,12 @@ tic
 for i=1:numOfIteretions
     disp(['at iteration num: #',num2str(i)]);
     
-    % test network to check  test_error:
-    [MoE_out_test,~,~,~] = obj.my_MoE_testNet(sampl_test,targ_test,expertsNN,...
+    % test network to check  validation_error:
+    [MoE_out_valid,~,~,~] = obj.my_MoE_testNet(sampl_valid,targ_valid,expertsNN,...
     gateNet,competetiveFlag,0);
 
     % calc MoE performance to check wether to stop the training:
-    [Moe_perf_over_iter(1,i),~] = obj.NN_perf_calc(targ_test,MoE_out_test,0,0);
+    [Moe_perf_over_iter(1,i),~] = obj.NN_perf_calc(targ_valid,MoE_out_valid,0,0);
     if Moe_perf_over_iter(1,i) < 0.000000000001 % stopping condition on error
         disp('reached below the desired error');
         break;
@@ -149,6 +151,11 @@ obj.my_MoE_out.gateNet = gateNet;
 obj.my_MoE_out.Moe_perf_over_iter = Moe_perf_over_iter;
 obj.my_MoE_out.gateTraniData.gateNN_perf_vec = gateNN_perf_vec;
 obj.my_MoE_out.out_from_train = netOut_train;
+obj.my_MoE_out.out_from_valid = MoE_out_valid;
+
+% test network to check test error:
+    [MoE_out_test,~,~,~] = obj.my_MoE_testNet(sampl_test,targ_test,expertsNN,...
+    gateNet,competetiveFlag,0);
 obj.my_MoE_out.out_from_test = MoE_out_test;
 
 switch competetiveFlag

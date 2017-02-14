@@ -42,6 +42,7 @@ xlabel('#iteretion');   ylabel('performance [crossentropy]');
 
 figure;
 plotregression(obj.targ_train,obj.my_MoE_out.out_from_train,'train',...
+    obj.targ_valid,obj.my_MoE_out.out_from_valid,'validation',...
     obj.targ_test,obj.my_MoE_out.out_from_test,'test');
 
 end

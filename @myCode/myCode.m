@@ -7,8 +7,8 @@ classdef myCode
         data_file_name = [];
         sampl_num_in_files = []; % if more than one file. than contain the number of samples in each file
         Worig_or_What = false % if 'true' than training on the normalized weights
-        results = []; 
-        periods = [];
+        sim_results = [];   
+        sim_periods = [];
         ids = []; % indecies of samples with not 'NaN' period
         
         % names of inputs and outputs:
@@ -28,14 +28,19 @@ classdef myCode
         % 'period','freq' (also every input can be defined as output).
         
 
-        
-        sampl = []; % the inputs to the NN
-        targ = []; % the targets to the NN
-        train2test_ratio = 0.8; % the ratio between training group and test group for the MoE training
+        unGroupted_data = [] % save the data in its undevided form for futuer bug checkig the the
+                             % devision to train, validation and test.
+        train_ratio = 0.6; % the % of samples in the train group
+        valid_ratio = 0.2; % the % of samples in the validation group
+        %note: the rest will go to the test group
         
         sampl_train = []; %training group
         targ_train = [];
         train_ind = []; % indecies for training group
+        
+        sampl_valid = []; %validation group
+        targ_valid = [];
+        valid_ind = []; % indecies for validation group
         
         sampl_test = []; %test group
         targ_test = [];
@@ -100,7 +105,7 @@ classdef myCode
                     obj.outputNames = varargin{3};
                     
                     obj.seqOrder =  varargin{4};
-                    obj = prepareData_to_NN(obj);
+                    
                     obj = divide_train_and_test(obj);
                     
                 otherwise
@@ -111,33 +116,90 @@ classdef myCode
         
         % %%% % load data to class % %%% %
         function [obj] = load_data(obj,fileName) 
-            if size(fileName,2)==2
-                % we give 2 file names then the 1st one will be the train
-                % and the 2nd one will be the test.
-                load(fileName{1,1},'results')
-                results1 = results;     clear results
-                
-                load(fileName{1,2},'results')
-                results2 = results;     clear results
-                
-                results = horzcat(results1,results2);
-                
-            else
-                load(fileName,'results');
-                obj.sampl_num_in_files = length(results);
+            switch size(fileName,2)
+                case 1
+                    load(fileName,'results');
+                    obj.sampl_num_in_files = length(results);
+                    [periods,good_ids] = obj.filter_Nan_periods_and_get_ids(results);
+                    obj.sim_periods = periods;
+                    obj.sim_results = results;
+                    obj.ids = good_ids;
+                    
+                case 2
+                    % if we give 2 file names then the 1st one will
+                    %devide randomly to train and validation
+                    % and the 2nd will be the test.
+                    
+                    % prepare the vector with the the amount of "good ids"
+                    % in each data file:
+                    sampl_num_in_files_temp = zeros(1,2);
+                    
+                    load(fileName{1,1},'results')
+                    obj.sim_results.results_train_and_valid = results;
+                    [periods_tr_val,ids_tr_val] = obj.filter_Nan_periods_and_get_ids(results);
+                    obj.sim_periods.periods_train_and_valid = periods_tr_val;
+                    obj.ids.ids_train_and_val = ids_tr_val;
+                    sampl_num_in_files_temp(1,1) = length(ids_tr_val);
+                    clear results
+                    
+                    load(fileName{1,2},'results')
+                    obj.sim_results.results_test = results;
+                    [periods_test,ids_test] = obj.filter_Nan_periods_and_get_ids(results);
+                    obj.sim_periods.periods_test = periods_test;
+                    obj.ids.ids_test = ids_test;
+                    sampl_num_in_files_temp(1,2) = length(ids_test);
+                    clear results
+                                   
+                case 3
+                    % if we give 3 file names then the 1st one will be the
+                    % train, the 2nd one will be validation and the 3rd
+                    % will be the test
+                    sampl_num_in_files_temp = zeros(1,3);
+                    
+                    load(fileName{1,1},'results')
+                    obj.sim_results.results_train = results;
+                    [periods_tr,ids_tr] = obj.filter_Nan_periods_and_get_ids(results);
+                    obj.sim_periods.periods_train = periods_tr;
+                    obj.ids.ids_train = ids_tr;
+                    sampl_num_in_files_temp(1,1) = length(ids_tr);
+                    clear results
+                    
+                    load(fileName{1,2},'results')
+                    obj.sim_results.results__valid = results;
+                    [periods_val,ids_val] = obj.filter_Nan_periods_and_get_ids(results);
+                    obj.sim_periods.periods_valid = periods_val;
+                    obj.ids.ids_val = ids_val;
+                    sampl_num_in_files_temp(1,2) = length(ids_val);
+                    clear results
+                    
+                    load(fileName{1,3},'results')
+                    obj.sim_results.results_test = results;
+                    [periods_test,ids_test] = obj.filter_Nan_periods_and_get_ids(results);
+                    obj.sim_periods.periods_test = periods_test;
+                    obj.ids.ids_test = ids_test;
+                    sampl_num_in_files_temp(1,3) = length(ids_test);
+                    clear results
+                    
             end
-            
-            obj.results = results;
+            obj.sampl_num_in_files = sampl_num_in_files_temp;
+        end
+
+        
+        function [periods,ids] = filter_Nan_periods_and_get_ids(obj,results)
+            % extract the periods:
             periods = horzcat(results(:).periods);
-            obj.periods = periods;
+            
             % TODO: check if in the 4 neurons case the periods from results
             %        is matched.
             
             % get the Ids of only the ones with period (not 'NaN')
-            ids_period = ~isnan(periods); 
-            ids_error = (max(horzcat(results(:).perError2)',[],2) < 0.001)'; % only ones with low enought error
+            ids_period = ~isnan(periods);
+            % only ones with low enought error
+            ids_error = (max(horzcat(results(:).perError2)',[],2) < 0.001)';
             
-            if (size(periods,1)>1) % for the 4Nuerons case:
+            % for the 4Nuerons case the period contain two rows,
+            %    one for the hip signal and one for the ankle signal:
+            if (size(periods,1)>1) 
                 % take only sample with the same periods in ankle and hip
                 ids_similiar_periods = (periods(1,:)-periods(2,:)) < 0.1;
                 % take only samples that don't have NaN in any joint
@@ -146,15 +208,7 @@ classdef myCode
                 ids_period = ids_similiar_periods & ids_period;
                 
             end
-            obj.ids = find(ids_period & ids_error);
-            
-            if size(fileName,2)==2
-                % get the number of samples in each group
-                sampl_num_in_files = zeros(1,2);
-                sampl_num_in_files(1,1) = length(find(obj.ids < length(results1)));
-                sampl_num_in_files(1,2) = length(find(obj.ids > length(results1)));
-                obj.sampl_num_in_files = sampl_num_in_files;
-            end
+            ids = find(ids_period & ids_error);         
         end
         
         % normalize the data by ( x_norm = (x-x_mean)/stdev(x) )  

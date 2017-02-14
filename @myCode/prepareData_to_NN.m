@@ -1,4 +1,4 @@
-function [obj] = prepareData_to_NN(obj)
+function [sampl,targ] = prepareData_to_NN(obj,results,periods,ids)
 % this function takes the results structure and extract the relevant data
 % to matrix.
 
@@ -11,7 +11,8 @@ function [obj] = prepareData_to_NN(obj)
 % 5) 'inputsNames' - cell array contain the names of the inputs
 % 6) 'outputNames' - cell array contain the names of the outputs
 
-period = obj.periods(:,obj.ids);
+
+period = periods(:,ids);
 
 if (size(period,1)>1) % for the 4Nuerons case:
     % take the periods as the mean between ankle and hip.
@@ -22,7 +23,7 @@ end
 
 freq = 1./period;
 
-seqMatrix = vertcat(obj.results(obj.ids).seq)'; % extracting the parameters from the structure to a matrix
+seqMatrix = vertcat(results(ids).seq)'; % extracting the parameters from the structure to a matrix
 
 tau = seqMatrix(strcmp('tau',obj.seqOrder),:);
 b = seqMatrix(strcmp('b',obj.seqOrder),:);
@@ -141,10 +142,10 @@ for k=1:2
     end
     
     if k == 1 %define inputs
-        obj.sampl = temp;
+        sampl = temp;
         clear temp
     else %define outputs
-        obj.targ = temp;
+        targ = temp;
     end
 end
 
