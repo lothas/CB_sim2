@@ -15,26 +15,34 @@ targ = horzcat(obj.targ_train,obj.targ_valid,obj.targ_test);
 obj.NN.net.divideFcn = 'divideind';
 obj.NN.net.divideParam.trainInd = 1:trainSize;
 obj.NN.net.divideParam.valInd   = trainSize+1:(trainSize+validSize);
-obj.NN.net.divideParam.testInd  = (trainSize+validSize+1)+size(sampl,2);
+obj.NN.net.divideParam.testInd  = (trainSize+validSize+1):size(sampl,2);
  
 %  obj.NN.net.divideMode = 'none'; % all data to training
  
-disp('training neural network...');
+if obj.disp_information
+    disp('training neural network...');
+end
+
 [obj.NN.net, obj.NN.net_perf] = train(obj.NN.net, sampl, targ);
 
 obj.NN.out_from_train = obj.NN.net(obj.sampl_train);
-obj.NN.out_from_validation = obj.NN.net(obj.sampl_valid);
+obj.NN.out_from_valid = obj.NN.net(obj.sampl_valid);
 obj.NN.out_from_test = obj.NN.net(obj.sampl_test);
-
-figure;
-plotregression(obj.targ_train,obj.NN.out_from_train,'train',...
-    obj.targ_valid,obj.NN.out_from_valid,'validation',...
-    obj.targ_test,obj.NN.out_from_test,'test');
 
 % Calc test MSE:
 [errMSE,~] = obj.NN_perf_calc(obj.targ_test,obj.NN.out_from_test,0,0,'test');
-disp(['NN MSE on test group is: ',num2str(errMSE)]);
+obj.NN.MSE_test_perf = errMSE;
 
+if obj.disp_information
+    figure;
+    plotregression(obj.targ_train,obj.NN.out_from_train,'train',...
+        obj.targ_valid,obj.NN.out_from_valid,'validation',...
+        obj.targ_test,obj.NN.out_from_test,'test');
+
+
+    disp(['NN MSE on test group is: ',num2str(errMSE)]);
+
+end
 obj.NN.MSE_test_perf = errMSE;
 end
 

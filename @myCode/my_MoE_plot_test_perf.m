@@ -1,4 +1,4 @@
-function my_MoE_plot_test_perf(expertCount,NNoutput,NNtargets,cluster_i_train_ind,gateOut,competetiveFlag)
+function my_MoE_plot_test_perf(obj,expertCount,NNoutput,NNtargets,cluster_i_train_ind,gateOut,competetiveFlag)
 % plot only graphs which are relevant to training sessions:
 
 switch expertCount
@@ -18,11 +18,13 @@ switch competetiveFlag
         % plot the regression graph and color each expert's cluster in a different color 
         figure; hold on
         for j=1:expertCount
-            out_temp = NNoutput(:,cluster_i_train_ind{1,j});
-            targ_temp = NNtargets(:,cluster_i_train_ind{1,j});
+            if length(cluster_i_train_ind{1,j}) > 0
+                out_temp = NNoutput(:,cluster_i_train_ind{1,j});
+                targ_temp = NNtargets(:,cluster_i_train_ind{1,j});
 
-            h = plot(targ_temp,out_temp,'Color',colors(j,:),'LineStyle','none');
-            h.Marker = 'o';
+                h = plot(targ_temp,out_temp,'Color',colors(j,:),'LineStyle','none');
+                h.Marker = 'o';
+            end
         end
         hold off;
         xlabel('targets'); ylabel('ouput'); legend(legendNames);
@@ -43,15 +45,14 @@ switch competetiveFlag
         % figure with different filled color for each "dominant expert
         % (based on "g")
         [g_max,g_max_ind] = max(gateOut,[],1);
-        colors = rand(expertCount,3);
         figure; hold on
         for j=1:expertCount
             for i=1:size(NNoutput,2)
                 if g_max_ind(1,i) == j
                     if g_max(1,i) > 0.5
-                        plot(NNoutput(1,i),NNtargets(1,i),'k-o','MarkerFaceColor',colors(j,:));
+                        plot(NNtargets(1,i),NNoutput(1,i),'k-o','MarkerFaceColor',colors(j,:));
                     else
-                        plot(NNoutput(1,i),NNtargets(1,i),'k-o');
+                        plot(NNtargets(1,i),NNoutput(1,i),'k-o');
                     end
                 end
             end

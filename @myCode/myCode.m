@@ -1,7 +1,9 @@
-classdef myCode
+classdef myCode < handle & matlab.mixin.Copyable
     % this class contains all nof my functions for NN,MoE analisys
     
     properties
+        
+        disp_information = false; %wether to display information or not
         
         % data from MatsuokaML sim
         data_file_name = [];
@@ -117,14 +119,6 @@ classdef myCode
         % %%% % load data to class % %%% %
         function [obj] = load_data(obj,fileName) 
             switch size(fileName,2)
-                case 1
-                    load(fileName,'results');
-                    obj.sampl_num_in_files = length(results);
-                    [periods,good_ids] = obj.filter_Nan_periods_and_get_ids(results);
-                    obj.sim_periods = periods;
-                    obj.sim_results = results;
-                    obj.ids = good_ids;
-                    
                 case 2
                     % if we give 2 file names then the 1st one will
                     %devide randomly to train and validation
@@ -179,6 +173,15 @@ classdef myCode
                     obj.ids.ids_test = ids_test;
                     sampl_num_in_files_temp(1,3) = length(ids_test);
                     clear results
+                otherwise % is file name is a char, then size return the number of latter which is almost alway more than 3:)
+                    load(fileName,'results');
+                    obj.sampl_num_in_files = length(results);
+                    [periods,good_ids] = obj.filter_Nan_periods_and_get_ids(results);
+                    obj.sim_periods = periods;
+                    obj.sim_results = results;
+                    obj.ids = good_ids;
+                    
+                    sampl_num_in_files_temp = length(good_ids);
                     
             end
             obj.sampl_num_in_files = sampl_num_in_files_temp;

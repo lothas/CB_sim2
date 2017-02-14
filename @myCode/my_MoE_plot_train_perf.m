@@ -37,7 +37,7 @@ title('total MSE error over #iteration');
 
 subplot(2,1,2) % gateNet perf over #interation
 plot(iterNum,obj.my_MoE_out.gateTraniData.gateNN_perf_vec,'-o'); hold on;
-title('gateNet perf (crossEntropy) over #interation');
+title('gateNet perf (MSE) over #interation');
 xlabel('#iteretion');   ylabel('performance [crossentropy]');
 
 figure;

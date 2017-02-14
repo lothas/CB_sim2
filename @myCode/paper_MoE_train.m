@@ -76,7 +76,10 @@ while true
     % calculate training set error
     err = obj.paper_MoE_test(sampl_valid, targ_valid, ExpertsWeights, gateWeights,0);
     
-    disp(['at itre num ',num2str(iters),': Error = ', num2str(err),' learning rate is: ',num2str(learningRate)]);
+    if obj.disp_information
+        disp(['at itre num ',num2str(iters),': Error = ', num2str(err),' learning rate is: ',num2str(learningRate)]);
+    end
+    
     errs(iters, 1) = err;
     % take average error of last five runs
     si = (((iters - 5) >= 0) * (iters - 5)) + 1;
@@ -84,7 +87,9 @@ while true
     iters = iters + 1;    
     % check stop condition
     if iters > obj.numOfIteretions
-        fprintf('Max Iterations Reached\n');
+        if obj.disp_information
+            fprintf('Max Iterations Reached\n');
+        end
         break;
     end
 %     if err < 1e-6 || sum( errs(si:li,:) ) < sum( errs(si+1:li+1,:) )

@@ -4,26 +4,6 @@ function [obj] = divide_train_and_test(obj)
 % ratio - the % of data in training group
 
 switch size(obj.data_file_name,2)
-    case 1 %divide the groups randomly
-        % then divide the data randomly to train and test
-        samplesNum = obj.sampl_num_in_files
-        
-        randIds = randsample(samplesNum,samplesNum);
-        trainingSize = floor(obj.train_ratio*samplesNum);
-        validSize = floor(obj.valid_ratio*samplesNum);
-
-        trainingIds = randIds(1:trainingSize);
-        validationIds = randIds((trainingSize+1):(validSize+trainingSize));
-        testingIds = randIds(validSize+trainingSize:end);
-        
-        [sampl,targ] = obj.prepareData_to_NN(obj.results,obj.periods,obj.ids);
-        obj.sampl_train = sampl(:,trainingIds);
-        obj.targ_train = targ(:,trainingIds);
-        obj.sampl_valid = sampl(:,validationIds);
-        obj.targ_valid = targ(:,validationIds);
-        obj.sampl_test = sampl(:,testingIds);
-        obj.targ_test = targ(:,testingIds);
-        
     case 2 % divide the 1st file to train and valid and take the 2nd file as test
         samplesNum = obj.sampl_num_in_files(1,1);
         randIds = randsample(samplesNum,samplesNum);
@@ -71,17 +51,35 @@ switch size(obj.data_file_name,2)
             obj.ids.ids_test);
         obj.sampl_test = sampl_test;
         obj.targ_test = targ_test;
+        
+    otherwise
+        % is file name is a char, then size return the number...
+        % of latter which is almost alway more than 3:)
+        
+        %divide the groups randomly
+        % then divide the data randomly to train and test
+        samplesNum = obj.sampl_num_in_files
+        
+        randIds = randsample(samplesNum,samplesNum);
+        trainingSize = floor(obj.train_ratio*samplesNum);
+        validSize = floor(obj.valid_ratio*samplesNum);
+
+        trainingIds = randIds(1:trainingSize);
+        validationIds = randIds((trainingSize+1):(validSize+trainingSize));
+        testingIds = randIds(validSize+trainingSize:end);
+        
+        [sampl,targ] = obj.prepareData_to_NN(obj.sim_results,obj.sim_periods,obj.ids);
+        obj.sampl_train = sampl(:,trainingIds);
+        obj.targ_train = targ(:,trainingIds);
+        obj.sampl_valid = sampl(:,validationIds);
+        obj.targ_valid = targ(:,validationIds);
+        obj.sampl_test = sampl(:,testingIds);
+        obj.targ_test = targ(:,testingIds);
 end
   
 % save the data in its undevided form for futuer bug checkig the the
 % devision to train, validation and test.
 switch size(obj.data_file_name,2)
-    case 1
-        obj.unGroupted_data.sampl = sampl;
-        obj.unGroupted_data.sampl = targ;
-        obj.unGroupted_data.data_group_ind.train_ind = trainingIds;
-        obj.unGroupted_data.data_group_ind.valid_ind = validationIds;
-        obj.unGroupted_data.data_group_ind.test_ind = testingIds;
     case 2
         obj.unGroupted_data.sampl_tr_val = sampl_tr_val;
         obj.unGroupted_data.targ_tr_val = targ_tr_val;
@@ -89,6 +87,12 @@ switch size(obj.data_file_name,2)
         obj.unGroupted_data.data_group_ind.valid_ind = validationIds;
     case 3
         % there is no ungroup data (each group was divided manually).
+    otherwise
+        obj.unGroupted_data.sampl = sampl;
+        obj.unGroupted_data.sampl = targ;
+        obj.unGroupted_data.data_group_ind.train_ind = trainingIds;
+        obj.unGroupted_data.data_group_ind.valid_ind = validationIds;
+        obj.unGroupted_data.data_group_ind.test_ind = testingIds;
 end
         
 

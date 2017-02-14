@@ -1,17 +1,19 @@
 
 clear all; close all; clc
 
-
 %% 2N symmetric
 % fileName = 'MatsRandomRes_2Neurons_change_only_a.mat';
-fileName = {'MatsRandomRes_2Neurons_symm_trainData_wide_range.mat',...
+% fileName = {'MatsRandomRes_2Neurons_symm_trainData_wide_range.mat',...
+%     'MatsRandomRes_2Neurons_symm_testData.mat'};
+fileName = {'MatsRandomRes_2Neurons_symm_trainData_narrow_range.mat',...
     'MatsRandomRes_2Neurons_symm_testData.mat'};
 parametersCells = {'tau','b','a','s'};
 targetCells = {'freq'};
 seqOrder = {'tau','b','s','_','a'}; %'_' - dont care parameter
 myCode = myCode(fileName,parametersCells,targetCells,seqOrder);
+myCode.disp_information = true;
 
-clear fileName parametersCells targetCells seqOrder
+% clear fileName parametersCells targetCells seqOrder
 
 problemType = '2N_symm';
 %% 2N general
@@ -21,7 +23,7 @@ targetCells = {'freq'};
 seqOrder = {'tau','b','c_1','c_2','w_12','w_21'};
 myCode = myCode(fileName,parametersCells,targetCells,seqOrder);
 
-clear fileName parametersCells targetCells seqOrder
+% clear fileName parametersCells targetCells seqOrder
 
 problemType = '2N_general';
 
@@ -32,16 +34,18 @@ targetCells = {'freq'};
 seqOrder = {'tau','b','c','w_12','w_13','w_14','w_23','w_24','w_34'};
 myCode = myCode(fileName,parametersCells,targetCells,seqOrder);
 
-clear fileName parametersCells targetCells seqOrder
+% clear fileName parametersCells targetCells seqOrder
 
 problemType = '4N_symm';
 %% with NN:
 myCode = myCode.Set('NN',[2],100);
 myCode = myCode.trainNN(0);
 myCode.plot_fit_data('NN',problemType);
+
 %% with my_MoE
+close all
 competetiveflag = 3;
-myCode = myCode.Set('our_MoE',15,5,[2],[5],5,competetiveflag);
+myCode = myCode.Set('our_MoE',15,3,[2],[2],5,competetiveflag);
 myCode = myCode.my_MoE_train();
 myCode.my_MoE_plot_train_perf();
 myCode.my_MoE_testNet(myCode.sampl_test,myCode.targ_test,myCode.my_MoE_out.expertsNN,...
@@ -49,9 +53,48 @@ myCode.my_MoE_testNet(myCode.sampl_test,myCode.targ_test,myCode.my_MoE_out.exper
 myCode.plot_fit_data('my_MoE',problemType);
 
 %% with the paper's MoE
-myCode = myCode.Set('paper_MoE',40,5,0.005,0.995);
+myCode = myCode.Set('paper_MoE',10,5,0.005,0.995);
 myCode = myCode.paper_MoE_train();
 myCode.paper_MoE_plotPerf({'MSE_over_iter','regGraph','reg_with_color','reg_graph_from_NNtoolbox'})
 myCode.plot_fit_data('paper_MoE',problemType);
 
+%%
+close all; clc
 
+N = 20;
+
+myCode.disp_information = false;
+
+train_err_NN = zeros(1,N);
+valid_err_NN = zeros(1,N);
+test_err_NN = zeros(1,N);
+
+for i=1:N    
+    myCode = myCode.Set('NN',[2],100);
+    myCode = myCode.trainNN(0);
+
+    train_err_NN(1,i) = myCode.NN.net_perf.best_perf;
+    valid_err_NN(1,i) = myCode.NN.net_perf.best_vperf;
+    test_err_NN(1,i) = myCode.NN.net_perf.best_tperf;
+end
+
+competetiveflag = 3;
+train_err_MoE = zeros(1,N);
+valid_err_MoE = zeros(1,N);
+test_err_MoE = zeros(1,N);
+
+for i=1:N
+    myCode = myCode.Set('our_MoE',15,3,[2],[5],5,competetiveflag);
+    myCode = myCode.my_MoE_train();
+
+    [train_err_MoE(1,i),~] = myCode.NN_perf_calc(myCode.targ_train,myCode.my_MoE_out.out_from_train,0,0,'train');
+    [valid_err_MoE(1,i),~] = myCode.NN_perf_calc(myCode.targ_valid,myCode.my_MoE_out.out_from_valid,0,0,'valid');
+    [test_err_MoE(1,i),~] = myCode.NN_perf_calc(myCode.targ_test,myCode.my_MoE_out.out_from_test,0,0,'test');
+
+end
+
+disp(['mean NN MSE = ',num2str(mean(test_err_NN,2))]);
+disp(['stdev NN MSE = ',num2str(std(test_err_NN,[],2))]);
+
+disp(['mean MoE MSE = ',num2str(mean(test_err_MoE,2))]);
+disp(['stdev MoE MSE = ',num2str(std(test_err_MoE,[],2))]);

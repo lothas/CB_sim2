@@ -22,14 +22,10 @@ switch method
         [g_max,g_max_ind] = max(gateOut,[],1);
     case {'NN'}
         freq_net_est = obj.NN.out_from_test;
+        figure;
+        plotregression(obj.targ_test,obj.NN.out_from_test,'test');
     otherwise
         error('invalid method');
-end
-
-if obj.expertCount == 2
-    colors = [1,0,0; 0,0,1]; 
-elseif obj.expertCount > 2
-    colors = rand(obj.expertCount,3); % if more than 2 experts
 end
             
 switch problemType
@@ -62,9 +58,9 @@ switch problemType
                     for i=1:size(a,2)
                         if g_max_ind(1,i) == j
                             if g_max(1,i) > 0.5 % only samples with more than 50% get fillet dot
-                                scatter(a(1,i),freq_net_est(1,i),'ko','MarkerFaceColor',colors(j,:));
+                                scatter(a(1,i),freq_net_est(1,i),'kd','MarkerFaceColor',colors(j,:));
                             else
-                                scatter(a(1,i),freq_net_est(1,i),'ko');
+                                scatter(a(1,i),freq_net_est(1,i),'kd');
                             end
                         end
                     end
@@ -101,6 +97,14 @@ switch problemType
         
                         % plotting a 2 experts output (freq over 'a') with color coding
             if exist('g_max','var')==1 % only plot this for MoE methods
+                
+                switch obj.expertCount
+                    case {2,3} % in case of small number of expert, make colors clear:
+                        colors = [1,0,0;0,1,0;0,0,1];
+                    otherwise
+                        colors = rand(obj.expertCount,3);
+                end
+
                 figure;
                 scatter3(w12,w21,freq_from_code,'go'); hold on
                 for j=1:obj.expertCount

@@ -8,10 +8,16 @@ targ_valid = obj.targ_valid;
 sampl_test = obj.sampl_test;
 targ_test = obj.targ_test;
 
-disp('initilizing new MoE:');
-tic
+if obj.disp_information
+    disp('initilizing new MoE:');
+    tic
+end
+
 obj = obj.My_MoE_init();
-disp(['time for init: ',num2str(toc)]);
+
+if obj.disp_information
+    disp(['time for init: ',num2str(toc)]);
+end
 
 % defining some constants:
 num_of_train_samples = size(sampl_train,2);
@@ -35,13 +41,18 @@ gateNet_targ = zeros(expertCount,num_of_train_samples); % target for gate networ
 emptyGroupIndecator = false(expertCount,numOfIteretions); % count how many time we have an empty cluster
 Moe_perf_over_iter = zeros(1,numOfIteretions); % the performance of the entire MoE over #iteretion
 
+if obj.disp_information
+    disp('start training...');
+    tic
+end
 
-disp('start training...');
-tic
 % Train the experts and the gate NN:
 
 for i=1:numOfIteretions
-    disp(['at iteration num: #',num2str(i)]);
+    
+    if obj.disp_information
+        disp(['at iteration num: #',num2str(i)]);
+    end
     
     % test network to check  validation_error:
     [MoE_out_valid,~,~,~] = obj.my_MoE_testNet(sampl_valid,targ_valid,expertsNN,...
@@ -118,23 +129,13 @@ for i=1:numOfIteretions
                 fh(:,k) = g(:,k) .* exp(-0.5 .* yStar_yi(:,k) );
                 fh(:,k) = fh(:,k) ./ sum(fh(:,k),1);
             end
+            
             for j=1:expertCount
                 tempNet = expertsNN{1,j};
                 errorWeights = {fh(j,:)};                
                 [expertsNN{1,j}, expertsNN{2,j}] = train(tempNet,...
                         sampl_train, targ_train,[],[],errorWeights);
             end
-%             [fhMax,fhMaxIndex] = max(fh,[],1);
-%             % 'fh' becomes the target of the gate network by taking the max
-%             % of 'fh' => '1' all other in row => '0'
-%             gateNet_targ = zeros(expertCount,num_of_train_samples);
-%             gateNet_targ(:,fhMaxIndex) = 1;
-%             
-%             % 'fh' is also the "errorWeigths" for the training of the gate
-%             % network.
-%             
-%             [gateNet,gateNet_perf] = train(gateNet,sampl_train,gateNet_targ,[],[],fhMax);
-%             gateNN_perf_vec(1,i) = gateNet_perf.best_perf;
             
             [gateNet,gateNet_perf] = train(gateNet,sampl_train,fh);
             gateNN_perf_vec(1,i) = gateNet_perf.best_perf;
@@ -169,10 +170,10 @@ switch competetiveFlag
         obj.my_MoE_out.expertsTrainData.emptyGroupIndecator = [];
 end
 
-
-disp(['runTime of training: ',num2str(toc)]);
-
-disp([' MoE perf (MSE) on test group: ',num2str(Moe_perf_over_iter(1,end))]);
+if obj.disp_information
+    disp(['runTime of training: ',num2str(toc)]);
+    disp([' MoE perf (MSE) on test group: ',num2str(Moe_perf_over_iter(1,end))]);
+end
 
 end
 
