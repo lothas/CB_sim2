@@ -89,7 +89,7 @@ switch size(obj.data_file_name,2)
         % there is no ungroup data (each group was divided manually).
     otherwise
         obj.unGroupted_data.sampl = sampl;
-        obj.unGroupted_data.sampl = targ;
+        obj.unGroupted_data.targ = targ;
         obj.unGroupted_data.data_group_ind.train_ind = trainingIds;
         obj.unGroupted_data.data_group_ind.valid_ind = validationIds;
         obj.unGroupted_data.data_group_ind.test_ind = testingIds;

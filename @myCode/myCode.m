@@ -3,7 +3,10 @@ classdef myCode < handle & matlab.mixin.Copyable
     
     properties
         
-        disp_information = false; %wether to display information or not
+        sizeOfCPG=[]; % the number of neurons in the Matsuoka CPG
+        rearrenge_in_a_uniq_way = [] % decide wether is needed to rearenge the genes in a uniq way for training
+        
+        disp_information = true; %wether to display information or not
         
         % data from MatsuokaML sim
         data_file_name = [];
@@ -96,8 +99,6 @@ classdef myCode < handle & matlab.mixin.Copyable
     methods
          % %%% % Class constructor % %%% %
         function obj = myCode(varargin)
-            switch nargin
-                case 4
                     obj.data_file_name = varargin{1};
                     
                     fileName = varargin{1};
@@ -108,12 +109,18 @@ classdef myCode < handle & matlab.mixin.Copyable
                     
                     obj.seqOrder =  varargin{4};
                     
-                    obj = divide_train_and_test(obj);
+                    obj.sizeOfCPG = varargin{5};
+            switch nargin
+                case 5
+                    obj.rearrenge_in_a_uniq_way = false; 
+                case 6
                     
+                    obj.rearrenge_in_a_uniq_way = varargin{6};
                 otherwise
                     warning('invalid number of inputs');
                     error('input order should be: 1)name of data file 2)inputsNames 3)outputNames 4) order of seq');
             end
+            obj = divide_train_and_test(obj);
         end
         
         % %%% % load data to class % %%% %

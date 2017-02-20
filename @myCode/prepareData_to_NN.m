@@ -33,18 +33,18 @@ c_1 = seqMatrix(strcmp('c_1',obj.seqOrder),:);
 c_2 = seqMatrix(strcmp('c_2',obj.seqOrder),:);
 c_3 = seqMatrix(strcmp('c_3',obj.seqOrder),:);
 c_4 = seqMatrix(strcmp('c_4',obj.seqOrder),:);
-w_12 = seqMatrix(strcmp('w_12',obj.seqOrder),:);
-w_13 = seqMatrix(strcmp('w_13',obj.seqOrder),:);
-w_14 = seqMatrix(strcmp('w_14',obj.seqOrder),:);
-w_21 = seqMatrix(strcmp('w_21',obj.seqOrder),:);
-w_23 = seqMatrix(strcmp('w_23',obj.seqOrder),:);
-w_24 = seqMatrix(strcmp('w_24',obj.seqOrder),:);
-w_31 = seqMatrix(strcmp('w_31',obj.seqOrder),:);
-w_32 = seqMatrix(strcmp('w_32',obj.seqOrder),:);
-w_34 = seqMatrix(strcmp('w_34',obj.seqOrder),:);
-w_41 = seqMatrix(strcmp('w_41',obj.seqOrder),:);
-w_42 = seqMatrix(strcmp('w_42',obj.seqOrder),:);
-w_43 = seqMatrix(strcmp('w_43',obj.seqOrder),:);
+w_12 = seqMatrix(strcmp('w_{12}',obj.seqOrder),:);
+w_13 = seqMatrix(strcmp('w_{13}',obj.seqOrder),:);
+w_14 = seqMatrix(strcmp('w_{14}',obj.seqOrder),:);
+w_21 = seqMatrix(strcmp('w_{21}',obj.seqOrder),:);
+w_23 = seqMatrix(strcmp('w_{23}',obj.seqOrder),:);
+w_24 = seqMatrix(strcmp('w_{24}',obj.seqOrder),:);
+w_31 = seqMatrix(strcmp('w_{31}',obj.seqOrder),:);
+w_32 = seqMatrix(strcmp('w_{32}',obj.seqOrder),:);
+w_34 = seqMatrix(strcmp('w_{34}',obj.seqOrder),:);
+w_41 = seqMatrix(strcmp('w_{41}',obj.seqOrder),:);
+w_42 = seqMatrix(strcmp('w_{42}',obj.seqOrder),:);
+w_43 = seqMatrix(strcmp('w_{43}',obj.seqOrder),:);
 
 if obj.Worig_or_What % if we want to work with the normalize Matsuoka weights:
     Worig = [w_12;w_13;w_14;w_21;w_23;w_24;w_31;w_32;w_34;w_41;w_42;w_43];
@@ -88,29 +88,29 @@ for k=1:2
                 temp(i,:) = c_3;
             case 'c_4'
                 temp(i,:) = c_4;
-            case 'w_12'
+            case 'w_{12}'
                 temp(i,:) = w_12;
-            case 'w_13'
+            case 'w_{13}'
                 temp(i,:) = w_13;
-            case 'w_14'
+            case 'w_{14}'
                 temp(i,:) = w_14;
-            case 'w_21'
+            case 'w_{21}'
                 temp(i,:) = w_21;
-            case 'w_23'
+            case 'w_{23}'
                 temp(i,:) = w_23;
-            case 'w_24'
+            case 'w_{24}'
                 temp(i,:) = w_24;
-            case 'w_31'
+            case 'w_{31}'
                temp(i,:) = w_31;
-            case 'w_32'
+            case 'w_{32}'
                 temp(i,:) = w_32;
-            case 'w_34'
+            case 'w_{34}'
                 temp(i,:) = w_34;
-            case 'w_41'
+            case 'w_{41}'
                 temp(i,:) = w_41;
-            case 'w_42'
+            case 'w_{42}'
                 temp(i,:) = w_42;
-            case 'w_43'
+            case 'w_{43}'
                 temp(i,:) = w_43;
             case 'prodW'
                 temp(i,:) = prodW;
@@ -149,5 +149,9 @@ for k=1:2
     end
 end
 
+if obj.rearrenge_in_a_uniq_way
+    [samplNew] = obj.matsuoka_arrange_uniq(sampl);
+    sampl = samplNew;
+end
 end
 
