@@ -28,8 +28,8 @@ myCode.sizeOfCPG = 2;
 problemType = '2N_general';
 
 %% 4N CPG symmetric
-fileName = 'MatsRandomRes_4Neurons_symm_all_samples.mat';
-% fileName = 'MatsRandomRes_4Neurons_symm.mat';
+% fileName = 'MatsRandomRes_4Neurons_symm_all_samples.mat';
+fileName = 'MatsRandomRes_4Neurons_symm.mat';
 parametersCells = {'tau','b','w_{12}','w_{13}','w_{14}','w_{23}','w_{24}','w_{34}'};
 targetCells = {'freq'};
 seqOrder = {'tau','b','c','w_{12}','w_{13}','w_{14}','w_{23}','w_{24}','w_{34}'};
@@ -39,19 +39,20 @@ myCode.sizeOfCPG = 4;
 
 problemType = '4N_symm';
 %% with NN:
-myCode = myCode.Set('NN',[5],100);
+myCode.disp_information = false;
+myCode = myCode.Set('NN',[2],20);
 myCode = myCode.trainNN(0);
 myCode.plot_fit_data('NN',problemType);
 
 %% with my_MoE
 close all
 competetiveflag = 3;
-myCode = myCode.Set('our_MoE',20,50,[5],[2],5,competetiveflag);
+myCode = myCode.Set('our_MoE',2,2,[2],[2],5,competetiveflag);
 myCode = myCode.my_MoE_train();
 myCode.my_MoE_plot_train_perf();
-myCode.my_MoE_testNet(myCode.sampl_test,myCode.targ_test,myCode.my_MoE_out.expertsNN,...
-    myCode.my_MoE_out.gateNet,competetiveflag,1);
-myCode.plot_fit_data('my_MoE',problemType);
+% myCode.my_MoE_testNet(myCode.sampl_test,myCode.targ_test,myCode.my_MoE_out.expertsNN,...
+%     myCode.my_MoE_out.gateNet,competetiveflag,1);
+% myCode.plot_fit_data('my_MoE',problemType);
 
 %% with the paper's MoE
 myCode = myCode.Set('paper_MoE',10,5,0.005,0.995);

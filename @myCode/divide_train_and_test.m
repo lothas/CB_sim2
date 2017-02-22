@@ -11,6 +11,10 @@ switch size(obj.data_file_name,2)
         trainingIds = randIds(1:trainingSize);
         validationIds = randIds(trainingSize+1:end);
         
+        obj.train_ind = trainingIds;
+        obj.valid_ind = validationIds;
+        obj.test_ind = 'the test group is the data from the 2nd file';
+        
         [sampl_tr_val,targ_tr_val] = ...
             obj.prepareData_to_NN(obj.sim_results.results_train_and_valid,...
             obj.sim_periods.periods_train_and_valid,...
@@ -52,6 +56,10 @@ switch size(obj.data_file_name,2)
         obj.sampl_test = sampl_test;
         obj.targ_test = targ_test;
         
+        obj.train_ind = 'the train group is the data from the 1st file';
+        obj.valid_ind = 'the valid group is the data from the 2nd file';
+        obj.test_ind = 'the test group is the data from the 3rd file';
+        
     otherwise
         % is file name is a char, then size return the number...
         % of latter which is almost alway more than 3:)
@@ -67,6 +75,10 @@ switch size(obj.data_file_name,2)
         trainingIds = randIds(1:trainingSize);
         validationIds = randIds((trainingSize+1):(validSize+trainingSize));
         testingIds = randIds(validSize+trainingSize:end);
+        
+        obj.train_ind = trainingIds;
+        obj.valid_ind = validationIds;
+        obj.test_ind = testingIds;
         
         [sampl,targ] = obj.prepareData_to_NN(obj.sim_results,obj.sim_periods,obj.ids);
         obj.sampl_train = sampl(:,trainingIds);
