@@ -41,14 +41,15 @@ title('gateNet perf (MSE) over #interation');
 xlabel('#iteretion');   ylabel('performance [crossentropy]');
 
 % plot the weights of the experts:
-figure; hold on;
-numOfCol = 3;
-numOfRows = mod(obj.expertCount,numOfCol);
-for j=1:obj.expertCount
-    subplot(numOfRows,numOfCol,j);
-    title_temp = (['expert #',num2str(j)]);;
-    obj.NN_weights_matrix_visualize(obj.my_MoE_out.expertsNN{1,j},title_temp)
-    
+for k=1:floor(obj.expertCount/9)
+    lastExpertIND = (k-1)*9;
+    figure; hold on;
+    for j=1:9
+        currentExptIND = lastExpertIND+j;
+        subplot(3,3,j);
+        title_temp = (['expert #',num2str(currentExptIND)]);
+        obj.NN_weights_matrix_visualize(obj.my_MoE_out.expertsNN{1,currentExptIND},title_temp);
+    end
 end
 
 figure;
