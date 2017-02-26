@@ -22,7 +22,7 @@ function varargout = myGUI(varargin)
 
 % Edit the above text to modify the response to help myGUI
 
-% Last Modified by GUIDE v2.5 22-Feb-2017 19:35:54
+% Last Modified by GUIDE v2.5 23-Feb-2017 13:07:48
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -413,19 +413,6 @@ end
 
 hObject.UserData = myCode1;
 
-function plot_myMoE(obj,handles)
-% iterNum = 1:obj.numOfIteretions;
-% % total MSE error over #iteration
-% plot(handles.graph0,iterNum,obj.my_MoE_out.Moe_perf_over_iter,'b-o');
-% xlabel('#iteration'); ylabel('MoE MSE error');
-% title('total MSE error over #iteration');
-% 
-% % gateNet perf over #interation
-% plot(handles.graph1,iterNum,obj.my_MoE_out.gateTraniData.gateNN_perf_vec,'-o');
-% title('gateNet perf (MSE) over #interation');
-% xlabel('#iteretion');   ylabel('performance [crossentropy]');
-% 
-% plotregression(obj.targ_test,obj.my_MoE_out.out_from_test,'test');
 
 function ax = whichAxis(handles)
 % check on which axis we want to plot
@@ -437,31 +424,44 @@ elseif handles.toGraph2.Value
     ax = handles.graph2;
 elseif handles.toGraph3.Value
     ax = handles.graph3;
-elseif handles.toGraph4.Value
-    ax = handles.graph4;   
 end
 
 % --- Executes on button press in perf_over_epochPB.
 function perf_over_epochPB_Callback(hObject, eventdata, handles)
-ax = whichAxis(handles);   
+if handles.refreshGrpahsPB.Value
+    % if we want to refresh the graphs after retraining
+    ax = hObject.UserData;
+else
+    ax = whichAxis(handles);
+    hObject.UserData = ax; %which graph this plot was on last
+end
 obj = handles.trainPB.UserData;
 iterNum = 1:obj.numOfIteretions;
 % total MSE error over #iteration
 plot(ax,iterNum,obj.my_MoE_out.Moe_perf_over_iter,'b-o'); hold on;
 ax.XLabel.String='#iteration'; ax.YLabel.String='MoE MSE error';
 ax.Title.String='total MSE error over #iteration';
+ax.UserData = hObject;
 hold off
+
 
 
 % --- Executes on button press in gatePerfOverEpochPB.
 function gatePerfOverEpochPB_Callback(hObject, eventdata, handles)
-ax = whichAxis(handles);   
+if handles.refreshGrpahsPB.Value
+    % if we want to refresh the graphs after retraining
+    ax = hObject.UserData;
+else
+    ax = whichAxis(handles);
+    hObject.UserData = ax; %which graph this plot was on last
+end 
 obj = handles.trainPB.UserData;
 iterNum = 1:obj.numOfIteretions;
 % gateNet perf over #interation
 plot(ax,iterNum,obj.my_MoE_out.gateTraniData.gateNN_perf_vec,'-o'); hold on
 ax.XLabel.String='#iteration'; ax.YLabel.String='performance [MSE]';
 ax.Title.String='gateNet perf (MSE) over #interation';
+ax.UserData = hObject;
 hold off
 
 
@@ -470,7 +470,14 @@ function MoE_regressionGraphPB_Callback(hObject, eventdata, handles)
 % hObject    handle to MoE_regressionGraphPB (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-ax = whichAxis(handles);
+if handles.refreshGrpahsPB.Value
+    % if we want to refresh the graphs after retraining
+    ax = hObject.UserData;
+else
+    ax = whichAxis(handles);
+    hObject.UserData = ax; %which graph this plot was on last
+end
+cla(ax);
 ax.NextPlot= 'add';
 obj = handles.trainPB.UserData;
 switch obj.expertCount
@@ -496,6 +503,7 @@ for j=1:obj.expertCount
 end
 ax.XLabel.String='target'; ax.YLabel.String='output';
 ax.Title.String={'regression graph with different color for every dominant expert';'empty circle mean g<0.5'};
+ax.UserData = hObject;
 ax.NextPlot= 'replace';
 
 % --- Executes on button press in NNregressionPB.
@@ -505,9 +513,9 @@ function NNregressionPB_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 
-% --- Executes on button press in pushbutton14.
-function pushbutton14_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton14 (see GCBO)
+% --- Executes on button press in viewFitting2DPB.
+function viewFitting2DPB_Callback(hObject, eventdata, handles)
+% hObject    handle to viewFitting2DPB (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
@@ -519,9 +527,9 @@ function pushbutton15_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 
-% --- Executes on button press in pushbutton16.
-function pushbutton16_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton16 (see GCBO)
+% --- Executes on button press in viewFitting3DPB.
+function viewFitting3DPB_Callback(hObject, eventdata, handles)
+% hObject    handle to viewFitting3DPB (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
@@ -548,18 +556,18 @@ function pushbutton19_Callback(hObject, eventdata, handles)
 
 
 
-function edit9_Callback(hObject, eventdata, handles)
-% hObject    handle to edit9 (see GCBO)
+function expertNumType_Callback(hObject, eventdata, handles)
+% hObject    handle to expertNumType (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of edit9 as text
-%        str2double(get(hObject,'String')) returns contents of edit9 as a double
+% Hints: get(hObject,'String') returns contents of expertNumType as text
+%        str2double(get(hObject,'String')) returns contents of expertNumType as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function edit9_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit9 (see GCBO)
+function expertNumType_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to expertNumType (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -570,8 +578,77 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on button press in pushbutton20.
-function pushbutton20_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton20 (see GCBO)
+% --- Executes on button press in viewNNWeightsPB.
+function viewNNWeightsPB_Callback(hObject, eventdata, handles)
+% hObject    handle to viewNNWeightsPB (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+if handles.refreshGrpahsPB.Value
+    % if we want to refresh the graphs after retraining
+    ax = hObject.UserData;
+else
+    ax = whichAxis(handles);
+    hObject.UserData = ax; %which graph this plot was on last
+end
+axes(ax); %make 'ax' the current axis
+obj = handles.trainPB.UserData;
+if handles.toggleToViewNNRB.Value
+    tempNet = obj.NN.net;
+    title_temp = 'NN weights';
+elseif handles.toggleToViewMoERB.Value
+    expertNum = str2double(get(handles.expertNumType,'String'));
+    tempNet = obj.my_MoE_out.expertsNN{1,expertNum};
+    title_temp = ['expert #',num2str(expertNum)];
+end
+
+parametersCells = obj.inputsNames;
+weightsInput = tempNet.IW;  
+weightsInput = cell2mat(weightsInput);
+weightsOutput = tempNet.LW;
+weightsOutput = cell2mat(weightsOutput);
+bias = tempNet.b;
+bias = cell2mat(bias);
+
+weights = horzcat(diag(weightsOutput)*weightsInput);  % multiply the output weights with the neurons outputs
+[x,y] = meshgrid(1:size(weights,2),1:size(weights,1));   %# Create x and y coordinates for the strings
+HiddenNumCells = num2cell((1:size(weights,1)));
+textStrings = num2str(weights(:),'%0.2f');  %# Create strings from the matrix values
+textStrings = strtrim(cellstr(textStrings));  %# Remove any space padding
+
+imagesc(abs(weights));
+colormap(flipud(gray));  %# Change the colormap to gray (so higher values are
+                         %#   black and lower values are white)
+ax.Title.String = title_temp;
+hStrings = text(x(:),y(:),textStrings(:),'HorizontalAlignment','center');
+midValue = mean(get(gca,'CLim'));  %# Get the middle value of the color range
+textColors = repmat(abs(weights(:)) > midValue,1,3);%# Choose white or black for the
+                                             %#   text color of the strings so
+                                             %#   they can be easily seen over
+                                             %#   the background color
+set(hStrings,{'Color'},num2cell(textColors,2));  %# Change the text colors
+set(gca,'XTick',1:size(weights,2),...     %# Change the axes tick marks
+        'XTickLabel',parametersCells,...  %#   and tick labels
+        'YTick',1:size(weights,1),...
+        'YTickLabel',HiddenNumCells,...
+        'TickLength',[0 0]);
+ax.UserData = hObject;
+ 
+
+% --- Executes on button press in refreshGrpahsPB.
+function refreshGrpahsPB_Callback(hObject, eventdata, handles)
+% hObject    handle to refreshGrpahsPB (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+% gatePerfOverEpochPB_Callback(handles.gatePerfOverEpochPB,eventdata,handles)
+if ~isempty(handles.graph0.UserData)
+    handles.graph0.UserData.Callback(handles.graph0.UserData,eventdata);
+end
+if ~isempty(handles.graph1.UserData)
+    handles.graph1.UserData.Callback(handles.graph1.UserData,eventdata);
+end
+if ~isempty(handles.graph2.UserData)
+    handles.graph2.UserData.Callback(handles.graph2.UserData,eventdata);
+end
+if ~isempty(handles.graph3.UserData)
+    handles.graph3.UserData.Callback(handles.graph3.UserData,eventdata);
+end

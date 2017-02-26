@@ -26,19 +26,20 @@ if obj.my_MoE_out.competetiveFlag==1 || obj.my_MoE_out.competetiveFlag==2
     plot(iterNum,double(obj.my_MoE_out.expertsTrainData.emptyGroupIndecator),'-o'); hold on;
     title('indication on empty clusters: "1" means empty');
     xlabel('#iteretion');   ylabel('"1"=empty   "0"-not empty');
-
 end
 
-figure; 
-subplot(2,1,1) % total MSE error over #iteration
-plot(iterNum,obj.my_MoE_out.Moe_perf_over_iter,'b-o');
+% total MSE error over #iteration
+figure; hold on;
+subplot(2,1,1) 
+plot(iterNum,obj.my_MoE_out.Moe_perf_over_iter,'b-o'); 
 xlabel('#iteration'); ylabel('MoE MSE error');
 title('total MSE error over #iteration');
-
-subplot(2,1,2) % gateNet perf over #interation
-plot(iterNum,obj.my_MoE_out.gateTraniData.gateNN_perf_vec,'-o'); hold on;
+% gateNet perf over #interation
+subplot(2,1,2) 
+plot(iterNum,obj.my_MoE_out.gateTraniData.gateNN_perf_vec,'-o');
 title('gateNet perf (MSE) over #interation');
 xlabel('#iteretion');   ylabel('performance [crossentropy]');
+hold off;
 
 % plot the weights of the experts:
 for k=1:floor(obj.expertCount/9)
