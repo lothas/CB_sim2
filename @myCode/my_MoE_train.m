@@ -158,7 +158,8 @@ obj.my_MoE_out.out_from_valid = MoE_out_valid;
     [MoE_out_test,~,~,~] = obj.my_MoE_testNet(sampl_test,targ_test,expertsNN,...
     gateNet,competetiveFlag,0);
 obj.my_MoE_out.out_from_test = MoE_out_test;
-[Moe_MSE_on_test_temp,~] = obj.NN_perf_calc(targ_test,MoE_out_test,0,0);
+[Moe_MSE_on_test_temp,Rsquar] = obj.NN_perf_calc(targ_test,MoE_out_test,0,0);
+
 
 switch competetiveFlag
     case {1,2}
@@ -172,6 +173,7 @@ switch competetiveFlag
 end
 
 obj.my_MoE_out.Moe_MSE_on_test = Moe_MSE_on_test_temp;
+obj.my_MoE_out.RsquarTest = Rsquar;
 if obj.disp_information
     disp(['runTime of training: ',num2str(toc)]);
     disp([' MoE perf (MSE) on test group: ',num2str(Moe_MSE_on_test_temp)]);

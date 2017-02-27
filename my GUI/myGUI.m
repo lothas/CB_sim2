@@ -22,7 +22,7 @@ function varargout = myGUI(varargin)
 
 % Edit the above text to modify the response to help myGUI
 
-% Last Modified by GUIDE v2.5 23-Feb-2017 13:07:48
+% Last Modified by GUIDE v2.5 27-Feb-2017 11:02:45
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -58,6 +58,37 @@ handles.output = hObject;
 % Update handles structure
 guidata(hObject, handles);
 
+% display text in terminal:
+handles.teminalText.String = 'please choose CPG case and load data';
+
+% % disable all irrelevant button groups:
+handles.singleNNCB.Enable = 'off';
+handles.ourMoECB.Enable = 'off';
+handles.paperMoECB.Enable = 'off';
+handles.hidNueronNum_slider.Enable = 'off';
+handles.Experts_Num_slider.Enable = 'off';
+handles.epochsNumSlider.Enable = 'off';
+handles.hiddenNeuSliderText.Enable = 'off';
+handles.NumOfExpertsSliderText.Enable = 'off';
+handles.numOfEpochsSliderText.Enable = 'off';
+handles.trainPB.Enable = 'off';
+handles.shufflePB.Enable = 'off';
+handles.resultsTable.Enable = 'off';
+handles.perf_over_epochPB.Enable = 'off';
+handles.gatePerfOverEpochPB.Enable = 'off';
+handles.MoE_regressionGraphPB.Enable = 'off';
+handles.NNregressionPB.Enable = 'off';
+handles.toGraph0.Enable = 'off';
+handles.toGraph1.Enable = 'off';
+handles.toGraph2.Enable = 'off';
+handles.toGraph3.Enable = 'off';
+handles.refreshGrpahsPB.Enable = 'off';
+handles.viewFitting2DCB.Enable = 'off';
+handles.viewFitting3DCB.Enable = 'off';
+handles.toggleToViewNNRB.Enable = 'off';
+handles.toggleToViewMoERB.Enable = 'off';
+handles.expertNumType.Enable = 'off';
+handles.viewNNWeightsPB.Enable = 'off';
 % UIWAIT makes myGUI wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
 
@@ -72,6 +103,16 @@ function varargout = myGUI_OutputFcn(hObject, eventdata, handles)
 varargout{1} = handles.output;
 disp('starting GUI...');
 
+function teminalText_Callback(hObject, eventdata, handles)
+% Hints: get(hObject,'String') returns contents of teminalText as text
+%        str2double(get(hObject,'String')) returns contents of teminalText as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function teminalText_CreateFcn(hObject, eventdata, handles)
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
 
 % --- Executes on button press in twoNsymmRB.
 function twoNsymmRB_Callback(hObject, eventdata, handles)
@@ -114,6 +155,7 @@ function loadData_PB_Callback(hObject, eventdata, handles)
 % hObject    handle to loadData_PB (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+handles.teminalText.String = 'loading data now...';
 targetCells = {'freq'};
 fileName = handles.enterFileNameLine.String;
 if handles.twoNsymmRB.Value
@@ -131,8 +173,7 @@ elseif handles.fourNsymmRB.Value
     seqOrder = {'tau','b','c','w_{12}','w_{13}','w_{14}','w_{23}','w_{24}','w_{34}'};
     myCode1=myCode(fileName,parametersCells,targetCells,seqOrder,4);
     myCode1.sizeOfCPG = 4;
-elseif handles.fourNsymmRB.Value
-    
+elseif handles.fourNsymmRB.Value   
 end
 
 %NOTE: this doesn't change with shuffling!
@@ -140,6 +181,14 @@ handles.sampleSizeTable.Data{1,1} = size(myCode1.sampl_train,2);
 handles.sampleSizeTable.Data{2,1} = size(myCode1.sampl_valid,2);
 handles.sampleSizeTable.Data{3,1} = size(myCode1.sampl_test,2);
 hObject.UserData = myCode1;
+
+% enable the Training bottun group:
+handles.singleNNCB.Enable = 'on';
+handles.ourMoECB.Enable = 'on';
+handles.paperMoECB.Enable = 'on';
+handles.shufflePB.Enable = 'on';
+
+handles.teminalText.String = 'data was loaded';
 
 
 function enterFileNameLine_Callback(hObject, eventdata, handles)
@@ -175,7 +224,8 @@ if get(hObject,'Value')
     elseif handles.twoNgenRB.Value        
         handles.enterFileNameLine.String = 'MatsRandomRes_2Neurons_general_1to4_combained.mat';
     elseif handles.fourNsymmRB.Value
-        handles.enterFileNameLine.String = 'MatsRandomRes_4Neurons_symm.mat';
+%         handles.enterFileNameLine.String = 'MatsRandomRes_4Neurons_symm.mat';
+        handles.enterFileNameLine.String = 'MatsRandomRes_4Neurons_symm_all_samples.mat';
     elseif handles.fourNsymmRB.Value
         handles.enterFileNameLine.String = ' ';
     end
@@ -184,50 +234,86 @@ end
 
 % --- Executes on button press in singleNNCB.
 function singleNNCB_Callback(hObject, eventdata, handles)
-% hObject    handle to singleNNCB (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of singleNNCB
-
+if get(hObject,'Value')
+    handles.teminalText.String = 'chosen single NN for training';
+    pause(1);
+    handles.hidNueronNum_slider.Enable = 'on';
+    handles.epochsNumSlider.Enable = 'on';
+    handles.hiddenNeuSliderText.Enable = 'on';
+    handles.numOfEpochsSliderText.Enable = 'on';
+    handles.trainPB.Enable = 'on';
+    handles.ShowNNGUI.Enable = 'on';
+    handles.teminalText.String = 'choose addiional methods and/or choose training parameters';
+else
+    handles.ShowNNGUI.Enable = 'off';
+end
+if ~get(hObject,'Value') && ~handles.ourMoECB.Value && ~handles.paperMoECB.Value
+    % if no botton is enable then deactivate all
+    handles.hidNueronNum_slider.Enable = 'off';
+    handles.epochsNumSlider.Enable = 'off';
+    handles.hiddenNeuSliderText.Enable = 'off';
+    handles.numOfEpochsSliderText.Enable = 'off';
+    handles.trainPB.Enable = 'off';
+end
 
 % --- Executes on button press in ourMoECB.
 function ourMoECB_Callback(hObject, eventdata, handles)
-% hObject    handle to ourMoECB (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of ourMoECB
-
-
+if get(hObject,'Value')
+    handles.teminalText.String = 'chosen our MoE method';
+    pause(1);
+    handles.hidNueronNum_slider.Enable = 'on';
+    handles.Experts_Num_slider.Enable = 'on';
+    handles.epochsNumSlider.Enable = 'on';
+    handles.hiddenNeuSliderText.Enable = 'on';
+    handles.NumOfExpertsSliderText.Enable = 'on';
+    handles.numOfEpochsSliderText.Enable = 'on';
+    handles.trainPB.Enable = 'on';
+    handles.teminalText.String = 'choose addiional methods and/or choose training parameters';
+end
+if ~get(hObject,'Value') && ~handles.singleNNCB.Value && ~handles.paperMoECB.Value
+    % if no botton is enable then deactivate all
+    handles.hidNueronNum_slider.Enable = 'off';
+    handles.epochsNumSlider.Enable = 'off';
+    handles.hiddenNeuSliderText.Enable = 'off';
+    handles.numOfEpochsSliderText.Enable = 'off';
+    handles.trainPB.Enable = 'off';
+end
+    
 % --- Executes on button press in paperMoECB.
 function paperMoECB_Callback(hObject, eventdata, handles)
-% hObject    handle to paperMoECB (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of paperMoECB
-
-
-% --- Executes on button press in spareCB.
-function spareCB_Callback(hObject, eventdata, handles)
-% hObject    handle to spareCB (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of spareCB
-
+if get(hObject,'Value')
+    handles.teminalText.String = 'chosen papers MoE method';
+    pause(1);
+    handles.hidNueronNum_slider.Enable = 'on';
+    handles.Experts_Num_slider.Enable = 'on';
+    handles.epochsNumSlider.Enable = 'on';
+    handles.hiddenNeuSliderText.Enable = 'on';
+    handles.NumOfExpertsSliderText.Enable = 'on';
+    handles.numOfEpochsSliderText.Enable = 'on';
+    handles.trainPB.Enable = 'on';
+    handles.teminalText.String = 'choose addiional methods and/or choose training parameters';
+end
+if ~get(hObject,'Value') && ~handles.singleNNCB.Value && ~handles.ourMoECB.Value
+    % if no botton is enable then deactivate all
+    handles.hidNueronNum_slider.Enable = 'off';
+    handles.epochsNumSlider.Enable = 'off';
+    handles.hiddenNeuSliderText.Enable = 'off';
+    handles.numOfEpochsSliderText.Enable = 'off';
+    handles.trainPB.Enable = 'off';
+end
 
 % --- Executes on button press in shufflePB.
 function shufflePB_Callback(hObject, eventdata, handles)
 % hObject    handle to shufflePB (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+handles.teminalText.String = 'shuffling the samples...';
 if ~isempty(handles.loadData_PB.UserData)
     myCode1 = handles.loadData_PB.UserData;
     myCode1 = myCode1.shuffle_samples();
     handles.loadData_PB.UserData = myCode1;
 end
+handles.teminalText.String = 'samples shuffled';
 
 % --- Executes on slider movement.
 function hidNueronNum_slider_Callback(hObject, eventdata, handles)
@@ -365,6 +451,11 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
+% --- Executes on button press in ShowNNGUI.
+function ShowNNGUI_Callback(hObject, eventdata, handles)
+
+% Hint: get(hObject,'Value') returns toggle state of ShowNNGUI
+
 
 % --- Executes on button press in trainPB.
 function trainPB_Callback(hObject, eventdata, handles)
@@ -384,9 +475,11 @@ myCode1.disp_information = false;
 
 if handles.singleNNCB.Value
     disp('training NN...');
+    NNtrainingGUI_flag = handles.ShowNNGUI.Value;
     myCode1 = myCode1.Set('NN',numOfHiddenNeurons,numOfEpochs);
-    myCode1 = myCode1.trainNN(0);
+    myCode1 = myCode1.trainNN(NNtrainingGUI_flag);
     handles.resultsTable.Data{1,1} = num2str(myCode1.NN.MSE_test_perf);
+    handles.resultsTable.Data{2,1} = num2str(myCode1.NN.RsquarTest);
 end
 
 if handles.ourMoECB.Value
@@ -396,8 +489,7 @@ if handles.ourMoECB.Value
         numOfExperts,numOfHiddenNeurons,[2],5,competetiveflag);
     myCode1 = myCode1.my_MoE_train();
     handles.resultsTable.Data{1,2} = num2str(myCode1.my_MoE_out.Moe_MSE_on_test);
-    
-%     plot_myMoE(myCode1,handles)
+    handles.resultsTable.Data{2,2} = num2str(myCode1.my_MoE_out.RsquarTest);
 end
 
 if handles.paperMoECB.Value
@@ -407,11 +499,28 @@ if handles.paperMoECB.Value
     handles.resultsTable.Data{1,3} = myCode1.paper_MoE_out.Moe_perf_over_iter(1,end);
 end
 
-if handles.spareCB.Value
-    %%%%%%%%%
-end
-
 hObject.UserData = myCode1;
+
+handles.resultsTable.Enable = 'on';
+handles.toGraph0.Enable = 'on';
+handles.toGraph1.Enable = 'on';
+handles.toGraph2.Enable = 'on';
+handles.toGraph3.Enable = 'on';
+handles.refreshGrpahsPB.Enable = 'on';
+handles.viewFitting2DCB.Enable = 'on';
+handles.viewFitting3DCB.Enable = 'on';
+if handles.singleNNCB.Value
+    handles.NNregressionPB.Enable = 'on';
+    handles.toggleToViewNNRB.Enable = 'on';
+end
+if handles.ourMoECB.Value
+    handles.MoE_regressionGraphPB.Enable = 'on';
+    handles.perf_over_epochPB.Enable = 'on';
+    handles.gatePerfOverEpochPB.Enable = 'on';
+    handles.toggleToViewMoERB.Enable = 'on';
+    handles.expertNumType.Enable = 'on';
+end
+handles.viewNNWeightsPB.Enable = 'on';
 
 
 function ax = whichAxis(handles)
@@ -513,49 +622,6 @@ function NNregressionPB_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 
-% --- Executes on button press in viewFitting2DPB.
-function viewFitting2DPB_Callback(hObject, eventdata, handles)
-% hObject    handle to viewFitting2DPB (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --- Executes on button press in pushbutton15.
-function pushbutton15_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton15 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --- Executes on button press in viewFitting3DPB.
-function viewFitting3DPB_Callback(hObject, eventdata, handles)
-% hObject    handle to viewFitting3DPB (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --- Executes on button press in pushbutton17.
-function pushbutton17_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton17 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --- Executes on button press in pushbutton18.
-function pushbutton18_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton18 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --- Executes on button press in pushbutton19.
-function pushbutton19_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton19 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-
 function expertNumType_Callback(hObject, eventdata, handles)
 % hObject    handle to expertNumType (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -652,3 +718,183 @@ end
 if ~isempty(handles.graph3.UserData)
     handles.graph3.UserData.Callback(handles.graph3.UserData,eventdata);
 end
+
+
+% --- Executes on button press in viewFitting2DCB.
+function viewFitting2DCB_Callback(hObject, eventdata, handles)
+% unselect the other one
+handles.viewFitting3DCB.Value = false;
+handles.chooseOneMore.Enable = 'off';
+handles.text9.Enable = 'off';
+handles.ViewFittingPB.Enable = 'on';
+
+% --- Executes on button press in viewFitting3DCB.
+function viewFitting3DCB_Callback(hObject, eventdata, handles)
+% unselect the other one
+handles.viewFitting2DCB.Value = false;
+handles.chooseOneMore.Enable = 'on';
+handles.text9.Enable = 'on';
+handles.ViewFittingPB.Enable = 'on';
+
+% --- Executes on selection change in fittingViewOptions.
+function fittingViewOptions_Callback(hObject, eventdata, handles)
+% Hints: contents = cellstr(get(hObject,'String')) returns fittingViewOptions contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from fittingViewOptions
+
+
+% --- Executes during object creation, after setting all properties.
+function fittingViewOptions_CreateFcn(hObject, eventdata, handles)
+% Hint: listbox controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+function [param,chosenParam] = chooseParam(objectHandle,handles)
+% get the right CPG parameter from the list for fitting plot
+contents = cellstr(get(objectHandle,'String'));
+chosenParam = contents{get(objectHandle,'Value')};
+obj = handles.trainPB.UserData;
+switch chosenParam
+    case 'tau'
+        param = obj.sampl_test(strcmp('tau',obj.inputsNames),:);
+    case 'b'
+        param = obj.sampl_test(strcmp('b',obj.inputsNames),:);
+    case 'a'
+        param = obj.sampl_test(strcmp('a',obj.inputsNames),:);
+    case 's'
+        param = obj.sampl_test(strcmp('s',obj.inputsNames),:);
+    case 'c1'
+        param = obj.sampl_test(strcmp('c_1',obj.inputsNames),:);
+    case 'c2'
+        param = obj.sampl_test(strcmp('c_2',obj.inputsNames),:);
+    case 'c3'
+        param = obj.sampl_test(strcmp('c_3',obj.inputsNames),:);
+    case 'c4'
+        param = obj.sampl_test(strcmp('c_4',obj.inputsNames),:);
+    case 'w12'
+        param = obj.sampl_test(strcmp('w_{12}',obj.inputsNames),:);
+    case 'w13'
+        param = obj.sampl_test(strcmp('w_{13}',obj.inputsNames),:);
+    case 'w14'
+        param = obj.sampl_test(strcmp('w_{14}',obj.inputsNames),:);
+    case 'w21'
+        param = obj.sampl_test(strcmp('w_{21}',obj.inputsNames),:);
+    case 'w23'
+        param = obj.sampl_test(strcmp('w_{23}',obj.inputsNames),:);
+    case 'w24'
+        param = obj.sampl_test(strcmp('w_{24}',obj.inputsNames),:);
+    case 'w31'
+        param = obj.sampl_test(strcmp('w_{31}',obj.inputsNames),:);
+    case 'w32'
+        param = obj.sampl_test(strcmp('w_{32}',obj.inputsNames),:);
+    case 'w34'
+        param = obj.sampl_test(strcmp('w_{34}',obj.inputsNames),:);
+    case 'w41'
+        param = obj.sampl_test(strcmp('w_{41}',obj.inputsNames),:);
+    case 'w42'
+        param = obj.sampl_test(strcmp('w_{42}',obj.inputsNames),:);
+    case 'w43'
+        param = obj.sampl_test(strcmp('w_{43}',obj.inputsNames),:);
+end
+
+% --- Executes on button press in ViewFittingPB.
+function ViewFittingPB_Callback(hObject, eventdata, handles)
+obj = handles.trainPB.UserData;
+if handles.refreshGrpahsPB.Value
+    % if we want to refresh the graphs after retraining
+    ax = hObject.UserData;
+else
+    ax = whichAxis(handles);
+    hObject.UserData = ax; %which graph this plot was on last
+end
+cla(ax);
+ax.NextPlot= 'add';
+
+[param1,param1Name] = chooseParam(handles.fittingViewOptions,handles);
+if handles.viewFitting3DCB.Value
+    % if we want a 3D plot
+    [param2,param2Name] = chooseParam(handles.chooseOneMore,handles);
+end
+
+if handles.viewFitting2DCB.Value
+    scatter(ax,param1,obj.targ_test,'o');
+else
+    scatter3(ax,param1,param2,obj.targ_test,'o');
+end
+
+Legend={'targets'};
+if handles.singleNNCB.Value
+    output_from_NN = obj.NN.out_from_test;
+    if handles.viewFitting2DCB.Value
+        scatter(ax,param1,output_from_NN,'d');
+    else
+        scatter3(ax,param1,param2,output_from_NN,'d');
+    end
+    Legend{end+1} = 'NN estimation';
+end
+if handles.ourMoECB.Value
+    output_from_ourMoE = obj.my_MoE_out.out_from_test;
+    if handles.viewFitting2DCB.Value
+        scatter(ax,param1,output_from_ourMoE,'d');
+    else
+        scatter3(ax,param1,param2,output_from_ourMoE,'d');
+    end
+    Legend{end+1} = 'our MoE estimation';
+end
+
+if handles.twoNsymmRB.Value
+    % if 2N CPG than show Matsuoka's estimation 
+    freq_Matsuoka_est = zeros(1,size(obj.targ_test,2));
+    tau = obj.sampl_test(strcmp('tau',obj.inputsNames),:);
+    b = obj.sampl_test(strcmp('b',obj.inputsNames),:);
+    a = obj.sampl_test(strcmp('a',obj.inputsNames),:);
+    T = 5.*tau;
+    for j=1:size(obj.targ_test,2);
+        freq_Matsuoka_est(1,j) = obj.MatsuokaEstimation(tau(1,j),T(1,j),b(1,j),a(1,j));
+    end
+    
+    if handles.viewFitting2DCB.Value
+        scatter(ax,param1,freq_Matsuoka_est,'x');
+    else
+        scatter3(ax,param1,param2,freq_Matsuoka_est,'x');
+    end
+    Legend{end+1}='Matsuoka est';
+end
+
+ax.XLabel.String=param1Name;   grid on;
+ax.Title.String=['frequency over ',param1Name];
+if handles.viewFitting3DCB.Value
+    ax.YLabel.String=param2Name;
+    ax.ZLabel.String='freq [Hz]';
+    ax.Title.String=['frequency over ',param1Name, 'and ',param2Name];
+    rotate3d(ax,'on');
+else
+    view(ax,0,90);
+    ax.YLabel.String='freq [Hz]';
+end
+legend(ax,Legend);
+ax.UserData = hObject;
+
+% --- Executes on selection change in chooseOneMore.
+function chooseOneMore_Callback(hObject, eventdata, handles)
+% hObject    handle to chooseOneMore (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns chooseOneMore contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from chooseOneMore
+
+
+% --- Executes during object creation, after setting all properties.
+function chooseOneMore_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to chooseOneMore (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: listbox controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+

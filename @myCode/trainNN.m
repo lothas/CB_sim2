@@ -30,8 +30,9 @@ obj.NN.out_from_valid = obj.NN.net(obj.sampl_valid);
 obj.NN.out_from_test = obj.NN.net(obj.sampl_test);
 
 % Calc test MSE:
-[errMSE,~] = obj.NN_perf_calc(obj.targ_test,obj.NN.out_from_test,0,0,'test');
+[errMSE,Rsquar] = obj.NN_perf_calc(obj.targ_test,obj.NN.out_from_test,0,0,'test');
 obj.NN.MSE_test_perf = errMSE;
+obj.NN.RsquarTest = Rsquar;
 
 if obj.disp_information
     figure;

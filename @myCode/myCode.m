@@ -35,8 +35,8 @@ classdef myCode < handle & matlab.mixin.Copyable
 
         unGroupted_data = [] % save the data in its undevided form for futuer bug checkig the the
                              % devision to train, validation and test.
-        train_ratio = 0.6; % the % of samples in the train group
-        valid_ratio = 0.2; % the % of samples in the validation group
+        train_ratio = 0.75; % the % of samples in the train group
+        valid_ratio = 0.15; % the % of samples in the validation group
         %note: the rest will go to the test group
         
         sampl_train = []; %training group
