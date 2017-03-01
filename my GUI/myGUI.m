@@ -22,7 +22,7 @@ function varargout = myGUI(varargin)
 
 % Edit the above text to modify the response to help myGUI
 
-% Last Modified by GUIDE v2.5 27-Feb-2017 11:02:45
+% Last Modified by GUIDE v2.5 28-Feb-2017 14:54:25
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -485,7 +485,7 @@ end
 if handles.ourMoECB.Value
     disp('training MoE...');
     competetiveflag = 3;
-    myCode1 = myCode1.Set('our_MoE',floor(numOfEpochs/5),...
+    myCode1 = myCode1.Set('our_MoE',ceil(numOfEpochs/5),...
         numOfExperts,numOfHiddenNeurons,[2],5,competetiveflag);
     myCode1 = myCode1.my_MoE_train();
     handles.resultsTable.Data{1,2} = num2str(myCode1.my_MoE_out.Moe_MSE_on_test);
@@ -589,6 +589,7 @@ end
 cla(ax);
 ax.NextPlot= 'add';
 obj = handles.trainPB.UserData;
+line([0,1],[0,1],'color',[0,0,0],'linewidth',2,'Parent',ax);
 switch obj.expertCount
     case {2,3} % in case of small number of expert, make colors clear:
         colors = [1,0,0;0,1,0;0,0,1];
@@ -702,10 +703,13 @@ ax.UserData = hObject;
 
 % --- Executes on button press in refreshGrpahsPB.
 function refreshGrpahsPB_Callback(hObject, eventdata, handles)
-% hObject    handle to refreshGrpahsPB (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-% gatePerfOverEpochPB_Callback(handles.gatePerfOverEpochPB,eventdata,handles)
+% refresh the graphics in all graphs.
+% clear the old graphics:
+cla(handles.graph0);
+cla(handles.graph1);
+cla(handles.graph2);
+cla(handles.graph3);
+% call again the plotting functions that were used on the graph
 if ~isempty(handles.graph0.UserData)
     handles.graph0.UserData.Callback(handles.graph0.UserData,eventdata);
 end
@@ -718,6 +722,14 @@ end
 if ~isempty(handles.graph3.UserData)
     handles.graph3.UserData.Callback(handles.graph3.UserData,eventdata);
 end
+
+
+% --- Executes on button press in clearAllGraphsPB.
+function clearAllGraphsPB_Callback(hObject, eventdata, handles)
+cla(handles.graph0,'reset');
+cla(handles.graph1,'reset');
+cla(handles.graph2,'reset');
+cla(handles.graph3,'reset');
 
 
 % --- Executes on button press in viewFitting2DCB.
@@ -868,7 +880,7 @@ if handles.viewFitting3DCB.Value
     ax.YLabel.String=param2Name;
     ax.ZLabel.String='freq [Hz]';
     ax.Title.String=['frequency over ',param1Name, 'and ',param2Name];
-    rotate3d(ax,'on');
+%     rotate3d(ax,'on');
 else
     view(ax,0,90);
     ax.YLabel.String='freq [Hz]';
@@ -897,4 +909,3 @@ function chooseOneMore_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
