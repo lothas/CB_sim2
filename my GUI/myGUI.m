@@ -625,7 +625,7 @@ obj = handles.trainPB.UserData;
 % end
 % % TODO: make a legend with these names.
 gateOut = obj.my_MoE_out.gateNet(obj.sampl_test);
-bar(ax,gateOut','stacked'); xlabel('#sample');
+bar(ax,gateOut','stacked');
 ax.XLabel.String='sample Num'; ax.YLabel.String='gate output [Prob]';
 ax.Title.String={'The probability of each sample to belong to each expert',...
     'each expert is a different color'};
