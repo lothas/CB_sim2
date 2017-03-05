@@ -22,7 +22,7 @@ function varargout = myGUI(varargin)
 
 % Edit the above text to modify the response to help myGUI
 
-% Last Modified by GUIDE v2.5 28-Feb-2017 14:54:25
+% Last Modified by GUIDE v2.5 05-Mar-2017 16:18:17
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -77,6 +77,7 @@ handles.resultsTable.Enable = 'off';
 handles.perf_over_epochPB.Enable = 'off';
 handles.gatePerfOverEpochPB.Enable = 'off';
 handles.MoE_regressionGraphPB.Enable = 'off';
+handles.MoEGateOutPlotPB.Enable = 'off';
 handles.NNregressionPB.Enable = 'off';
 handles.toGraph0.Enable = 'off';
 handles.toGraph1.Enable = 'off';
@@ -116,38 +117,68 @@ end
 
 % --- Executes on button press in twoNsymmRB.
 function twoNsymmRB_Callback(hObject, eventdata, handles)
-% hObject    handle to twoNsymmRB (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of twoNsymmRB
-
+chooseDifferentDataType(handles);
 
 % --- Executes on button press in twoNgenRB.
 function twoNgenRB_Callback(hObject, eventdata, handles)
-% hObject    handle to twoNgenRB (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of twoNgenRB
-
+chooseDifferentDataType(handles);
 
 % --- Executes on button press in fourNsymmRB.
 function fourNsymmRB_Callback(hObject, eventdata, handles)
-% hObject    handle to fourNsymmRB (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of fourNsymmRB
-
+chooseDifferentDataType(handles);
 
 % --- Executes on button press in fourNgenRB.
 function fourNgenRB_Callback(hObject, eventdata, handles)
-% hObject    handle to fourNgenRB (see GCBO)
+chooseDifferentDataType(handles);
+
+function chooseDifferentDataType(handles)
+% when choose different data, then clear default data name and prepare to
+% recieve a new one.
+handles.useDefaultFileCB.Value = false;
+handles.enterFileNameLine.String = 'enter file name or choose default';
+
+
+function enterFileNameLine_Callback(hObject, eventdata, handles)
+% hObject    handle to enterFileNameLine (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of fourNgenRB
+% Hints: get(hObject,'String') returns contents of enterFileNameLine as text
+%        str2double(get(hObject,'String')) returns contents of enterFileNameLine as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function enterFileNameLine_CreateFcn(hObject, eventdata, handles)
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+% --- Executes on button press in browseFileNamePB.
+function browseFileNamePB_Callback(hObject, eventdata, handles)
+% if we want specific data file, then browse for it on the PC.
+handles.useDefaultFileCB.Value = false;
+[FileName,~,~] = uigetfile('*.mat','Select a MATLAB data file');
+handles.enterFileNameLine.String = FileName;
+
+% --- Executes on button press in useDefaultFileCB.
+function useDefaultFileCB_Callback(hObject, eventdata, handles)
+% hObject    handle to useDefaultFileCB (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if get(hObject,'Value')
+    if handles.twoNsymmRB.Value
+        handles.enterFileNameLine.String = 'MatsRandomRes_2Neurons_symm_trainData_narrow_range.mat';
+    elseif handles.twoNgenRB.Value        
+        handles.enterFileNameLine.String = 'MatsRandomRes_2Neurons_general_1to4_combained.mat';
+    elseif handles.fourNsymmRB.Value
+%         handles.enterFileNameLine.String = 'MatsRandomRes_4Neurons_symm.mat';
+        handles.enterFileNameLine.String = 'MatsRandomRes_4Neurons_symm_all_samples.mat';
+    elseif handles.fourNgenRB.Value
+        handles.enterFileNameLine.String = ' ';
+    end
+end
 
 
 % --- Executes on button press in loadData_PB.
@@ -173,7 +204,8 @@ elseif handles.fourNsymmRB.Value
     seqOrder = {'tau','b','c','w_{12}','w_{13}','w_{14}','w_{23}','w_{24}','w_{34}'};
     myCode1=myCode(fileName,parametersCells,targetCells,seqOrder,4);
     myCode1.sizeOfCPG = 4;
-elseif handles.fourNsymmRB.Value   
+elseif handles.fourNgenRB.Value  
+    handles.teminalText.String = 'still not implemented yet...';
 end
 
 %NOTE: this doesn't change with shuffling!
@@ -189,48 +221,6 @@ handles.paperMoECB.Enable = 'on';
 handles.shufflePB.Enable = 'on';
 
 handles.teminalText.String = 'data was loaded';
-
-
-function enterFileNameLine_Callback(hObject, eventdata, handles)
-% hObject    handle to enterFileNameLine (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of enterFileNameLine as text
-%        str2double(get(hObject,'String')) returns contents of enterFileNameLine as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function enterFileNameLine_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to enterFileNameLine (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-% --- Executes on button press in useDefaultFileCB.
-function useDefaultFileCB_Callback(hObject, eventdata, handles)
-% hObject    handle to useDefaultFileCB (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-if get(hObject,'Value')
-    if handles.twoNsymmRB.Value
-        handles.enterFileNameLine.String = 'MatsRandomRes_2Neurons_symm_trainData_narrow_range.mat';
-    elseif handles.twoNgenRB.Value        
-        handles.enterFileNameLine.String = 'MatsRandomRes_2Neurons_general_1to4_combained.mat';
-    elseif handles.fourNsymmRB.Value
-%         handles.enterFileNameLine.String = 'MatsRandomRes_4Neurons_symm.mat';
-        handles.enterFileNameLine.String = 'MatsRandomRes_4Neurons_symm_all_samples.mat';
-    elseif handles.fourNsymmRB.Value
-        handles.enterFileNameLine.String = ' ';
-    end
-end
-
 
 % --- Executes on button press in singleNNCB.
 function singleNNCB_Callback(hObject, eventdata, handles)
@@ -515,6 +505,7 @@ if handles.singleNNCB.Value
 end
 if handles.ourMoECB.Value
     handles.MoE_regressionGraphPB.Enable = 'on';
+    handles.MoEGateOutPlotPB.Enable = 'on';
     handles.perf_over_epochPB.Enable = 'on';
     handles.gatePerfOverEpochPB.Enable = 'on';
     handles.toggleToViewMoERB.Enable = 'on';
@@ -613,6 +604,31 @@ for j=1:obj.expertCount
 end
 ax.XLabel.String='target'; ax.YLabel.String='output';
 ax.Title.String={'regression graph with different color for every dominant expert';'empty circle mean g<0.5'};
+ax.UserData = hObject;
+ax.NextPlot= 'replace';
+
+% --- Executes on button press in MoEGateOutPlotPB.
+function MoEGateOutPlotPB_Callback(hObject, eventdata, handles)
+if handles.refreshGrpahsPB.Value
+    % if we want to refresh the graphs after retraining
+    ax = hObject.UserData;
+else
+    ax = whichAxis(handles);
+    hObject.UserData = ax; %which graph this plot was on last
+end
+cla(ax);
+ax.NextPlot= 'add';
+obj = handles.trainPB.UserData;
+% legendNames = cell(1,expertCount);
+% for j=1:expertCount
+%     legendNames{1,j} = ['#',num2str(j),' expert'];
+% end
+% % TODO: make a legend with these names.
+gateOut = obj.my_MoE_out.gateNet(obj.sampl_test);
+bar(ax,gateOut','stacked'); xlabel('#sample');
+ax.XLabel.String='sample Num'; ax.YLabel.String='gate output [Prob]';
+ax.Title.String={'The probability of each sample to belong to each expert',...
+    'each expert is a different color'};
 ax.UserData = hObject;
 ax.NextPlot= 'replace';
 
@@ -900,12 +916,7 @@ function chooseOneMore_Callback(hObject, eventdata, handles)
 
 % --- Executes during object creation, after setting all properties.
 function chooseOneMore_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to chooseOneMore (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: listbox controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
