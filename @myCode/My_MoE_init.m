@@ -19,35 +19,27 @@ for j=1:obj.expertCount
 end
 
 % initial training (to initilazied the NN)
-% train each experts on a random sample of 500 points to initialze the
+% train each experts on a random sample of 10 points to initialze the
 % weights.
 
-if num_of_train_samples < 500
-    error('num of train samples need to be larger than 500!');
+if num_of_train_samples < 10
+    error('num of train samples need to be larger than 10!');
 end
 
 for j=1:obj.expertCount
-    initTrain = randsample(1:num_of_train_samples,500);
-    [expertsNN{1,j}, expertsNN{2,j}] = train(expertsNN{1,j}, obj.sampl_train(:,initTrain), obj.targ_train(:,initTrain));
+    initTrain = randsample(1:num_of_train_samples,10);
+    [expertsNN{1,j}, expertsNN{2,j}] = train(expertsNN{1,j},...
+        obj.sampl_train(:,initTrain),...
+        obj.targ_train(:,initTrain));
 end
 
 % define and initialize gate Network:
-for j=1:obj.expertCount % run the data throught the experts to get initial clustering
-    tempNet = expertsNN{1,j};
-    outMat(j,:) = tempNet(obj.sampl_train);
-    errMat(j,:) = outMat(j,:) - obj.targ_train;
-end
-seMat = errMat.^2; % squar error
-
 g0 = rand(obj.expertCount,num_of_train_samples);
-fh = zeros(obj.expertCount,num_of_train_samples);
-for k=1:num_of_train_samples
-    fh(:,k) = g0(:,k) .* exp(-0.5 .* seMat(:,k) );
-    fh(:,k) = fh(:,k) ./ sum(fh(:,k),1);
-end
+fh = obj.calc_fh(expertsNN,g0);
 
-gateNet = trainSoftmaxLayer(obj.sampl_train,fh,'LossFunction','mse',...
-    'MaxEpochs',100,'ShowProgressWindow',false);
+initTrain = randsample(1:num_of_train_samples,10);
+gateNet = trainSoftmaxLayer(obj.sampl_train(:,initTrain),fh(:,initTrain),...
+    'LossFunction','mse','MaxEpochs',100,'ShowProgressWindow',false);
 
 % gateNet = feedforwardnet(obj.my_MoE_out.GateHidLayer);
 % layerNum = numel(obj.my_MoE_out.GateHidLayer); % number of layers

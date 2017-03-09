@@ -27,7 +27,7 @@ textStrings = strtrim(cellstr(textStrings));  %# Remove any space padding
 
 % figure;
 imagesc(abs(weights));
-colormap(flipud(gray));  %# Change the colormap to gray (so higher values are
+colormap(gca,flipud(gray));  %# Change the colormap to gray (so higher values are
                          %#   black and lower values are white)
 title(graphTitle);
 % title(['Weights in a NN with ',num2str(length(HiddenNumCells)),' hidden neurons']);

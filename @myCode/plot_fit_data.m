@@ -80,7 +80,7 @@ switch problemType
             title('frequency over "a" and "tau"'); hold off;
         end
         
-        [MSE_matsuoka,~] = obj.NN_perf_calc(freq_from_code,freq_Matsuoka_est,0,0,'test' )
+        [MSE_matsuoka,~] = obj.NN_perf_calc(freq_from_code,freq_Matsuoka_est,0,0,'test' );
         disp(['Matsuoka estimation perf = ',num2str(MSE_matsuoka)]);
         
     case '2N_general'

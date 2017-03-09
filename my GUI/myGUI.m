@@ -581,12 +581,6 @@ cla(ax);
 ax.NextPlot= 'add';
 obj = handles.trainPB.UserData;
 line([0,1],[0,1],'color',[0,0,0],'linewidth',2,'Parent',ax);
-switch obj.expertCount
-    case {2,3} % in case of small number of expert, make colors clear:
-        colors = [1,0,0;0,1,0;0,0,1];
-    otherwise
-        colors = rand(obj.expertCount,3);
-end
 gateOut = obj.my_MoE_out.gateNet(obj.sampl_test);
 ouputs = obj.my_MoE_out.out_from_test;
 targets = obj.targ_test;
@@ -595,7 +589,7 @@ for j=1:obj.expertCount
     for i=1:size(ouputs,2)
         if g_max_ind(1,i) == j
             if g_max(1,i) > 0.5
-                plot(ax,targets(1,i),ouputs(1,i),'k-o','MarkerFaceColor',colors(j,:));
+                plot(ax,targets(1,i),ouputs(1,i),'k-o','MarkerFaceColor',obj.colors(j,:));
             else
                 plot(ax,targets(1,i),ouputs(1,i),'k-o');
             end

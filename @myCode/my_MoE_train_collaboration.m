@@ -3,12 +3,19 @@ function [obj] = my_MoE_train_collaboration(obj)
 % % NOTE: same for the "my_MoE_train.m" but only for competetiveFlag=3 and
 % with better visualization.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%TODO: update this code according to the "my_MoE_train_softCompetetive"
+%       code!!!!!!
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 switch obj.expertCount
     case {2,3} % in case of small number of expert, make colors clear:
         colors = [1,0,0;0,1,0;0,0,1];
     otherwise
         colors = rand(obj.expertCount,3);
 end
+
+numToShow = 100; % the #samples to show in the online regression plot.
 
 fig1 = figure;
 ax1 = subplot(2,2,1);% axes('Position',[0.1 0.1 0.7 0.7]);
@@ -40,6 +47,10 @@ ax4.XLabel.String='sample Num';
 ax4.YLabel.String='gate output [Prob]';
 ax4.Title.String={'The probability of each sample to belong to each expert',...
     'each expert is a different color'};
+ax4.XLim = [0 numToShow];
+ax4.XLimMode = 'manual';
+ax4.YLim = [0 1];
+ax4.YLimMode = 'manual';
 
 sampl_train = obj.sampl_train;
 targ_train = obj.targ_train;
@@ -49,7 +60,6 @@ sampl_test = obj.sampl_test;
 targ_test = obj.targ_test;
 
 % take only few points for the regression plot:
-numToShow = 100;
 if size(targ_test,2) > numToShow
     randSampl_ind = randsample(size(targ_test,2),numToShow);
     randSampl_ind = randSampl_ind';
@@ -78,8 +88,7 @@ gateNet = obj.my_MoE_out.gateNet;
 expertsNN = obj.my_MoE_out.expertsNN;
 
 % data storage:
-outMat = zeros(expertCount,num_of_train_samples); % Experts output matrix 
-errMat = zeros(size(outMat)); % error matrix (each row - targets)
+errMat = zeros(expertCount,num_of_train_samples); % error matrix (each row - targets)
 gateNN_perf_vec = zeros(1,numOfIteretions); % gate performance over iteration num
 Moe_perf_over_iter = zeros(1,numOfIteretions); % the performance of the entire MoE over #iteretion
 
@@ -151,8 +160,8 @@ for i=1:numOfIteretions
     % run each expert on the entire data:
     for j=1:expertCount
         tempNet = expertsNN{1,j};
-        outMat(j,:) = tempNet(sampl_train);
-        errMat(j,:) = outMat(j,:) - targ_train;
+        outMat = tempNet(sampl_train);
+        errMat(j,:) = outMat - targ_train;
     end
     seMat = errMat.^2; % squar error
     

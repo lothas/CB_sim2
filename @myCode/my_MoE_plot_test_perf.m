@@ -1,13 +1,6 @@
 function my_MoE_plot_test_perf(obj,expertCount,NNoutput,NNtargets,cluster_i_train_ind,gateOut,competetiveFlag)
 % plot only graphs which are relevant to training sessions:
 
-switch expertCount
-    case {2,3} % in case of small number of expert, make colors clear:
-        colors = [1,0,0;0,1,0;0,0,1];
-    otherwise
-        colors = rand(expertCount,3);
-end
-
 legendNames = cell(1,expertCount);
 for j=1:expertCount
     legendNames{1,j} = ['#',num2str(j),' expert'];
@@ -22,7 +15,7 @@ switch competetiveFlag
                 out_temp = NNoutput(:,cluster_i_train_ind{1,j});
                 targ_temp = NNtargets(:,cluster_i_train_ind{1,j});
 
-                h = plot(targ_temp,out_temp,'Color',colors(j,:),'LineStyle','none');
+                h = plot(targ_temp,out_temp,'Color',obj.colors(j,:),'LineStyle','none');
                 h.Marker = 'o';
             end
         end
@@ -50,7 +43,7 @@ switch competetiveFlag
             for i=1:size(NNoutput,2)
                 if g_max_ind(1,i) == j
                     if g_max(1,i) > 0.5
-                        plot(NNtargets(1,i),NNoutput(1,i),'k-o','MarkerFaceColor',colors(j,:));
+                        plot(NNtargets(1,i),NNoutput(1,i),'k-o','MarkerFaceColor',obj.colors(j,:));
                     else
                         plot(NNtargets(1,i),NNoutput(1,i),'k-o');
                     end

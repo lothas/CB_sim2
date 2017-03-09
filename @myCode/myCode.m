@@ -94,6 +94,7 @@ classdef myCode < handle & matlab.mixin.Copyable
                             %   'learningRate' - the learning rate 
                             %   'decay'- the decay of the learning rate 
         
+        colors = []; % the colors of each expert on the graphs
     end
     
     methods
