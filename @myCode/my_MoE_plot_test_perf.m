@@ -1,11 +1,6 @@
 function my_MoE_plot_test_perf(obj,expertCount,NNoutput,NNtargets,cluster_i_train_ind,gateOut,competetiveFlag)
 % plot only graphs which are relevant to training sessions:
 
-legendNames = cell(1,expertCount);
-for j=1:expertCount
-    legendNames{1,j} = ['#',num2str(j),' expert'];
-end
-
 switch competetiveFlag
     case {1,2}
         % plot the regression graph and color each expert's cluster in a different color 
@@ -20,7 +15,7 @@ switch competetiveFlag
             end
         end
         hold off;
-        xlabel('targets'); ylabel('ouput'); legend(legendNames);
+        xlabel('targets'); ylabel('ouput'); legend(obj.legendNames);
         title('regression graph: Targets over NNoutputs');
 
     case 3
@@ -33,7 +28,7 @@ switch competetiveFlag
 
         subplot(2,1,2);
         bar(gateOut','stacked'); xlabel('#sample');
-        legend(legendNames);
+        legend(obj.legendNames);
 
         % figure with different filled color for each "dominant expert
         % (based on "g")

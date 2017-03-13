@@ -34,15 +34,10 @@ function [err, r, g] = paper_MoE_test(obj,sampl, targ, ExpertsWeights, gateWeigh
         h.Marker = 'o';
         xlabel('targets'); ylabel('outputs');
         title('regression graph: Targets over NNoutputs');
-        
-        legendNames = cell(1,expertCount);
-        for j=1:expertCount
-            legendNames{1,j} = ['#',num2str(j),' expert'];
-        end
     
         subplot(2,1,2);
         bar(g','stacked'); xlabel('#sample');
-        legend(legendNames);
+        legend(obj.legendNames);
         
     end
  

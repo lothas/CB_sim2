@@ -21,5 +21,10 @@ for k=1:num_of_train_samples
     fh(:,k) = fh(:,k) ./ sum(fh(:,k),1);
 end
 
+% % % check if the sum of the gait for each sample is '1'
+% if (sum(sum(fh,1),2) ~=  num_of_train_samples)
+%    error('something is wrong with "f_h"!');
+% end
+
 end
 

@@ -14,12 +14,8 @@ netOut_test = obj.paper_MoE_out.out_from_test;
 gateOut_train = obj.paper_MoE_out.gateOut_from_train;
 gateOut_test = obj.paper_MoE_out.gateOut_from_test;
 
-% set legend and x-axis for plot:
+% x-axis for plot:
 iterNum = 1:numOfIteretions;
-legendNames = cell(1,expertCount);
-for j=1:expertCount
-    legendNames{1,j} = ['#',num2str(j),' expert'];
-end
 
 % plot the requested graphs:
 for i=1:length(graphKeys)
@@ -42,7 +38,7 @@ for i=1:length(graphKeys)
 
             subplot(2,2,3);
             bar(gateOut_test','stacked'); xlabel('#sample');
-            legend(legendNames);
+            legend(obj.legendNames);
             title('gate output over sample num - test');
 
             subplot(2,2,2);
@@ -53,7 +49,7 @@ for i=1:length(graphKeys)
 
             subplot(2,2,4);
             bar(gateOut_train','stacked'); xlabel('#sample');
-            legend(legendNames);
+            legend(obj.legendNames);
             title('gate output over sample num - train');
             
         case{'reg_with_color'}

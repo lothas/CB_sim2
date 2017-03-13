@@ -138,10 +138,10 @@ for i=1:numOfIteretions
     
     cla(ax4);
     bplot = bar(ax4,(gateOut_test(:,randSampl_ind))','stacked');
-    for k=1:length(randSampl_ind)
+    for k=1:obj.expertCount
       set(bplot(k),'facecolor',obj.colors(k,:))
     end
-    AX=legend(H, {'a','b','c','d','e','f'}, 'Location','Best','FontSize',8);
+    AXlegend=legend(bplot, obj.legendNames, 'Location','northwestoutside','FontSize',8);
     
     % calc MoE performance to check wether to stop the training:
     [Moe_perf_over_iter(1,i),~] = obj.NN_perf_calc(targ_valid,MoE_out_valid,0,0);
@@ -161,18 +161,15 @@ for i=1:numOfIteretions
    end
    
    % run each expert on the entire data and calc "fh":
-   g = gateOut;
-   fh = obj.calc_fh(expertsNN,g);
+   fh = obj.calc_fh(expertsNN,gateOut); % ( g = gateOut )
    
     % training the experts:
     %   train each expert only on the samples which belongs to it.
     %      also train the experts with weights given to samples by f_h 
     for j=1:expertCount
         tempNet = expertsNN{1,j};
-        errorWeights_all0 = {fh(j,:)};
-        errorWeights_all = errorWeights_all0{1,1};
+        errorWeights_all = fh(j,:);
         errorWeights = errorWeights_all(1,cluster_i__ind{1,j});
-        
         [tempNet, tempNet_perf] = train(tempNet,...
             sampl_train(:,cluster_i__ind{1,j}),...
             targ_train(:,cluster_i__ind{1,j}),...

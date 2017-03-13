@@ -34,7 +34,7 @@ for j=1:obj.expertCount
 end
 
 % define and initialize gate Network:
-g0 = rand(obj.expertCount,num_of_train_samples);
+g0 = softmax(rand(obj.expertCount,num_of_train_samples));
 fh = obj.calc_fh(expertsNN,g0);
 
 initTrain = randsample(1:num_of_train_samples,10);
