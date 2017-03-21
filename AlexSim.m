@@ -1,6 +1,8 @@
 function [Sim] = AlexSim()
 close all
 
+event_based_poincare = 0;
+
 Sim = Simulation();
 Sim.Graphics = 1;
 Sim.EndCond = 2;
@@ -41,7 +43,33 @@ Sim.Con.HandleEvent(1, Sim.IC(Sim.ConCo));
 Sim = Sim.Run();
 
 % Calculate eigenvalues
-[EigVal,EigVec] = Sim.Poincare();
+Sim.PMFull = 0;
+if event_based_poincare == 1
+    Sim.PMstrob = 0;
+    [EigVal,EigVec] = Sim.Poincare();
+else    
+    % Simulate CB for extra delta % of period
+    delta = 0.25;
+    tSim = copy(Sim);
+    tSim.Graphics = 1;
+    tSim.EndCond = 0;
+
+    % Simulation parameters
+    tSim = tSim.SetTime(0,0.01,delta*tSim.Period(1)*tSim.Period(2));
+    tSim.IC = tSim.IClimCyc;
+
+    % Some more simulation initialization
+    tSim.Mod.LegShift = tSim.Mod.Clearance;
+    tSim.Con.HandleEvent(1, tSim.IC(tSim.ConCo));
+
+    % Simulate
+    tSim = tSim.Run();
+    
+    % Use new state as limit cycle steady state ICs
+    Sim.IClimCyc = tSim.Out.X(end,:)';
+    
+    Sim.PMstrob = 1;
+    [EigVal,EigVec] = Sim.Poincare();
 
 % Do some plots
 disp(EigVal);

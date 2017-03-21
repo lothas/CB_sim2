@@ -5,6 +5,7 @@ function [ sim ] = Run( sim )
     sim.Out.T = [];
     Torques = [];
     Slopes = [];
+    sim.StopSim = 0;
     
     if sim.Graphics == 1
         options=odeset('MaxStep',sim.tstep/10,'RelTol',1e-8,'AbsTol',1e-9,...

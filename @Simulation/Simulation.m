@@ -41,7 +41,7 @@ classdef Simulation < handle & matlab.mixin.Copyable
         
         % Poincare map calculation parameters
         IClimCyc; Period;
-        PMeps = 1e-5; PMFull = 0;
+        PMeps = 1e-5; PMFull = 0; PMstrob = 0;
         PMeigs; PMeigVs;
         % Check convergence progression
         doGoNoGo = 1; % 0 - OFF, 1 - Extend, 2 - Cut

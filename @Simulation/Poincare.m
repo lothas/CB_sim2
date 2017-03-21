@@ -37,8 +37,13 @@ end
 
 % Run the simulations
 PMsim = copy(sim);
-PMsim.EndCond = [1,sim.Period(1)];
-PMsim = PMsim.SetTime(0,2*sim.Period(1)*sim.Period(2));
+if sim.PMstrob == 1
+    PMsim.EndCond = 0;
+    PMsim = PMsim.SetTime(0,sim.Period(1)*sim.Period(2));
+else
+    PMsim.EndCond = [1,sim.Period(1)];
+    PMsim = PMsim.SetTime(0,2*sim.Period(1)*sim.Period(2));
+end
 Slope = PMsim.Env.SurfSlope(PMsim.Mod.xS);
 for d = Coords
     PMsim.IC = dIC(:,d);
@@ -48,13 +53,19 @@ for d = Coords
         PMsim.IC(PMsim.ConCo),Slope);
     PMsim = PMsim.Run();
 
-    if PMsim.Out.Type ~= 4
+    if (PMsim.PMstrob == 0 && PMsim.Out.Type ~= 4) ...
+            || (PMsim.PMstrob == 1 && PMsim.Out.Type ~= 0)
         % Robot didn't complete the step
         EigVal = 2*ones(Ncoord,1);
         EigVec = eye(Ncoord);
         return;
     end
-    dICp(:,d) = PMsim.ICstore(:,1);
+    
+    if PMsim.PMstrob == 0
+        dICp(:,d) = PMsim.ICstore(:,1);
+    else
+        dICp(:,d) = PMsim.Out.X(end,:)';
+    end
 end
 
 % Calculate deviation
