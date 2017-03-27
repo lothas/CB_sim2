@@ -300,7 +300,7 @@ function shufflePB_Callback(hObject, eventdata, handles)
 handles.teminalText.String = 'shuffling the samples...';
 if ~isempty(handles.loadData_PB.UserData)
     myCode1 = handles.loadData_PB.UserData;
-    myCode1 = myCode1.shuffle_samples();
+    myCode1 = myCode1.shuffle_samples('completeShuffle');
     handles.loadData_PB.UserData = myCode1;
 end
 handles.teminalText.String = 'samples shuffled';

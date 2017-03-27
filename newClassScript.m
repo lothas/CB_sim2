@@ -28,11 +28,29 @@ myCode.sizeOfCPG = 2;
 problemType = '2N_general';
 
 %% 4N CPG symmetric
-% fileName = 'MatsRandomRes_4Neurons_symm_all_samples.mat';
-fileName = 'MatsRandomRes_4Neurons_symm.mat';
+fileName = 'MatsRandomRes_4Neurons_symm_all_samples.mat';
+% fileName = 'MatsRandomRes_4Neurons_symm.mat';
 parametersCells = {'tau','b','w_{12}','w_{13}','w_{14}','w_{23}','w_{24}','w_{34}'};
 targetCells = {'freq'};
 seqOrder = {'tau','b','c','w_{12}','w_{13}','w_{14}','w_{23}','w_{24}','w_{34}'};
+myCode = myCode(fileName,parametersCells,targetCells,seqOrder,4);
+myCode.sizeOfCPG = 4;
+% clear fileName parametersCells targetCells seqOrder
+
+problemType = '4N_symm';
+
+%% 4N CPG general
+% fileName = 'MatsRandomRes_test.mat';
+fileName = 'MatsRandomRes_31_01_2017.mat';
+parametersCells = {'tau','b',...
+    'w_{12}','w_{13}','w_{14}',...
+    'w_{21}','w_{23}','w_{24}',...
+    'w_{31}','w_{32}','w_{34}',...
+    'w_{41}','w_{42}','w_{43}'};
+targetCells = {'freq'};
+seqOrder = {'tau','b','c_1','c_2','c_3','c_4',...
+    'w_{12}','w_{13}','w_{14}','w_{21}','w_{23}','w_{24}',...
+    'w_{31}','w_{32}','w_{34}','w_{41}','w_{42}','w_{43}'};
 myCode = myCode(fileName,parametersCells,targetCells,seqOrder,4);
 myCode.sizeOfCPG = 4;
 % clear fileName parametersCells targetCells seqOrder
@@ -75,7 +93,7 @@ valid_err_NN = zeros(1,N);
 test_err_NN = zeros(1,N);
 
 for i=1:N  
-    myCode = myCode.shuffle_samples();
+    myCode = myCode.shuffle_samples('completeShuffle');
     myCode = myCode.Set('NN',[numOfHiddenNeurons],numOfEpochs);
     myCode = myCode.trainNN(0);
     
@@ -90,7 +108,7 @@ valid_err_MoE_cmpFlag1 = zeros(1,N);
 test_err_MoE_cmpFlag1 = zeros(1,N);
 
 for i=1:N
-    myCode = myCode.shuffle_samples();
+    myCode = myCode.shuffle_samples('completeShuffle');
     myCode = myCode.Set('our_MoE',numOfEpochs/5,numOfExperts,[numOfHiddenNeurons],[5],5,competetiveflag);
     myCode = myCode.my_MoE_train();
 
@@ -105,7 +123,7 @@ valid_err_MoE_cmpFlag3 = zeros(1,N);
 test_err_MoE_cmpFlag3 = zeros(1,N);
 
 for i=1:N
-    myCode = myCode.shuffle_samples();
+    myCode = myCode.shuffle_samples('completeShuffle');
     myCode = myCode.Set('our_MoE',numOfEpochs/5,numOfExperts,[numOfHiddenNeurons],[5],5,competetiveflag);
     myCode = myCode.my_MoE_train();
 
@@ -151,7 +169,7 @@ valid_err_NN = zeros(1,N);
 test_err_NN = zeros(1,N);
 
 for i=1:N  
-    myCode = myCode.shuffle_samples();
+    myCode = myCode.shuffle_samples('completeShuffle');
     myCode = myCode.Set('NN',[numOfHiddenNeurons],numOfEpochs);
     myCode = myCode.trainNN(0);
     
@@ -166,7 +184,7 @@ valid_err_MoE_cmpFlag3 = zeros(1,N);
 test_err_MoE_cmpFlag3 = zeros(1,N);
 
 for i=1:N
-    myCode = myCode.shuffle_samples();
+    myCode = myCode.shuffle_samples('completeShuffle');
     myCode = myCode.Set('our_MoE',numOfEpochs/5,numOfExperts,[numOfHiddenNeurons],[5],5,competetiveflag);
     myCode = myCode.my_MoE_train();
 
@@ -206,7 +224,7 @@ valid_err_NN = zeros(1,N);
 test_err_NN = zeros(1,N);
 
 for i=1:N  
-    myCode = myCode.shuffle_samples();
+    myCode = myCode.shuffle_samples('completeShuffle');
     myCode = myCode.Set('NN',[numOfHiddenNeurons],numOfEpochs);
     myCode = myCode.trainNN(0);
     
@@ -226,7 +244,7 @@ test_err_MoE_cmpFlag3 = zeros(numOfSims,N);
 
 for j=1:numOfSims
     for i=1:N
-        myCode = myCode.shuffle_samples();
+        myCode = myCode.shuffle_samples('completeShuffle');
         myCode = myCode.Set('our_MoE',numOfEpochs/5,numOfExperts(1,j),[numOfHiddenNeurons],[5],5,competetiveflag);
         myCode = myCode.my_MoE_train();
 

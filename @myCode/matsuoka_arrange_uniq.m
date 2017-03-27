@@ -81,7 +81,7 @@ switch obj.sizeOfCPG
     case 2 % if we have CPG with 2 neurons
         newSampl_Weights = zeros(2,numOfSAmple);
         newSampl_c = zeros(2,numOfSAmple);
-        for i=1:dataPointsNum
+        for i=1:numOfSAmple
             mat = [0        ,w_12(1,i);
                    w_21(1,i),0        ];
 
@@ -106,7 +106,7 @@ switch obj.sizeOfCPG
     case 4 % if we have CPG with 4 neurons
         newSampl_Weights = zeros(12,numOfSAmple);
         newSampl_c = zeros(4,numOfSAmple);
-        for i=1:dataPointsNum
+        for i=1:numOfSAmple
             mat = [0        ,w_12(1,i),w_13(1,i),w_14(1,i);
                    w_21(1,i),0        ,w_23(1,i),w_24(1,i);
                    w_31(1,i),w_32(1,i),0        ,w_34(1,i);
