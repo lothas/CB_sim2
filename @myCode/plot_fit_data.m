@@ -58,7 +58,7 @@ switch problemType
                     for i=1:size(a,2)
                         if g_max_ind(1,i) == j
                             if g_max(1,i) > 0.5 % only samples with more than 50% get fillet dot
-                                scatter(a(1,i),freq_net_est(1,i),'kd','MarkerFaceColor',colors(j,:));
+                                scatter(a(1,i),freq_net_est(1,i),'kd','MarkerFaceColor',obj.colors(j,:));
                             else
                                 scatter(a(1,i),freq_net_est(1,i),'kd');
                             end

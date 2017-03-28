@@ -49,9 +49,9 @@ switch train_or_plot
 
                 % %  shuffle for next time:
                 % only for 2neuron symmetric case-
-%                 obj = obj.shuffle_samples('onlyTrainAndValid'); 
+                obj = obj.shuffle_samples('onlyTrainAndValid'); 
                 % for the other cases- dont keep test group the same-
-                obj = obj.shuffle_samples('completeShuffle');
+%                 obj = obj.shuffle_samples('completeShuffle');
                 
                 clear tr
             end
@@ -99,6 +99,30 @@ switch train_or_plot
         ylabel('MSE');
         
         out=[];
+        
+    case 'text'
+        load('NN_Perf_over_HNnum.mat','out');
+        
+        numOfNNtypes = length(out.HiddenN);
+        if numOfNNtypes == 1 
+            % if we check only one type of NN, show all groups
+            rowNames = {'train';'validation';'test'};
+            meanMse = out.NN_Mean_over_HN_num;
+            stdMse = out.NN_stdev_over_HN_num;
+            resTable = table(meanMse,stdMse,'RowNames',rowNames)
+        end
+        if numOfNNtypes > 1
+            % show only test perf
+           disp('Results on test group:');
+           rowNames = cell(numOfNNtypes,1);
+           for i=1:numOfNNtypes
+               rowNames{i,1} = [num2str(out.HiddenN(1,i)),' hidden neurons'];
+           end
+           meanMse = (out.NN_Mean_over_HN_num(1,:))';
+           stdMse = (out.NN_stdev_over_HN_num(1,:))';
+           resTable = table(meanMse,stdMse,'RowNames',rowNames)
+        end
+        
     otherwise
         error('invalid input "train_or_plot"');
 end

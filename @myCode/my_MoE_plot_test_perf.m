@@ -1,5 +1,5 @@
 function my_MoE_plot_test_perf(obj,expertCount,NNoutput,NNtargets,cluster_i_train_ind,gateOut,competetiveFlag)
-% plot only graphs which are relevant to training sessions:
+% plot only graphs which are relevant to test sessions:
 
 switch competetiveFlag
     case {1,2}
