@@ -3,8 +3,10 @@ clear all; close all; clc
 
 %% 2N symmetric
 % fileName = 'MatsRandomRes_2Neurons_change_only_a.mat';
-fileName = {'MatsRandomRes_2Neurons_symm_trainData_wide_range.mat',...
-    'MatsRandomRes_2Neurons_symm_testData.mat'};
+% fileName = {'MatsRandomRes_2Neurons_symm_trainData_wide_range.mat',...
+%     'MatsRandomRes_2Neurons_symm_testData.mat'};
+fileName = {'MatsRandomRes_2Neurons_symm_trainData_wide_range2.mat',...
+    'MatsRandomRes_2Neurons_symm_testData2.mat'};
 % fileName = {'MatsRandomRes_2Neurons_symm_trainData_narrow_range.mat',...
 %     'MatsRandomRes_2Neurons_symm_testData.mat'};
 parametersCells = {'tau','b','a','s'};
@@ -79,7 +81,7 @@ myCode.plot_fit_data('paper_MoE',problemType);
 %%
 close all
 competetiveflag = 2;
-myCode = myCode.Set('our_MoE',1000,2,[2],[2],1,competetiveflag);
+myCode = myCode.Set('our_MoE',200,3,[2],[2],1,competetiveflag);
 % myCode = myCode.my_MoE_train_collaboration();
 myCode = myCode.my_MoE_train_softCompetetive();
 myCode.plot_fit_data('our_MoE',problemType);

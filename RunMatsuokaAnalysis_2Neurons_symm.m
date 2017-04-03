@@ -15,7 +15,7 @@ mw = 0*Mw;
 % %     % 2neuron symmetric specific range%%
 Keys = {'\tau_r', 'beta',     'amp_2n',        '2neuron_symm_weights', 'ks_\tau',     'ks_c', 'IC_matsuoka';
               1 ,      1,          2*N,                             1,        1 ,       2*N ,            0 };
-Range = {  0.02 ,      1,         mamp,                             1,   -0.001 ,  -0.2*Mamp; % Min
+Range = {  0.02 ,    1.1,         mamp,                             1,   -0.001 ,  -0.2*Mamp; % Min
            0.6  ,    8.0,         Mamp,                             6,   0.001 ,   0.2*Mamp}; % Max
 
 MutDelta0 = 0.04;   MutDelta1 = 0.02;
@@ -32,9 +32,9 @@ MML.perLim = [0.68 0.78];
 MML.perLimOut = MML.perLim + [-0.08 0.08]; % Desired period range
 MML.tStep = 0.01;
 MML.tEnd = 30; % 15
-
+MML.nNeurons = 2;
 %% Train data:
-N = 10000; % the number of samples
+N = 50000; % the number of samples
 % CPG parameters:
 % tau_min = 0.4;     tau_max = 0.6;
 tau_min = 0.02;     tau_max = 0.6;
@@ -77,7 +77,7 @@ parfor i=1:N % Simulate and calculate the frequecy (also calc from Matsuoka exti
 end 
 disp('sim end...');
 
-save('MatsRandomRes_2Neurons_symm_trainData_wide_range.mat','results');
+save('MatsRandomRes_2Neurons_symm_trainData_wide_range4.mat','results');
 
 
 %% Test data:
@@ -123,4 +123,4 @@ parfor i=1:N % Simulate and calculate the frequecy (also calc from Matsuoka exti
 end 
 disp('sim end...');
 
-save('MatsRandomRes_2Neurons_symm_testData.mat','results');
+save('MatsRandomRes_2Neurons_symm_testData2.mat','results');
