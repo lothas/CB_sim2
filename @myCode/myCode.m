@@ -67,9 +67,11 @@ classdef myCode < handle & matlab.mixin.Copyable
         % parameters for use in our MoE method:
         my_MoE_out = []; % structure with fields:
                             %   'maxEphocs' - max number of ephocs for each NN training cycle
+                            %   'perf_Stop_cond' - training stopping
+                            %           condition (MSE)
+                            %   'gradient_stop' - perf gradient stop
                             %   'ExpertHidLayer'- num of hidden layer in each expert
                             %   'ExpertHidNueron' - num of neurons in each hidden layer
-                            %   'GateHidLayer' -num of hidden layer in gateNN
                             %   'GateHidNueron' - num of neurons in each hidden layer
                             %   'competetiveFlag' - our methods of training
                             %   'expertsNN' - contains all of the experts as NN structures

@@ -3,21 +3,15 @@ function [obj] = my_MoE_train_collaboration(obj)
 % % NOTE: same for the "my_MoE_train.m" but only for competetiveFlag=3 and
 % with better visualization.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%TODO: update this code according to the "my_MoE_train_softCompetetive"
-%       code!!!!!!
+competetiveFlag = 3;
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-switch obj.expertCount
-    case {2,3} % in case of small number of expert, make colors clear:
-        colors = [1,0,0;0,1,0;0,0,1];
-    otherwise
-        colors = rand(obj.expertCount,3);
-end
+obj.my_MoE_out.competetiveType = 'collaboration';
 
 numToShow = 100; % the #samples to show in the online regression plot.
 
 fig1 = figure;
+set(fig1, 'Position', get(0, 'Screensize')); % set the figure on full screen size
+
 ax1 = subplot(2,2,1);% axes('Position',[0.1 0.1 0.7 0.7]);
 ax2 = subplot(2,2,2);
 ax3 = subplot(2,2,3);
@@ -82,13 +76,11 @@ end
 num_of_train_samples = size(sampl_train,2);
 numOfIteretions = obj.numOfIteretions;
 expertCount = obj.expertCount; % number of "Experts", each Expert is a NN
-competetiveFlag = 3;
 
 gateNet = obj.my_MoE_out.gateNet;
 expertsNN = obj.my_MoE_out.expertsNN;
 
 % data storage:
-errMat = zeros(expertCount,num_of_train_samples); % error matrix (each row - targets)
 gateNN_perf_vec = zeros(1,numOfIteretions); % gate performance over iteration num
 Moe_perf_over_iter = zeros(1,numOfIteretions); % the performance of the entire MoE over #iteretion
 
@@ -121,9 +113,9 @@ for i=1:numOfIteretions
     [MSE_test,~] = obj.NN_perf_calc(targ_test,MoE_out_test,0,0);
     
     % plot the MoE performance
-    plot(ax1,i,MSE_train,'b-o');
-    plot(ax1,i,MSE_valid,'g-o');
-    plot(ax1,i,MSE_test,'r-o');
+    plot(ax1,i,MSE_train,'b','Marker','o');
+    plot(ax1,i,MSE_valid,'g','Marker','o');
+    plot(ax1,i,MSE_test,'r','Marker','o');
     
     % plot and update the regression plot:
     [g_max,g_max_ind] = max(gateOut_test,[],1);
@@ -132,10 +124,11 @@ for i=1:numOfIteretions
     cla(ax3);
     for k=1:obj.expertCount
         for n=1:numToShow
+            line([0,1],[0,1],'color',[0,0,0],'linewidth',2,'Parent',ax3);
             ind = randSampl_ind(1,n);
             if g_max_ind(1,ind) == k
                 if g_max(1,ind) > 0.5
-                    plot(ax3,targets(1,ind),ouputs(1,ind),'k-o','MarkerFaceColor',colors(k,:));
+                    plot(ax3,targets(1,ind),ouputs(1,ind),'k-o','MarkerFaceColor',obj.colors(k,:));
                 else
                     plot(ax3,targets(1,ind),ouputs(1,ind),'k-o');
                 end
@@ -143,39 +136,27 @@ for i=1:numOfIteretions
         end
     end
     
+    % bar graph with the gate output of some random points
     cla(ax4);
-    bar(ax4,(gateOut_test(:,randSampl_ind))','stacked');
+    bplot = bar(ax4,(gateOut_test(:,randSampl_ind))','stacked');
+    for k=1:obj.expertCount
+      set(bplot(k),'facecolor',obj.colors(k,:))
+    end
+    AXlegend=legend(bplot, obj.legendNames, 'Location','northwestoutside','FontSize',8);
     
     % calc MoE performance to check wether to stop the training:
     [Moe_perf_over_iter(1,i),~] = obj.NN_perf_calc(targ_valid,MoE_out_valid,0,0);
-    if Moe_perf_over_iter(1,i) < 0.000000000001 % stopping condition on error
+    if Moe_perf_over_iter(1,i) < obj.my_MoE_out.perf_Stop_cond % stopping condition on error
         disp('reached below the desired error');
         break;
     end
-    if (i > 11) && (mean(Moe_perf_over_iter(1,(i-10):i)) < 0.00000000001) % stopping condition on error gradient
+    if (i > 11) && (mean(Moe_perf_over_iter(1,(i-10):i)) < obj.my_MoE_out.gradient_stop) % stopping condition on error gradient
         disp('reached below the desired error gradient');
         break;
     end
 
-    % run each expert on the entire data:
-    for j=1:expertCount
-        tempNet = expertsNN{1,j};
-        outMat = tempNet(sampl_train);
-        errMat(j,:) = outMat - targ_train;
-    end
-    seMat = errMat.^2; % squar error
-    
-    % initilize f_h
-    fh = zeros(expertCount,num_of_train_samples);
-    g = gateOut;
-
-    yStar_yi = seMat;
-    
-    % calc f_h from the equation in Jacobs1990 paper
-    for k=1:size(targ_train,2)
-        fh(:,k) = g(:,k) .* exp(-0.5 .* yStar_yi(:,k) );
-        fh(:,k) = fh(:,k) ./ sum(fh(:,k),1);
-    end
+   % run each expert on the entire data and calc "fh":
+   fh = obj.calc_fh(expertsNN,gateOut); % ( g = gateOut )
     
     % train the experts with weights given to samples by f_h 
     for j=1:expertCount
@@ -184,7 +165,9 @@ for i=1:numOfIteretions
         [expertsNN{1,j}, expertsNN{2,j}] = train(tempNet,...
                 sampl_train, targ_train,[],[],errorWeights);
     end
-
+%     % ???? SHOULD I TRAIN THE EXPERT ONLY ON THE POINTS WITH THE HIEGHEST
+%     % PROBABILITY??? (IN COLLABORATION MODE)
+    
     % train the gate using f_h as targets:
     %       (minimize MSE between 'g' and 'f_h')
     [gateNet,gateNet_perf] = train(gateNet,sampl_train,fh);

@@ -9,13 +9,13 @@ switch varargin{1}
         obj.NN.net.trainParam.epochs = varargin{3};
         
     case {'my_MoE','our_MoE'}
-        if nargin == 8
-            obj.numOfIteretions = varargin{2};
+        if nargin == 6
+            obj.numOfIteretions = varargin{2}; 
             obj.expertCount = varargin{3};
             obj.my_MoE_out.ExpertHidLayer = varargin{4};
-            obj.my_MoE_out.GateHidLayer = varargin{5};
-            obj.my_MoE_out.maxEphocs = varargin{6};
-            obj.my_MoE_out.competetiveFlag = varargin{7};
+            obj.my_MoE_out.maxEphocs = varargin{5};
+            obj.my_MoE_out.perf_Stop_cond = 1e-7;
+            obj.my_MoE_out.gradient_stop = 1e-5;
             
         else
            disp(['input variable order:',...

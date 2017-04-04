@@ -1,7 +1,22 @@
-function [obj] = my_MoE_train_softCompetetive(obj)
+function [obj] = my_MoE_train_Competetive(obj,type)
 %this function train a "Mixture of Experts" newural networks
 % % NOTE: same for the "my_MoE_train.m" but only for competetiveFlag=2 and
 % with better visualization.
+
+% type - 1) 'soft' - for "softcompetetive" evry point has a chance to go to
+%                   each expert.
+%       2) 'hard' - the point goes to the best expert ('highest
+%                   probability).
+
+switch type
+    case 'soft'
+        competetiveFlag = 2;
+    case 'hard'
+        competetiveFlag = 1;
+    otherwise
+        error('invalid type!');
+end
+obj.my_MoE_out.competetiveType = type;
 
 numToShow = 100; % the #samples to show in the online regression plot.
 
@@ -72,13 +87,11 @@ end
 num_of_train_samples = size(sampl_train,2);
 numOfIteretions = obj.numOfIteretions;
 expertCount = obj.expertCount; % number of "Experts", each Expert is a NN
-competetiveFlag = 2;
 
 gateNet = obj.my_MoE_out.gateNet;
 expertsNN = obj.my_MoE_out.expertsNN;
 
 % data storage:
-errMat = zeros(expertCount,num_of_train_samples); % error matrix (each row - targets)
 gateNN_perf_vec = zeros(1,numOfIteretions); % gate performance over iteration num
 Moe_perf_over_iter = zeros(1,numOfIteretions); % the performance of the entire MoE over #iteretion
 Experts_perf_mat = zeros(expertCount,numOfIteretions); % experts best perf (MSE) over iteration num
@@ -136,6 +149,7 @@ for i=1:numOfIteretions
         end
     end
     
+    % bar graph with the gate output of some random points
     cla(ax4);
     bplot = bar(ax4,(gateOut_test(:,randSampl_ind))','stacked');
     for k=1:obj.expertCount
@@ -145,11 +159,11 @@ for i=1:numOfIteretions
     
     % calc MoE performance to check wether to stop the training:
     [Moe_perf_over_iter(1,i),~] = obj.NN_perf_calc(targ_valid,MoE_out_valid,0,0);
-    if Moe_perf_over_iter(1,i) < 0.0000001 % stopping condition on error
+    if Moe_perf_over_iter(1,i) < obj.my_MoE_out.perf_Stop_cond % stopping condition on error
         disp('reached below the desired error');
         break;
     end
-    if (i > 11) && (mean(Moe_perf_over_iter(1,(i-10):i)) < 0.00000001) % stopping condition on error gradient
+    if (i > 11) && (mean(Moe_perf_over_iter(1,(i-10):i)) < obj.my_MoE_out.gradient_stop) % stopping condition on error gradient
         disp('reached below the desired error gradient');
         break;
         % TODO: use 'diff' to calculate the gradient.
@@ -187,13 +201,6 @@ for i=1:numOfIteretions
     [gateNet,gateNet_perf] = train(gateNet,sampl_train,fh);
     plot(ax2,i,gateNet_perf.best_perf,'k','Marker','o');
     gateNN_perf_vec(1,i) = gateNet_perf.best_perf;
-    
-%     % % % ploting the expert's weights:
-%     ax_temp = gca;
-%     title_temp = (['expert #',num2str(1)]);
-%     axes(ax2);
-%     obj.NN_weights_matrix_visualize(expertsNN{1,1},title_temp);
-%     axes(ax_temp);
     
 end
 

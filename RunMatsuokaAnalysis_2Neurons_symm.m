@@ -34,7 +34,7 @@ MML.tStep = 0.01;
 MML.tEnd = 30; % 15
 MML.nNeurons = 2;
 %% Train data:
-N = 50000; % the number of samples
+N = 30000; % the number of samples
 % CPG parameters:
 % tau_min = 0.4;     tau_max = 0.6;
 tau_min = 0.02;     tau_max = 0.6;
@@ -77,12 +77,12 @@ parfor i=1:N % Simulate and calculate the frequecy (also calc from Matsuoka exti
 end 
 disp('sim end...');
 
-save('MatsRandomRes_2Neurons_symm_trainData_wide_range4.mat','results');
+save('MatsRandomRes_2Neurons_symm_trainData_wide_range2.mat','results');
 
 
 %% Test data:
 % the test data has only change of 'a'
-N = 200; % the number of samples
+N = 1000; % the number of samples
 % CPG parameters:
 tau_min = 0.02;     tau_max = 0.6;
 tau = 0.5.*ones(1,N);%(tau_max-tau_min).*rand(1,N) + tau_min;

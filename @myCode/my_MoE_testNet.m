@@ -11,9 +11,9 @@ function [netOut,gateOut,belongToExpert,cluster_i_train_ind] = my_MoE_testNet(ob
 %                matrix of (#targets x #samples) dimention
 % 3) expertsNN - cell array containing the experts and their performance.
 % 4) gateNet - the Gate NN.
-% 5) competetiveFlag - if '1'- "winner takes all"
-%                         '2'- "chance for everybody"
-%                         '3'- out = expertsOut * gateOut
+% 5) competetiveFlag - if '1'- hardCompetetetive = "winner takes all"
+%                         '2'- softCompetetetive = "chance for everybody"
+%                         '3'- collaboration = (out = expertsOut*gateOut)
 
 % outputs:
 % 1) netOut - output from MoE

@@ -5,7 +5,7 @@ clear all; close all; clc
 % fileName = 'MatsRandomRes_2Neurons_change_only_a.mat';
 % fileName = {'MatsRandomRes_2Neurons_symm_trainData_wide_range.mat',...
 %     'MatsRandomRes_2Neurons_symm_testData.mat'};
-fileName = {'MatsRandomRes_2Neurons_symm_trainData_wide_range2.mat',...
+fileName = {'MatsRandomRes_2Neurons_symm_trainData_wide_range_all.mat',...
     'MatsRandomRes_2Neurons_symm_testData2.mat'};
 % fileName = {'MatsRandomRes_2Neurons_symm_trainData_narrow_range.mat',...
 %     'MatsRandomRes_2Neurons_symm_testData.mat'};
@@ -68,7 +68,7 @@ myCode.NN_Perf_over_HNnum(numOfRepeats,hiddenN,'plot' );
 myCode.NN_Perf_over_HNnum(numOfRepeats,hiddenN,'text' );
 %% with NN:
 myCode.disp_information = false;
-myCode = myCode.Set('NN',[4],200);
+myCode = myCode.Set('NN',[10],200);
 myCode = myCode.trainNN(1);
 myCode.plot_fit_data('NN',problemType);
 
@@ -80,8 +80,7 @@ myCode.plot_fit_data('paper_MoE',problemType);
 
 %%
 close all
-competetiveflag = 2;
-myCode = myCode.Set('our_MoE',200,3,[2],[2],1,competetiveflag);
+myCode = myCode.Set('our_MoE',300,2,[2],1);
 % myCode = myCode.my_MoE_train_collaboration();
-myCode = myCode.my_MoE_train_softCompetetive();
+myCode = myCode.my_MoE_train_Competetive('hard');
 myCode.plot_fit_data('our_MoE',problemType);
