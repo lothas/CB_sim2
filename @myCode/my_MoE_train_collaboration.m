@@ -9,42 +9,45 @@ obj.my_MoE_out.competetiveType = 'collaboration';
 
 numToShow = 100; % the #samples to show in the online regression plot.
 
-fig1 = figure;
-set(fig1, 'Position', get(0, 'Screensize')); % set the figure on full screen size
+% initilize graphs:
+if obj.disp_information
+    fig1 = figure;
+    set(fig1, 'Position', get(0, 'Screensize')); % set the figure on full screen size
 
-ax1 = subplot(2,2,1);% axes('Position',[0.1 0.1 0.7 0.7]);
-ax2 = subplot(2,2,2);
-ax3 = subplot(2,2,3);
-ax4 = subplot(2,2,4);
+    ax1 = subplot(2,2,1);% axes('Position',[0.1 0.1 0.7 0.7]);
+    ax2 = subplot(2,2,2);
+    ax3 = subplot(2,2,3);
+    ax4 = subplot(2,2,4);
 
-ax1.NextPlot= 'add';
-ax1.XLabel.String = '#iteration';
-ax1.YLabel.String = 'MSE of MoE net';   
-ax1.Title.String = 'MSE perf over iteration';
-ax1.XGrid = 'on';   ax1.XMinorGrid  = 'on';
-ax1.YGrid = 'on';   ax1.YMinorGrid  = 'on';
+    ax1.NextPlot= 'add';
+    ax1.XLabel.String = '#iteration';
+    ax1.YLabel.String = 'MSE of MoE net';   
+    ax1.Title.String = 'MSE perf over iteration';
+    ax1.XGrid = 'on';   ax1.XMinorGrid  = 'on';
+    ax1.YGrid = 'on';   ax1.YMinorGrid  = 'on';
 
-ax2.NextPlot= 'add';
-ax2.XLabel.String = '#iteration';
-ax2.YLabel.String = 'gate performance MSE of g-f_{h}';
-ax2.Title.String = 'gate perf over iteration';
-ax2.XGrid = 'on';   ax2.XMinorGrid  = 'on';
-ax2.YGrid = 'on';   ax2.YMinorGrid  = 'on';
+    ax2.NextPlot= 'add';
+    ax2.XLabel.String = '#iteration';
+    ax2.YLabel.String = 'gate performance MSE of g-f_{h}';
+    ax2.Title.String = 'gate perf over iteration';
+    ax2.XGrid = 'on';   ax2.XMinorGrid  = 'on';
+    ax2.YGrid = 'on';   ax2.YMinorGrid  = 'on';
 
-ax3.NextPlot= 'add';
-ax3.XLabel.String='target'; ax3.YLabel.String='output';
-ax3.Title.String={'regression graph with different color for every dominant expert';'empty circle mean g<0.5'};
-line([0,1],[0,1],'color',[0,0,0],'linewidth',2,'Parent',ax3);
+    ax3.NextPlot= 'add';
+    ax3.XLabel.String='target'; ax3.YLabel.String='output';
+    ax3.Title.String={'regression graph with different color for every dominant expert';'empty circle mean g<0.5'};
+    line([0,1],[0,1],'color',[0,0,0],'linewidth',2,'Parent',ax3);
 
-ax4.NextPlot= 'add';
-ax4.XLabel.String='sample Num'; 
-ax4.YLabel.String='gate output [Prob]';
-ax4.Title.String={'The probability of each sample to belong to each expert',...
-    'each expert is a different color'};
-ax4.XLim = [0 numToShow];
-ax4.XLimMode = 'manual';
-ax4.YLim = [0 1];
-ax4.YLimMode = 'manual';
+    ax4.NextPlot= 'add';
+    ax4.XLabel.String='sample Num'; 
+    ax4.YLabel.String='gate output [Prob]';
+    ax4.Title.String={'The probability of each sample to belong to each expert',...
+        'each expert is a different color'};
+    ax4.XLim = [0 numToShow];
+    ax4.XLimMode = 'manual';
+    ax4.YLim = [0 1];
+    ax4.YLimMode = 'manual';
+end
 
 sampl_train = obj.sampl_train;
 targ_train = obj.targ_train;
@@ -63,14 +66,7 @@ else
 end
 
 % Initializing the Experts:
-if obj.disp_information
-    disp('initilizing new MoE:');
-    tic
-end
 obj = obj.My_MoE_init();
-if obj.disp_information
-    disp(['time for init: ',num2str(toc)]);
-end
 
 % defining some constants:
 num_of_train_samples = size(sampl_train,2);
@@ -96,10 +92,6 @@ for i=1:numOfIteretions
     % update the graphs:
     drawnow
     
-    if obj.disp_information
-        disp(['at iteration num: #',num2str(i)]);
-    end
-    
     % test network (on various group) to check  validation_error:
     [netOut_train,gateOut,~,~] = obj.my_MoE_testNet(sampl_train,targ_train,expertsNN,...
     gateNet,competetiveFlag,0);
@@ -112,37 +104,40 @@ for i=1:numOfIteretions
     [MSE_valid,~] = obj.NN_perf_calc(targ_valid,MoE_out_valid,0,0);
     [MSE_test,~] = obj.NN_perf_calc(targ_test,MoE_out_test,0,0);
     
-    % plot the MoE performance
-    plot(ax1,i,MSE_train,'b','Marker','o');
-    plot(ax1,i,MSE_valid,'g','Marker','o');
-    plot(ax1,i,MSE_test,'r','Marker','o');
+    % update some of the graphs
+    if obj.disp_information
+        % plot the MoE performance
+        plot(ax1,i,MSE_train,'b','Marker','o');
+        plot(ax1,i,MSE_valid,'g','Marker','o');
+        plot(ax1,i,MSE_test,'r','Marker','o');
     
     % plot and update the regression plot:
-    [g_max,g_max_ind] = max(gateOut_test,[],1);
-    ouputs = MoE_out_test;
-    targets = targ_test;
-    cla(ax3);
-    for k=1:obj.expertCount
-        for n=1:numToShow
-            line([0,1],[0,1],'color',[0,0,0],'linewidth',2,'Parent',ax3);
-            ind = randSampl_ind(1,n);
-            if g_max_ind(1,ind) == k
-                if g_max(1,ind) > 0.5
-                    plot(ax3,targets(1,ind),ouputs(1,ind),'k-o','MarkerFaceColor',obj.colors(k,:));
-                else
-                    plot(ax3,targets(1,ind),ouputs(1,ind),'k-o');
+        [g_max,g_max_ind] = max(gateOut_test,[],1);
+        ouputs = MoE_out_test;
+        targets = targ_test;
+        cla(ax3);
+        for k=1:obj.expertCount
+            for n=1:numToShow
+                line([0,1],[0,1],'color',[0,0,0],'linewidth',2,'Parent',ax3);
+                ind = randSampl_ind(1,n);
+                if g_max_ind(1,ind) == k
+                    if g_max(1,ind) > 0.5
+                        plot(ax3,targets(1,ind),ouputs(1,ind),'k-o','MarkerFaceColor',obj.colors(k,:));
+                    else
+                        plot(ax3,targets(1,ind),ouputs(1,ind),'k-o');
+                    end
                 end
             end
         end
-    end
     
-    % bar graph with the gate output of some random points
-    cla(ax4);
-    bplot = bar(ax4,(gateOut_test(:,randSampl_ind))','stacked');
-    for k=1:obj.expertCount
-      set(bplot(k),'facecolor',obj.colors(k,:))
+    % bar graph with the gate output of some random points:
+        cla(ax4);
+        bplot = bar(ax4,(gateOut_test(:,randSampl_ind))','stacked');
+        for k=1:obj.expertCount
+          set(bplot(k),'facecolor',obj.colors(k,:))
+        end
+        AXlegend=legend(bplot, obj.legendNames, 'Location','northwestoutside','FontSize',8);
     end
-    AXlegend=legend(bplot, obj.legendNames, 'Location','northwestoutside','FontSize',8);
     
     % calc MoE performance to check wether to stop the training:
     [Moe_perf_over_iter(1,i),~] = obj.NN_perf_calc(targ_valid,MoE_out_valid,0,0);
@@ -171,8 +166,12 @@ for i=1:numOfIteretions
     % train the gate using f_h as targets:
     %       (minimize MSE between 'g' and 'f_h')
     [gateNet,gateNet_perf] = train(gateNet,sampl_train,fh);
-    plot(ax2,i,gateNet_perf.best_perf,'k-o');
     gateNN_perf_vec(1,i) = gateNet_perf.best_perf;
+    
+    % plot the gate performance (MSE)
+    if obj.disp_information
+        plot(ax2,i,gateNet_perf.best_perf,'k','Marker','o');
+    end
     
 end
 

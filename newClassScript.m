@@ -68,7 +68,7 @@ myCode.NN_Perf_over_HNnum(numOfRepeats,hiddenN,'plot' );
 myCode.NN_Perf_over_HNnum(numOfRepeats,hiddenN,'text' );
 %% with NN:
 myCode.disp_information = false;
-myCode = myCode.Set('NN',[10],200);
+myCode = myCode.Set('NN',[4],200);
 myCode = myCode.trainNN(1);
 myCode.plot_fit_data('NN',problemType);
 
@@ -80,7 +80,44 @@ myCode.plot_fit_data('paper_MoE',problemType);
 
 %%
 close all
-myCode = myCode.Set('our_MoE',300,2,[2],1);
+myCode = myCode.Set('our_MoE',10,2,[2],1);
+myCode.disp_information = false;
 % myCode = myCode.my_MoE_train_collaboration();
-myCode = myCode.my_MoE_train_Competetive('hard');
+myCode = myCode.my_MoE_train_Competetive('soft');
 myCode.plot_fit_data('our_MoE',problemType);
+
+%%
+N=20;
+training_epochs = 200;
+myCode.disp_information = false;
+
+mse_NN = zeros(N,1);
+myCode = myCode.Set('NN',[4],training_epochs);
+for i=1:N
+    disp(['NN inter #',num2str(i)]);
+    myCode = myCode.trainNN(0);
+    mse_NN(i,1) = myCode.NN.MSE_test_perf;
+    myCode = myCode.shuffle_samples('onlyTrainAndValid'); 
+end
+
+mse_MoE = zeros(N,1);
+myCode = myCode.Set('our_MoE',training_epochs,2,[2],1);
+for i=1:N
+    disp(['MoE inter #',num2str(i)]);
+    myCode = myCode.my_MoE_train_Competetive('hard');
+    mse_MoE(i,1) = myCode.my_MoE_out.Moe_MSE_on_test;
+    myCode = myCode.shuffle_samples('onlyTrainAndValid'); 
+end
+
+meanMse_NN = mean(mse_NN,1);
+stdMse_NN = std(mse_NN,0,1);
+meanMse_MoE = mean(mse_MoE,1);
+stdMse_MoE = std(mse_MoE,0,1);
+
+means = [meanMse_NN; meanMse_MoE];
+stdevs = [stdMse_NN; stdMse_MoE];
+Names = {' ',' ','   61 weights   ',' ',' '};
+label_Y = 'perf_{MSE}';
+graph_title = 'comparison between NN and MoE';
+graph_legend = {'NN','MoE'};
+myCode.plot_MSE_perf_with_stdev(means,stdevs,Names,label_Y,graph_title,graph_legend)

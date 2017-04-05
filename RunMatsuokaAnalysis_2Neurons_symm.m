@@ -34,7 +34,7 @@ MML.tStep = 0.01;
 MML.tEnd = 30; % 15
 MML.nNeurons = 2;
 %% Train data:
-N = 30000; % the number of samples
+N = 20000; % the number of samples
 % CPG parameters:
 % tau_min = 0.4;     tau_max = 0.6;
 tau_min = 0.02;     tau_max = 0.6;
