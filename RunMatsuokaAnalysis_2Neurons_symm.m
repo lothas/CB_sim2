@@ -77,7 +77,7 @@ parfor i=1:N % Simulate and calculate the frequecy (also calc from Matsuoka exti
 end 
 disp('sim end...');
 
-save('MatsRandomRes_2Neurons_symm_trainData_wide_range2.mat','results');
+save('MatsRandomRes_2Neurons_symm_trainData_wide_range9.mat','results');
 
 
 %% Test data:

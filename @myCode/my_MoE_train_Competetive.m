@@ -194,8 +194,8 @@ for i=1:numOfIteretions
             % NOTE: is the group is empty, than the expert will not train!!
             warning(['at iter #',num2str(i),' the cluster of expert #',...
                 num2str(j),' is empty']);
-            expertsNN{2,j} = 0;
-            Experts_perf_mat(j,i) = 0;
+            expertsNN{2,j} = NaN;
+            Experts_perf_mat(j,i) = NaN;
         end
     end
             

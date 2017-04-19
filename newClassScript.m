@@ -43,7 +43,8 @@ problemType = '4N_symm';
 
 %% 4N CPG general
 % fileName = 'MatsRandomRes_test.mat';
-fileName = 'MatsRandomRes_31_01_2017.mat';
+% fileName = 'MatsRandomRes_31_01_2017.mat';
+fileName = 'MatsRandomRes_2-4_02_2017.mat';
 parametersCells = {'tau','b',...
     'w_{12}','w_{13}','w_{14}',...
     'w_{21}','w_{23}','w_{24}',...
@@ -68,7 +69,7 @@ myCode.NN_Perf_over_HNnum(numOfRepeats,hiddenN,'plot' );
 myCode.NN_Perf_over_HNnum(numOfRepeats,hiddenN,'text' );
 %% with NN:
 myCode.disp_information = false;
-myCode = myCode.Set('NN',[4],200);
+myCode = myCode.Set('NN',[1000],200);
 myCode = myCode.trainNN(1);
 myCode.plot_fit_data('NN',problemType);
 
@@ -87,8 +88,8 @@ myCode = myCode.my_MoE_train_Competetive('soft');
 myCode.plot_fit_data('our_MoE',problemType);
 
 %%
-N=20;
-training_epochs = 200;
+N=5;
+training_epochs = 500;
 myCode.disp_information = false;
 
 mse_NN = zeros(N,1);
@@ -104,7 +105,8 @@ mse_MoE = zeros(N,1);
 myCode = myCode.Set('our_MoE',training_epochs,2,[2],1);
 for i=1:N
     disp(['MoE inter #',num2str(i)]);
-    myCode = myCode.my_MoE_train_Competetive('hard');
+%     myCode = myCode.my_MoE_train_Competetive('hard');
+    myCode = myCode.my_MoE_train_collaboration();
     mse_MoE(i,1) = myCode.my_MoE_out.Moe_MSE_on_test;
     myCode = myCode.shuffle_samples('onlyTrainAndValid'); 
 end
@@ -116,7 +118,7 @@ stdMse_MoE = std(mse_MoE,0,1);
 
 means = [meanMse_NN; meanMse_MoE];
 stdevs = [stdMse_NN; stdMse_MoE];
-Names = {' ',' ','   61 weights   ',' ',' '};
+Names = {' ',' ','   21 weights   ',' ',' '};
 label_Y = 'perf_{MSE}';
 graph_title = 'comparison between NN and MoE';
 graph_legend = {'NN','MoE'};
