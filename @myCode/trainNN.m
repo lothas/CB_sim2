@@ -23,7 +23,11 @@ if obj.disp_information
     disp('training neural network...');
 end
 
-[obj.NN.net, obj.NN.net_perf] = train(obj.NN.net, sampl, targ);
+% Training:
+%   also save a checkpoint file every 600 seconds (10 minutes). just in case
+%   the computer will crash.
+[obj.NN.net, obj.NN.net_perf] = train(obj.NN.net, sampl, targ,...
+    'CheckpointFile','MyCheckpoint.mat','CheckpointDelay',600);
 
 obj.NN.out_from_train = obj.NN.net(obj.sampl_train);
 obj.NN.out_from_valid = obj.NN.net(obj.sampl_valid);

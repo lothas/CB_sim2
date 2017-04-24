@@ -81,6 +81,8 @@ obj = obj.My_MoE_init();
 
 % defining some constants:
 num_of_train_samples = size(sampl_train,2);
+num_of_valid_samples = size(sampl_valid,2);
+num_of_test_samples = size(sampl_test,2);
 numOfIteretions = obj.numOfIteretions;
 expertCount = obj.expertCount; % number of "Experts", each Expert is a NN
 
@@ -92,6 +94,9 @@ gateNN_perf_vec = zeros(1,numOfIteretions); % gate performance over iteration nu
 Moe_perf_over_iter = zeros(1,numOfIteretions); % the performance of the entire MoE over #iteretion
 Experts_perf_mat = zeros(expertCount,numOfIteretions); % experts best perf (MSE) over iteration num
 emptyGroupIndecator = false(expertCount,numOfIteretions); % count how many time we have an empty cluster
+
+% some more variables
+gateOut_old = zeros(expertCount,num_of_test_samples);
 
 if obj.disp_information
     disp('start training...');
@@ -203,6 +208,14 @@ for i=1:numOfIteretions
     %       (minimize MSE between 'g' and 'f_h')
     [gateNet,gateNet_perf] = train(gateNet,sampl_train,fh);
     gateNN_perf_vec(1,i) = gateNet_perf.best_perf;
+    
+    % keep track on the test group Gate change 
+    if i > 1
+        [max_err_g,max_err_g_ind,err_g] = ...
+            obj.check_gate_change(gateOut_old,gateOut_test);
+    end
+    gateOut_old = gateOut_test;
+    
     % plot the gate performance (MSE)
     if obj.disp_information
         plot(ax2,i,gateNet_perf.best_perf,'k','Marker','o');
