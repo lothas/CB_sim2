@@ -97,6 +97,7 @@ emptyGroupIndecator = false(expertCount,numOfIteretions); % count how many time 
 
 % some more variables
 gateOut_old = zeros(expertCount,num_of_test_samples);
+g_changes = zeros(numOfIteretions,num_of_test_samples);
 
 if obj.disp_information
     disp('start training...');
@@ -128,6 +129,8 @@ for i=1:numOfIteretions
         plot(ax1,i,MSE_train,'b','Marker','o');
         plot(ax1,i,MSE_valid,'g','Marker','o');
         plot(ax1,i,MSE_test,'r','Marker','o');
+        ax1.Title.String = ['MSE perf over iteration, perf_{mse} = ',...
+            num2str(MSE_test)];
     
     % plot and update the regression plot:
         [g_max,g_max_ind] = max(gateOut_test,[],1);
@@ -211,7 +214,7 @@ for i=1:numOfIteretions
     
     % keep track on the test group Gate change 
     if i > 1
-        [max_err_g,max_err_g_ind,err_g] = ...
+        [~,~,g_changes(i,:)] = ...
             obj.check_gate_change(gateOut_old,gateOut_test);
     end
     gateOut_old = gateOut_test;
@@ -226,6 +229,7 @@ end
    
 obj.my_MoE_out.expertsNN = expertsNN;
 obj.my_MoE_out.gateNet = gateNet;
+obj.my_MoE_out.gate_changes = g_changes; % rows-iteration num , col-mse chage per sample
 obj.my_MoE_out.Moe_perf_over_iter = Moe_perf_over_iter;
 obj.my_MoE_out.gateTraniData.gateNN_perf_vec = gateNN_perf_vec;
 obj.my_MoE_out.out_from_train = netOut_train;

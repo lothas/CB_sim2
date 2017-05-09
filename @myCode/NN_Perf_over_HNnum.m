@@ -1,4 +1,5 @@
-function [out] = NN_Perf_over_HNnum(obj,NumOfRepeats,HiddenN,train_or_plot )
+function [out] = NN_Perf_over_HNnum(obj,NumOfRepeats,HiddenN,train_or_plot,...
+    keepRatioConstant)
 % this function is calculating the NN performance over the number of
 % neurons in the hidden layer.
 
@@ -7,6 +8,10 @@ function [out] = NN_Perf_over_HNnum(obj,NumOfRepeats,HiddenN,train_or_plot )
 %                       get the error bars).
 % 2) 'HiddenN' - the number of neurons in the hidden layer
 % 3) 'train_or_plot' - to plot the error burs or not.
+% 4) 'keepRatioConstant' - if 'true'- keep the ratio between the number of
+%                               neurons to the number of samples constant.
+%                          if 'false' - take the number of samples from the
+%                                       class (no change)
 
 % ouputs:
 % 1) 'NN_Mean_over_HN_num' - the NN mean performance over the amount of
@@ -14,27 +19,47 @@ function [out] = NN_Perf_over_HNnum(obj,NumOfRepeats,HiddenN,train_or_plot )
 % 2) 'NN_stdev_over_HN_num' - the NN stdev of the performance over the amount of
 %                            neurons in the hidden layer.
 
-
-trainSize = size(obj.sampl_train,2);
-validSize = size(obj.sampl_valid,2);
-
 switch train_or_plot
     case 'train'
         netMseTrain = zeros(NumOfRepeats,length(HiddenN));
         netMseValidation = zeros(NumOfRepeats,length(HiddenN));
         netMseTest = zeros(NumOfRepeats,length(HiddenN));
-
+                
         for i=1:length(HiddenN)
             for j=1:NumOfRepeats
                 % NOTE: this code shuffles the train and validation group in each
                 % iteration. but keeps the test group fixed.
 
+                sampl_train = obj.sampl_train;
+                targ_train = obj.targ_train;
+                
+                % calc the number of weights:
+                num_of_inputs = size(sampl_train,1);
+                num_of_outputs = size(targ_train,1);
+                num_of_weights = ( (num_of_inputs+1) * HiddenN(1,i) )  +...
+                    ( (HiddenN(1,i)+1) * num_of_outputs ); 
+                
+                % If to take the training samples as is, or to reduce their
+                %       number to only 100 times more than the NN weights:
+                ratio = 100; %100 times more samples than weights
+                % calc if we have enough samples to reduce the number
+                enough_cond = size(sampl_train,2) > (ratio*num_of_weights);
+                if keepRatioConstant && enough_cond
+                    rand_ind = randsample(1:size(obj.sampl_train,2),...
+                        ratio*num_of_weights);
+                    sampl_train = sampl_train(:,rand_ind);
+                    targ_train = targ_train(:,rand_ind);
+                end
+                
+                trainSize = size(sampl_train,2);
+                validSize = size(obj.sampl_valid,2);
+                
                 net = feedforwardnet(HiddenN(1,i));
                 
                 net.trainParam.showWindow = false; % dont show training window
-                sampl = horzcat(obj.sampl_train,obj.sampl_valid,obj.sampl_test);
-                targ = horzcat(obj.targ_train,obj.targ_valid,obj.targ_test);
-                
+                sampl = horzcat(sampl_train,obj.sampl_valid,obj.sampl_test);
+                targ = horzcat(targ_train,obj.targ_valid,obj.targ_test);
+
                 % set Train, Valid and Test groups:
                 net.divideFcn = 'divideind';
                 net.divideParam.trainInd = 1:trainSize;
@@ -81,6 +106,15 @@ switch train_or_plot
     case 'plot'
         load('NN_Perf_over_HNnum.mat','out');
         
+        if keepRatioConstant
+            % TODO: make sure that we have here enough samples to reduce.
+            graph_title = {'network perf_{(MSE)} over #hidden_{N}',...
+                '#train_{samples} = K * #Weights'};
+        else
+            graph_title = {'network perf(MSE) over #hidden_{neurons}',...
+                ['#train_{samples} = ',num2str(size(obj.sampl_train,2))]};
+        end
+        
         meanMseTrain = out.NN_Mean_over_HN_num(1,:);
         meanMseValidation = out.NN_Mean_over_HN_num(2,:);
         meanMseTest = out.NN_Mean_over_HN_num(3,:);
@@ -94,7 +128,7 @@ switch train_or_plot
         errorbar(out.HiddenN,meanMseValidation,stdMseValidation);
         errorbar(out.HiddenN,meanMseTest,stdMseTest);
         legend('Train group','validation group','Test group');
-        title('network performance (MSE) over hidden neurons num (target=frequency)');
+        title(graph_title);
         xlabel('Hidden Neuron Num');
         ylabel('MSE');
         

@@ -1,9 +1,25 @@
-function [obj] = trainNN(obj,showWindow)
+function [obj] = trainNN(obj,varargin)
 % this function trains a neural network using NNtoolbox
 
 % TODO: add more control on the training parameters
 
 % 'showWindow' - wether to show the training GUI or not 
+
+switch nargin
+    case 3
+        showWindow = varargin{1};
+        useGPU_flag = varargin{2};
+    case 2
+        showWindow = varargin{1};
+        useGPU_flag = false;
+    case 1
+        showWindow = false;
+        useGPU_flag = false;
+    otherwise
+        error('invalid number of inputs')
+end
+
+obj.NN.usingGPU = useGPU_flag;
 
 obj.NN.net.trainParam.showWindow = showWindow; % dont show training window
 
@@ -15,20 +31,33 @@ targ = horzcat(obj.targ_train,obj.targ_valid,obj.targ_test);
 obj.NN.net.divideFcn = 'divideind';
 obj.NN.net.divideParam.trainInd = 1:trainSize;
 obj.NN.net.divideParam.valInd   = trainSize+1:(trainSize+validSize);
-obj.NN.net.divideParam.testInd  = (trainSize+validSize+1):size(sampl,2);
- 
+obj.NN.net.divideParam.testInd  = (trainSize+validSize+1):size(sampl,2); 
 %  obj.NN.net.divideMode = 'none'; % all data to training
  
+% calc the number of weights:
+obj.NN.num_of_weights = length(getwb(obj.NN.net));
+
 if obj.disp_information
     disp('training neural network...');
 end
 
-% Training:
-%   also save a checkpoint file every 600 seconds (10 minutes). just in case
-%   the computer will crash.
-[obj.NN.net, obj.NN.net_perf] = train(obj.NN.net, sampl, targ,...
-    'CheckpointFile','MyCheckpoint.mat','CheckpointDelay',600);
-
+if ~useGPU_flag
+    % % % Training (NO GPU): % % %
+    %   also save a checkpoint file every 1800 seconds (30 minutes). just in case
+    %   the computer will crash.
+    [obj.NN.net, obj.NN.net_perf] = train(obj.NN.net, sampl, targ,...
+        'CheckpointFile','MyCheckpoint.mat','CheckpointDelay',1800);
+else
+    % % % Training (WITH GPU): % % %
+    % note: If NET has the default training function trainlm,
+    %   you see a warning that GPU calculations do not support Jacobian training,
+    %   only gradient training. So the training function is automatically
+    %   changed to the gradient training function trainscg.
+    %   To avoid the notice, you can specify the function before training:
+    %      "net.trainFcn = 'trainscg';" 
+    [obj.NN.net, obj.NN.net_perf] = train(obj.NN.net, sampl, targ,...
+        'useGPU','yes');
+end
 obj.NN.out_from_train = obj.NN.net(obj.sampl_train);
 obj.NN.out_from_valid = obj.NN.net(obj.sampl_valid);
 obj.NN.out_from_test = obj.NN.net(obj.sampl_test);

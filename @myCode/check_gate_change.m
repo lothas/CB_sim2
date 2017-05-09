@@ -8,7 +8,10 @@ function [max_err_g,max_err_g_ind,err_g] = check_gate_change(obj,g_old,g_new)
 %	*) err_g - a row vector contain the change for all of the samples
 
 % calculate change by mse error:
-err_g = immse(g_old,g_new);
+err_g = zeros(1,size(g_old,2));
+for j=1:size(g_old,2)
+    err_g(1,j) = immse(g_old(:,j),g_new(:,j));
+end
 %    check for which point we get the maximum change.
 [max_err_g,max_err_g_ind] = max(err_g,[],1);
 

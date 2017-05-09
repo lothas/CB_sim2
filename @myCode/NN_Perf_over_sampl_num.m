@@ -1,4 +1,4 @@
-function [out] = NN_Perf_over_sampl_num( NumOfRepeats,HiddenN,dataPointsNum,NNinput,NNtarg,train_or_plot )
+function [out] = NN_Perf_over_sampl_num(obj,NumOfRepeats,HiddenN,dataPointsNum,NNinput,NNtarg,train_or_plot )
 % this function is calculating the NN performance over the number of
 % neurons in the hidden layer.
 
@@ -41,12 +41,12 @@ switch train_or_plot
         meanMseTrain = mean(netMseTrain,1);
         meanMseValidation = mean(netMseValidation,1);
         meanMseTest = mean(netMseTest,1);
-        out.NN_Mean_over_sampl_num = [meanMseTrain,meanMseValidation,meanMseTest];
+        out.NN_Mean_over_sampl_num = [meanMseTrain;meanMseValidation;eanMseTest];
 
         stdMseTrain = std(netMseTrain,0,1);
         stdMseValidation = std(netMseValidation,0,1);
         stdMseTest = std(netMseTest,0,1);
-        out.NN_stdev_over_sampl_num= [stdMseTrain,stdMseValidation,stdMseTest];
+        out.NN_stdev_over_sampl_num= [stdMseTrain;stdMseValidation;stdMseTest];
         
         out.order_of_perf = {'1st col - train','2nd col - vald','3rd col - test'};
         
@@ -55,10 +55,18 @@ switch train_or_plot
     case 'plot'
         load('NN_Perf_over_sampl_num_result.mat','out');
         
+        meanMseTrain = out.NN_Mean_over_sampl_num(1,:);
+        meanMseValidation = out.NN_Mean_over_sampl_num(2,:);
+        meanMseTest = out.NN_Mean_over_sampl_num(3,:);
+        
+        stdMseTrain = out.NN_stdev_over_sampl_num(1,:);
+        stdMseValidation = out.NN_stdev_over_sampl_num(2,:);
+        stdMseTest = out.NN_stdev_over_sampl_num(3,:);
+        
         figure;
-        errorbar(out.samplesNum,out.meanMseTrain,out.stdMseTrain); hold on
-        errorbar(out.samplesNum,out.meanMseValidation,out.stdMseValidation);
-        errorbar(out.samplesNum,out.meanMseTest,out.stdMseTest);
+        errorbar(out.samplesNum,meanMseTrain,stdMseTrain); hold on
+        errorbar(out.samplesNum,meanMseValidation,stdMseValidation);
+        errorbar(out.samplesNum,meanMseTest,stdMseTest);
         legend('Train group','validation group','Test group');
         title('network performance over samples num');
         xlabel('samples num');

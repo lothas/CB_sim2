@@ -4,11 +4,13 @@
 Old Sims/*
 *.gif
 *.xcf
+*.csv
 
 #################
 ## Matlab
 #################
 *.asv
+*.mat
 Test*.mat
 GA*.mat
 VGA*.mat

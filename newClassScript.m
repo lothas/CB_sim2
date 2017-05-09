@@ -69,9 +69,12 @@ myCode.NN_Perf_over_HNnum(numOfRepeats,hiddenN,'plot' );
 myCode.NN_Perf_over_HNnum(numOfRepeats,hiddenN,'text' );
 %% with NN:
 myCode.disp_information = false;
-myCode = myCode.Set('NN',[1000],200);
-myCode = myCode.trainNN(1);
+myCode = myCode.Set('NN',[300],50);
+myCode = myCode.trainNN(1,0);
 myCode.plot_fit_data('NN',problemType);
+
+% g = gpuDevice(1); % reset the GPU and clear memory
+% reset(g); clear g
 
 %% with the paper's MoE
 myCode = myCode.Set('paper_MoE',10,5,0.005,0.995);
@@ -81,8 +84,8 @@ myCode.plot_fit_data('paper_MoE',problemType);
 
 %%
 close all
-myCode = myCode.Set('our_MoE',10,2,[2],1);
-myCode.disp_information = false;
+myCode = myCode.Set('our_MoE',500,10,[100],1);
+myCode.disp_information = true;
 % myCode = myCode.my_MoE_train_collaboration();
 myCode = myCode.my_MoE_train_Competetive('soft');
 myCode.plot_fit_data('our_MoE',problemType);
