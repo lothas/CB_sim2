@@ -30,8 +30,8 @@ targetCells = {'tau','b'};
 % note: not sure is would run with two outputs
 
 %% File to load
-% fileName = 'MatsRandomRes_test.mat';
-fileName = 'MatsRandomRes_2-4_02_2017.mat';
+fileName = 'MatsRandomRes_test.mat';
+% fileName = 'MatsRandomRes_2-4_02_2017.mat';
 seqOrder = {'tau','b','c_1','c_2','c_3','c_4',...
     'w_{12}','w_{13}','w_{14}','w_{21}','w_{23}','w_{24}',...
     'w_{31}','w_{32}','w_{34}','w_{41}','w_{42}','w_{43}'};

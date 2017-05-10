@@ -19,6 +19,27 @@ osc = ~isnan(periods);
 good_ids = find(osc);
 count = false(1,length(periods));
 %%
+
+i = 29648;
+    
+tau = results(i).Tr;
+T = results(i).Ta;
+b = results(i).b;
+s = results(i).c;
+W_ij = results(i).W;
+
+sami = W_ij * y;
+f_i = (1/tau) * (-x + sami + s - b*u);
+f_i_prime = (1/T) * (-u + y);
+
+f = [f_i;f_i_prime];
+
+f=vpa(f,3)
+
+% clac the jacobian:
+J = double(jacobian(f', [x',u']))
+
+%%
 for i=1:length(periods)
     
     tau = results(i).Tr;
@@ -32,7 +53,10 @@ for i=1:length(periods)
     f_i_prime = (1/T) * (-u + y);
 
     f = [f_i;f_i_prime];
-
+    
+    % faster claculation???
+    f=vpa(f,3);
+    
     J = double(jacobian(f', [x',u']));
     
     % place '1' in every element when the Jacobian is negative

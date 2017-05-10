@@ -45,8 +45,9 @@ if ~useGPU_flag
     % % % Training (NO GPU): % % %
     %   also save a checkpoint file every 1800 seconds (30 minutes). just in case
     %   the computer will crash.
-    [obj.NN.net, obj.NN.net_perf] = train(obj.NN.net, sampl, targ,...
-        'CheckpointFile','MyCheckpoint.mat','CheckpointDelay',1800);
+%     [obj.NN.net, obj.NN.net_perf] = train(obj.NN.net, sampl, targ,...
+%         'CheckpointFile','MyCheckpoint.mat','CheckpointDelay',1800);
+    [obj.NN.net, obj.NN.net_perf] = train(obj.NN.net, sampl, targ);
 else
     % % % Training (WITH GPU): % % %
     % note: If NET has the default training function trainlm,
