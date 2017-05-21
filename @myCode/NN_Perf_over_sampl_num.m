@@ -41,7 +41,7 @@ switch train_or_plot
         meanMseTrain = mean(netMseTrain,1);
         meanMseValidation = mean(netMseValidation,1);
         meanMseTest = mean(netMseTest,1);
-        out.NN_Mean_over_sampl_num = [meanMseTrain;meanMseValidation;eanMseTest];
+        out.NN_Mean_over_sampl_num = [meanMseTrain;meanMseValidation;meanMseTest];
 
         stdMseTrain = std(netMseTrain,0,1);
         stdMseValidation = std(netMseValidation,0,1);

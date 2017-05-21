@@ -117,7 +117,7 @@ for k=1:2
             case 'sumW'
                 temp(i,:) = sumW;
             case 'period'
-                temp(i,:) = Period;
+                temp(i,:) = period;
             case 'freq'
                 temp(i,:) = freq;
             case 'W123' % w12+w23+w31
@@ -137,7 +137,7 @@ for k=1:2
             case 'W243' % w24+w43+w32
                 temp(i,:) = w_24+w_43+w_32;
             otherwise
-                warning('no such string');
+                error('no such string');
        end
     end
     

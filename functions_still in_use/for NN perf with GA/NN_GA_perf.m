@@ -1,5 +1,5 @@
 function [percent_osc_new,conv_in_range,accuracy] = ...
-    NN_GA_perf(net,sampl,results_old,fileName,seqOrder,caseNum,perORfreq)
+    NN_GA_perf(net,sampl,results_old,seqOrder,caseNum)
 % this function change a sript to automate the NN perf checking using GA
 % FOR the 4N Matsuoka general CP only!
 
@@ -33,25 +33,35 @@ warning('off','signal:findpeaks:largeMinPeakHeight');
 %% % % % 1st stage: pass the input to the NN:
 
 theta_S1_new = net(sampl);
+numOfCPGs = length(theta_S1_new);
+% NOTE: update accordinly to "'MatsuokaGenome.mat'" file!!
+tau_min = 0.02;
+tau_Max = 0.25;
+b_min = 0.2;
+b_max = 10;
 
+% can't select NN output which is out of bound:
 switch caseNum
     case {1,2,3,4}
-        theta_S1_new_MAX = 0.25; % NOTE: update accordinly to "'MatsuokaGenome.mat'" file
+        good_ids = (theta_S1_new > tau_min) & ...
+                (theta_S1_new < tau_Max); 
     case {5,6,7,8}
-        theta_S1_new_MAX = 10;
+        good_ids = (theta_S1_new > b_min) & ...
+                (theta_S1_new < b_max);
     case {9,10}
-        theta_S1_new_MAX = [0.25;10];
+        good_ids = (theta_S1_new(1,:) > tau_min) & ...
+            (theta_S1_new(1,:) < tau_Max) &...
+            (theta_S1_new(2,:) > b_min) & ...
+            (theta_S1_new(2,:) < b_max);
     otherwise
         error('illigal caseNUM');
 end
-% can't select NN output which is out of bound:
-good_ids = (theta_S1_new > 0.02) & (theta_S1_new < theta_S1_new_MAX);
-if size(theta_S1_new,1) == 2
-    good_ids = good_ids(1,:) & good_ids(2,:);
-end
+
 results_old = results_old(good_ids);
 theta_S1_new = theta_S1_new(:,good_ids);
 
+disp(['the number of CPGs in bounds is ',num2str(sum(good_ids)),...
+    ' out of ',num2str(numOfCPGs)]);
 %% % % % 2nd stage: - make new CPGs:
 [results_new] = ...
     change_CPG(MML,caseNum,seqOrder,theta_S1_new,results_old);
@@ -61,7 +71,7 @@ periods_new = horzcat(results_new(:).periods);
 periods_new = periods_new(1,:);
 % osc_ids_new = find(~isnan(periods_new));
 
-percent_osc_new = (sum(~isnan(periods_new))/length(periods_new));
+percent_osc_new = ( sum(~isnan(periods_new)) / length(periods_new) );
 disp(['the percentage of osc period after the change is: ',...
     num2str(100*percent_osc_new),'%']);
 

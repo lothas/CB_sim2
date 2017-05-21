@@ -3,6 +3,11 @@ function [out] = NN_Perf_over_HNnum(obj,NumOfRepeats,HiddenN,train_or_plot,...
 % this function is calculating the NN performance over the number of
 % neurons in the hidden layer.
 
+% NOTE:
+%   for 2N symmetric case: shuffle only validation and train!!
+%   for the rest: shuffle everything!!!
+
+
 % inputs:
 % 1) 'NumOfRepeats' - the amount of times that we train each network (to
 %                       get the error bars).
@@ -24,9 +29,18 @@ switch train_or_plot
         netMseTrain = zeros(NumOfRepeats,length(HiddenN));
         netMseValidation = zeros(NumOfRepeats,length(HiddenN));
         netMseTest = zeros(NumOfRepeats,length(HiddenN));
-                
+        
+        % Start Timer
+        tic
+        
         for i=1:length(HiddenN)
             for j=1:NumOfRepeats
+                
+                disp(['NN with ',num2str(HiddenN(1,i)),...
+                    ' hidden neurons, ',num2str(j),...
+                    ' out of ',num2str(NumOfRepeats),...
+                    ' at time = ',num2str(toc),'[sec]']);
+                
                 % NOTE: this code shuffles the train and validation group in each
                 % iteration. but keeps the test group fixed.
 
@@ -40,8 +54,8 @@ switch train_or_plot
                     ( (HiddenN(1,i)+1) * num_of_outputs ); 
                 
                 % If to take the training samples as is, or to reduce their
-                %       number to only 100 times more than the NN weights:
-                ratio = 100; %100 times more samples than weights
+                %       number to only 500 times more than the NN weights:
+                ratio = 500; %500 times more samples than weights
                 % calc if we have enough samples to reduce the number
                 enough_cond = size(sampl_train,2) > (ratio*num_of_weights);
                 if keepRatioConstant && enough_cond
@@ -74,9 +88,9 @@ switch train_or_plot
 
                 % %  shuffle for next time:
                 % only for 2neuron symmetric case-
-                obj = obj.shuffle_samples('onlyTrainAndValid'); 
+%                 obj = obj.shuffle_samples('onlyTrainAndValid'); 
                 % for the other cases- dont keep test group the same-
-%                 obj = obj.shuffle_samples('completeShuffle');
+                obj = obj.shuffle_samples('completeShuffle');
                 
                 clear tr
             end
