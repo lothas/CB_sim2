@@ -66,7 +66,7 @@ switch size(obj.data_file_name,2)
         
         %divide the groups randomly
         % then divide the data randomly to train and test
-        samplesNum = obj.sampl_num_in_files
+        samplesNum = obj.sampl_num_in_files;
         
         randIds = randsample(samplesNum,samplesNum);
         trainingSize = floor(obj.train_ratio*samplesNum);

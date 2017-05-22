@@ -23,6 +23,13 @@ end
 
 freq = 1./period;
 
+% desired period and frequency:
+per_des_Min = 0.68;
+per_des_Max = 0.78;
+period_desired = per_des_Min + ...
+    ((per_des_Max-per_des_Min) * rand(1,length(ids)));
+freq_desired = 1./period_desired;
+
 seqMatrix = vertcat(results(ids).seq)'; % extracting the parameters from the structure to a matrix
 
 tau = seqMatrix(strcmp('tau',obj.seqOrder),:);
@@ -120,6 +127,10 @@ for k=1:2
                 temp(i,:) = period;
             case 'freq'
                 temp(i,:) = freq;
+            case 'period_desired'
+                temp(i,:) = period_desired;
+            case 'freq_desired'
+                temp(i,:) = freq_desired;
             case 'W123' % w12+w23+w31
                 temp(i,:) = w_12+w_23+w_31;
             case 'W124' % w12+w24+w41

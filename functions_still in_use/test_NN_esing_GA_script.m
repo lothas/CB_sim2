@@ -51,8 +51,9 @@ clear periods filename1 id_conv id_per nPlotSamples nSims
 periods = horzcat(results(:).periods);
 periods = periods(1,:);
 
-osc_ids = find(~isnan(periods));
-cpg_toUse = randsample(osc_ids,800);
+% osc_ids = find(~isnan(periods)); % find oscilatorry
+osc_ids = find(isnan(periods)); % find NOT oscilatorry
+cpg_toUse = randsample(osc_ids,600);
 results1 = results;             clear results;
 results = results1(cpg_toUse);  clear results1;
 
@@ -96,7 +97,6 @@ net = netemp.NN;   clear netemp netFile
 
 % what NN case do we want:
 caseNum = 1:10; % options: '1'-'10'
-% TODO: fix i=9,10
 N = length(caseNum);
 percent_osc_new = zeros(1,N);
 conv_in_range = zeros(1,N);
@@ -107,7 +107,7 @@ NN_perf_b = nan(1,N);
 seqOrder = {'tau','b','c_1','c_2','c_3','c_4',...
     'w_{12}','w_{13}','w_{14}','w_{21}','w_{23}','w_{24}',...
     'w_{31}','w_{32}','w_{34}','w_{41}','w_{42}','w_{43}'};
-fileName_4GA = 'MatsRandomRes_Test_NN_Sims2use.mat';
+fileName_4GA = 'MatsRandomRes_Test_NN_allSims.mat';
 fileName_for_train = 'MatsRandomRes_2-4_02_2017.mat';
 
 
@@ -116,18 +116,15 @@ for i=1:N
     disp([' at i = ',num2str(i)]);
     
     % make input and outputs names according to what NN case do we want:
-%     perORfreq = 'freq';
-    perORfreq = 'period';
+%     perORfreq = 'freq_desired';
+    perORfreq = 'period_desired';
     [parametersCells,targetCells] = ...
         check_NN_case_for_paper(caseNum(1,i),perORfreq);
     
     % Load data for GA testing (500-600 samples):
     myCode = myCode(fileName_4GA,parametersCells,targetCells,seqOrder,4);
     myCode.sizeOfCPG = 4;
-    ind_ids = [myCode.train_ind;myCode.valid_ind;myCode.test_ind];
-    results_old = myCode.sim_results(ind_ids);
-    sampl = horzcat(myCode.sampl_train,myCode.sampl_valid,myCode.sampl_test);
-    targ = horzcat(myCode.targ_train,myCode.targ_valid,myCode.targ_test);
+    [results_old,sampl,~] = myCode.NN_prepare_badCPGs_to_NN(600);
     clear myCode
     
     % Load data for NN training (lots of samples):
@@ -140,7 +137,7 @@ for i=1:N
     myCode = myCode.trainNN(0,0);
     net = myCode.NN.net;
     
-    switch i
+    switch caseNum(1,i)
         case {1,2,3,4}
             NN_perf_tau(1,i) = myCode.NN.MSE_test_perf;
         case {5,6,7,8}
@@ -166,18 +163,25 @@ for i=1:N
     clear parametersCells targetCells myCode net results_old sampl targ
 end
 
-%% Plot
+% Plot
 
 figure;
-bar(NN_perf);
-title('NN with 10 hidden neurons and different inputs outputs');
+bar(NN_perf_tau);
+title('NN with 15 hidden neurons and different inputs outputs');
 xlabel('#case');
-ylabel('MSE perf');
+ylabel('MSE perf on \tau');
+grid minor
+
+figure;
+bar(NN_perf_b);
+title('NN with 15 hidden neurons and different inputs outputs');
+xlabel('#case');
+ylabel('MSE perf on b');
 grid minor
 
 figure;
 bar([percent_osc_new;conv_in_range;accuracy]');
-title('NN with 10 hidden neurons and different inputs outputs');
+title('NN with 15 hidden neurons and different inputs outputs');
 xlabel('#case');
 legend('converged','conv in range','accuracy');
 grid minor

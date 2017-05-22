@@ -20,10 +20,10 @@ function [parametersCells,targetCells] = ...
 %          *) 'targetCells' - NN outputs names
 
 switch perORfreq
-    case 'period'
-        theta_s0 = {'period'};
-    case 'freq'
-        theta_s0 = {'freq'};
+    case 'period_desired'
+        theta_s0 = {'period_desired'};
+    case 'freq_desired'
+        theta_s0 = {'freq_desired'};
     otherwise
         error('you can only choose between the period or the frequency!');
 end

@@ -69,7 +69,6 @@ disp(['the number of CPGs in bounds is ',num2str(sum(good_ids)),...
 %% % % % 3rd stage: results:
 periods_new = horzcat(results_new(:).periods);
 periods_new = periods_new(1,:);
-% osc_ids_new = find(~isnan(periods_new));
 
 percent_osc_new = ( sum(~isnan(periods_new)) / length(periods_new) );
 disp(['the percentage of osc period after the change is: ',...
@@ -81,9 +80,8 @@ conv_in_range = sum(conv_in_range_temp) / length(periods_new);
 disp(['the percentage of CPGs which converge in period range is: ',...
     num2str(100*conv_in_range),'%']);
 
-periods_old = horzcat(results_old(:).periods);
-periods_old = periods_old(1,:);
-delta_vec = ((1./periods_old) .* ( periods_new - periods_old ));
+periods_des = (MML.perLimOut(1,2)+MML.perLimOut(1,1))/2;
+delta_vec = ((1./periods_des) .* ( periods_new - periods_des ));
 delta = mean(delta_vec,'omitnan');
 accuracy = 1/(1+delta);
 

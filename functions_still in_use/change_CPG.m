@@ -23,8 +23,6 @@ function [results_new] = ...
 
 seq = vertcat(results_old(:).seq);
 
-change_index = strcmp('tau',seqOrder);
-
 switch caseNum
     case {1,2,3,4}
         change_index = strcmp('tau',seqOrder);
@@ -38,13 +36,31 @@ switch caseNum
         seq(:,change_index) = theta_S1_new; % theta_S1_new =tau
 end
 
+N = size(seq,1);
+if 1 % 'if' for code folding purposes
+    [out, ~, ~] = MML.runSim(seq(N,:));
+        % Prepare output:
+    % Parameters
+    results_new(N).seq = seq(N,:);
+    results_new(N).x0 = out.x0;
+    % Results
+    results_new(N).periods = out.periods;
+    results_new(N).pos_work = out.pos_work;
+    results_new(N).neg_work = out.neg_work;
+    results_new(N).perError1 = out.perError1;
+    results_new(N).perOK1 = out.perOK1;
+    results_new(N).perError2 = out.perError2;
+    results_new(N).perOK2 = out.perOK2;
+    results_new(N).neuronActive = out.neuronActive;
+    results_new(N).neuronOsc = out.neuronOsc;
+end    
 
-parfor i=1:size(results_old,2)
+parfor i=1:(N-1)
     [out, ~, ~] = MML.runSim(seq(i,:));
     
         % Prepare output:
     % Parameters
-    results_new(i).seq = seq;
+    results_new(i).seq = seq(i,:);
     results_new(i).x0 = out.x0;
 
     % Results
@@ -57,6 +73,9 @@ parfor i=1:size(results_old,2)
     results_new(i).perOK2 = out.perOK2;
     results_new(i).neuronActive = out.neuronActive;
     results_new(i).neuronOsc = out.neuronOsc;
+
+end
+results_new = results_new';
 
 end
 
