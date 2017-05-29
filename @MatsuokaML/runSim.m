@@ -29,7 +29,7 @@ function [out, sim, signal] = runSim(obj, sequence)
         neuronOsc, perError1, perOK1, perError2, perOK2] = ...
         obj.processResults(X, T);
 %     periods
-%     [simFreq, amp] = obj.processResultsFFT(X, T, 0);
+    [simFreq, ~] = obj.processResultsFFT_better(X, T, 0);
     
     % Plot results
     if obj.doPlot
@@ -67,7 +67,7 @@ function [out, sim, signal] = runSim(obj, sequence)
     % Prepare output
     out.x0 = x0;
     out.periods = periods;
-%     out.period_Rea = 1/simFreq;
+    out.periods_Rea = 1./simFreq;
     out.perError1 = perError1;
     out.perOK1 = perOK1;
     % ^ Returns 1 if the calculated period was verified to be correct

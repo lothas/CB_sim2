@@ -30,11 +30,11 @@ clear all
 MML = MatsuokaML();
 MML.perLim = [0.68 0.78];
 MML.perLimOut = MML.perLim + [-0.08 0.08]; % Desired period range
-MML.tStep = 0.01;
-MML.tEnd = 30; % 15
+MML.tStep = 0.05;
+MML.tEnd = 50; % 15
 MML.nNeurons = 2;
 %% Train data:
-N = 20000; % the number of samples
+N = 20; % the number of samples
 % CPG parameters:
 % tau_min = 0.4;     tau_max = 0.6;
 tau_min = 0.02;     tau_max = 0.6;
@@ -51,7 +51,8 @@ a_min = 1;     a_max = 6;
 a = (a_max-a_min).*rand(1,N) + a_min;
 
 disp('start with the sim:');
-parfor i=1:N % Simulate and calculate the frequecy (also calc from Matsuoka extimation)
+% parfor i=1:N % Simulate and calculate the frequecy (also calc from Matsuoka extimation)
+for i=1:N
     disp(['at sim #',num2str(i)]);
     seq = [tau(1,i),b(1,i),c(1,i),0,a(1,i),0,0,0];
     [out, ~, ~] = MML.runSim(seq);
@@ -66,6 +67,7 @@ parfor i=1:N % Simulate and calculate the frequecy (also calc from Matsuoka exti
 
     % Results
     results(i).periods = out.periods;
+    results(i).periods_Rea = out.periods_Rea;
     results(i).pos_work = out.pos_work;
     results(i).neg_work = out.neg_work;
     results(i).perError1 = out.perError1;
@@ -77,7 +79,7 @@ parfor i=1:N % Simulate and calculate the frequecy (also calc from Matsuoka exti
 end 
 disp('sim end...');
 
-save('MatsRandomRes_2Neurons_symm_trainData_wide_range9.mat','results');
+save('MatsRandomRes_2Neurons_symm_test_for_FFT.mat','results');
 
 
 %% Test data:

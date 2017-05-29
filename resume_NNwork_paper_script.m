@@ -31,7 +31,9 @@ targetCells = {'tau','b'};
 
 %% File to load
 % fileName = 'MatsRandomRes_test.mat';
-fileName = 'MatsRandomRes_2-4_02_2017.mat';
+% fileName = 'MatsRandomRes_2-4_02_2017.mat';
+% fileName = 'MatsRandomRes_1-31_01_2017.mat';
+fileName = 'MatsRandomRes_all_from_1-2_2017.mat';
 seqOrder = {'tau','b','c_1','c_2','c_3','c_4',...
     'w_{12}','w_{13}','w_{14}','w_{21}','w_{23}','w_{24}',...
     'w_{31}','w_{32}','w_{34}','w_{41}','w_{42}','w_{43}'};
@@ -50,7 +52,7 @@ myCode.plot_fit_data('NN',problemType);
 % reset(g); clear g
 
 %% train with NN: (graph: perf over hidNum)
-HiddenN = [8,10,12,14,16,18,20,50,100,300];
+HiddenN = [8,10,12,14,16,18,20,50,100];
 % HiddenN = [3,5];
 NumOfRepeats = 5;
 Smpl2HidN_ratio_const = true;
@@ -58,7 +60,7 @@ myCode.NN_Perf_over_HNnum(NumOfRepeats,HiddenN,'train',Smpl2HidN_ratio_const);
 myCode.NN_Perf_over_HNnum(NumOfRepeats,HiddenN,'plot',Smpl2HidN_ratio_const);
 
 %% train with NN: (graph: perf over num of samples)
-NumOfRepeats = 10;
+NumOfRepeats = 20;
 HiddenN = 10;
 dataPointsNum = 1000 * [15,20,25,30,40,50,60,120,150,200,225];
 % % dataPointsNum = 1000 * [15,20];

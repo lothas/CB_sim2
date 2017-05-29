@@ -108,7 +108,8 @@ seqOrder = {'tau','b','c_1','c_2','c_3','c_4',...
     'w_{12}','w_{13}','w_{14}','w_{21}','w_{23}','w_{24}',...
     'w_{31}','w_{32}','w_{34}','w_{41}','w_{42}','w_{43}'};
 fileName_4GA = 'MatsRandomRes_Test_NN_allSims.mat';
-fileName_for_train = 'MatsRandomRes_2-4_02_2017.mat';
+% fileName_for_train = 'MatsRandomRes_2-4_02_2017.mat';
+fileName_for_train = 'MatsRandomRes_all_from_1-2_2017.mat';
 
 
 for i=1:N
