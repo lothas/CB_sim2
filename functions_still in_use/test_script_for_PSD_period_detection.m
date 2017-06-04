@@ -1,21 +1,21 @@
 
 close all; clear all; clc
 
-%% define the class:
+% define the class:
 MML = MatsuokaML();
 MML.perLim = [0.68 0.78];
 MML.perLimOut = MML.perLim + [-0.08 0.08]; % Desired period range
 MML.tStep = 0.05;
 MML.tEnd = 50; % 15
 MML.nNeurons = 2;
-%%
+%
 filename = 'MatsRandomRes_2Neurons_symm_test_for_FFT.mat';
 load(filename,'results');
-
 %%
+%
 % picks = randsample(length(results), 3);
 % picks = [24893, 10746, 2447, 6292, 3632, 9959];
-picks = 2;
+picks = 3;
 
 for i = 1:length(picks)
     sr = results(picks(i)); % Get sample by id
@@ -65,5 +65,52 @@ for i = 1:length(picks)
     
 end
 
-%% PSD of the signal:
-MML.processResultsFFT_better(signal.X, signal.T, 1);
+x = signal.signal(1,:);
+t = signal.T;
+
+%% LSQ
+close all; clc;
+
+[periodsFFT,sine_coef,cos_coef,a0,fitObject] = ...
+    MML.processResults_LSQ(x,t,1)
+
+
+
+%% FFT
+close all; clc;
+
+[periodsFFT,f_amp,f_phase, ~] = ...
+    MML.processResults_FFT(x,t,1)
+
+f_har = 1./periodsFFT;
+
+x_rec = 0;
+for i=1:length(f_har)
+    x_rec = x_rec + ...
+        (f_amp(1,i) .* sin(2*pi*f_har(1,i).*t + f_phase(1,i)));
+end
+
+figure;
+plot(t,x,'b'); hold on;
+plot(t,x_rec,'r'); grid minor;
+xlabel('time [sec]');
+ylabel('signal');
+title(' comparison between the actual signal and the reconstruction with FFT');
+legend('original signal','from FFT');
+
+
+%% checking known signals
+close all; clc;
+
+N = 5100;
+t = linspace(0,20,N);
+
+% % beating with noise:
+x = 0.5*sin(2*pi*10*t) + 0.3*sin(2*pi*11*t) + 0.2*rand(1,length(t));
+
+% % % simple sine:
+% x = 0.5*sin(2*pi*10*t);
+
+% % % squar wave:
+% x = 0.5 + 0.5 * square(2*pi*t,50);
+

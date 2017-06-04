@@ -1,4 +1,4 @@
-function [fundanetalHarmonics, amp] = processResultsFFT_better( obj, X, T, graphicsFlag)
+function [fundanetalHarmonics, amp] = processResults_PSD( obj, X, T, graphicsFlag)
     %checking the period using limit cycle 
     
     % INPUTS:
@@ -13,8 +13,12 @@ function [fundanetalHarmonics, amp] = processResultsFFT_better( obj, X, T, graph
     % Turn off findpeaks warning
     warning('off','signal:findpeaks:largeMinPeakHeight');
 
+    % Process Parameters:
+    min_peak_prominence = 0.7; % percent from max prominence, freq domain
+    min_peak_hight = 0.85; % percent from max hight, time domain
     samplingTime = mean(diff(T));
     Fs = 1/samplingTime;
+%     NFFT = 2^nextpow2(length(T));
 
     % Build signals
     if obj.nNeurons > 2
@@ -37,6 +41,7 @@ function [fundanetalHarmonics, amp] = processResultsFFT_better( obj, X, T, graph
         signal2Process = signals(s,signal_start:end);
         signal2Process = signal2Process - min(signal2Process);
         
+        % check if the signal is non oscillatory. method #1
         if std(signal2Process) < 1e-3
             fundanetalHarmonics = NaN;
             % TODO: implement amplitude detection
@@ -45,7 +50,8 @@ function [fundanetalHarmonics, amp] = processResultsFFT_better( obj, X, T, graph
         end
         
         [~,locs]=findpeaks(signal2Process, ...
-            'MinPeakheight',0.75*max(signal2Process));
+            'MinPeakheight',...
+            min_peak_hight*max(signal2Process));
 
         if length(locs) > 1
             peak_locs(s,:) = [locs(1), locs(end)];
@@ -69,11 +75,21 @@ function [fundanetalHarmonics, amp] = processResultsFFT_better( obj, X, T, graph
     T2graph = T(1,locs(1):locs(end));
     
     % PSD parameters:
-    window = hamming(1024);
+    window = hamming(512);
     
     % PSD:
-    [Pxx,Fxx] = pwelch(signal,window,[],[],Fs);
-    %     [Pxx,Fxx] = pwelch(x,window,noverlap,f,fs)
+    try
+        [Pxx,Fxx] = pwelch(signal,window,[],[],Fs);
+    catch
+        % dump oscillating signals get falsly flaged as oscillating.
+        %   which leads to "signals" with really small num of samples. 
+        warning('was unable to compute "pwelch"')
+        fundanetalHarmonics = NaN;
+        % TODO: implement amplitude detection
+        amp = [];
+        return
+    end
+%         [Pxx,Fxx] = pwelch(x,window,noverlap,f,fs)
     Pxx_dB = 10*log10(Pxx);
     
     % find peaks in PSD:
@@ -81,7 +97,9 @@ function [fundanetalHarmonics, amp] = processResultsFFT_better( obj, X, T, graph
     maxProminence = max(prominences);
 
     % find dominant peaks only:
-    [~,locs] = findpeaks(Pxx_dB,'MinPeakProminence',0.80*maxProminence);
+    [~,locs] = findpeaks(Pxx_dB,'MinPeakProminence',...
+        min_peak_prominence*maxProminence);
+    
     fundanetalHarmonics = (Fxx(locs))';
     
     if graphicsFlag
@@ -104,25 +122,27 @@ function [fundanetalHarmonics, amp] = processResultsFFT_better( obj, X, T, graph
         clear psor lsor
         
         figure;
-        findpeaks(Pxx_dB,'MinPeakProminence',0.8*maxProminence)
+        findpeaks(Pxx_dB,'MinPeakProminence',...
+            min_peak_prominence*maxProminence)
         title('peaks with most prominence:');
         xlabel('locations');    ylabel('Magnitude [dB]');
         
-        % reconstruct the signal:
-        harmonics_amp = Pxx(locs);
-        signal_from_PSD = harmonics_amp(1,1) *...
-            sin(2*pi*fundanetalHarmonics(1,1)*T);
-        if length(fundanetalHarmonics) > 1
-            for j=2:length(fundanetalHarmonics)
-                signal_from_PSD = signal_from_PSD + (harmonics_amp(1,j) *...
-                sin(2*pi*fundanetalHarmonics(1,j)*T));
-            end
-        end
-        figure;
-        plot(T,signal_from_PSD); hold on
-        plot(T,signals);
-        xlabel('time'); ylabel('signal');
-        legend('FFT reconstructed signal','original signal');
+%         % reconstruct the signal:
+%         harmonics_amp = Pxx(locs);
+% %         harmonics_amp = sqrt(harmonics_amp*Fs/2)
+%         signal_from_PSD = harmonics_amp(1,1) *...
+%             sin(2*pi*fundanetalHarmonics(1,1)*T);
+%         if length(fundanetalHarmonics) > 1
+%             for j=2:length(fundanetalHarmonics)
+%                 signal_from_PSD = signal_from_PSD + (harmonics_amp(j,1) *...
+%                 sin(2*pi*fundanetalHarmonics(1,j)*T));
+%             end
+%         end
+%         figure;
+%         plot(T,signal_from_PSD); hold on
+%         plot(T,signals);
+%         xlabel('time'); ylabel('signal');
+%         legend('FFT reconstructed signal','original signal');
     end     
 
     % TODO: implement amplitude detection.

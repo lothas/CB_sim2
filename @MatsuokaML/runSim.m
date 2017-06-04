@@ -29,7 +29,7 @@ function [out, sim, signal] = runSim(obj, sequence)
         neuronOsc, perError1, perOK1, perError2, perOK2] = ...
         obj.processResults(X, T);
 %     periods
-    [simFreq, ~] = obj.processResultsFFT_better(X, T, 0);
+    [simFreq, ~] = obj.processResults_PSD(X, T, 0);
     
     % Plot results
     if obj.doPlot
