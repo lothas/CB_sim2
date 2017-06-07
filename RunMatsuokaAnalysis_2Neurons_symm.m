@@ -34,7 +34,7 @@ MML.tStep = 0.05;
 MML.tEnd = 50; % 15
 MML.nNeurons = 2;
 %% Train data:
-N = 100; % the number of samples
+N = 100000; % the number of samples
 % CPG parameters:
 % tau_min = 0.4;     tau_max = 0.6;
 tau_min = 0.02;     tau_max = 0.6;
@@ -51,11 +51,11 @@ a_min = 1;     a_max = 6;
 a = (a_max-a_min).*rand(1,N) + a_min;
 
 disp('start with the sim:');
-% parfor i=1:N % Simulate and calculate the frequecy (also calc from Matsuoka extimation)
-for i=1:N
+parfor i=1:N % Simulate and calculate the frequecy (also calc from Matsuoka extimation)
+% for i=1:N
     disp(['at sim #',num2str(i)]);
     seq = [tau(1,i),b(1,i),c(1,i),0,a(1,i),0,0,0];
-    [out, ~, ~] = MML.runSim(seq);
+    [out, ~, signal] = MML.runSim(seq);
         % Prepare output:
     % Parameters
     results(i).seq = seq;
@@ -65,9 +65,20 @@ for i=1:N
     results(i).a = a(1,i);
     results(i).x0 = out.x0;
 
-    % Results
+    % Results- caculate perdiods using different methods:
     results(i).periods = out.periods;
-    results(i).periods_Rea = out.periods_Rea;
+    % results(i).periods_Rea = out.periods_Rea;
+    
+    t = signal.T;
+    x = signal.signal(1,:);
+    
+    [periodsFFT,sine_coef,cos_coef,a0,~] = ...
+        MML.processResults_LSQ(x,t,0);
+    results(i).periods_LSQ = periodsFFT;
+    results(i).bias_coef = a0;
+    results(i).sine_coef = sine_coef;
+    results(i).cos_coef = cos_coef;
+    
     results(i).pos_work = out.pos_work;
     results(i).neg_work = out.neg_work;
     results(i).perError1 = out.perError1;
@@ -76,10 +87,12 @@ for i=1:N
     results(i).perOK2 = out.perOK2;
     results(i).neuronActive = out.neuronActive;
     results(i).neuronOsc = out.neuronOsc;
+    
+%     clear t x periodsFFT sine_coef cos_coef a0
 end 
 disp('sim end...');
 
-save('MatsRandomRes_2Neurons_symm_test_for_FFT.mat','results');
+save('MatsRandomRes_2Neurons_symm_test_for_FFT_1.mat','results');
 
 
 %% Test data:

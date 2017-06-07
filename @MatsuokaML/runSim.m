@@ -28,8 +28,11 @@ function [out, sim, signal] = runSim(obj, sequence)
     [y, periods, signals, pos_work, neg_work, neuronActive, ...
         neuronOsc, perError1, perOK1, perError2, perOK2] = ...
         obj.processResults(X, T);
-%     periods
-    [simFreq, ~] = obj.processResults_PSD(X, T, 0);
+%     periods calc:
+    % Using PSD: "pwelch"
+%     [simFreq, ~] = obj.processResults_PSD(X, T, 0);
+    % Using FFT: "fft"
+%     [simFreq,~,~, ~] = obj.processResults_FFT(X, T, 0);
     
     % Plot results
     if obj.doPlot
@@ -67,7 +70,7 @@ function [out, sim, signal] = runSim(obj, sequence)
     % Prepare output
     out.x0 = x0;
     out.periods = periods;
-    out.periods_Rea = 1./simFreq;
+%     out.periods_PSD = 1./simFreq;
     out.perError1 = perError1;
     out.perOK1 = perOK1;
     % ^ Returns 1 if the calculated period was verified to be correct

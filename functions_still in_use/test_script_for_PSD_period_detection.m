@@ -9,13 +9,14 @@ MML.tStep = 0.05;
 MML.tEnd = 50; % 15
 MML.nNeurons = 2;
 %
+% filename = 'MatsRandomRes_2Neurons_symm_test_for_FFT.mat';
 filename = 'MatsRandomRes_2Neurons_symm_test_for_FFT.mat';
 load(filename,'results');
-%%
+%% Run individual simulations:
 %
 % picks = randsample(length(results), 3);
 % picks = [24893, 10746, 2447, 6292, 3632, 9959];
-picks = 3;
+picks = 1;
 
 for i = 1:length(picks)
     sr = results(picks(i)); % Get sample by id

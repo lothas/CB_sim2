@@ -40,8 +40,8 @@ function [periodsFFT,sine_coef,cos_coef,a0,fitObject] = ...
     signal_start = floor(percent_of_sig2process * length(T));
     
     signal2Process = X(1,signal_start:end);
-    % aliminate the 'zero' frequency (bias)
-    signal2Process = signal2Process - min(signal2Process);
+%     % aliminate the 'zero' frequency (bias) (no need!!!!)
+%     signal2Process = signal2Process - min(signal2Process);
     
     % check if the signal is non periodic
     if std(signal2Process) < 1e-3 % check standart deviation:
@@ -70,7 +70,7 @@ function [periodsFFT,sine_coef,cos_coef,a0,fitObject] = ...
     
     %   curve fitting assuming furrier series:
     %   NOTE: 'fourier_i' = series of order i
-    fitObject = fit(T2fit,signal2fit,'fourier3')
+    fitObject = fit(T2fit,signal2fit,'fourier3');
 
     
     

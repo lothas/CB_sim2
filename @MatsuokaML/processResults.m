@@ -123,16 +123,22 @@ function [y, periods, signals, pos_work, neg_work, neuronActive, ...
     %     steps = floor(max(periods)/mean(diff(T)));
     %     Xsamp = perSignal(:,1:steps:end);
         % Sample the signal at the expected period
-        Xsamp2 = interp1(sigT,perSignal',(1:10)*max(periods));
-        Xsamp2(isnan(Xsamp2(:,1)),:) = [];
-        Xsamp2 = 1e-4+Xsamp2;
-        % Calculate the error as the relative std (std/mean)
-        perError1 = abs(std(Xsamp2)./mean(Xsamp2));
-        error = max(perError1);
-        if error < 0.1
-            perOK1 = true;
+        try % this function cuases problem with some sims
+            Xsamp2 = interp1(sigT,perSignal',(1:10)*max(periods));
+            Xsamp2(isnan(Xsamp2(:,1)),:) = [];
+            Xsamp2 = 1e-4+Xsamp2;
+            % Calculate the error as the relative std (std/mean)
+            perError1 = abs(std(Xsamp2)./mean(Xsamp2));
+            error = max(perError1);
+            if error < 0.1
+                perOK1 = true;
+            end
+        catch
+            warning('"interp1" exsecution failed');
+            perError1 = [NaN,NaN];
+            perOK1 = false;
         end
-        
+
         % Get the last 33% of the signal
         N = size(signals, 2);
         for i = 1:obj.nNeurons
