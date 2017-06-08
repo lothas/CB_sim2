@@ -16,7 +16,7 @@ load(filename,'results');
 %
 % picks = randsample(length(results), 3);
 % picks = [24893, 10746, 2447, 6292, 3632, 9959];
-picks = 1;
+picks = 2;
 
 for i = 1:length(picks)
     sr = results(picks(i)); % Get sample by id
@@ -75,8 +75,11 @@ close all; clc;
 [periodsFFT,sine_coef,cos_coef,a0,fitObject] = ...
     MML.processResults_LSQ(x,t,1)
 
-
-
+close all
+N = 10000;
+t=linspace(0,3,N);
+x = sin(100*t) + 5*rand(1,length(t));
+MML.processResults_FFT(x,t,1)
 %% FFT
 close all; clc;
 

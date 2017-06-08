@@ -82,6 +82,17 @@ function [periodsFFT,sine_coef,cos_coef,a0,fitObject] = ...
     cos_coef = [fitObject.b1,fitObject.b2,fitObject.b3];
     a0 = fitObject.a0;
     
+    % it's not likely that the CPG amplitude is much greater
+    %   than the tonic input.
+    %   sometimes the coef are in the order of 10^6 (I dont know why)
+    saf = 30;
+    if (fitObject.a1 > saf) ||...
+            (fitObject.b1 > saf) ||...
+            (fitObject.a0 > saf)
+        warning('furrier coef are abnormaly big!! set freq=NaN');
+        periodsFFT = NaN;
+    end
+    
     if graphicsFlag
         
         figure;
