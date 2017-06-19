@@ -1,4 +1,4 @@
-function prepareData_NN(obj)
+function obj = prepareData_NN(obj)
 % prepare Matrices to NN training
 % each ROW = different param.
 % each Col = different sample.
@@ -10,7 +10,7 @@ for k=1:2
         tempNames = obj.outputNames;
     end
     
-    temp = zeros(length(tempNames),length(obj.ids));
+    temp = zeros(length(tempNames),sum(obj.ids));
     for i=1:length(tempNames)
         temp(i,:) = obj.get_param(tempNames{1,i});
     end

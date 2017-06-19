@@ -1,4 +1,4 @@
-function [wantedParam_vec] = get_param(obj,wantedParam_name)
+function wantedParam_vec = get_param(obj,wantedParam_name)
 % this function takes the results data structure and extract the wanted
 % parameter (as a row vector)
 
@@ -9,7 +9,7 @@ function [wantedParam_vec] = get_param(obj,wantedParam_name)
 %   *) 'wantedParam_vec' - a row vector with the wanted parameters values.
 
 results = obj.sim_results;
-ids = obj.good_ids;
+ids = obj.ids;
 
 switch wantedParam_name
     case 'tau'
@@ -50,7 +50,9 @@ switch wantedParam_name
     otherwise
         error('no parameter with that name...');
 end
-        
+
+wantedParam_vec = wantedParam_vec';
+
 %TODO:
 % think how and for who to generate the desired parameters.
 

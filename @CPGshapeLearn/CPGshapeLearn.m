@@ -36,7 +36,7 @@ classdef CPGshapeLearn
     
     methods
                  % %%% % Class constructor % %%% %
-        function obj = myCode(varargin)
+        function obj = CPGshapeLearn(varargin)
                     obj.data_file_name = varargin{1};
                     
                     fileName = varargin{1};
@@ -47,6 +47,8 @@ classdef CPGshapeLearn
                     
                     obj.inputsNames = varargin{2};
                     obj.outputNames = varargin{3};
+                    
+                   obj = obj.prepareData_NN();
 
                 if nargin < 3
                     warning('invalid number of inputs');

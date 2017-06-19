@@ -1,4 +1,4 @@
-function [obj] = NN_training(obj,varargin)
+function obj = NN_training(obj,varargin)
 % this function trains a neural network using NNtoolbox
 
 % TODO: add more control on the training parameters
@@ -6,32 +6,28 @@ function [obj] = NN_training(obj,varargin)
 % 'showWindow' - wether to show the training GUI or not 
 
 switch nargin
+    case 5
+        obj.NN.hiddenNeuronNum = varargin{1};
+        obj.NN.net = feedforwardnet(varargin{1});
+        obj.NN.net.trainParam.epochs = varargin{2};
+        showWindow = varargin{3};
+        useGPU_flag = varargin{4};
     case 3
-        showWindow = varargin{1};
-        useGPU_flag = varargin{2};
-    case 2
-        showWindow = varargin{1};
-        useGPU_flag = false;
-    case 1
+        obj.NN.hiddenNeuronNum = varargin{1};
+        obj.NN.net = feedforwardnet(varargin{1});
+        obj.NN.net.trainParam.epochs = varargin{2};
         showWindow = false;
         useGPU_flag = false;
     otherwise
-        error('invalid number of inputs')
+        disp('invalid number of inputs...')
+        error('the inputs order is: 1)hidNeurons, 2)numEphocs, 3)showWind, 4)useGPU');
 end
 
 obj.NN.usingGPU = useGPU_flag;
-
 obj.NN.net.trainParam.showWindow = showWindow; % dont show training window
-
-trainSize = size(obj.sampl_train,2);
-validSize = size(obj.sampl_valid,2);
 
 sampl = obj.sampl;
 targ = obj.targ;
-%  obj.NN.net.divideMode = 'none'; % all data to training
- 
-% calc the number of weights:
-obj.NN.num_of_weights = length(getwb(obj.NN.net));
 
 if obj.disp_information
     disp('training neural network...');
@@ -55,25 +51,20 @@ else
     [obj.NN.net, obj.NN.net_perf] = train(obj.NN.net, sampl, targ,...
         'useGPU','yes');
 end
-obj.NN.out_from_train = obj.NN.net(obj.sampl_train);
-obj.NN.out_from_valid = obj.NN.net(obj.sampl_valid);
-obj.NN.out_from_test = obj.NN.net(obj.sampl_test);
 
-% Calc test MSE:
-[errMSE,Rsquar] = obj.NN_perf_calc(obj.targ_test,obj.NN.out_from_test,0,0,'test');
-obj.NN.MSE_test_perf = errMSE;
-obj.NN.RsquarTest = Rsquar;
+% get the number of weights:
+obj.NN.num_of_weights = obj.NN.net.numWeightElements;
 
-if obj.disp_information
-    figure;
-    plotregression(obj.targ_train,obj.NN.out_from_train,'train',...
-        obj.targ_valid,obj.NN.out_from_valid,'validation',...
-        obj.targ_test,obj.NN.out_from_test,'test');
-
-
-    disp(['NN MSE on test group is: ',num2str(errMSE)]);
-
+% Calc test MSE for each targ(output):
+testInd = obj.NN.net_perf.testInd;
+targ_test = targ(:,testInd);
+output_test = obj.NN.net(sampl(:,testInd));
+numOfOut = size(targ,1);
+MSE_test = zeros(numOfOut,1);
+for j=1:numOfOut
+    [MSE_test(j,1),~] = obj.NN_perf(targ_test(j,:),output_test(j,:));
 end
-obj.NN.MSE_test_perf = errMSE;
+obj.NN.MSE_test_perf = MSE_test;
+
 end
 

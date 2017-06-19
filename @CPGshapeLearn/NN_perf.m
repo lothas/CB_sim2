@@ -1,7 +1,30 @@
-function [errMSE,R_squar] = NN_perf(obj,targets,outputs,dispFlag,GraphicsFlag,trainOrTest )
+function [errMSE,R_squar] = NN_perf(obj,varargin)
 % calculate the R^2 and MSE of a fitting neural net
 
 % trainOrTest- either 'train' or 'test'
+switch nargin
+    case 6
+        targets = varargin{1};
+        outputs = varargin{2};
+        dispFlag = varargin{3};
+        GraphicsFlag = varargin{4};
+        trainOrTest = varargin{5};
+    case 4
+        targets = varargin{1};
+        outputs = varargin{2};
+        dispFlag = varargin{3};
+        GraphicsFlag = false;
+        trainOrTest = 'test';
+    case 3
+        targets = varargin{1};
+        outputs = varargin{2};
+        dispFlag = false;
+        GraphicsFlag = false;
+    otherwise
+        disp('invalid number of inputs...')
+        error(['the inputs order is: 1)targets, 2)outputs',...
+        '3)dispFlag, 4)GraphicsFlag','trainOrTest']);
+end
 
 % calc R^2
 err = targets-outputs;
