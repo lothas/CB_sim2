@@ -15,7 +15,7 @@ samplesNum = obj.sampl_num_in_files;
 
 switch mode
     case 'completeShuffle'
-        % shuffle all groups (traun,validation and test)
+        % shuffle all groups (train,validation and test)
         randIds = randsample(samplesNum,samplesNum);
         trainingSize = floor(obj.train_ratio*samplesNum);
         validSize = floor(obj.valid_ratio*samplesNum);

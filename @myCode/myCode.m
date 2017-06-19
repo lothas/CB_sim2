@@ -54,7 +54,7 @@ classdef myCode < handle & matlab.mixin.Copyable
         % parameters for use in "normal" nueral network:
         NN = []; % structure with fields:
                  %      net = 'feedfarward neural network;
-                 %      net_perf = perfurmance structure ('tr')
+                 %      net_perf = performance structure ('tr')
                  %      hiddenNeuronNum = hidden neurons vector
                  %      out_from_train = NN output from train group
                  %      out_from_test = NN output from test group
