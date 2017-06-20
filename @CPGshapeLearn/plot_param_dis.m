@@ -5,6 +5,8 @@ binNum = 100;
 inputsNames = obj.inputsNames;
 outputNames = obj.outputNames;
 
+figure;
+
 switch whichOne
     case {'in','Inputs','inputs'}
         graphsNum = length(inputsNames);
@@ -17,15 +19,23 @@ switch whichOne
         graphsNum = length(param);
     otherwise
         graphsNum = 1;
-        param = whichOne;
+        param = cell(1,1);
+        param{1,1} = whichOne;
 end
 
-figure;
-for j=1:graphsNum
-    subplot(3,ceil(graphsNum/3),j);
-    temp = obj.get_param(param{1,j});
-    hist(temp,binNum);    grid minor;
-    title(['historiogram of ',param{1,j}]);
+switch graphsNum
+    case 1
+        temp = obj.get_param(param{1,1});
+        hist(temp,binNum);    grid minor;
+        title(['historiogram of ',param{1,1}]);
+    otherwise
+        for j=1:graphsNum
+            subplot(3,ceil(graphsNum/3),j);
+            temp = obj.get_param(param{1,j});
+            hist(temp,binNum);    grid minor;
+            title(['historiogram of ',param{1,j}]);
+        end
 end
+
 end
 

@@ -31,6 +31,7 @@ targ = obj.targ;
 
 if obj.disp_information
     disp('training neural network...');
+    tic
 end
 
 if ~useGPU_flag
@@ -65,6 +66,21 @@ for j=1:numOfOut
     [MSE_test(j,1),~] = obj.NN_perf(targ_test(j,:),output_test(j,:));
 end
 obj.NN.MSE_test_perf = MSE_test;
+
+if obj.disp_information
+    disp(['training time was: ',num2str(toc), '[sec]']);
+    disp(['the number of samples is: ',num2str(size(sampl,2))]);
+    disp(['the number of network weights: ',num2str(obj.NN.net.numWeightElements)]);
+    disp(['the ratio between #sampl/#weights =  ',...
+        num2str(size(sampl,2)/obj.NN.net.numWeightElements)]);
+   
+    disp(' ');
+    errs = obj.NN.MSE_test_perf;
+    disp('the MSE err for each output:');
+    for i=1:length(obj.outputNames)
+        disp([obj.outputNames{1,i},' = ',num2str(errs(i))]);
+    end
+end
 
 end
 

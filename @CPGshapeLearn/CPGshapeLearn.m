@@ -32,6 +32,7 @@ classdef CPGshapeLearn
                  %      MSE_test_perf = NN perf (MSE) on test group
                  %      MSE_per_parameter = MSE performance for every
                  %          output element
+         multi_NN = []; %stores NN for each output
     end
     
     methods
