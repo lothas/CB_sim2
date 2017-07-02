@@ -123,6 +123,12 @@ if use_NN
 end
 
     function seq = NNFcn(Gen, net, seq)
+        [~, periods, ~, ~, ~] = MML.processResults(X, T);
+        % don't do anything if CPG IS stable
+        if ~any(isnan(periods)) 
+            return
+        end
+        
         % Use NN to select best value for tau gene
         desPeriod = MML.perLim(1) + ...
                      rand()*(MML.perLim(2)-MML.perLim(1));
@@ -144,10 +150,17 @@ end
 
     function seq = rescaleFcn(Gen, seq, X, T)
         [~, periods, ~, ~, ~] = MML.processResults(X, T);
-        if any(isnan(periods))
+        
+        % don't do anything if CPG is not stable
+        if any(isnan(periods)) 
             return
         end
         inputPeriod = max(periods);
+        
+        % don't do anything if CPG is osc in the right period range
+        if (inputPeriod > MML.perLim(1)) && (inputPeriod < MML.perLim(2))
+            return
+        end
         
         % Select new random period within desired range
         des_period = MML.perLim(1) + rand()*(MML.perLim(2)-MML.perLim(1));

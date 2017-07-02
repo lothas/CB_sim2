@@ -44,8 +44,8 @@ tau = (tau_max-tau_min).*rand(1,N) + tau_min;
 b_min = 1.1;     b_max = 5;
 b = (b_max-b_min).*rand(1,N) + b_min;
 
-c_min = 0;     c_max = 10;
-c = 5.*ones(1,N);
+c_min = 2.5;     c_max = 7;
+c = (c_max-c_min).*rand(1,N) + c_min;
 
 a_min = 1;     a_max = 6;
 a = (a_max-a_min).*rand(1,N) + a_min;
@@ -88,11 +88,17 @@ parfor i=1:N % Simulate and calculate the frequecy (also calc from Matsuoka exti
     results(i).neuronActive = out.neuronActive;
     results(i).neuronOsc = out.neuronOsc;
     
+    T = 5*tau(1,i);
+    wn = (1/T)*sqrt(((tau(1,i)+T)*b(1,i)-tau(1,i)*a(1,i))/(tau(1,i)*a(1,i)));
+    results(i).period_matsuoka_est = 2*pi./wn;
+    
+    Kn = (tau(1,i)+T)/(T*a(1,i));
+    results(i).amp_matsuoka_est = c(1,i) / (2*Kn-1+(2/pi)*(a(1,i)+b(1,i))*asin(Kn))
 %     clear t x periodsFFT sine_coef cos_coef a0
 end 
 disp('sim end...');
 
-save('MatsRandomRes_2Neurons_symm_test_for_FFT_1.mat','results');
+save('MatsRandomRes_2Neurons_symm_test_for_FFT_new_3.mat','results');
 
 
 %% Test data:
