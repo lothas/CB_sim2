@@ -23,15 +23,20 @@ function [results_new] = ...
 
 seq = vertcat(results_old(:).seq);
 
+misingZerosNum = size(seq,2) -size(seqOrder,2);
+
 switch caseNum
     case {1,2,3,4}
         change_index = strcmp('tau',seqOrder);
+        change_index = [change_index,false(1,misingZerosNum)];
         seq(:,change_index) = theta_S1_new'; % theta_S1_new = tau_new
     case {5,6,7,8}
         change_index = strcmp('b',seqOrder);
+        change_index = [change_index,false(1,misingZerosNum)];
         seq(:,change_index) = theta_S1_new'; % theta_S1_new = b
     case {9,10}
         change_index = strcmp('tau',seqOrder) | strcmp('b',seqOrder);
+        change_index = [change_index,false(1,misingZerosNum)];
         theta_S1_new=theta_S1_new';
         seq(:,change_index) = theta_S1_new; % theta_S1_new =tau
 end

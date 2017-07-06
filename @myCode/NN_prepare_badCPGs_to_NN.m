@@ -17,11 +17,14 @@ else
     error('not enougth bad CPGs');
 end
 
-results = obj.sim_results(:);
+results = obj.sim_results(cpg_toUse);
 
-[sampl,targ] = obj.prepareData_to_NN(results,...
+[sampl,targ] = obj.prepareData_to_NN(obj.sim_results(:),...
     periods,cpg_toUse);
 
-
+% % TO CHECK:
+% the "obj.prepareData_to_NN" function is taking the outputs and inputs names
+% from the "obj"... maybe it's taking the desired period instead of the period itself?
+% also check why im picking CPGs with not NaN period
 end
 

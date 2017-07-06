@@ -50,7 +50,7 @@ disp(['Converged: ', int2str(sum(~isnan(periods))), ...
     
 
 %% Phase 1 - Run lots of Matsuoka simulations with different parameters
-filename1 = 'MatsRandomRes_16_12_2016.mat';
+filename1 = 'MatsRandomRes.mat';
 % filename1 = 'MatsRandomRes_test.mat';
 nSamples = 200000;
 MML.runRandomSims(nSamples, filename1);

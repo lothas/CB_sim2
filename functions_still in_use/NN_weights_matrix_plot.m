@@ -1,6 +1,8 @@
 function NN_weights_matrix_plot( net,parametersCells )
 % this function takes a NN and plot a color maps of its weights
 
+% IMPORTANT: this can be replace with "heatmap" function!!
+
 % inputs:
 % 1) 'net' - the NN structure
 % 2) 'parametersCells' - the names of the inputs.

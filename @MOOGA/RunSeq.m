@@ -30,12 +30,6 @@ end
 
 % Set-up the simulation
 wSim = deepcopy(GA.Sim);
-
-if ~isempty(GA.NN) && ~isempty(GA.NNFcn) ...
-        && strcmp(wSim.Con.name, 'Matsuoka')
-    % Use NN to select best value for tau gene
-    thisSeq = GA.NNFcn(GA.Gen, GA.NN, thisSeq);
-end
     
 wSim = GA.Gen.Decode(wSim,thisSeq);
 
@@ -86,7 +80,18 @@ if strcmp(wSim.Con.name, 'Matsuoka')
 %     figure
 %     plot(TTemp, wMOSim.Con.Output(TTemp, XTemp', 0));
 %     grid on
+
+    % % % use NN to change the gene:
+    if ~isempty(GA.NN) && ~isempty(GA.NNFcn) ...
+            && strcmp(wSim.Con.name, 'Matsuoka')
+        % Use NN to select best value for tau gene
+        thisSeq = GA.NNFcn(GA.Gen, GA.NN, thisSeq, XTemp, TTemp);
+    end    
+
+    % Run simulation again (just in case the NN changed something):
+    [TTemp,XTemp] = ode45(@MatsDerivative,t_span,IC0,options);
     
+    % % % use Rescaling to change the gene:
     if ~isempty(GA.rescaleFcn)
         thisSeq = GA.rescaleFcn(GA.Gen, thisSeq, XTemp, TTemp);
         wSim = GA.Gen.Decode(wSim,thisSeq);

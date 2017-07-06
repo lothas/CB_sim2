@@ -12,7 +12,7 @@ function [ samples, targets, normParams ] = ...
         data = load(filenames{i});
         new_periods = data.periods;
         results = [results, data.results(~isnan(new_periods))]; %#ok<AGROW>
-        periods = [periods; new_periods(~isnan(new_periods))]; %#ok<AGROW>
+        periods = [periods, new_periods(~isnan(new_periods))]; %#ok<AGROW>
     end
     nSamples = numel(results);
     

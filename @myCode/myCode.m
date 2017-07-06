@@ -203,9 +203,6 @@ classdef myCode < handle & matlab.mixin.Copyable
             % extract the periods:
             periods = horzcat(results(:).periods);
             
-            % TODO: check if in the 4 neurons case the periods from results
-            %        is matched.
-            
             % get the Ids of only the ones with period (not 'NaN')
             ids_period = ~isnan(periods);
             % only ones with low enought error

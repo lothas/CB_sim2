@@ -22,7 +22,7 @@ else
 end
 
 % Use NN?
-use_NN = 0;
+use_NN = 1;
 % Rescale?
 GA.rescaleFcn = @rescaleFcn;
 
@@ -45,20 +45,20 @@ if exist(genome_file, 'file') ~= 2
     % TorqueFBMin = [-5*ones(1,NAnkleT),-10*ones(1,NHipT)];
     % TorqueFBMax = -TorqueFBMin;
   
-%     %%%%%%%%%%%% For the 4-neuron case!!!
-% %     % Final genome with tau_r + beta (constant tau_u/tau_v ratio) 
-%     Keys = {'\tau_r', 'beta', 'amp',   'weights', 'ks_\tau',     'ks_c', 'IC_matsuoka';
-%                   1 ,      1,  2*N , (2*N-1)*2*N,        1 ,       2*N ,            0 };
-%     Range = {  0.02 ,    0.2,  mamp,          mw,   -0.001 ,  -0.2*Mamp; % Min
-%                0.25 ,   10.0,  Mamp,          Mw,    0.001 ,   0.2*Mamp}; % Max
+    %%%%%%%%%%%% For the 4-neuron case!!!
+%     % Final genome with tau_r + beta (constant tau_u/tau_v ratio) 
+    Keys = {'\tau_r', 'beta', 'amp',   'weights', 'ks_\tau',     'ks_c', 'IC_matsuoka';
+                  1 ,      1,  2*N , (2*N-1)*2*N,        1 ,       2*N ,            0 };
+    Range = {  0.02 ,    0.2,  mamp,          mw,   -0.001 ,  -0.2*Mamp; % Min
+               0.25 ,   10.0,  Mamp,          Mw,    0.001 ,   0.2*Mamp}; % Max
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% %     % Final genome with tau_r + beta (constant tau_u/tau_v ratio) %%
-%                        symmetric 2neuron case
-    Keys = {'\tau_r', 'beta', 'amp',   'weights', 'ks_\tau',     'ks_c', 'IC_matsuoka';
-                  1 ,      1,   2*N,           1,        1 ,       2*N ,            0 };
-    Range = {  0.02 ,    0.2,  mamp,           1,   -0.001 ,  -0.2*Mamp; % Min
-               0.6  ,   10.0,  Mamp,          10,   0.001 ,   0.2*Mamp}; % Max
+% % %     % Final genome with tau_r + beta (constant tau_u/tau_v ratio) %%
+% %                        symmetric 2neuron case
+%     Keys = {'\tau_r', 'beta', 'amp',   'weights', 'ks_\tau',     'ks_c', 'IC_matsuoka';
+%                   1 ,      1,   2*N,           1,        1 ,       2*N ,            0 };
+%     Range = {  0.02 ,    0.2,  mamp,           1,   -0.001 ,  -0.2*Mamp; % Min
+%                0.6  ,   10.0,  Mamp,          10,   0.001 ,   0.2*Mamp}; % Max
 
 % % %    % for comparing a specific Matsuoka CPG to the NN
 %     Keys = {'tau'   ,   'tav', 'beta', 'amp',   'weights', 'ks_\tau',     'ks_c', 'IC_matsuoka';
@@ -122,7 +122,7 @@ if use_NN
     GA.NNFcn = @NNFcn;
 end
 
-    function seq = NNFcn(Gen, net, seq)
+    function seq = NNFcn(Gen, net, seq,X,T)
         [~, periods, ~, ~, ~] = MML.processResults(X, T);
         % don't do anything if CPG IS stable
         if ~any(isnan(periods)) 
