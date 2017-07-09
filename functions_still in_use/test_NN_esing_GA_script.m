@@ -100,8 +100,8 @@ for i=1:N
     myCode_test = myCode(fileName_4GA,parametersCells_test,...
         targetCells_test,seqOrder,4);
     myCode_test.sizeOfCPG = 4;
-%     [results_old,sampl,~] = myCode.NN_prepare_badCPGs_to_NN(600);
-    [results_old,sampl,~] = myCode_test.NN_prepare_badCPGs_to_NN(100);
+    [results_old,sampl,~] = myCode_test.NN_prepare_badCPGs_to_NN(600);
+%     [results_old,sampl,~] = myCode_test.NN_prepare_badCPGs_to_NN(100);
     
     % make input and outputs names according to what NN case do we want:
     %   Training case:
@@ -163,6 +163,7 @@ end
 fileName = 'testing_NNs_cases.mat';
 save(fileName,'NNs_cases_perf');
 %% Phase 4- plot and save results:
+close all;
 fileName = 'testing_NNs_cases.mat';
 load(fileName,'NNs_cases_perf');
 
@@ -209,11 +210,6 @@ xlabel('#case');
 ylabel('MSE perf on b');
 grid minor; hold off;
 
-% get class "myCode" for use of funtion "bars..."
-[parametersCells,targetCells] = check_NN_case_for_paper(1,'period_desired');
-fileName_4GA = 'MatsRandomRes_Test_NN_allSims.mat';
-myCode = myCode(fileName_4GA,parametersCells,targetCells,seqOrder,4);
-myCode.sizeOfCPG = 4;
 
 means = [percent_osc_new_mean;...
     conv_in_range_mean;...
@@ -221,13 +217,13 @@ means = [percent_osc_new_mean;...
 stdevs = [percent_osc_new_std;...
     conv_in_range_std;...
     accuracy_std];
-Names = {' ',' ','case#1',' ',' ',' ',' ','case#3',' '};
+Names = {' ','case#1',' ','case#3 ',' ','case#5 ',' ','case#7 ',' ','case#9'};
 label_Y = '';
 graph_title = ['NN with ',num2str(hidN_num),...
     ' hidden neurons and different inputs outputs'];
 graph_legend = {'converged','conv in range','accuracy'};
-myCode.plot_MSE_perf_with_stdev(means,stdevs,...
-    Names,label_Y,graph_title,graph_legend)
+plot_bars_with_errors(means,stdevs,...
+    Names,label_Y,graph_title,graph_legend);
 
 % % plot
 % errBarLocs = caseNum'*ones(1,3) + ones(5,1)*[-0.5, 0, 0.5 ];

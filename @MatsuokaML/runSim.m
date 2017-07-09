@@ -33,7 +33,6 @@ function [out, sim, signal] = runSim(obj, sequence)
 %     [simFreq, ~] = obj.processResults_PSD(X, T, 0);
     % Using FFT: "fft"
 %     [simFreq,~,~, ~] = obj.processResults_FFT(X, T, 0);
-    
     % Plot results
     if obj.doPlot
         delta_y = max(X(:))-min(X(:));

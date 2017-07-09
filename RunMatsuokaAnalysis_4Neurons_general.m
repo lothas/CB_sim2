@@ -8,7 +8,7 @@ maxHip = 10;%20;    % Max hip torque
 Mamp = [maxAnkle*ones(1,2*nAnkle), maxHip*ones(1,2*nHip)];
 mamp = 0*Mamp;
 N = nAnkle+nHip;
-Mw = 10*ones(1,6);
+Mw = 10*ones(1,6); %10*ones(1,12);???
 mw = 0*Mw;
 
     %%%%%%%%%%%% For the 4-neuron case!!!
