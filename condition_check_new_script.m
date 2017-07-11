@@ -19,7 +19,20 @@ periods_LS_ankle = periods_LS(2,:);
 
 periods_AC_mean = mean(periods_AC,1);
 periods_LS_mean = mean(periods_LS,1);
+
 % TODO: do something is one of the periods os NaN
+
+%% get varifications:
+
+varification_1_vec = (vertcat(results(:).neuronOsc))';
+
+varification_1 = (varification_1_vec(1,:) | varification_1_vec(2,:)) & ...
+    (varification_1_vec(3,:) | varification_1_vec(4,:));
+
+disp(['the number of CPG that pass AC and didnt pass varification #1 is:',...
+    ' ',num2str(sum(varification_1 & ~(ids_AC_ankle & ids_AC_hip)))]);
+clear varification_1_vec
+
 %% phase 1- confusion matrix, osc/non-osc:
 % for ankle torque:
 ids_AC_ankle = ~isnan(periods_AC_ankle);
@@ -43,6 +56,28 @@ set(gca,'xticklabel',{'n-osc' 'osc' ''})
 ylabel('LS')
 set(gca,'yticklabel',{'n-osc' 'osc' ''})
 
+%% the entire consusion matrix:
+AC_ids = [ids_AC_hip & ids_AC_ankle;
+    ids_AC_hip & ~ids_AC_ankle;
+    ~ids_AC_hip & ids_AC_ankle;
+    ~ids_AC_hip & ~ids_AC_ankle];
+
+LS_ids = [ids_LS_hip & ids_LS_ankle;
+    ids_LS_hip & ~ids_LS_ankle;
+    ~ids_LS_hip & ids_LS_ankle;
+    ~ids_LS_hip & ~ids_LS_ankle];
+
+figure;
+plotconfusion(AC_ids,LS_ids,'total')
+xlabel('Auto-Corr')
+set(gca,'xticklabel',{'hip osc, ankle osc'...
+    'hip osc, ankle n-osc' 'hip n-osc, ankle osc'...
+    'hip n-osc, ankle n-osc' ''})
+ylabel('LS')
+set(gca,'yticklabel',{'hip osc, ankle osc'...
+    'hip osc, ankle n-osc' 'hip n-osc, ankle osc'...
+    'hip n-osc, ankle n-osc' ''})
+
 %% correlation coefficient between AC and LS
 best_ids_ankle = ids_AC_ankle & ids_LS_ankle;
 best_ids_hip = ids_AC_hip & ids_LS_hip;
@@ -63,6 +98,12 @@ set(gca,'xticklabel',{'n-osc' 'osc' ''})
 ylabel('LS')
 set(gca,'yticklabel',{'n-osc' 'osc' ''})
 
+% find samples which AC gives osc and LS gives n-osc:
+testIds_1 = find((ids_AC_mean & ~ids_LS_mean));
+
+% find samples which AC gives n-osc and LS gives osc:
+testIds_2 = find((~ids_AC_mean & ids_LS_mean));
+% plotCPG(results,3274)
 %% check conditions from section 3.5 in paper:
 y_i_osc = (vertcat(results(:).neuronOsc))';
 
@@ -73,76 +114,47 @@ y_12_and_34_osc = y_12_osc & y_34_osc;
 
 periods_AC = horzcat(results(:).periods);
 osc_net = ~isnan(periods_AC(1,:)) & ~isnan(periods_AC(2,:));
-%% run all simulations again and check the conditions in sec 3.5 in the paper:
-MML = MatsuokaML();
-MML.perLim = [0.68 0.78];
-MML.perLimOut = MML.perLim + [-0.08 0.08]; % Desired period range
-MML.tStep = 0.05;
-MML.tEnd = 30; % 15
-MML.nNeurons = 4;
 
-% N = length(results);
-N=100;
+%% plot example:
+close all
+plotCPG(results,'random')
 
-disp('start with the sim:');
-parfor i=1:N % Simulate and calculate the frequecy (also calc from Matsuoka extimation)
-% for i=1:N
-    disp(['at sim #',num2str(i)]);
-    
-    period_peaks = nan(1,2);
-    sq_err = nan(1,2);
-    firstCheck = false(1,2);
-    
-    [out, sim, signals] = MML.runSim(results(i).seq);
-        % Prepare output:
-    % Parameters
-    results_more(i).seq = results(i).seq;
+%% check Matsuoka conditions:
+clc
+nSims = length(results);
 
-    % Results- caculate perdiods using different methods:
-    results_more(i).periods = out.periods;
-    
-    [periods_LSQ1,~,~,~,~] = ...
-        MML.processResults_LSQ(signals.signal(1,:),signals.T,0);
-    [periods_LSQ2,~,~,~,~] = ...
-        MML.processResults_LSQ(signals.signal(2,:),signals.T,0);
-    results_more(i).periods_LSQ = [periods_LSQ1(1,1),periods_LSQ2(1,1)];
-    
-    if ~isnan(out.periods(1,1)) && ~isnan(out.periods(2,1))
-        % I) Verify that the squared errors between T_out and the distance
-        %   between the first and second peaks of each output signal 
-        %   are below 1E-4.
-        sig2proc = 0.3; % start calculating period after 30% of the signal
-                        % to skip transient
-        sig_idx = floor(sig2proc*size(signals.signal,2)):size(signals.signal,2);
+cond0 = false(1,nSims);
+cond1 = false(4,nSims);
+cond2 = false(1,nSims);
 
-        for j=1:2
-            signal = signals.signal(j,:);
-            norm_signal = (signal(sig_idx)-min(signal(sig_idx))) / ...
-                        (max(signal(sig_idx)) - min(signal(sig_idx)));
-            [~,locs]=findpeaks(norm_signal, 'MinPeakheight',0.5, ...
-                'MinPeakProminence', 0.05);
-
-            if length(locs) > 3
-                period_peaks(1,j) = signals.T(locs(2)) - signals.T(locs(1));
-                sq_err(1,j) = (period_peaks(1,j) - out.periods(j,1))^2;
-                firstCheck(1,j) = (sq_err(1,j) < 1e-4);
-            end
-        end
+for i=1:nSims
     
+    cond0(1,i) = checkCond_0(results(i).seq,seqOrder);
+    
+    cond1_temp = checkCond_1(results(i).seq,seqOrder);
+    cond1(:,i) = cond1_temp';
+    
+    cond2(1,i) = checkCond_2(results(i).seq,seqOrder,cond1_temp);
+    
+    if mod(i,10000)==0
+        disp(['at i=',num2str(i),...
+            '  cond0=',num2str(cond0(1,i)),...
+            '  cond1=[',num2str((cond1(:,i))'),']',...
+            '  cond2=',num2str(cond2(1,i))]);
     end
-    results_more(i).period_peaks = period_peaks;
-    results_more(i).sq_err = sq_err;
-    results_more(i).firstCheck = firstCheck;
-    
-    results_more(i).neuronActive = results(i).neuronActive;
-    results_more(i).neuronOsc = results(i).neuronOsc;
-    
-    
-    % II) Verify that y_1 or y_2 and y_3 or y_4 were oscillatory, detected
-    %   as sigma(y_i)>1E-4 , if a period was detected and not oscillatory
-    %   otherwise
-    
-end 
-disp('sim end...');
+end
 
-save('secnd_varification.mat','results');
+disp(['CPGs which fulfil cond #0 : ',num2str(sum(cond0))]);
+
+disp(['CPGs which fulfil cond #2 : ',num2str(sum(cond2))]);
+
+% taking only samples with both non-NaN periods:
+ids_AC_mean = ~isnan(mean(periods_AC,1));
+
+% plot confusion matrix for condition2:
+figure;
+plotconfusion(cond2,ids_AC_mean,'condition 2')
+xlabel('cond2')
+set(gca,'xticklabel',{'false' 'true' ''})
+ylabel('CPG osc')
+set(gca,'yticklabel',{'false' 'true' ''})

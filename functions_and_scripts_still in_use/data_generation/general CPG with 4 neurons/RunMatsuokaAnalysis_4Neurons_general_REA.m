@@ -101,6 +101,18 @@ parfor i=1:N % Simulate and calculate the frequecy (also calc from Matsuoka exti
     results(i).neuronActive = out.neuronActive;
     results(i).neuronOsc = out.neuronOsc;
     
+    % check Matsuoka conditions:
+    results(i).cond0 = checkCond_0(results(i).seq,seqOrder);
+    
+    results(i).cond1 = checkCond_1(results(i).seq,seqOrder);
+    
+    results(i).cond2 = checkCond_2(results(i).seq,seqOrder,cond1);
+    
+%     disp(['at i=',num2str(i),...
+%         '  cond0=',num2str(results(i).cond0),...
+%         '  cond1=[',num2str(results(i).cond1),']',...
+%         '  cond2=',num2str(results(i).cond2)]);
+
 end 
 disp('sim end...');
 
