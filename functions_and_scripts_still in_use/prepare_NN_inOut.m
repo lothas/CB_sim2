@@ -13,7 +13,7 @@ for i = 1:length(inputsNames)
             per_des_Min = 0.68;
             per_des_Max = 0.78;
             sampl(i,:) = per_des_Min + ...
-                ((per_des_Max-per_des_Min) * rand(1,sum(ids)));
+                ((per_des_Max-per_des_Min) * rand(1,length(periods)));
             clear per_des_Min per_des_Max
         case 'periods'
             sampl(i,:) = periods;

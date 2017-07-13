@@ -81,7 +81,7 @@ clear p_name p_vec p_osc_vec pvalue rejection
 
 %% Figure 6:
 
-inputsNames = {'period_desired','tau'...
+inputsNames = {'periods','tau'...
     'w_{12}','w_{13}','w_{14}',...
     'w_{21}','w_{23}','w_{24}',...
     'w_{31}','w_{32}','w_{34}',...
@@ -93,27 +93,8 @@ NumOfRepeats = 5;
 sampl = zeros(length(inputsNames),size(seq_osc,2));
 targ = zeros(length(outputsNames),size(seq_osc,2));
 
-% Prepare inputs:
-for i = 1:length(inputsNames)
-    p_name = inputsNames{1,i};
-    switch p_name
-        case 'period_desired'
-            per_des_Min = 0.68;
-            per_des_Max = 0.78;
-            sampl(i,:) = per_des_Min + ...
-                ((per_des_Max-per_des_Min) * rand(1,sum(ids)));
-            clear per_des_Min per_des_Max
-        otherwise
-            sampl(i,:) = seq_osc(strcmp(p_name,seqOrder),:);
-    end   
-end
-% Prepare inputs and outputs:
-for i = 1:length(outputsNames)
-    p_name = outputsNames{1,i};
-    
-    targ(i,:) = seq_osc(strcmp(p_name,seqOrder),:);
-    clear p_name
-end
+[sampl,targ] = prepare_NN_inOut(seq_osc,periodsMean,inputsNames,outputsNames,...
+    seqOrder);
 
 % perf over samples num:
 outputFileName = 'NN_Perf_over_sampl_num_test.mat';
@@ -143,11 +124,23 @@ NN_Perf_over_Hid_Neuron_Num(sampl,targ,NumOfRepeats,...
 % with different hidden neurons.
 % THIS SHOULD JUSTIFY THE SELECTION OF THE NN FOR MOGA.
 
+inputsNames_4GA = {'period_desired','tau'...
+    'w_{12}','w_{13}','w_{14}',...
+    'w_{21}','w_{23}','w_{24}',...
+    'w_{31}','w_{32}','w_{34}',...
+    'w_{41}','w_{42}','w_{43}'};
+outputsNames_4GA = {'b'};
 
 % find NOT oscilatory CPGs:
 not_osc_ids = find(~osc_ids); 
 cpg_non_osc = randsample(not_osc_ids,500); % use 500 n-osc CPGs
 results_old = results(cpg_non_osc);
+seq_n_osc = (vertcat(results_old (:).seq))';
+seq_n_osc = seq_n_osc(1:18,:);
+
+
+[sampl_4GA,targ_4GA] = prepare_NN_inOut(seq_n_osc,cpg_non_osc,...
+    inputsNames_4GA,outputsNames_4GA,seqOrder);
 
 caseNum = 7;
 HiddenN = [2,3,4];
@@ -181,10 +174,8 @@ for i=1:length(HiddenN)
         % NN training
         net = train(net, sampl, targ);
 
-        [sampl4change,~] = prepare_NN_inOut(seq,periodsMean,inputsNames,...
-            outputsNames,seqOrder);
         [percent_osc_new(j,i),conv_in_range(j,i),accuracy(j,i)] = ...
-             NN_GA_perf(net,sampl4change,results_old,seqOrder,caseNum);
+             NN_GA_perf(net,sampl_4GA,results_old,seqOrder,caseNum);
     end
 end
 
