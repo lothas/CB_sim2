@@ -73,8 +73,8 @@ periods_new = horzcat(results_new(:).periods);
 periods_new = periods_new(1,:);
 %% Plot periods histograms of before and after the change
 % figure;
-% histogram(periods_old,100); hold on;
-% histogram(periods_new,100);
+% histogram(periods_old,100,'Normalization','pdf'); hold on;
+% histogram(periods_new,100,'Normalization','pdf');
 % legend('before NN','after NN');
 % xlabel('periods [sec]');
 %% % % % 3rd stage: results:

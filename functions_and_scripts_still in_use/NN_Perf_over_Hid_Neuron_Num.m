@@ -1,19 +1,18 @@
-function [out] = NN_Perf_over_HNnum(obj,NumOfRepeats,HiddenN,train_or_plot,...
-    keepRatioConstant)
+function [out] = NN_Perf_over_Hid_Neuron_Num(sampl,targ,NumOfRepeats,HiddenN,train_or_plot,...
+    keepRatioConstant,outputFileName)
 % this function is calculating the NN performance over the number of
 % neurons in the hidden layer.
 
-% NOTE:
-%   for 2N symmetric case: shuffle only validation and train!!
-%   for the rest: shuffle everything!!!
-
-
 % inputs:
-% 1) 'NumOfRepeats' - the amount of times that we train each network (to
-%                       get the error bars).
-% 2) 'HiddenN' - the number of neurons in the hidden layer
-% 3) 'train_or_plot' - to plot the error burs or not.
-% 4) 'keepRatioConstant' - if 'true'- keep the ratio between the number of
+% *) 'sampl' - the NN inputs
+% *) 'targ' - the NN targets
+% *) 'NumOfRepeats' - the number of times that we train each network (to
+%                       get the statistical error).
+% *) 'HiddenN' - the number of neurons in the hidden layer
+% *) 'train_or_plot' - #) 'train' - train the NN and save data to file
+%					   #) 'plot' - plot the results on a graph
+%					   #) 'text' - output the results in text
+% *) 'keepRatioConstant' - if 'true'- keep the ratio between the number of
 %                               neurons to the number of samples constant.
 %                          if 'false' - take the number of samples from the
 %                                       class (no change)
@@ -24,81 +23,94 @@ function [out] = NN_Perf_over_HNnum(obj,NumOfRepeats,HiddenN,train_or_plot,...
 % 2) 'NN_stdev_over_HN_num' - the NN stdev of the performance over the amount of
 %                            neurons in the hidden layer.
 
+
+samplNum = size(sampl,2); % the number of samples in total
+num_of_inputs = size(sampl,1);
+num_of_outputs = size(targ,1);
+
+trainRatio = 0.7; 
+valRatio = 0.15;
+testRatio = 1 - trainRatio - valRatio;
+
 switch train_or_plot
     case 'train'
+	
+		disp('start the training...');
+		
         netMseTrain = zeros(NumOfRepeats,length(HiddenN));
         netMseValidation = zeros(NumOfRepeats,length(HiddenN));
         netMseTest = zeros(NumOfRepeats,length(HiddenN));
+        netTrainTime = zeros(NumOfRepeats,length(HiddenN));
         
         % Start Timer
         tic
         
         for i=1:length(HiddenN)
+		
+			disp(['NN with ',num2str(HiddenN(1,i)),' hidden neurons: ']);
+			
             for j=1:NumOfRepeats
-                
-                disp(['NN with ',num2str(HiddenN(1,i)),...
-                    ' hidden neurons, ',num2str(j),...
-                    ' out of ',num2str(NumOfRepeats),...
-                    ' at time = ',num2str(toc),'[sec]']);
-                
-                % NOTE: this code shuffles the train and validation group in each
-                % iteration. but keeps the test group fixed.
 
-                sampl_train = obj.sampl_train;
-                targ_train = obj.targ_train;
+				train_start_time = toc;
+				
+				% Shuffle the samples (matrix rows):
+				[trainInd,valInd,testInd] = dividerand(samplNum,trainRatio,valRatio,testRatio);
+				train_size = length(trainInd);
+				
                 
                 % calc the number of weights:
-                num_of_inputs = size(sampl_train,1);
-                num_of_outputs = size(targ_train,1);
                 num_of_weights = ( (num_of_inputs+1) * HiddenN(1,i) )  +...
                     ( (HiddenN(1,i)+1) * num_of_outputs ); 
-                
+
                 % If to take the training samples as is, or to reduce their
                 %       number to only 500 times more than the NN weights:
-                ratio = 500; %500 times more samples than weights
+                ratio = 500; %times more samples than weights
                 % calc if we have enough samples to reduce the number
-                enough_cond = size(sampl_train,2) > (ratio*num_of_weights);
-                if keepRatioConstant && enough_cond
-                    rand_ind = randsample(1:size(obj.sampl_train,2),...
-                        ratio*num_of_weights);
-                    sampl_train = sampl_train(:,rand_ind);
-                    targ_train = targ_train(:,rand_ind);
+                enough_sampl = train_size > (ratio*num_of_weights);
+                if keepRatioConstant && enough_sampl
+					% take only the 'n' first sampl from the hidden group
+                    trainInd = trainInd(1:floor(ratio*num_of_weights));
                 end
                 
-                trainSize = size(sampl_train,2);
-                validSize = size(obj.sampl_valid,2);
-                
+				if ~enough_sampl
+					% alert if we don't a the desired amount of training samples
+					warning('not enough samples to reduce... took everything we have');
+				end
+				
+				% prepare the Neural Network:
                 net = feedforwardnet(HiddenN(1,i));
                 
+				% Neural Network training parameters:
                 net.trainParam.showWindow = false; % dont show training window
-                sampl = horzcat(sampl_train,obj.sampl_valid,obj.sampl_test);
-                targ = horzcat(targ_train,obj.targ_valid,obj.targ_test);
-
-                % set Train, Valid and Test groups:
-                net.divideFcn = 'divideind';
-                net.divideParam.trainInd = 1:trainSize;
-                net.divideParam.valInd   = trainSize+1:(trainSize+validSize);
-                net.divideParam.testInd  = (trainSize+validSize+1):size(sampl,2);
+				net.divideFcn = 'divideind';
+                net.divideParam.trainInd = trainInd;
+                net.divideParam.valInd   = valInd;
+                net.divideParam.testInd  = testInd;
                 
                 % NN training
                 [~, tr] = train(net, sampl, targ);
                 netMseTrain(j,i) = tr.best_perf;
                 netMseValidation(j,i) = tr.best_vperf;
                 netMseTest(j,i) = tr.best_tperf;
-
-                % %  shuffle for next time:
-                % only for 2neuron symmetric case-
-%                 obj = obj.shuffle_samples('onlyTrainAndValid'); 
-                % for the other cases- dont keep test group the same-
-                obj = obj.shuffle_samples('completeShuffle');
                 
                 clear tr
+				
+				train_end_time = toc;
+				train_time = train_end_time - train_start_time;
+                
+                netTrainTime(j,i) = train_time;
+				
+				disp(['    ',num2str(j),' out of ',num2str(NumOfRepeats),...
+					' train time = ',num2str(train_time),'[sec]']);
+				
             end
         end
 
         out.HiddenN = HiddenN;
-        out.samplesNum = size(targ,2);
-
+        out.samplesNum = samplNum;
+        out.order_of_perf = {'1st col - train','2nd col - valid','3rd col - test'};
+        
+        % save the performances:
         out.netMseTrain = netMseTrain;
         out.netMseValidation = netMseValidation;
         out.netMseTest = netMseTest;
@@ -113,12 +125,15 @@ switch train_or_plot
         stdMseTest = std(netMseTest,0,1);
         out.NN_stdev_over_HN_num = [stdMseTrain;stdMseValidation;stdMseTest];
         
-        out.order_of_perf = {'1st col - train','2nd col - vald','3rd col - test'};
+        % save the training times:
+        out.training_time_sec = netTrainTime;
+        out.meanTrainTime = mean(netTrainTime,1);
+        out.stdTrainTime = std(netTrainTime,0,1);
         
-        save('NN_Perf_over_HNnum_case5.mat','out')
+        save(outputFileName,'out')
         
     case 'plot'
-        load('NN_Perf_over_HNnum.mat','out');
+        load(outputFileName,'out');
         
         if keepRatioConstant
             % TODO: make sure that we have here enough samples to reduce.
@@ -140,16 +155,24 @@ switch train_or_plot
         figure;
         errorbar(out.HiddenN,meanMseTrain,stdMseTrain); hold on
         errorbar(out.HiddenN,meanMseValidation,stdMseValidation);
-        errorbar(out.HiddenN,meanMseTest,stdMseTest);
+        errorbar(out.HiddenN,meanMseTest,stdMseTest); grid minor;
         legend('Train group','validation group','Test group');
         title(graph_title);
         xlabel('Hidden Neuron Num');
         ylabel('MSE');
+        set(gca,'FontSize',13);
+		
+        figure;
+        errorbar(out.HiddenN,out.meanTrainTime,out.stdTrainTime); grid minor;
+        title('train time over number of hidden neurons');
+        xlabel('number of neurons');
+        ylabel('Time [sec]');
+        set(gca,'FontSize',13);
         
         out=[];
         
     case 'text'
-        load('NN_Perf_over_HNnum.mat','out');
+        load(outputFileName,'out');
         
         numOfNNtypes = length(out.HiddenN);
         if numOfNNtypes == 1 
@@ -172,6 +195,7 @@ switch train_or_plot
         end
         
     otherwise
+		warning('option are: 1)"train" 2)"plot" 3)"text"');
         error('invalid input "train_or_plot"');
 end
 

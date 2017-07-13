@@ -236,3 +236,14 @@ plot_bars_with_errors(means,stdevs,...
 % xlabel('#case');
 % ylabel('MSE perf on \tau');
 % grid minor
+
+disp('|-------------------------------------------------------------|');
+disp('| caseNum | conv mean | conv std | inRange mean | inRange std |');
+disp('|-------------------------------------------------------------|');
+res = cell(1,length(caseNum));
+for i=1:length(caseNum)
+    res{1,i} = sprintf('|case %d   | %0.3f     | %0.3f    | %0.3f        | %0.3f       | \n',caseNum(1,i),...
+        means(1,i),stdevs(1,i),means(2,i),stdevs(2,i));
+    disp(res{1,i});
+end
+disp('|-------------------------------------------------------------|');
