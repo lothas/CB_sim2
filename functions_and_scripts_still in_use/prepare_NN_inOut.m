@@ -23,14 +23,12 @@ for i = 1:length(inputsNames)
 end
 % Prepare inputs and outputs:
 for i = 1:length(outputsNames)
+    p_name = outputsNames{1,i};
     switch p_name
         case 'peridos'
             targ(i,:) = periods;
         otherwise
-             p_name = outputsNames{1,i};
-
             targ(i,:) = seq(strcmp(p_name,seqOrder),:);
-            clear p_name
 end
 
 end

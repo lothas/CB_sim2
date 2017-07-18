@@ -41,6 +41,7 @@ switch train_or_plot
         netMseValidation = zeros(NumOfRepeats,length(HiddenN));
         netMseTest = zeros(NumOfRepeats,length(HiddenN));
         netTrainTime = zeros(NumOfRepeats,length(HiddenN));
+        net_NNs = cell(1,length(HiddenN));
         
         % Start Timer
         tic
@@ -49,6 +50,9 @@ switch train_or_plot
 		
 			disp(['NN with ',num2str(HiddenN(1,i)),' hidden neurons: ']);
 			
+            bestPreviuos = 0; % ini the best NN perf
+                % we only want to keep the best NN from every 'HiddenN'
+            
             for j=1:NumOfRepeats
 
 				train_start_time = toc;
@@ -63,8 +67,8 @@ switch train_or_plot
                     ( (HiddenN(1,i)+1) * num_of_outputs ); 
 
                 % If to take the training samples as is, or to reduce their
-                %       number to only 500 times more than the NN weights:
-                ratio = 500; %times more samples than weights
+                %       number to only 300 times more than the NN weights:
+                ratio = 300; %times more samples than weights
                 % calc if we have enough samples to reduce the number
                 enough_sampl = train_size > (ratio*num_of_weights);
                 if keepRatioConstant && enough_sampl
@@ -88,12 +92,15 @@ switch train_or_plot
                 net.divideParam.testInd  = testInd;
                 
                 % NN training
-                [~, tr] = train(net, sampl, targ);
+                [net, tr] = train(net, sampl, targ);
                 netMseTrain(j,i) = tr.best_perf;
                 netMseValidation(j,i) = tr.best_vperf;
                 netMseTest(j,i) = tr.best_tperf;
+                if tr.best_perf > bestPreviuos
+                    net_NNs{1,i} = net;
+                end
                 
-                clear tr
+                clear tr net
 				
 				train_end_time = toc;
 				train_time = train_end_time - train_start_time;
@@ -108,9 +115,13 @@ switch train_or_plot
 
         out.HiddenN = HiddenN;
         out.samplesNum = samplNum;
-        out.order_of_perf = {'1st col - train','2nd col - valid','3rd col - test'};
+        
+        % save the Best NNs:
+        out.net_NNs = net_NNs;
         
         % save the performances:
+        out.order_of_perf = {'1st col - train','2nd col - valid','3rd col - test'};
+        
         out.netMseTrain = netMseTrain;
         out.netMseValidation = netMseValidation;
         out.netMseTest = netMseTest;
@@ -161,6 +172,7 @@ switch train_or_plot
         xlabel('Hidden Neuron Num');
         ylabel('MSE');
         set(gca,'FontSize',13);
+        savefig('figure7_NN_perf_over_HidN')
 		
         figure;
         errorbar(out.HiddenN,out.meanTrainTime,out.stdTrainTime); grid minor;
@@ -168,6 +180,7 @@ switch train_or_plot
         xlabel('number of neurons');
         ylabel('Time [sec]');
         set(gca,'FontSize',13);
+        savefig('figure7_NN_trainTime_over_HidN')
         
         out=[];
         

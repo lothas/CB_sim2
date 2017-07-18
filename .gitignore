@@ -17,6 +17,7 @@ Old Sims/*
 *.mat
 *.m~   # OSX / *nix default autosave extensio
 *.mex  # Compiled MEX binaries (all platforms)
+*.fig
 NN*.mat
 Test*.mat
 GA*.mat

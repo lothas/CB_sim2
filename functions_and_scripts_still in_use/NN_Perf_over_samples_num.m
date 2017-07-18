@@ -136,16 +136,18 @@ switch train_or_plot
         errorbar(out.samplesNum,meanMseTest,stdMseTest); grid minor;
         legend('Train group','validation group','Test group');
         title(graph_title);
-        xlabel('Hidden Neuron Num');
+        xlabel('number of training samples');
         ylabel('MSE');
         set(gca,'FontSize',13);
-		
+		savefig('figure6_NN_perf_over_samplNum')
+        
         figure;
         errorbar(out.samplesNum,out.meanTrainTime,out.stdTrainTime);
-        title('train time over number of hidden neurons'); grid minor;
-        xlabel('number of neurons');
+        title('train time over number of training samples'); grid minor;
+        xlabel('number of training samples');
         ylabel('Time [sec]');
         set(gca,'FontSize',13);
+        savefig('figure6b_trainTime_over_samplNum')
         
         out=[];
         
