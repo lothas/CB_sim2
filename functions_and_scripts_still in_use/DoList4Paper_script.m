@@ -15,6 +15,13 @@ seqOrder = {'tau','b','c_1','c_2','c_3','c_4',...
 
 periods = horzcat(results(:).periods);
 
+% define the class for CPG simulation:
+MML = MatsuokaML();
+MML.perLim = [0.68 0.78];
+MML.perLimOut = MML.perLim + [-0.08 0.08]; % Desired period range
+MML.tStep = 0.05;
+MML.tEnd = 30; % 15
+MML.nNeurons = 4;
 %% get only good CPG's:
 
 % Filter CPG's where not both signals oscillating:
@@ -40,6 +47,8 @@ diff_ids = (periods_ratios >  0.85) & (periods_ratios <  1.15);
 ids = osc_ids & diff_ids;
 
 periodsMean = mean(periods(ids),1);
+
+ids_des_period = ids & ((periods(1,:) > 0.6) & (periods(1,:) < 0.86));
 %% Figure 5:
 clc
 
@@ -67,17 +76,143 @@ clear p_name p_vec p_osc_vec pvalue rejection
 %% "Kullback-Leibler" divergence:
 clc
 
+tau_n_osc = seq_n_osc(strcmp('tau',seqOrder),:);
+tau_osc = seq_osc(strcmp('tau',seqOrder),:);
+dist_tau = KL_div_4paper(tau_n_osc,tau_osc)
+clear tau_n_osc tau_osc
 
-p_name = 'tau'; % seqOrder{1,i};
+b_n_osc = seq_n_osc(strcmp('b',seqOrder),:);
+b_osc = seq_osc(strcmp('b',seqOrder),:);
+dist_b = KL_div_4paper(b_n_osc,b_osc)
+clear b_n_osc b_osc
 
-p_vec = sort(seq_n_osc(strcmp(p_name,seqOrder),:));
-p_osc_vec = sort(seq_osc(strcmp(p_name,seqOrder),:));
+%% heat map heatogram for parameter 'b':
+close all; clc
+
+p_n_osc = seq_n_osc(strcmp('b',seqOrder),:);
+p_osc = seq_osc(strcmp('b',seqOrder),:);
+Title = ['parameter: ','b',' of n-osc CPGs'];
+
+Edges = [];
+
+figure;
+ax1 = subplot(2,1,1);
+[ax] = heatmap_histogram(ax1,p_n_osc,Edges,Title);
+ax2 = subplot(2,1,2);
+[ax] = heatmap_histogram(ax2,p_osc,Edges,Title);
+
+%% Figure 4:
+clc
+CPG_num = size(periods,2);
+disp(['total number of CPGs is: ',num2str(CPG_num)]);
+disp(['total number of osc CPGs is: ',num2str(size(seq_osc,2)),...
+    ' which is: ',num2str(100*size(seq_osc,2)/CPG_num),'%']);
+disp(['total number of CPGs with desired periods is: ',...
+    num2str(sum(ids_des_period)),' which is: ',...
+    num2str(100*sum(ids_des_period)/CPG_num),'%']);
+
+N = length(results_osc);
+
+disp('start with the sim:');
+parfor i=1:N % Simulate and calculate the frequecy (also calc from Matsuoka extimation)
+% for i=1:N
+    disp(['at sim #',num2str(i)]);
     
-temp = ();
+    seq = results_osc(i).seq;
+    
+    inRange = ((periodsMean(1,i) > 0.6) & (periodsMean(1,i) < 0.86));
+    if ~inRange
+        % Select new random period within desired range
+        des_period = MML.perLim(1) + rand()*(MML.perLim(2)-MML.perLim(1));
 
+        % Scale Tr, Ta to obtain desired period
+        ratio = des_period/periodsMean(1,i);
+        seq(1) = seq(1)*ratio;
+        if seq(1) < MML.Gen.Range(1,1) || seq(1) > MML.Gen.Range(2,1)
+        %         warning('Genetic sequence out of bounds, using bounded tau gene')
+            % Bound tau gene
+            seq(1) = min(max(seq(1), MML.Gen.Range(1,1)), MML.Gen.Range(2,1));
+        end
+        
+    end
+    
+    [out, sim, ~] = MML.runSim(seq);
+        % Prepare output:
+    % Parameters
+    results_rescaled(i).seq = seq;
+    results_rescaled(i).b = sim.Con.beta;
+    results_rescaled(i).c = sim.Con.Amp0;
+    results_rescaled(i).Worig = sim.Con.wex;
+    results_rescaled(i).W = sim.Con.W;
+    results_rescaled(i).Tr = sim.Con.tau;
+    results_rescaled(i).Ta = sim.Con.tav;
+    results_rescaled(i).x0 = out.x0;
 
-clear p_name p_vec p_osc_vec pvalue rejection
+    % Results- caculate perdiods using different methods:
+    results_rescaled(i).periods = out.periods;
+    
+%     % check Matsuoka conditions:
+%     results_rescaled(i).cond0 = checkCond_0(seq,seqOrder);
+%     
+%     cond1 = checkCond_1(seq,seqOrder);
+%     results_rescaled(i).cond1 = cond1;
+%     
+%     results_rescaled(i).cond2 = ...
+%         checkCond_2(seq,seqOrder,cond1);
 
+end 
+disp('sim end...');
+
+clear CPG_num N out sim signal ratio seq
+
+save('MatsRandomRes_4Neurons_rescaled.mat','results_rescaled','results_osc');
+
+% plot distribution in heatmap:
+periods_b4_rescale = horzcat(results_osc(:).periods);
+periods_rescale = horzcat(results_rescaled(:).periods);
+
+ids1 = (periods_b4_rescale(1,:) > 0.3) & (periods_b4_rescale(1,:) < 7);
+vec1 = periods_b4_rescale(1,ids1);
+
+ids2 = (periods_rescale(1,:) > 0.3) & (periods_rescale(1,:) < 7);
+vec2 = periods_rescale(1,ids2);
+
+Title1 = sprintf('Period distribution of random parameters');
+Title2 = sprintf('Period distribution of random parameters after re-scaling');
+
+Edges = 0:0.1:7;
+
+% figure;
+% ax1 = subplot(2,1,1);
+% [ax] = heatmap_histogram(ax1,vec1,Edges,Title1);
+% ax2 = subplot(2,1,2);
+% [ax] = heatmap_histogram(ax2,vec2,Edges,Title1);
+
+hist_compare(vec2,vec1,'period',...
+    50,{'after rescale','all osc'},'plot')
+
+clear ax1 ax2 ax vec1 vec2 Title1 Title2 
+clear ids1 ids2 periods_b4_rescale periods_rescale
+%% plot distribution in heatmap:
+
+res = results_osc(1:1000);
+
+periods_b4_rescale = horzcat(res(:).periods);
+periods_rescale = horzcat(results_rescaled(:).periods);
+
+vec1 = periods_b4_rescale(1,:);
+vec2 = periods_rescale(1,:);
+
+Title1 = sprintf('Period distribution of random parameters');
+Title2 = sprintf('Period distribution of random parameters after re-scaling');
+
+figure;
+ax1 = subplot(2,1,1);
+[ax] = heatmap_histogram(ax1,vec1,100,Title1);
+ax2 = subplot(2,1,2);
+[ax] = heatmap_histogram(ax2,vec2,100,Title2);
+
+clear ax1 ax2 ax vec1 vec2 periods_b4_rescale periods_rescale
 %% appendix to Figure 5
 % join all 'C_i' to one vector and all 'W_ij' to another vector and 
 %   compare the distribution (instead of using many Hstograms).
@@ -102,6 +237,7 @@ for i = 3:6
     clear p_name p_vec _osc_vec
 end
 hist_compare(c_i,c_i_osc,'all c_{i}',20,{'n-osc CPGs','osc CPGs'},'plot');
+dist_c_i = KL_div_4paper(c_i,c_i_osc)
 clear c_i c_i_osc
 
 % join W_ij:
@@ -119,7 +255,7 @@ for i = 7:18
     clear p_name p_vec _osc_vec
 end
 hist_compare(W_ij,W_ij_osc,'all original W_{ij}',20,{'n-osc CPGs','osc CPGs'},'plot');
-kullback_leibler_divergence(W_ij',W_ij_osc')
+dist_W_ij = KL_div_4paper(W_ij,W_ij_osc)
 clear W_ij W_ij_osc
 
 %% check normalized Matsuoka coupling weights:
@@ -208,17 +344,17 @@ outputsNames_4GA = {'b'};
 
 % find NOT oscilatory CPGs:
 not_osc_ids = find(~osc_ids); 
-if length(not_osc_ids)<500
+if length(not_osc_ids)<1000
     results_n_osc = load('MatsRandomRes_4Neurons_with_LSQ_1_2.mat','results');
     results_n_osc = results_n_osc.results;
     periods = horzcat(results_n_osc(:).periods);
     non_osc_ids = isnan(periods);
     non_osc_ids = non_osc_ids(1,:) & non_osc_ids(2,:);
-    cpg_non_osc = randsample(find(non_osc_ids),500);
+    cpg_non_osc = randsample(find(non_osc_ids),1000);
     results_old = results_n_osc(cpg_non_osc);
     clear results_n_osc
 else
-    cpg_non_osc = randsample(not_osc_ids,500); % use 500 n-osc CPGs
+    cpg_non_osc = randsample(not_osc_ids,1000); % use 1000 n-osc CPGs
     results_old = results(cpg_non_osc);
 end
 
@@ -238,12 +374,13 @@ trainRatio = 0.7;
 valRatio = 0.15;
 testRatio = 1-trainRatio-valRatio;
 
-numRepeat = 10;
+numRepeat = 5;
 
 accuracy = zeros(numRepeat,length(HiddenN));
 percent_osc_new = zeros(numRepeat,length(HiddenN));
 conv_in_range = zeros(numRepeat,length(HiddenN));
- 
+MSE_testErr = zeros(numRepeat,length(HiddenN));
+
 for i=1:length(HiddenN)
     disp(['NN with ',num2str(HiddenN(1,i)),' hidden neurons:']);
     for j=1:numRepeat
@@ -264,9 +401,11 @@ for i=1:length(HiddenN)
 
         % NN training
         if 1
-        net = train(net, sampl, targ);
+            [net,tr] = train(net, sampl, targ);
+            MSE_testErr(j,i) = tr.best_tperf;
         else % use untrained net (with random weights)
-        net = configure(net,sampl,targ);
+            net = configure(net,sampl,targ);
+            MSE_testErr(j,i) = NaN;
         end
         
         [percent_osc_new(j,i),conv_in_range(j,i),accuracy(j,i)] = ...
@@ -277,10 +416,12 @@ end
 percent_osc_new_mean = mean(percent_osc_new,1);
 conv_in_range_mean = mean(conv_in_range,1);
 accuracy_mean = mean(accuracy,1);
+MSE_testErr_mean = mean(MSE_testErr,1);
 
 percent_osc_new_std = std(percent_osc_new,[],1);
 conv_in_range_std = std(conv_in_range,[],1);
 accuracy_std = std(accuracy,[],1);
+MSE_testErr_std = std(MSE_testErr,[],1);
 
 means = [percent_osc_new_mean;...
     conv_in_range_mean;...
@@ -306,3 +447,14 @@ for i=1:length(HiddenN)
     disp(res{1,i});
 end
 disp('|-------------------------------------------------------------|');
+
+% plot %conv and MSE err on a plot with different axes:
+figure;
+xlabel('hidden neuron num');
+yyaxis left
+plot(HiddenN,percent_osc_new_mean);
+ylabel('%inRange');
+
+yyaxis right
+plot(HiddenN,MSE_testErr_std);
+ylabel('NN MSE error on test group');
