@@ -5,8 +5,8 @@ close all; clc; clear all;
 genome_file = 'MatsuokaGenome.mat';
 nAnkle = 1; % Number of ankle torques
 nHip = 1;   % Number of hip torques
-maxAnkle = 10;%20;   % Max ankle torque
-maxHip = 10;%20;    % Max hip torque
+maxAnkle = 20;   % Max ankle torque
+maxHip = 8;    % Max hip torque
 Mamp = [maxAnkle*ones(1,2*nAnkle), maxHip*ones(1,2*nHip)];
 mamp = 0*Mamp;
 N = nAnkle+nHip;
@@ -17,8 +17,8 @@ mw = 0*Mw;
 %     % Final genome with tau_r + beta (constant tau_u/tau_v ratio) 
     Keys = {'\tau_r', 'beta', 'amp',   'weights', 'ks_\tau',     'ks_c', 'IC_matsuoka';
                   1 ,      1,    4 ,          12,        1 ,         4 ,            0 };
-    Range = {  0.02 ,    0.2,  mamp,          mw,   -0.001 ,  -0.2*Mamp; % Min
-               0.25 ,   10.0,  Mamp,          Mw,    0.001 ,   0.2*Mamp}; % Max
+    Range = {  0.02 ,    0.2,  mamp,          mw,      -10 ,  -0.1*Mamp; % Min
+               0.25 ,   10.0,  Mamp,          Mw,       10 ,   0.1*Mamp}; % Max
          
 MutDelta0 = 0.04;   MutDelta1 = 0.02;
 
@@ -33,7 +33,7 @@ MML = MatsuokaML();
 MML.perLim = [0.68 0.78];
 MML.perLimOut = MML.perLim + [-0.08 0.08]; % Desired period range
 MML.tStep = 0.05;
-MML.tEnd = 30; % 15
+MML.tEnd = 15;
 MML.nNeurons = 4;
 %% Train data:
 
@@ -49,17 +49,26 @@ tau = (tau_max-tau_min).*rand(1,N) + tau_min;
 b_min = 0.2;     b_max = 10;
 b = (b_max-b_min).*rand(1,N) + b_min;
 
-c_min = 1;     c_max = 10;
-c = (c_max-c_min).*rand(4,N) + c_min;
+c_hip_min = 0;     c_hip_max = 8;
+c_hip = (c_hip_max-c_hip_min).*rand(2,N) + c_hip_min;
+c_ankle_min = 0;     c_ankle_max = 20;
+c_ankle = (c_ankle_max-c_ankle_min).*rand(2,N) + c_ankle_min;
+c = [c_ankle;c_hip];
 
-W_min = 1;     W_max = 10;
+W_min = 0;     W_max = 10;
 W = (W_max-W_min).*rand(12,N) + W_min;
 
-ks_tau_min = -0.001;     ks_tau_max = 0.001;
+ks_tau_min = -10;     ks_tau_max = 10;
 ks_tau = (ks_tau_max-ks_tau_min).*rand(1,N) + ks_tau_min;
 
-ks_c_min = -0.2*10;     ks_c_max = 0.2*10;
-ks_c = (ks_c_max-ks_c_min).*rand(4,N) + ks_c_min;
+ks_c_hip_min = -0.8;     ks_c_hip_max = 0.8;
+ks_c_hip = (ks_c_hip_max-ks_c_hip_min).*rand(2,N) + ks_c_hip_min;
+ks_c_ankle_min = -2;     ks_c_ankle_max = 2;
+ks_c_ankle = (ks_c_ankle_max-ks_c_ankle_min).*rand(2,N) + ks_c_ankle_min;
+ks_c = [ks_c_ankle;ks_c_hip];
+
+tic
+t_cur = tic;
 
 disp('start with the sim:');
 parfor i=1:N % Simulate and calculate the frequecy (also calc from Matsuoka extimation)
@@ -81,11 +90,11 @@ parfor i=1:N % Simulate and calculate the frequecy (also calc from Matsuoka exti
     % Results- caculate perdiods using different methods:
     results(i).periods = out.periods;
     
-    [periods_LSQ1,~,~,~,~] = ...
-        MML.processResults_LSQ(signal.signal(1,:),signal.T,0);
-    [periods_LSQ2,~,~,~,~] = ...
-        MML.processResults_LSQ(signal.signal(2,:),signal.T,0);
-    results(i).periods_LSQ = [periods_LSQ1(1,1),periods_LSQ2(1,1)];
+%     [periods_LSQ1,~,~,~,~] = ...
+%         MML.processResults_LSQ(signal.signal(1,:),signal.T,0);
+%     [periods_LSQ2,~,~,~,~] = ...
+%         MML.processResults_LSQ(signal.signal(2,:),signal.T,0);
+%     results(i).periods_LSQ = [periods_LSQ1(1,1);periods_LSQ2(1,1)];
 %     [periodsFFT,sine_coef,cos_coef,a0,~] = ...
 %         MML.processResults_LSQ(x,t,0);
 %     results(i).bias_coef = a0;
@@ -102,11 +111,11 @@ parfor i=1:N % Simulate and calculate the frequecy (also calc from Matsuoka exti
     results(i).neuronOsc = out.neuronOsc;
     
     % check Matsuoka conditions:
-    results(i).cond0 = checkCond_0(results(i).seq,seqOrder);
-    
-    results(i).cond1 = checkCond_1(results(i).seq,seqOrder);
-    
-    results(i).cond2 = checkCond_2(results(i).seq,seqOrder,cond1);
+%     results(i).cond0 = checkCond_0(results(i).seq,seqOrder);
+%     
+%     results(i).cond1 = checkCond_1(results(i).seq,seqOrder);
+%     
+%     results(i).cond2 = checkCond_2(results(i).seq,seqOrder,cond1);
     
 %     disp(['at i=',num2str(i),...
 %         '  cond0=',num2str(results(i).cond0),...
@@ -116,7 +125,11 @@ parfor i=1:N % Simulate and calculate the frequecy (also calc from Matsuoka exti
 end 
 disp('sim end...');
 
-save('MatsRandomRes_4Neurons_with_LSQ_2.mat','results');
+t_elapsed = toc(t_cur);
+avg_sim_time = t_elapsed/N;
+disp(['avg sim time is ',num2str(avg_sim_time),' [sec]']);
+
+save('MatsRandomRes_4Neurons_4Paper_2.mat','results');
 
 %% Phase 2 - Re-run simulations that converged outside the desired range,
 % this time with scaled temporal parameters

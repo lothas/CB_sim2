@@ -5,15 +5,30 @@ function [ samples, targets, normParams ] = ...
     data = load(filenames{1});
     
     % Keep only results that converged
-    new_periods = data.periods;
-    results = data.results(~isnan(new_periods));
-    periods = new_periods(~isnan(new_periods));
+%     new_periods = data.periods;
+    new_periods = horzcat(data.results(:).periods);
+    
+    % Filter CPG's where not both signals oscillating:
+    osc_ids = ~isnan(new_periods);
+    osc_ids = osc_ids(1,:) & osc_ids(2,:);
+    
+    % Filter CPG's where the is a big difference between hip and ankle:
+    periods_ratios = (new_periods(1,:)./new_periods(2,:));
+    diff_ids = (periods_ratios >  0.85) & (periods_ratios <  1.15); 
+    
+    good_ids = osc_ids & diff_ids;
+    
+    results = data.results(good_ids);
+    periods = new_periods(:,good_ids);
+    periods = mean(periods,1);
+     
     for i = 2:numel(filenames)
         data = load(filenames{i});
         new_periods = data.periods;
         results = [results, data.results(~isnan(new_periods))]; %#ok<AGROW>
         periods = [periods, new_periods(~isnan(new_periods))]; %#ok<AGROW>
     end
+    
     nSamples = numel(results);
     
     if nargin < 3
@@ -41,8 +56,8 @@ function [ samples, targets, normParams ] = ...
         period = periods(ids(i));
         
         % Build sample and target vectors
-        samples(:,i) = obj.getNNin(sample.seq, 1/period);
-%         samples(:,i) = obj.getNNin(sample.seq, period);
+%         samples(:,i) = obj.getNNin(sample.seq, 1/period);
+        samples(:,i) = obj.getNNin(sample.seq, period);
         targets(:,i) = obj.Gen.GetGenes(sample.seq, obj.target_genes);
     end
 
@@ -53,5 +68,6 @@ for i = 1:size(samples, 1)
     normParams(i, :) = [mean(feat), std(feat)];
     samples(i, :) = (feat - normParams(i, 1))/normParams(i, 2);
 end
+
 end
 

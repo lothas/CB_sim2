@@ -6,7 +6,10 @@
 % 
 clear all; close all; clc
 
-load('MatsRandomRes_4Neurons_with_LSQ_1_2.mat','results');
+load('MatsRandomRes_4Neurons_rescaled.mat','results_rescaled');
+results = results_rescaled; clear results_rescaled;
+
+% load('MatsRandomRes_4Neurons_with_LSQ_1_2.mat','results');
 % load('MatsRandomRes_all_from_1-2_2017.mat','results');
 
 seqOrder = {'tau','b','c_1','c_2','c_3','c_4',...
@@ -20,7 +23,7 @@ MML = MatsuokaML();
 MML.perLim = [0.68 0.78];
 MML.perLimOut = MML.perLim + [-0.08 0.08]; % Desired period range
 MML.tStep = 0.05;
-MML.tEnd = 30; % 15
+MML.tEnd = 15;
 MML.nNeurons = 4;
 %% get only good CPG's:
 
@@ -49,17 +52,24 @@ ids = osc_ids & diff_ids;
 periodsMean = mean(periods(ids),1);
 
 ids_des_period = ids & ((periods(1,:) > 0.6) & (periods(1,:) < 0.86));
-%% Figure 5:
-clc
 
-results_osc = results(ids);
-results_n_osc = results(~ids);
+results_osc = results(ids);     % oscillatory CPGs
+results_n_osc = results(~ids);  % non-oscillatory CPGs
+results_in_range = results(ids_des_period); % oscillatory CPGs in period range
 
 seq_osc = (vertcat(results_osc(:).seq))';
 seq_osc = seq_osc(1:18,:);
 
 seq_n_osc = (vertcat(results_n_osc(:).seq))';
 seq_n_osc = seq_n_osc(1:18,:);
+
+seq_in_range = (vertcat(results_in_range(:).seq))';
+seq_in_range = seq_in_range(1:18,:);
+periods_in_range = mean(periods(ids_des_period),1);
+
+
+%% Figure 5:
+clc
 
 for i = 1:length(seqOrder)
     p_name = seqOrder{1,i};
@@ -165,7 +175,7 @@ disp('sim end...');
 
 clear CPG_num N out sim signal ratio seq
 
-save('MatsRandomRes_4Neurons_rescaled.mat','results_rescaled','results_osc');
+save('MatsRandomRes_4Neurons_rescaled_1.mat','results_rescaled','results_osc');
 
 % plot distribution in heatmap:
 periods_b4_rescale = horzcat(results_osc(:).periods);
@@ -335,26 +345,39 @@ NN_Perf_over_Hid_Neuron_Num(sampl,targ,NumOfRepeats,...
 
 clc 
 
-inputsNames_4GA = {'period_desired','tau'...
-    'w_{12}','w_{13}','w_{14}',...
-    'w_{21}','w_{23}','w_{24}',...
-    'w_{31}','w_{32}','w_{34}',...
-    'w_{41}','w_{42}','w_{43}'};
-outputsNames_4GA = {'b'};
+caseNum = 7;
+% HiddenN = [10,20,30,40,50];
+HiddenN = [10,20];
+trainRatio = 0.7;
+valRatio = 0.15;
+testRatio = 1-trainRatio-valRatio;
+
+
+[inputsNames_4NN,outputsNames_4NN] = ...
+    check_NN_case_for_paper(caseNum,'period');
+
+[sampl,targ] = prepare_NN_inOut(seq_in_range,periods_in_range,...
+    inputsNames_4NN,outputsNames_4NN,seqOrder);
+
+[inputsNames_4GA,outputsNames_4GA] = ...
+    check_NN_case_for_paper(caseNum,'period_desired');
+
+% number of training samples:
+samplNum = size(sampl,2);
 
 % find NOT oscilatory CPGs:
 not_osc_ids = find(~osc_ids); 
-if length(not_osc_ids)<1000
+if length(not_osc_ids)<500
     results_n_osc = load('MatsRandomRes_4Neurons_with_LSQ_1_2.mat','results');
     results_n_osc = results_n_osc.results;
     periods = horzcat(results_n_osc(:).periods);
     non_osc_ids = isnan(periods);
     non_osc_ids = non_osc_ids(1,:) & non_osc_ids(2,:);
-    cpg_non_osc = randsample(find(non_osc_ids),1000);
+    cpg_non_osc = randsample(find(non_osc_ids),500);
     results_old = results_n_osc(cpg_non_osc);
     clear results_n_osc
 else
-    cpg_non_osc = randsample(not_osc_ids,1000); % use 1000 n-osc CPGs
+    cpg_non_osc = randsample(not_osc_ids,500); % use 1000 n-osc CPGs
     results_old = results(cpg_non_osc);
 end
 
@@ -365,14 +388,6 @@ seq_n_osc = seq_n_osc(1:18,:);
 
 [sampl_4GA,targ_4GA] = prepare_NN_inOut(seq_n_osc,cpg_non_osc,...
     inputsNames_4GA,outputsNames_4GA,seqOrder);
-
-caseNum = 7;
-% HiddenN = [10,20,30,40,50];
-HiddenN = [2,5,10,15];
-samplNum = size(sampl,2);
-trainRatio = 0.7;
-valRatio = 0.15;
-testRatio = 1-trainRatio-valRatio;
 
 numRepeat = 5;
 
@@ -430,7 +445,7 @@ stdevs = [percent_osc_new_std;...
     conv_in_range_std;...
     accuracy_std];
 % Names = {' ','10neurons',' ','20neurons ',' ','30neurons ',' ','40neurons ',' ','50neurons'};
-Names = {' ','2neurons',' ','5neurons ',' ','10neurons ',' ','15neurons '};
+Names = {' ',' ','10neurons',' ',' ',' ',' ','20neurons ',' '};
 label_Y = '';
 graph_title = ['NN perf over different hidden neurons num'];
 graph_legend = {'converged','conv in range','accuracy'};
@@ -448,13 +463,154 @@ for i=1:length(HiddenN)
 end
 disp('|-------------------------------------------------------------|');
 
-% plot %conv and MSE err on a plot with different axes:
-figure;
-xlabel('hidden neuron num');
-yyaxis left
-plot(HiddenN,percent_osc_new_mean);
-ylabel('%inRange');
+% % plot %conv and MSE err on a plot with different axes:
+% figure;
+% xlabel('hidden neuron num');
+% yyaxis left
+% plot(HiddenN,percent_osc_new_mean);
+% ylabel('%inRange');
+% 
+% yyaxis right
+% plot(HiddenN,MSE_testErr_std);
+% ylabel('NN MSE error on test group');
 
-yyaxis right
-plot(HiddenN,MSE_testErr_std);
-ylabel('NN MSE error on test group');
+%% Figure 8b:
+% non-osc CPGs that produced oscillations after pre-tuning with NN with 'n'
+% hidden neurons
+% (of different configuration) 
+
+clc 
+
+caseNum = [1,3,5,7,9];
+HiddenN = 20;
+
+% find NOT oscilatory CPGs:
+not_osc_ids = find(~osc_ids); 
+if length(not_osc_ids)<500
+    results_n_osc = load('MatsRandomRes_4Neurons_with_LSQ_1_2.mat','results');
+    results_n_osc = results_n_osc.results;
+    periods = horzcat(results_n_osc(:).periods);
+    non_osc_ids = isnan(periods);
+    non_osc_ids = non_osc_ids(1,:) & non_osc_ids(2,:);
+    cpg_non_osc = randsample(find(non_osc_ids),500);
+    results_old = results_n_osc(cpg_non_osc);
+    clear results_n_osc
+else
+    cpg_non_osc = randsample(not_osc_ids,500); % use 1000 n-osc CPGs
+    results_old = results(cpg_non_osc);
+end
+
+
+seq_n_osc = (vertcat(results_old (:).seq))';
+seq_n_osc = seq_n_osc(1:18,:);
+
+samplNum = size(sampl,2);
+trainRatio = 0.7;
+valRatio = 0.15;
+testRatio = 1-trainRatio-valRatio;
+
+numRepeat = 5;
+
+accuracy = zeros(numRepeat,length(caseNum));
+percent_osc_new = zeros(numRepeat,length(caseNum));
+conv_in_range = zeros(numRepeat,length(caseNum));
+MSE_testErr = zeros(numRepeat,length(caseNum));
+
+for i=1:length(caseNum)
+    disp(['NN case #',num2str(caseNum(1,i)),':']);
+    
+    [inputsNames_4GA,outputsNames_4GA] = ...
+    check_NN_case_for_paper(caseNum(1,i),'period_desired');
+
+    [sampl_4GA,targ_4GA] = prepare_NN_inOut(seq_n_osc,cpg_non_osc,...
+    inputsNames_4GA,outputsNames_4GA,seqOrder);
+    
+    for j=1:numRepeat
+        disp(['    iter ',num2str(j),' out of ',num2str(numRepeat)]);
+        % Shuffle the samples (matrix rows):
+        [trainInd,valInd,testInd] = dividerand(samplNum,trainRatio,valRatio,testRatio);
+
+
+        % prepare the Neural Network:
+        net = feedforwardnet(HiddenN);
+
+        % Neural Network training parameters:
+        net.trainParam.showWindow = false; % dont show training window
+        net.divideFcn = 'divideind';
+        net.divideParam.trainInd = trainInd;
+        net.divideParam.valInd   = valInd;
+        net.divideParam.testInd  = testInd;
+
+        % NN training
+        if 1
+            [net,tr] = train(net, sampl, targ);
+            MSE_testErr(j,i) = tr.best_tperf;
+        else % use untrained net (with random weights)
+            net = configure(net,sampl,targ);
+            MSE_testErr(j,i) = NaN;
+        end
+        
+        [percent_osc_new(j,i),conv_in_range(j,i),accuracy(j,i)] = ...
+             NN_GA_perf(net,sampl_4GA,results_old,seqOrder,caseNum);
+    end
+end
+
+percent_osc_new_mean = mean(percent_osc_new,1);
+conv_in_range_mean = mean(conv_in_range,1);
+accuracy_mean = mean(accuracy,1);
+MSE_testErr_mean = mean(MSE_testErr,1);
+
+percent_osc_new_std = std(percent_osc_new,[],1);
+conv_in_range_std = std(conv_in_range,[],1);
+accuracy_std = std(accuracy,[],1);
+MSE_testErr_std = std(MSE_testErr,[],1);
+
+means = [percent_osc_new_mean;...
+    conv_in_range_mean;...
+    accuracy_mean];
+stdevs = [percent_osc_new_std;...
+    conv_in_range_std;...
+    accuracy_std];
+
+Names = {' ','case#1',' ','case#3',' ','case#5',' ','case#7',' ','case#9'};
+label_Y = '';
+graph_title = ['NN perf over different case#'];
+graph_legend = {'converged','conv in range','accuracy'};
+plot_bars_with_errors(means,stdevs,...
+    Names,label_Y,graph_title,graph_legend);
+
+disp('|-------------------------------------------------------------|');
+disp('| case    | conv mean | conv std | inRange mean | inRange std |');
+disp('|-------------------------------------------------------------|');
+res = cell(1,length(caseNum));
+for i=1:length(caseNum)
+    res{1,i} = sprintf('|case %d   | %0.3f     | %0.3f    | %0.3f        | %0.3f       | \n',HiddenN(1,i),...
+        caseNum(1,i),stdevs(1,i),means(2,i),stdevs(2,i));
+    disp(res{1,i});
+end
+disp('|-------------------------------------------------------------|');
+
+% % plot %conv and MSE err on a plot with different axes:
+% figure;
+% xlabel('hidden neuron num');
+% yyaxis left
+% plot(HiddenN,percent_osc_new_mean);
+% ylabel('%inRange');
+% 
+% yyaxis right
+% plot(HiddenN,MSE_testErr_std);
+% ylabel('NN MSE error on test group');
+
+%% Check avg run time with and without the CB model:
+clc
+
+conv_in_range_temp = (periodsMean > MML.perLimOut(1,1)) & ...
+    (periodsMean < MML.perLimOut(1,2));
+
+res = results_osc(conv_in_range_temp);
+clear conv_in_range_temp
+
+% with:
+[avg_sim_time,simOutType] = run_CPG_with_CB(res);
+
+% without:

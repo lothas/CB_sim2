@@ -40,6 +40,8 @@ for g = GA.Progress+1:GA.Generations
     end    
     inner_tic = tic;
     
+	gMRT = GA.MLseqRunTime(:,:,g);	% Matsuoka sim runTime
+	gSRT = GA.simRunTime(:,:,g);	% Matsuoka + CB runTime
     gSeqs = GA.Seqs(:,:,g);
     gFits = GA.Fit(:,:,g);
     ParRunSeq = @GA.RunSeq;
@@ -50,7 +52,7 @@ for g = GA.Progress+1:GA.Generations
             continue;
         end
                 
-        [gFits(i,:), gSeqs(i,:)] = feval(ParRunSeq, gSeqs(i,:));
+        [gFits(i,:), gSeqs(i,:), gMRT(i,1),gSRT(i,1)] = feval(ParRunSeq, gSeqs(i,:));
 %         % Set-up the simulation
 %         wSim = deepcopy(Sim);
 %         wSim = Gen.Decode(wSim,gSeqs(i,:)); %#ok<PFBNS>
@@ -115,6 +117,9 @@ for g = GA.Progress+1:GA.Generations
 %         end        
 %         gFits(i,:) = thisFit;
     end
+	
+	GA.MLseqRunTime(:,:,g) = gMRT;
+	GA.simRunTime(:,:,g) = gSRT;
     GA.Fit(:,:,g) = gFits;
     GA.Seqs(:,:,g) = gSeqs;
     

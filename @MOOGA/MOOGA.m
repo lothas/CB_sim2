@@ -62,6 +62,11 @@ classdef MOOGA
         % Filenames
         FileIn;     % Input file with previous genomes (same MOOGA)
         FileOut;    % Output file
+		
+		% Run times:
+		MLseqRunTime = [];	% run time for the Matsuoka CPG by itself
+		simRunTime = [];	% run time for the CPG with the CB
+		
     end
     
     methods

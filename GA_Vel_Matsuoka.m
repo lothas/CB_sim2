@@ -122,12 +122,14 @@ if use_NN
     GA.NNFcn = @NNFcn;
 end
 
-    function seq = NNFcn(Gen, net, seq,X,T)
-        [~, periods, ~, ~, ~] = MML.processResults(X, T);
-        % don't do anything if CPG IS stable
-        if ~any(isnan(periods)) 
-            return
-        end
+    function seq = NNFcn(Gen, net, seq)
+	
+		% % % don't need to run Sim again. run the NN on all CPG's:
+        % [~, periods, ~, ~, ~] = MML.processResults(X, T);
+        % % don't do anything if CPG IS stable
+        % if ~any(isnan(periods)) 
+            % return
+        % end
         
         % Use NN to select best value for tau gene
         desPeriod = MML.perLim(1) + ...

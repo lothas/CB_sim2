@@ -15,7 +15,7 @@ for i = 1:length(inputsNames)
             sampl(i,:) = per_des_Min + ...
                 ((per_des_Max-per_des_Min) * rand(1,length(periods)));
             clear per_des_Min per_des_Max
-        case 'periods'
+        case {'periods','period'}
             sampl(i,:) = periods;
         otherwise
             sampl(i,:) = seq(strcmp(p_name,seqOrder),:);
@@ -25,7 +25,7 @@ end
 for i = 1:length(outputsNames)
     p_name = outputsNames{1,i};
     switch p_name
-        case 'peridos'
+        case {'periods','period'}
             targ(i,:) = periods;
         otherwise
             targ(i,:) = seq(strcmp(p_name,seqOrder),:);

@@ -6,6 +6,10 @@ function [ GA ] = InitGen( GA )
 GA.Seqs = zeros(GA.Population, GA.Gen.Length, GA.Generations);
 GA.Parents = zeros(GA.Population, 2, GA.Generations); % 2 parents
 GA.Fit = zeros(GA.Population, max(cell2mat(GA.FitFcn(:,1)')), GA.Generations);
+GA.MLseqRunTime = NaN(GA.Population, 1, GA.Generations);
+GA.simRunTime = NaN(GA.Population, 1, GA.Generations);
+% TODO: do for 'MLseqRunTime' and 'simRunTime' what is done for 'Fit' and
+%       'Seqs' (' if exist('In','var') == 1 ')
 
 if exist(GA.FileIn,'file') == 2
     % Load input file

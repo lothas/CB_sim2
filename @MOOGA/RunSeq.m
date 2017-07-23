@@ -64,13 +64,11 @@ if strcmp(wSim.Con.name, 'Matsuoka')
     t_step = 0.025;
     t_span = t_start:t_step:t_end;
     
+	% Simulation settings:
+	options = odeset('MaxStep',t_step/10,'RelTol',.5e-7,'AbsTol',.5e-8);
+	
     % Run simulation
-    options = odeset('MaxStep',t_step/10,'RelTol',.5e-7,'AbsTol',.5e-8);
-    [TTemp,XTemp] = ode45(@MatsDerivative,t_span,IC0,options);
-    % options = odeset('MaxStep',t_step/10,'RelTol',.5e-7,'AbsTol',.5e-8,...
-    %             'Events', @MO.Events);
-    % [TTemp,XTemp,TE,YE,IE] = ...
-    %     ode45(@MO.Derivative,t_span,IC0,options); %#ok<ASGLU>
+    % % [TTemp,XTemp] = ode45(@MatsDerivative,t_span,IC0,options);
     
 %     figure
 %     for i = 1:4
@@ -85,12 +83,14 @@ if strcmp(wSim.Con.name, 'Matsuoka')
     if ~isempty(GA.NN) && ~isempty(GA.NNFcn) ...
             && strcmp(wSim.Con.name, 'Matsuoka')
         % Use NN to select best value for tau gene
-        thisSeq = GA.NNFcn(GA.Gen, GA.NN, thisSeq, XTemp, TTemp);
+        thisSeq = GA.NNFcn(GA.Gen, GA.NN, thisSeq);
     end    
 
     % Run simulation again (just in case the NN changed something):
+	Matsuoka_tic = tic;
     [TTemp,XTemp] = ode45(@MatsDerivative,t_span,IC0,options);
-    
+    Matsuoka_runTime = toc(Matsuoka_tic);
+	
     % % % use Rescaling to change the gene:
     if ~isempty(GA.rescaleFcn)
         thisSeq = GA.rescaleFcn(GA.Gen, thisSeq, XTemp, TTemp);
@@ -107,7 +107,10 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%   
 
 % Run the simulation
+Sim_tic = tic;
 wSim = wSim.Run();
+Sim_runTime = toc(Sim_tic);
+
 wSim.Con.startup_t = 0;
 wSim.ConvProgr = [0, 0];
 wSim.minMaxDiff = [1, 0];
@@ -190,6 +193,8 @@ switch nargout
         varargout = {};
     case 2
         varargout = {thisFit, thisSeq};
+	case 4
+		varargout = {thisFit, thisSeq,Matsuoka_runTime,Sim_runTime};
 end
 
 end
