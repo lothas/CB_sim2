@@ -6,11 +6,25 @@
 % 
 clear all; close all; clc
 
-load('MatsRandomRes_4Neurons_rescaled.mat','results_rescaled');
-results = results_rescaled; clear results_rescaled;
-
+% load('MatsRandomRes_4Neurons_4Paper.mat','results');
 % load('MatsRandomRes_4Neurons_with_LSQ_1_2.mat','results');
 % load('MatsRandomRes_all_from_1-2_2017.mat','results');
+
+% % % Load peridos that mainly oscillating in range:
+load('MatsRandomRes_4Neurons_4Paper_Rescaled_Sims.mat','results_rescaled');
+results1 = results_rescaled;    clear results_rescaled
+load('MatsRandomRes_4Neurons_4Paper_Rescaled_Sims_2.mat','results_rescaled');
+results2 = results_rescaled';    clear results_rescaled
+results = [results1,results2];  clear results1 results2
+
+% % % Load peridos oscillating and periods which oscillates in range:
+% load('MatsRandomRes_4Neurons_4Paper_Rescaled_Sims.mat','results_rescaled');
+% results1 = results_rescaled;    clear results_rescaled
+% load('MatsRandomRes_4Neurons_4Paper_Rescaled_Sims_2.mat','results_rescaled');
+% results2 = results_rescaled';    clear results_rescaled
+% load('MatsRandomRes_4Neurons_4Paper.mat','results');
+% results3 = results;    clear results
+% results = [results1,results2,results3];  clear results1 results2 results3
 
 seqOrder = {'tau','b','c_1','c_2','c_3','c_4',...
     'w_{12}','w_{13}','w_{14}','w_{21}','w_{23}','w_{24}',...
@@ -49,13 +63,16 @@ diff_ids = (periods_ratios >  0.85) & (periods_ratios <  1.15);
 
 ids = osc_ids & diff_ids;
 
-periodsMean = mean(periods(ids),1);
+periodsMean = mean(periods(:,ids),1);
 
 ids_des_period = ids & ((periods(1,:) > 0.6) & (periods(1,:) < 0.86));
+
+ids_not_des_period = ids & ((periods(1,:) < 0.6) | (periods(1,:) > 0.86));
 
 results_osc = results(ids);     % oscillatory CPGs
 results_n_osc = results(~ids);  % non-oscillatory CPGs
 results_in_range = results(ids_des_period); % oscillatory CPGs in period range
+results_not_in_range = results(ids_not_des_period);
 
 seq_osc = (vertcat(results_osc(:).seq))';
 seq_osc = seq_osc(1:18,:);
@@ -67,8 +84,11 @@ seq_in_range = (vertcat(results_in_range(:).seq))';
 seq_in_range = seq_in_range(1:18,:);
 periods_in_range = mean(periods(ids_des_period),1);
 
+seq_not_in_range = (vertcat(results_not_in_range(:).seq))';
+seq_not_in_range = seq_not_in_range(1:18,:);
 
-%% Figure 5:
+
+%% Figure 5: (and "Kullback-Leibler" divergence)
 clc
 
 for i = 1:length(seqOrder)
@@ -83,7 +103,7 @@ end
 
 clear p_name p_vec p_osc_vec pvalue rejection
 
-%% "Kullback-Leibler" divergence:
+% % % % % "Kullback-Leibler" divergence:
 clc
 
 tau_n_osc = seq_n_osc(strcmp('tau',seqOrder),:);
@@ -95,141 +115,9 @@ b_n_osc = seq_n_osc(strcmp('b',seqOrder),:);
 b_osc = seq_osc(strcmp('b',seqOrder),:);
 dist_b = KL_div_4paper(b_n_osc,b_osc)
 clear b_n_osc b_osc
-
-%% heat map heatogram for parameter 'b':
-close all; clc
-
-p_n_osc = seq_n_osc(strcmp('b',seqOrder),:);
-p_osc = seq_osc(strcmp('b',seqOrder),:);
-Title = ['parameter: ','b',' of n-osc CPGs'];
-
-Edges = [];
-
-figure;
-ax1 = subplot(2,1,1);
-[ax] = heatmap_histogram(ax1,p_n_osc,Edges,Title);
-ax2 = subplot(2,1,2);
-[ax] = heatmap_histogram(ax2,p_osc,Edges,Title);
-
-%% Figure 4:
-clc
-CPG_num = size(periods,2);
-disp(['total number of CPGs is: ',num2str(CPG_num)]);
-disp(['total number of osc CPGs is: ',num2str(size(seq_osc,2)),...
-    ' which is: ',num2str(100*size(seq_osc,2)/CPG_num),'%']);
-disp(['total number of CPGs with desired periods is: ',...
-    num2str(sum(ids_des_period)),' which is: ',...
-    num2str(100*sum(ids_des_period)/CPG_num),'%']);
-
-N = length(results_osc);
-
-disp('start with the sim:');
-parfor i=1:N % Simulate and calculate the frequecy (also calc from Matsuoka extimation)
-% for i=1:N
-    disp(['at sim #',num2str(i)]);
-    
-    seq = results_osc(i).seq;
-    
-    inRange = ((periodsMean(1,i) > 0.6) & (periodsMean(1,i) < 0.86));
-    if ~inRange
-        % Select new random period within desired range
-        des_period = MML.perLim(1) + rand()*(MML.perLim(2)-MML.perLim(1));
-
-        % Scale Tr, Ta to obtain desired period
-        ratio = des_period/periodsMean(1,i);
-        seq(1) = seq(1)*ratio;
-        if seq(1) < MML.Gen.Range(1,1) || seq(1) > MML.Gen.Range(2,1)
-        %         warning('Genetic sequence out of bounds, using bounded tau gene')
-            % Bound tau gene
-            seq(1) = min(max(seq(1), MML.Gen.Range(1,1)), MML.Gen.Range(2,1));
-        end
-        
-    end
-    
-    [out, sim, ~] = MML.runSim(seq);
-        % Prepare output:
-    % Parameters
-    results_rescaled(i).seq = seq;
-    results_rescaled(i).b = sim.Con.beta;
-    results_rescaled(i).c = sim.Con.Amp0;
-    results_rescaled(i).Worig = sim.Con.wex;
-    results_rescaled(i).W = sim.Con.W;
-    results_rescaled(i).Tr = sim.Con.tau;
-    results_rescaled(i).Ta = sim.Con.tav;
-    results_rescaled(i).x0 = out.x0;
-
-    % Results- caculate perdiods using different methods:
-    results_rescaled(i).periods = out.periods;
-    
-%     % check Matsuoka conditions:
-%     results_rescaled(i).cond0 = checkCond_0(seq,seqOrder);
-%     
-%     cond1 = checkCond_1(seq,seqOrder);
-%     results_rescaled(i).cond1 = cond1;
-%     
-%     results_rescaled(i).cond2 = ...
-%         checkCond_2(seq,seqOrder,cond1);
-
-end 
-disp('sim end...');
-
-clear CPG_num N out sim signal ratio seq
-
-save('MatsRandomRes_4Neurons_rescaled_1.mat','results_rescaled','results_osc');
-
-% plot distribution in heatmap:
-periods_b4_rescale = horzcat(results_osc(:).periods);
-periods_rescale = horzcat(results_rescaled(:).periods);
-
-ids1 = (periods_b4_rescale(1,:) > 0.3) & (periods_b4_rescale(1,:) < 7);
-vec1 = periods_b4_rescale(1,ids1);
-
-ids2 = (periods_rescale(1,:) > 0.3) & (periods_rescale(1,:) < 7);
-vec2 = periods_rescale(1,ids2);
-
-Title1 = sprintf('Period distribution of random parameters');
-Title2 = sprintf('Period distribution of random parameters after re-scaling');
-
-Edges = 0:0.1:7;
-
-% figure;
-% ax1 = subplot(2,1,1);
-% [ax] = heatmap_histogram(ax1,vec1,Edges,Title1);
-% ax2 = subplot(2,1,2);
-% [ax] = heatmap_histogram(ax2,vec2,Edges,Title1);
-
-hist_compare(vec2,vec1,'period',...
-    50,{'after rescale','all osc'},'plot')
-
-clear ax1 ax2 ax vec1 vec2 Title1 Title2 
-clear ids1 ids2 periods_b4_rescale periods_rescale
-%% plot distribution in heatmap:
-
-res = results_osc(1:1000);
-
-periods_b4_rescale = horzcat(res(:).periods);
-periods_rescale = horzcat(results_rescaled(:).periods);
-
-vec1 = periods_b4_rescale(1,:);
-vec2 = periods_rescale(1,:);
-
-Title1 = sprintf('Period distribution of random parameters');
-Title2 = sprintf('Period distribution of random parameters after re-scaling');
-
-figure;
-ax1 = subplot(2,1,1);
-[ax] = heatmap_histogram(ax1,vec1,100,Title1);
-ax2 = subplot(2,1,2);
-[ax] = heatmap_histogram(ax2,vec2,100,Title2);
-
-clear ax1 ax2 ax vec1 vec2 periods_b4_rescale periods_rescale
 %% appendix to Figure 5
 % join all 'C_i' to one vector and all 'W_ij' to another vector and 
 %   compare the distribution (instead of using many Hstograms).
-
-% seqOrder = {'tau','b','c_1','c_2','c_3','c_4',...
-%     'w_{12}','w_{13}','w_{14}','w_{21}','w_{23}','w_{24}',...
-%     'w_{31}','w_{32}','w_{34}','w_{41}','w_{42}','w_{43}'};
 
 % join C_i:
 c_i = [];
@@ -294,10 +182,103 @@ for i = 1:12
     
     clear p_name p_vec _osc_vec
 end
-hist_compare(W_ij,W_ij_osc,'all normalized W {ij}',20,{'n-osc CPGs','osc CPGs'},'plot');
 
-clear W_ij W_ij_osc
+% truncted the distributions:
+ids_W_ij = (W_ij < 100);    ids_W_ij_osc = (W_ij_osc < 100);
+
+disp('the number of CPGs with abnormaly large weights after normalization:');
+disp(['non oscillating: ',num2str(sum(~ids_W_ij_osc))]);
+disp(['oscillating: ',num2str(sum(~ids_W_ij))]);
+
+hist_compare(W_ij(ids_W_ij),W_ij_osc(ids_W_ij_osc),...
+    'all normalized W {ij}',20,{'n-osc CPGs','osc CPGs'},'plot');
+dist_W_ij_norm = KL_div_4paper(W_ij(ids_W_ij),W_ij_osc(ids_W_ij_osc))
+
+clear W_ij W_ij_osc ids_W_ij ids_W_ij_osc
 clear Wnames CNames Worig_osc c_osc Worig_n_osc c_n_osc W_norm_osc W_norm_n_osc
+
+%% heat map heatogram for parameter 'b':
+close all; clc
+
+p_n_osc = seq_n_osc(strcmp('b',seqOrder),:);
+p_osc = seq_osc(strcmp('b',seqOrder),:);
+Title = ['parameter: ','b',' of n-osc CPGs'];
+
+Edges = [];
+
+figure;
+ax1 = subplot(2,1,1);
+[ax] = heatmap_histogram(ax1,p_n_osc,Edges,Title);
+ax2 = subplot(2,1,2);
+[ax] = heatmap_histogram(ax2,p_osc,Edges,Title);
+
+%% Figure 4:
+% this data matched to file: 'MatsRandomRes_4Neurons_4Paper.mat'
+
+res = load('MatsRandomRes_4Neurons_4Paper_Rescaled_Sims.mat');
+results_before_rescale = res.results_osc;
+results_after_rescale = res.results_rescaled;
+clear res
+
+
+CPG_num = size(periods,2);
+disp(['total number of CPGs is: ',num2str(CPG_num)]);
+disp(['total number of osc CPGs is: ',num2str(size(seq_osc,2)),...
+    ' which is: ',num2str(100*size(seq_osc,2)/CPG_num),'%']);
+disp(['total number of CPGs with desired periods is: ',...
+    num2str(sum(ids_des_period)),' which is: ',...
+    num2str(100*sum(ids_des_period)/CPG_num),'%']);
+
+
+% plot distribution in heatmap:
+periods_before_rescale = horzcat(results_before_rescale(:).periods);
+periods_after_rescale = horzcat(results_after_rescale(:).periods);
+
+ids1 = (periods_before_rescale(1,:) > 0.3) &...
+    (periods_before_rescale(1,:) < 7);
+vec1 = periods_before_rescale(1,ids1);
+
+ids2 = (periods_after_rescale(1,:) > 0.3) &...
+    (periods_after_rescale(1,:) < 7);
+vec2 = periods_after_rescale(1,ids2);
+
+Title1 = sprintf('Period distribution of random parameters');
+Title2 = sprintf('Period distribution of random parameters after re-scaling');
+
+Edges = 0:0.1:7;
+
+% figure;
+% ax1 = subplot(2,1,1);
+% [ax] = heatmap_histogram(ax1,vec1,Edges,Title1);
+% ax2 = subplot(2,1,2);
+% [ax] = heatmap_histogram(ax2,vec2,Edges,Title1);
+
+hist_compare(vec2,vec1,'period',...
+    50,{'after rescale','all osc'},'plot')
+
+clear ax1 ax2 ax vec1 vec2 Title1 Title2 
+clear ids1 ids2 periods_b4_rescale periods_rescale
+%% plot distribution in heatmap:
+
+res = results_osc(1:1000);
+
+periods_b4_rescale = horzcat(res(:).periods);
+periods_rescale = horzcat(results_rescaled(:).periods);
+
+vec1 = periods_b4_rescale(1,:);
+vec2 = periods_rescale(1,:);
+
+Title1 = sprintf('Period distribution of random parameters');
+Title2 = sprintf('Period distribution of random parameters after re-scaling');
+
+figure;
+ax1 = subplot(2,1,1);
+[ax] = heatmap_histogram(ax1,vec1,100,Title1);
+ax2 = subplot(2,1,2);
+[ax] = heatmap_histogram(ax2,vec2,100,Title2);
+
+clear ax1 ax2 ax vec1 vec2 periods_b4_rescale periods_rescale
+
 %% Figure 6:
 
 inputsNames = {'periods','tau'...
@@ -366,27 +347,18 @@ testRatio = 1-trainRatio-valRatio;
 samplNum = size(sampl,2);
 
 % find NOT oscilatory CPGs:
-not_osc_ids = find(~osc_ids); 
-if length(not_osc_ids)<500
-    results_n_osc = load('MatsRandomRes_4Neurons_with_LSQ_1_2.mat','results');
-    results_n_osc = results_n_osc.results;
-    periods = horzcat(results_n_osc(:).periods);
-    non_osc_ids = isnan(periods);
-    non_osc_ids = non_osc_ids(1,:) & non_osc_ids(2,:);
-    cpg_non_osc = randsample(find(non_osc_ids),500);
-    results_old = results_n_osc(cpg_non_osc);
-    clear results_n_osc
-else
-    cpg_non_osc = randsample(not_osc_ids,500); % use 1000 n-osc CPGs
-    results_old = results(cpg_non_osc);
-end
+
+load('MatsRandomRes_4Neurons_4Paper_not_osc_Sims.mat','results_not_osc');
+howMuch = length(results_not_osc);
+cpg_non_osc = randsample(1:howMuch,500);
+results_old = results_not_osc(cpg_non_osc);
+clear results_not_osc howMuch
+
+seq_n_osc_4Sim = (vertcat(results_old (:).seq))';
+seq_n_osc_4Sim = seq_n_osc_4Sim(1:18,:);
 
 
-seq_n_osc = (vertcat(results_old (:).seq))';
-seq_n_osc = seq_n_osc(1:18,:);
-
-
-[sampl_4GA,targ_4GA] = prepare_NN_inOut(seq_n_osc,cpg_non_osc,...
+[sampl_4GA,targ_4GA] = prepare_NN_inOut(seq_n_osc_4Sim,cpg_non_osc,...
     inputsNames_4GA,outputsNames_4GA,seqOrder);
 
 numRepeat = 5;
@@ -614,3 +586,23 @@ clear conv_in_range_temp
 [avg_sim_time,simOutType] = run_CPG_with_CB(res);
 
 % without:
+
+
+%% Figure 5: For osc CPGs (in and out of range
+
+clc 
+
+tau_not_in_range = seq_not_in_range(strcmp('tau',seqOrder),:);
+tau_in_range = seq_in_range(strcmp('tau',seqOrder),:);
+hist_compare(tau_not_in_range,tau_in_range,...
+    'tau',20,{'not in range CPGs','in range CPGs'},'plot');
+dist_tau = KL_div_4paper(tau_not_in_range,tau_in_range)
+clear tau_n_osc tau_osc
+
+b_not_in_range = seq_not_in_range(strcmp('b',seqOrder),:);
+b_in_range = seq_in_range(strcmp('b',seqOrder),:);
+hist_compare(b_not_in_range,b_in_range,...
+    'b',20,{'not in range CPGs','in range CPGs'},'plot');
+dist_b = KL_div_4paper(b_not_in_range,b_in_range)
+clear b_n_osc b_osc
+

@@ -129,7 +129,7 @@ t_elapsed = toc(t_cur);
 avg_sim_time = t_elapsed/N;
 disp(['avg sim time is ',num2str(avg_sim_time),' [sec]']);
 
-save('MatsRandomRes_4Neurons_4Paper_2.mat','results');
+save('MatsRandomRes_4Neurons_4Paper_5.mat','results');
 
 %% Phase 2 - Re-run simulations that converged outside the desired range,
 % this time with scaled temporal parameters
