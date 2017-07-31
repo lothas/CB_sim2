@@ -1,5 +1,5 @@
-function [percent_osc_new,conv_in_range,accuracy] = ...
-    NN_GA_perf(net,sampl,results_old,seqOrder,caseNum)
+function [percent_osc_new,conv_in_range,accuracy1,accuracy2,accuracy3] = ...
+    NN_GA_perf(MML,net,sampl,results_old,seqOrder,caseNum)
 % this function change a sript to automate the NN perf checking using GA
 % FOR the 4N Matsuoka general CP only!
 
@@ -16,29 +16,35 @@ function [percent_osc_new,conv_in_range,accuracy] = ...
 % *) 'percent_osc_new' - home many new CPG's are oscillating 
 % *) 'conv_in_range' - home many new CPG's are oscillating in the desired
 %                       range
-% *) 'accuracy' - look at accuracy from the paper
+% *) 'accuracy' - calculating accuracy in 3 different methods
 
 
-%% % % % 0 stage - initiate MML:
-% Initialize machine learning object for Matsuoka analysis
-MML = MatsuokaML();
-MML.perLim = [0.68 0.78];
-MML.perLimOut = MML.perLim + [-0.08 0.08]; % Desired period range
-MML.tStep = 0.01; % 0.01
-MML.tEnd = 30;
-nPlotSamples = 0; % 10;
-% Turn off findpeaks warning
-warning('off','signal:findpeaks:largeMinPeakHeight');
+% %% % % % 0 stage - initiate MML:
+% % Initialize machine learning object for Matsuoka analysis
+% MML = MatsuokaML();
+% MML.perLim = [0.68 0.78];
+% MML.perLimOut = MML.perLim + [-0.08 0.08]; % Desired period range
+% MML.tStep = 0.01; % 0.01
+% MML.tEnd = 30;
+% nPlotSamples = 0; % 10;
+% % Turn off findpeaks warning
+% warning('off','signal:findpeaks:largeMinPeakHeight');
 
 %% % % % 1st stage: pass the input to the NN:
 
+periods_des = sampl(1,:);   % get the desired period
+
 theta_S1_new = net(sampl);
 numOfCPGs = length(theta_S1_new);
-% NOTE: update accordinly to "'MatsuokaGenome.mat'" file!!
-tau_min = 0.02;
-tau_Max = 0.25;
-b_min = 0.2;
-b_max = 10;
+
+GenKeys = MML.Gen.Keys(1,:);
+tauKey = strcmp(GenKeys,'\tau_r');
+bKey = strcmp(GenKeys,'beta');
+
+tau_min = MML.Gen.Range(1,tauKey);
+tau_Max = MML.Gen.Range(2,tauKey);
+b_min = MML.Gen.Range(1,bKey);
+b_max = MML.Gen.Range(2,bKey);
 
 % can't select NN output which is out of bound:
 switch caseNum
@@ -49,10 +55,11 @@ switch caseNum
         good_ids = (theta_S1_new > b_min) & ...
                 (theta_S1_new < b_max);
     case {9,10}
-        good_ids = (theta_S1_new(1,:) > tau_min) & ...
-            (theta_S1_new(1,:) < tau_Max) &...
-            (theta_S1_new(2,:) > b_min) & ...
+        good_tau_ids = (theta_S1_new(1,:) > tau_min) & ...
+            (theta_S1_new(1,:) < tau_Max);
+        good_b_ids = (theta_S1_new(2,:) > b_min) & ...
             (theta_S1_new(2,:) < b_max);
+        good_ids = good_tau_ids & good_b_ids;
     otherwise
         error('illigal caseNUM');
 end
@@ -89,12 +96,34 @@ conv_in_range = sum(conv_in_range_temp) / length(periods_new);
 disp(['the percentage of CPGs which converge in period range is: ',...
     num2str(100*conv_in_range),'%']);
 
-periods_des = (MML.perLimOut(1,2)+MML.perLimOut(1,1))/2;
-delta_vec = ((1./periods_des) .* ( periods_new - periods_des ));
-% delta_vec = (( periods_new - periods_old )./periods_old);
+% % % Accuracy calc #1:
+delta_vec = ((1./periods_des) .* abs(( periods_new - periods_des )) );
 delta = mean(delta_vec,'omitnan');
-accuracy = 1/(1+delta);
+accuracy1 = 1/(1+delta);
 
-disp(['the Accuracy is: ',...
-    num2str(accuracy)]);
+% % % Accuracy calc #2:
+accuracy2 = sqrt(sum(((periods_new - periods_des)./periods_des)^2));
+
+% % % Accuracy calc #3:
+lowerRange_ids = periods_new < MML.perLimOut(1,1);
+upperRange_ids = periods_new > MML.perLimOut(1,2);
+inRange_ids = (periods_new > MML.perLimOut(1,1)) &...
+    (periods_new < MML.perLimOut(1,2));
+
+borderRange = zeros(size(periods_des));
+borderRange(1,lowerRange_ids) = MML.perLimOut(1,1);
+borderRange(1,upperRange_ids) = MML.perLimOut(1,2);
+borderRange(1,inRange_ids) = periods_des(1,inRange_ids);
+
+accuracy3 = saqrt(sum(borderRange))/0.73;
+
+
+disp(['the Accuracy #1 is: ',...
+    num2str(accuracy1)]);
+
+disp(['the Accuracy #2 is: ',...
+    num2str(accuracy2)]);
+
+disp(['the Accuracy #3 is: ',...
+    num2str(accuracy3)]);
 end

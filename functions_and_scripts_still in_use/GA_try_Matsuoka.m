@@ -11,7 +11,10 @@ if nargin<4
 %     GA.FileIn = 'VGAM_11_22_00_00.mat';
 %     GA.FileOut = GA.FileIn;
 
-    GA.FileOut = ['VGAM_',datestr(now,'mm_dd_hh_MM'),'.mat'];
+%     GA.FileOut = ['VGAM_',datestr(now,'mm_dd_hh_MM'),'_NN_and_rescale','.mat'];
+%     GA.FileOut = ['VGAM_',datestr(now,'mm_dd_hh_MM'),'_NN_only','.mat'];
+%     GA.FileOut = ['VGAM_',datestr(now,'mm_dd_hh_MM'),'_rescale_only','.mat'];
+    GA.FileOut = ['VGAM_',datestr(now,'mm_dd_hh_MM'),'_GA_only','.mat'];
 else
     GA = MOOGA(gen,pop);
     GA = GA.SetFittest(20,20,0.5);
@@ -22,9 +25,9 @@ else
 end
 
 % Use NN?
-use_NN = 1;
+use_NN = 0;
 % Rescale?
-GA.rescaleFcn = @rescaleFcn;
+GA.rescaleFcn = [];% @rescaleFcn;
 
 GA.Graphics = 0;
 GA.ReDo = 1;
@@ -32,24 +35,25 @@ GA.ReDo = 1;
 % Set up the genome
 genome_file = 'MatsuokaGenome.mat';
 if exist(genome_file, 'file') ~= 2
-    nAnkle = 1;%1; % Number of ankle torques
+    nAnkle = 1; % Number of ankle torques
     nHip = 1;   % Number of hip torques
     maxAnkle = 20;   % Max ankle torque
-    maxHip = 20;    % Max hip torque
+    maxHip = 8;    % Max hip torque
     Mamp = [maxAnkle*ones(1,2*nAnkle), maxHip*ones(1,2*nHip)];
     mamp = 0*Mamp;
     N = nAnkle+nHip;
-    Mw = 10*ones(1,(2*N-1)*2*N);
+    Mw = 10*ones(1,12);
     mw = 0*Mw;
 
-    Keys = {'\tau_r', 'beta', 'amp',   'weights', 'ks_\tau',     'ks_c', 'IC_matsuoka';
-                  1 ,      1,  2*N , (2*N-1)*2*N,        1 ,       2*N ,            0 };
-    Range = {  0.02 ,    0.2,  mamp,          mw,   -0.001 ,  -0.2*Mamp; % Min
-               0.25 ,   10.0,  Mamp,          Mw,    0.001 ,   0.2*Mamp}; % Max
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    MutDelta0 = 0.04;
-    MutDelta1 = 0.02;
-    
+        %%%%%%%%%%%% For the 4-neuron case!!!
+    %     % Final genome with tau_r + beta (constant tau_u/tau_v ratio) 
+        Keys = {'\tau_r', 'beta', 'amp',   'weights', 'ks_\tau',     'ks_c', 'IC_matsuoka';
+                      1 ,      1,    4 ,          12,        1 ,         4 ,            0 };
+        Range = {  0.02 ,    0.2,  mamp,          mw,      -10 ,  -0.1*Mamp; % Min
+                   0.25 ,   10.0,  Mamp,          Mw,       10 ,   0.1*Mamp}; % Max
+
+    MutDelta0 = 0.04;   MutDelta1 = 0.02;
+
     save(genome_file, 'nAnkle', 'nHip', 'maxAnkle', 'maxHip', ...
         'Mamp', 'mamp', 'N', 'Mw', 'mw', ...
         'MutDelta0', 'MutDelta1', 'Keys', 'Range');
@@ -72,36 +76,37 @@ if use_NN
     NNSamples = 500;
     
 %     inFilenames = {'MatsRandomRes.mat', 'MatsScaledRes.mat'};
-    inFilenames = {'MatsRandomRes_4Neurons_with_LSQ_1_2.mat'};
+    inFilenames = {'MatsRandomRes_4Neurons_4Paper_for_MOOGA_try.mat'};
 
     MML.sample_genes = {'weights'};
-    MML.target_genes = {'beta'};
-%     MML.target_genes = {'\tau_r','beta'};
+%     MML.target_genes = {'beta'};
+    MML.target_genes = {'\tau_r','beta'};
 
     [samples, targets, normParams] = MML.prepareNNData(inFilenames, maxN);
     MML.normParams = normParams;
     
-    if exist(GANN_file, 'file') ~= 2
+%     if exist(GANN_file, 'file') ~= 2
         [net, ~, ~, ~, ~, ~] = ...
                 MML.trainNN(samples, targets, 20, NNSamples);
         save(GANN_file,'net');
-    else
-        GANN_net = load(GANN_file);
-        net = GANN_net.net;
-    end
+%     else
+%         GANN_net = load(GANN_file);
+%         net = GANN_net.net;
+%     end
 
     GA.NN = net;
     GA.NNFcn = @NNFcn;
 end
 
-function seq = NNFcn(Gen, net, seq)
+function seq = NNFcn(Gen, net, seq, X, T)
 
-    % % % don't need to run Sim again. run the NN on all CPG's:
-    % [~, periods, ~, ~, ~] = MML.processResults(X, T);
-    % % don't do anything if CPG IS stable
-    % if ~any(isnan(periods)) 
-        % return
-    % end
+    % % don't need to run Sim again. run the NN on all CPG's??
+    
+    [~, periods, ~, ~, ~] = MML.processResults(X, T);
+    % don't do anything if CPG IS stable
+    if ~any(isnan(periods)) 
+        return
+    end
 
     % Use NN to select best value for tau gene
     desPeriod = MML.perLim(1) + ...

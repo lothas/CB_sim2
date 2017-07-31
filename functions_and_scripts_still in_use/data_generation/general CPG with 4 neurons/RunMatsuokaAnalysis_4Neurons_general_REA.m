@@ -37,7 +37,7 @@ MML.tEnd = 15;
 MML.nNeurons = 4;
 %% Train data:
 
-N = 100000; % the number of samples
+N = 200000; % the number of samples
 % % % % CPG parameters:
 % seqOrder = {'tau','b','c_1','c_2','c_3','c_4',...
 %     'w_{12}','w_{13}','w_{14}','w_{21}','w_{23}','w_{24}',...
@@ -129,7 +129,7 @@ t_elapsed = toc(t_cur);
 avg_sim_time = t_elapsed/N;
 disp(['avg sim time is ',num2str(avg_sim_time),' [sec]']);
 
-save('MatsRandomRes_4Neurons_4Paper_5.mat','results');
+save('MatsRandomRes_4Neurons_4Paper_7.mat','results');
 
 %% Phase 2 - Re-run simulations that converged outside the desired range,
 % this time with scaled temporal parameters

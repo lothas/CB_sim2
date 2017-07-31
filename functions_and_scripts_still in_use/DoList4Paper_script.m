@@ -10,21 +10,29 @@ clear all; close all; clc
 % load('MatsRandomRes_4Neurons_with_LSQ_1_2.mat','results');
 % load('MatsRandomRes_all_from_1-2_2017.mat','results');
 
-% % % Load peridos that mainly oscillating in range:
-load('MatsRandomRes_4Neurons_4Paper_Rescaled_Sims.mat','results_rescaled');
-results1 = results_rescaled;    clear results_rescaled
-load('MatsRandomRes_4Neurons_4Paper_Rescaled_Sims_2.mat','results_rescaled');
-results2 = results_rescaled';    clear results_rescaled
-results = [results1,results2];  clear results1 results2
-
-% % % Load peridos oscillating and periods which oscillates in range:
+% % % % Load peridos that mainly oscillating in range:
 % load('MatsRandomRes_4Neurons_4Paper_Rescaled_Sims.mat','results_rescaled');
 % results1 = results_rescaled;    clear results_rescaled
 % load('MatsRandomRes_4Neurons_4Paper_Rescaled_Sims_2.mat','results_rescaled');
 % results2 = results_rescaled';    clear results_rescaled
+% results = [results1,results2];  clear results1 results2
+
+% % Load peridos oscillating and periods which oscillates in range:
+load('MatsRandomRes_4Neurons_4Paper_Rescaled_Sims.mat','results_rescaled');
+results1 = results_rescaled;    clear results_rescaled
+load('MatsRandomRes_4Neurons_4Paper_Rescaled_Sims_2.mat','results_rescaled');
+results2 = results_rescaled';    clear results_rescaled
+load('MatsRandomRes_4Neurons_4Paper.mat','results');
+results3 = results;    clear results
+results = [results1,results2,results3];  clear results1 results2 results3
+
+% % % Load peridos that osc and osc in range:
+% % % % for plotting histograms in range and out of rang
+% load('MatsRandomRes_4Neurons_4Paper_Rescaled_Sims.mat','results_rescaled');
+% results1 = results_rescaled;    clear results_rescaled
 % load('MatsRandomRes_4Neurons_4Paper.mat','results');
-% results3 = results;    clear results
-% results = [results1,results2,results3];  clear results1 results2 results3
+% results2 = results;    clear results
+% results = [results1,results2];  clear results1 results2
 
 seqOrder = {'tau','b','c_1','c_2','c_3','c_4',...
     'w_{12}','w_{13}','w_{14}','w_{21}','w_{23}','w_{24}',...
@@ -326,7 +334,7 @@ NN_Perf_over_Hid_Neuron_Num(sampl,targ,NumOfRepeats,...
 
 clc 
 
-caseNum = 7;
+caseNum = 9; % caseNum = 7;
 % HiddenN = [10,20,30,40,50];
 HiddenN = [10,20];
 trainRatio = 0.7;
@@ -347,7 +355,6 @@ testRatio = 1-trainRatio-valRatio;
 samplNum = size(sampl,2);
 
 % find NOT oscilatory CPGs:
-
 load('MatsRandomRes_4Neurons_4Paper_not_osc_Sims.mat','results_not_osc');
 howMuch = length(results_not_osc);
 cpg_non_osc = randsample(1:howMuch,500);
@@ -363,7 +370,9 @@ seq_n_osc_4Sim = seq_n_osc_4Sim(1:18,:);
 
 numRepeat = 5;
 
-accuracy = zeros(numRepeat,length(HiddenN));
+accuracy1 = zeros(numRepeat,length(HiddenN));
+accuracy2 = zeros(numRepeat,length(HiddenN));
+accuracy3 = zeros(numRepeat,length(HiddenN));
 percent_osc_new = zeros(numRepeat,length(HiddenN));
 conv_in_range = zeros(numRepeat,length(HiddenN));
 MSE_testErr = zeros(numRepeat,length(HiddenN));
@@ -395,27 +404,37 @@ for i=1:length(HiddenN)
             MSE_testErr(j,i) = NaN;
         end
         
-        [percent_osc_new(j,i),conv_in_range(j,i),accuracy(j,i)] = ...
-             NN_GA_perf(net,sampl_4GA,results_old,seqOrder,caseNum);
+        [percent_osc_new(j,i),conv_in_range(j,i),...
+            accuracy1(j,i),accuracy2(j,i),accuracy3(j,i)] = ...
+             NN_GA_perf(MML,net,sampl_4GA,results_old,seqOrder,caseNum);
     end
 end
 
 percent_osc_new_mean = mean(percent_osc_new,1);
 conv_in_range_mean = mean(conv_in_range,1);
-accuracy_mean = mean(accuracy,1);
+accuracy1_mean = mean(accuracy1,1);
+accuracy2_mean = mean(accuracy2,1);
+accuracy3_mean = mean(accuracy3,1);
 MSE_testErr_mean = mean(MSE_testErr,1);
 
 percent_osc_new_std = std(percent_osc_new,[],1);
 conv_in_range_std = std(conv_in_range,[],1);
-accuracy_std = std(accuracy,[],1);
+accuracy1_std = std(accuracy1,[],1);
+accuracy2_std = std(accuracy2,[],1);
+accuracy3_std = std(accuracy3,[],1);
 MSE_testErr_std = std(MSE_testErr,[],1);
 
 means = [percent_osc_new_mean;...
     conv_in_range_mean;...
-    accuracy_mean];
+    accuracy1_mean;
+    accuracy2_mean;
+    accuracy3_mean];
 stdevs = [percent_osc_new_std;...
     conv_in_range_std;...
-    accuracy_std];
+    accuracy1_std;
+    accuracy2_std;
+    accuracy3_std];
+
 % Names = {' ','10neurons',' ','20neurons ',' ','30neurons ',' ','40neurons ',' ','50neurons'};
 Names = {' ',' ','10neurons',' ',' ',' ',' ','20neurons ',' '};
 label_Y = '';
@@ -446,6 +465,10 @@ disp('|-------------------------------------------------------------|');
 % plot(HiddenN,MSE_testErr_std);
 % ylabel('NN MSE error on test group');
 
+
+% figure;
+% plotyy(HiddenN,percent_osc_new_mean,HiddenN,MSE_testErr_std,'bar','plot')
+
 %% Figure 8b:
 % non-osc CPGs that produced oscillations after pre-tuning with NN with 'n'
 % hidden neurons
@@ -456,34 +479,26 @@ clc
 caseNum = [1,3,5,7,9];
 HiddenN = 20;
 
-% find NOT oscilatory CPGs:
-not_osc_ids = find(~osc_ids); 
-if length(not_osc_ids)<500
-    results_n_osc = load('MatsRandomRes_4Neurons_with_LSQ_1_2.mat','results');
-    results_n_osc = results_n_osc.results;
-    periods = horzcat(results_n_osc(:).periods);
-    non_osc_ids = isnan(periods);
-    non_osc_ids = non_osc_ids(1,:) & non_osc_ids(2,:);
-    cpg_non_osc = randsample(find(non_osc_ids),500);
-    results_old = results_n_osc(cpg_non_osc);
-    clear results_n_osc
-else
-    cpg_non_osc = randsample(not_osc_ids,500); % use 1000 n-osc CPGs
-    results_old = results(cpg_non_osc);
-end
-
-
-seq_n_osc = (vertcat(results_old (:).seq))';
-seq_n_osc = seq_n_osc(1:18,:);
-
 samplNum = size(sampl,2);
 trainRatio = 0.7;
 valRatio = 0.15;
 testRatio = 1-trainRatio-valRatio;
 
+% find NOT oscilatory CPGs:
+load('MatsRandomRes_4Neurons_4Paper_not_osc_Sims.mat','results_not_osc');
+howMuch = length(results_not_osc);
+cpg_non_osc = randsample(1:howMuch,500);
+results_old = results_not_osc(cpg_non_osc);
+clear results_not_osc howMuch
+
+seq_n_osc_4Sim = (vertcat(results_old (:).seq))';
+seq_n_osc_4Sim = seq_n_osc_4Sim(1:18,:);
+
 numRepeat = 5;
 
-accuracy = zeros(numRepeat,length(caseNum));
+accuracy1 = zeros(numRepeat,length(caseNum));
+accuracy2 = zeros(numRepeat,length(caseNum));
+accuracy3 = zeros(numRepeat,length(caseNum));
 percent_osc_new = zeros(numRepeat,length(caseNum));
 conv_in_range = zeros(numRepeat,length(caseNum));
 MSE_testErr = zeros(numRepeat,length(caseNum));
@@ -494,8 +509,15 @@ for i=1:length(caseNum)
     [inputsNames_4GA,outputsNames_4GA] = ...
     check_NN_case_for_paper(caseNum(1,i),'period_desired');
 
-    [sampl_4GA,targ_4GA] = prepare_NN_inOut(seq_n_osc,cpg_non_osc,...
+    [sampl_4GA,targ_4GA] = prepare_NN_inOut(seq_n_osc_4Sim,cpg_non_osc,...
     inputsNames_4GA,outputsNames_4GA,seqOrder);
+
+    [inputsNames_4NN,outputsNames_4NN] = ...
+        check_NN_case_for_paper(caseNum(1,i),'period');
+
+    [sampl,targ] = prepare_NN_inOut(seq_in_range,periods_in_range,...
+        inputsNames_4NN,outputsNames_4NN,seqOrder);
+
     
     for j=1:numRepeat
         disp(['    iter ',num2str(j),' out of ',num2str(numRepeat)]);
@@ -522,27 +544,36 @@ for i=1:length(caseNum)
             MSE_testErr(j,i) = NaN;
         end
         
-        [percent_osc_new(j,i),conv_in_range(j,i),accuracy(j,i)] = ...
-             NN_GA_perf(net,sampl_4GA,results_old,seqOrder,caseNum);
+        [percent_osc_new(j,i),conv_in_range(j,i),...
+            accuracy1(j,i),accuracy2(j,i),accuracy3(j,i)] = ...
+             NN_GA_perf(MML,net,sampl_4GA,results_old,seqOrder,caseNum(1,i));
     end
 end
 
 percent_osc_new_mean = mean(percent_osc_new,1);
 conv_in_range_mean = mean(conv_in_range,1);
-accuracy_mean = mean(accuracy,1);
+accuracy1_mean = mean(accuracy1,1);
+accuracy2_mean = mean(accuracy2,1);
+accuracy3_mean = mean(accuracy3,1);
 MSE_testErr_mean = mean(MSE_testErr,1);
 
 percent_osc_new_std = std(percent_osc_new,[],1);
 conv_in_range_std = std(conv_in_range,[],1);
-accuracy_std = std(accuracy,[],1);
+accuracy1_std = std(accuracy1,[],1);
+accuracy2_std = std(accuracy2,[],1);
+accuracy3_std = std(accuracy3,[],1);
 MSE_testErr_std = std(MSE_testErr,[],1);
 
 means = [percent_osc_new_mean;...
     conv_in_range_mean;...
-    accuracy_mean];
+    accuracy1_mean;
+    accuracy2_mean;
+    accuracy3_mean];
 stdevs = [percent_osc_new_std;...
     conv_in_range_std;...
-    accuracy_std];
+    accuracy1_std;
+    accuracy2_std;
+    accuracy3_std];
 
 Names = {' ','case#1',' ','case#3',' ','case#5',' ','case#7',' ','case#9'};
 label_Y = '';
@@ -556,8 +587,8 @@ disp('| case    | conv mean | conv std | inRange mean | inRange std |');
 disp('|-------------------------------------------------------------|');
 res = cell(1,length(caseNum));
 for i=1:length(caseNum)
-    res{1,i} = sprintf('|case %d   | %0.3f     | %0.3f    | %0.3f        | %0.3f       | \n',HiddenN(1,i),...
-        caseNum(1,i),stdevs(1,i),means(2,i),stdevs(2,i));
+    res{1,i} = sprintf('|case %d   | %0.3f     | %0.3f    | %0.3f        | %0.3f       | \n',...
+        caseNum(1,i),means(1,i),stdevs(1,i),means(2,i),stdevs(2,i));
     disp(res{1,i});
 end
 disp('|-------------------------------------------------------------|');
