@@ -479,7 +479,6 @@ clc
 caseNum = [1,3,5,7,9];
 HiddenN = 20;
 
-samplNum = size(sampl,2);
 trainRatio = 0.7;
 valRatio = 0.15;
 testRatio = 1-trainRatio-valRatio;
@@ -517,7 +516,7 @@ for i=1:length(caseNum)
 
     [sampl,targ] = prepare_NN_inOut(seq_in_range,periods_in_range,...
         inputsNames_4NN,outputsNames_4NN,seqOrder);
-
+    samplNum = size(sampl,2);
     
     for j=1:numRepeat
         disp(['    iter ',num2str(j),' out of ',num2str(numRepeat)]);
@@ -575,23 +574,33 @@ stdevs = [percent_osc_new_std;...
     accuracy2_std;
     accuracy3_std];
 
+save('NN_conv_perf_over_case_num.mat',...
+    'caseNum','HiddenN','numRepeat','MSE_testErr','means','stdevs');
+
+% load('NN_conv_perf_over_case_num.mat',...
+%     'caseNum','HiddenN','numRepeat','MSE_testErr','means','stdevs');
+
 Names = {' ','case#1',' ','case#3',' ','case#5',' ','case#7',' ','case#9'};
 label_Y = '';
 graph_title = ['NN perf over different case#'];
-graph_legend = {'converged','conv in range','accuracy'};
+graph_legend = {'converged','conv in range','accuracy1','accuracy2','accuracy3'};
 plot_bars_with_errors(means,stdevs,...
     Names,label_Y,graph_title,graph_legend);
 
-disp('|-------------------------------------------------------------|');
-disp('| case    | conv mean | conv std | inRange mean | inRange std |');
-disp('|-------------------------------------------------------------|');
+disp('|-------------------------------------------------------------------------------------------------------------------------------------|');
+disp(['| case    | conv mean | conv std | inRange mean | inRange std |',...
+     ' acc1_mean  | acc1_std | acc2_mean  | acc2_std | acc3_mean  | acc3_std |']);
+disp('|-------------------------------------------------------------------------------------------------------------------------------------|');
 res = cell(1,length(caseNum));
 for i=1:length(caseNum)
-    res{1,i} = sprintf('|case %d   | %0.3f     | %0.3f    | %0.3f        | %0.3f       | \n',...
+    res_temp1 = sprintf('|case %d   | %0.3f     | %0.3f    | %0.3f        | %0.3f       | ',...
         caseNum(1,i),means(1,i),stdevs(1,i),means(2,i),stdevs(2,i));
+    res_temp2 = sprintf(' %0.3f      | %0.3f     | %0.3f       | %0.3f      | %0.3f      | %0.3f    | \n',...
+        means(3,i),stdevs(3,i),means(4,i),stdevs(4,i),means(5,i),stdevs(5,i));
+    res{1,i} = strcat(res_temp1,res_temp2);
     disp(res{1,i});
 end
-disp('|-------------------------------------------------------------|');
+disp('|-------------------------------------------------------------------------------------------------------------------------------------|');
 
 % % plot %conv and MSE err on a plot with different axes:
 % figure;

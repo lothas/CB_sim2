@@ -66,7 +66,8 @@ end
 
 results_old = results_old(good_ids);
 theta_S1_new = theta_S1_new(:,good_ids);
-
+periods_des = periods_des(:,good_ids);
+N = length(periods_des);
 disp(['the number of CPGs with parameters in bounds is ',...
     num2str(sum(good_ids)),' out of ',num2str(numOfCPGs)]);
 %% % % % 2nd stage: - make new CPGs:
@@ -96,26 +97,32 @@ conv_in_range = sum(conv_in_range_temp) / length(periods_new);
 disp(['the percentage of CPGs which converge in period range is: ',...
     num2str(100*conv_in_range),'%']);
 
+% get rid of the not osc CPG's:
+T_new = periods_new(1,~isnan(periods_new));
+T_des = periods_des(1,~isnan(periods_new));
+
 % % % Accuracy calc #1:
-delta_vec = ((1./periods_des) .* abs(( periods_new - periods_des )) );
+delta_vec = ((1./T_des) .* abs(( T_new - T_des )) );
 delta = mean(delta_vec,'omitnan');
 accuracy1 = 1/(1+delta);
 
 % % % Accuracy calc #2:
-accuracy2 = sqrt(sum(((periods_new - periods_des)./periods_des)^2));
+norm_sqr_err = ((T_new - T_des)./T_des).^2;
+mean_norm_sqr_err = mean(norm_sqr_err);
+accuracy2 = sqrt(mean_norm_sqr_err);
 
 % % % Accuracy calc #3:
-lowerRange_ids = periods_new < MML.perLimOut(1,1);
-upperRange_ids = periods_new > MML.perLimOut(1,2);
-inRange_ids = (periods_new > MML.perLimOut(1,1)) &...
-    (periods_new < MML.perLimOut(1,2));
+lowerRange_ids = T_new < MML.perLimOut(1,1);
+upperRange_ids = T_new > MML.perLimOut(1,2);
+inRange_ids = (T_new > MML.perLimOut(1,1)) &...
+    (T_new < MML.perLimOut(1,2));
 
-borderRange = zeros(size(periods_des));
+borderRange = zeros(size(T_des));
 borderRange(1,lowerRange_ids) = MML.perLimOut(1,1);
 borderRange(1,upperRange_ids) = MML.perLimOut(1,2);
-borderRange(1,inRange_ids) = periods_des(1,inRange_ids);
+borderRange(1,inRange_ids) = T_des(1,inRange_ids);
 
-accuracy3 = saqrt(sum(borderRange))/0.73;
+accuracy3 = sqrt( ((sum(borderRange)).^2)/N )/0.73;
 
 
 disp(['the Accuracy #1 is: ',...

@@ -14,7 +14,7 @@ if nargin<4
 %     GA.FileOut = ['VGAM_',datestr(now,'mm_dd_hh_MM'),'_NN_and_rescale','.mat'];
 %     GA.FileOut = ['VGAM_',datestr(now,'mm_dd_hh_MM'),'_NN_only','.mat'];
 %     GA.FileOut = ['VGAM_',datestr(now,'mm_dd_hh_MM'),'_rescale_only','.mat'];
-    GA.FileOut = ['VGAM_',datestr(now,'mm_dd_hh_MM'),'_GA_only','.mat'];
+%     GA.FileOut = ['VGAM_',datestr(now,'mm_dd_hh_MM'),'_GA_only','.mat'];
 else
     GA = MOOGA(gen,pop);
     GA = GA.SetFittest(20,20,0.5);
