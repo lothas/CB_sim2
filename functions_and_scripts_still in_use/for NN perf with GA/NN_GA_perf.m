@@ -88,13 +88,13 @@ periods_new = periods_new(1,:);
 %% % % % 3rd stage: results:
 
 percent_osc_new = ( sum(~isnan(periods_new)) / length(periods_new) );
-disp(['the percentage of osc period after the change is: ',...
+disp(['    the percentage of osc period after the change is: ',...
     num2str(100*percent_osc_new),'%']);
 
 conv_in_range_temp = (periods_new > MML.perLimOut(1,1)) & ...
     (periods_new < MML.perLimOut(1,2));
 conv_in_range = sum(conv_in_range_temp) / length(periods_new);
-disp(['the percentage of CPGs which converge in period range is: ',...
+disp(['    the percentage of CPGs which converge in period range is: ',...
     num2str(100*conv_in_range),'%']);
 
 % get rid of the not osc CPG's:
@@ -122,15 +122,16 @@ borderRange(1,lowerRange_ids) = MML.perLimOut(1,1);
 borderRange(1,upperRange_ids) = MML.perLimOut(1,2);
 borderRange(1,inRange_ids) = T_des(1,inRange_ids);
 
-accuracy3 = sqrt( ((sum(borderRange)).^2)/N )/0.73;
+mean_norm_sqr_err1 = mean((T_new - borderRange).^2);
+accuracy3 = sqrt(mean_norm_sqr_err1)/0.73;
 
 
-disp(['the Accuracy #1 is: ',...
+disp(['    the Accuracy #1 is: ',...
     num2str(accuracy1)]);
 
-disp(['the Accuracy #2 is: ',...
+disp(['    the Accuracy #2 is: ',...
     num2str(accuracy2)]);
 
-disp(['the Accuracy #3 is: ',...
+disp(['    the Accuracy #3 is: ',...
     num2str(accuracy3)]);
 end

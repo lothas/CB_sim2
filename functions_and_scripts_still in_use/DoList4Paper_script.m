@@ -268,25 +268,52 @@ clear ax1 ax2 ax vec1 vec2 Title1 Title2
 clear ids1 ids2 periods_b4_rescale periods_rescale
 %% plot distribution in heatmap:
 
-res = results_osc(1:1000);
+if false
+    load('MatsRandomRes_4Neurons_4Paper_Rescaled_Sims.mat');
 
-periods_b4_rescale = horzcat(res(:).periods);
-periods_rescale = horzcat(results_rescaled(:).periods);
+    periods = horzcat(results_osc(:).periods);
+    periods = mean(periods,1);
 
-vec1 = periods_b4_rescale(1,:);
-vec2 = periods_rescale(1,:);
+    periods_rescaled = horzcat(results_rescaled(:).periods);
+    periods_rescaled = mean(periods_rescaled,1);
 
-Title1 = sprintf('Period distribution of random parameters');
-Title2 = sprintf('Period distribution of random parameters after re-scaling');
+    perRange = [MML.perLimOut(1,1), MML.perLimOut(1,2)];
+    randPeriods = periods;
+    % ignore all data after and before a certain point (for estetics)
+    randPeriods(randPeriods > perRange(2)*5) = [];
+    randPeriods(randPeriods < perRange(1)/5) = [];
 
-figure;
-ax1 = subplot(2,1,1);
-[ax] = heatmap_histogram(ax1,vec1,100,Title1);
-ax2 = subplot(2,1,2);
-[ax] = heatmap_histogram(ax2,vec2,100,Title2);
+    scalPeriods = periods_rescaled;
+    scalPeriods(scalPeriods > perRange(2)*5) = [];
+    scalPeriods(scalPeriods < perRange(1)/5) = [];
 
-clear ax1 ax2 ax vec1 vec2 periods_b4_rescale periods_rescale
+    % Plot histogram of periods
+    Nbins = 200;
+    [N1, bins1] = histcounts(randPeriods,Nbins);
+    N1 = N1/max(N1);
+    [N2, bins2] = histcounts(scalPeriods,Nbins);
+    N2 = N2/max(N2);
 
+    bins1n = (bins1 - min(bins1))/(max(bins1) - min(bins1));
+
+    % Plot heat map of periods
+    figure
+    subplot(2,1,1)
+    imagesc(N1)
+    axis off
+    set(gca,'FontSize',12);
+    title('Period distribution of random parameters')
+    subplot(2,1,2)
+    imagesc(N2)
+    set(gca,'YTickLabel',[]);
+    set(gca,'XTick',bins1n(1:Nbins/10:end)*Nbins);
+    set(gca,'XTickLabel',bins1(1:Nbins/10:end));
+    box off
+    title('Period distribution of random parameters after re-scaling')
+    set(gca,'FontSize',12);
+    set(gca,'FontWeight','bold');
+
+end
 %% Figure 6:
 
 inputsNames = {'periods','tau'...
@@ -477,6 +504,7 @@ disp('|-------------------------------------------------------------|');
 clc 
 
 caseNum = [1,3,5,7,9];
+% caseNum = 9;
 HiddenN = 20;
 
 trainRatio = 0.7;
@@ -574,8 +602,8 @@ stdevs = [percent_osc_new_std;...
     accuracy2_std;
     accuracy3_std];
 
-save('NN_conv_perf_over_case_num.mat',...
-    'caseNum','HiddenN','numRepeat','MSE_testErr','means','stdevs');
+% save('NN_conv_perf_over_case_num.mat',...
+%     'caseNum','HiddenN','numRepeat','MSE_testErr','means','stdevs');
 
 % load('NN_conv_perf_over_case_num.mat',...
 %     'caseNum','HiddenN','numRepeat','MSE_testErr','means','stdevs');
