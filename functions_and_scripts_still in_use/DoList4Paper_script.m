@@ -363,7 +363,7 @@ clc
 
 caseNum = 9; % caseNum = 7;
 % HiddenN = [10,20,30,40,50];
-HiddenN = [10,20];
+HiddenN = [5,10,20,30];
 trainRatio = 0.7;
 valRatio = 0.15;
 testRatio = 1-trainRatio-valRatio;
@@ -402,7 +402,10 @@ accuracy2 = zeros(numRepeat,length(HiddenN));
 accuracy3 = zeros(numRepeat,length(HiddenN));
 percent_osc_new = zeros(numRepeat,length(HiddenN));
 conv_in_range = zeros(numRepeat,length(HiddenN));
-MSE_testErr = zeros(numRepeat,length(HiddenN));
+
+MSE_testErr = nan(numRepeat,length(HiddenN));
+MSE_testErr_tau = nan(numRepeat,length(HiddenN));
+MSE_testErr_b = nan(numRepeat,length(HiddenN));
 
 for i=1:length(HiddenN)
     disp(['NN with ',num2str(HiddenN(1,i)),' hidden neurons:']);
@@ -428,9 +431,21 @@ for i=1:length(HiddenN)
             MSE_testErr(j,i) = tr.best_tperf;
         else % use untrained net (with random weights)
             net = configure(net,sampl,targ);
-            MSE_testErr(j,i) = NaN;
         end
         
+        % claculate net Perf:
+        netOut = net(sampl);
+        
+        switch caseNum
+            case {1,2,3,4}
+                MSE_testErr_tau(j,i) = immse(netOut,targ);
+            case {5,6,7,8}
+                MSE_testErr_b(j,i) = immse(netOut,targ);
+            case {9,10}
+                MSE_testErr_tau(j,i) = immse(netOut(1,:),targ(1,:));
+                MSE_testErr_b(j,i) = immse(netOut(2,:),targ(2,:));
+        end
+                      
         [percent_osc_new(j,i),conv_in_range(j,i),...
             accuracy1(j,i),accuracy2(j,i),accuracy3(j,i)] = ...
              NN_GA_perf(MML,net,sampl_4GA,results_old,seqOrder,caseNum);
@@ -443,6 +458,8 @@ accuracy1_mean = mean(accuracy1,1);
 accuracy2_mean = mean(accuracy2,1);
 accuracy3_mean = mean(accuracy3,1);
 MSE_testErr_mean = mean(MSE_testErr,1);
+MSE_testErr_tau_mean = mean(MSE_testErr_tau,1);
+MSE_testErr_b_mean = mean(MSE_testErr_b,1);
 
 percent_osc_new_std = std(percent_osc_new,[],1);
 conv_in_range_std = std(conv_in_range,[],1);
@@ -450,6 +467,8 @@ accuracy1_std = std(accuracy1,[],1);
 accuracy2_std = std(accuracy2,[],1);
 accuracy3_std = std(accuracy3,[],1);
 MSE_testErr_std = std(MSE_testErr,[],1);
+MSE_testErr_tau_std = std(MSE_testErr_tau,[],1);
+MSE_testErr_b_std = std(MSE_testErr_b,[],1);
 
 means = [percent_osc_new_mean;...
     conv_in_range_mean;...
@@ -463,12 +482,7 @@ stdevs = [percent_osc_new_std;...
     accuracy3_std];
 
 % Names = {' ','10neurons',' ','20neurons ',' ','30neurons ',' ','40neurons ',' ','50neurons'};
-Names = {' ',' ','10neurons',' ',' ',' ',' ','20neurons ',' '};
-label_Y = '';
-graph_title = ['NN perf over different hidden neurons num'];
-graph_legend = {'converged','conv in range','accuracy'};
-plot_bars_with_errors(means,stdevs,...
-    Names,label_Y,graph_title,graph_legend);
+Names = {' ',' ','5neurons',' ','10neurons',' ','20neurons ',' ','30neurons '};
 
 disp('|-------------------------------------------------------------|');
 disp('| hidNnum | conv mean | conv std | inRange mean | inRange std |');
@@ -481,6 +495,28 @@ for i=1:length(HiddenN)
 end
 disp('|-------------------------------------------------------------|');
 
+
+label_Y = '';
+graph_title = ['NN perf over different hidden neurons num'];
+graph_legend = {'converged','conv in range','accuracy'};
+plot_bars_with_errors(means,stdevs,...
+    Names,label_Y,graph_title,graph_legend);
+
+
+
+% plot MSE net perf:
+means = [MSE_testErr;...
+    MSE_testErr_tau;...
+    MSE_testErr_b];
+stdevs = [MSE_testErr_std;...
+    MSE_testErr_tau_std;...
+    MSE_testErr_b_std];
+
+label_Y = 'MSE error';
+graph_title = ['NN perf over different hidden neurons num'];
+graph_legend = {'total err','tau err','b err'};
+plot_bars_with_errors(means,stdevs,...
+    Names,label_Y,graph_title,graph_legend);
 % % plot %conv and MSE err on a plot with different axes:
 % figure;
 % xlabel('hidden neuron num');
