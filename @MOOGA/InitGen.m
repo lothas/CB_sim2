@@ -8,6 +8,10 @@ GA.Parents = zeros(GA.Population, 2, GA.Generations); % 2 parents
 GA.Fit = zeros(GA.Population, max(cell2mat(GA.FitFcn(:,1)')), GA.Generations);
 GA.MLseqRunTime = NaN(GA.Population, 1, GA.Generations);
 GA.simRunTime = NaN(GA.Population, 1, GA.Generations);
+GA.sim_endCond = zeros(GA.Population, 1, GA.Generations);
+GA.Tend_ratio = zeros(GA.Population, 1, GA.Generations);
+
+GA.totGenTime = zeros(1,GA.Generations);
 % TODO: do for 'MLseqRunTime' and 'simRunTime' what is done for 'Fit' and
 %       'Seqs' (' if exist('In','var') == 1 ')
 

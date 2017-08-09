@@ -59,13 +59,18 @@ classdef MOOGA
         % External function (called at the end of every generation)
         GenerationFcn;
         
-        % Filenames
+        % Filenames:
         FileIn;     % Input file with previous genomes (same MOOGA)
         FileOut;    % Output file
 		
 		% Run times:
+        totGenTime = [] % save the generation time
 		MLseqRunTime = [];	% run time for the Matsuoka CPG by itself
 		simRunTime = [];	% run time for the CPG with the CB
+        
+        % some more parameters for the paper:
+        sim_endCond = [];
+        Tend_ratio = [];
 		
     end
     

@@ -4,7 +4,8 @@ function [  ] = GA_try_Matsuoka( gen, pop, file_in, file_out )
 
 if nargin<4
 %     GA = MOOGA(25,500);
-    GA = MOOGA(10,500);
+% %     GA = MOOGA(20,1000);
+    GA = MOOGA(25,500);
     GA = GA.SetFittest(15,15,0.5);
     GA.JOAT = 0; GA.Quant = 0.8;
     % GA.Fittest = [20,20,1];
@@ -14,7 +15,7 @@ if nargin<4
 %     GA.FileOut = ['VGAM_',datestr(now,'mm_dd_hh_MM'),'_NN_and_rescale','.mat'];
 %     GA.FileOut = ['VGAM_',datestr(now,'mm_dd_hh_MM'),'_NN_only','.mat'];
 %     GA.FileOut = ['VGAM_',datestr(now,'mm_dd_hh_MM'),'_rescale_only','.mat'];
-%     GA.FileOut = ['VGAM_',datestr(now,'mm_dd_hh_MM'),'_GA_only','.mat'];
+    GA.FileOut = ['VGAM_',datestr(now,'mm_dd_hh_MM'),'_GA_only_test','.mat'];
 else
     GA = MOOGA(gen,pop);
     GA = GA.SetFittest(20,20,0.5);

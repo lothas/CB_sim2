@@ -63,7 +63,9 @@ if strcmp(wSim.Con.name, 'Matsuoka')
     t_end = 10;
     t_step = 0.025;
     t_span = t_start:t_step:t_end;
-    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% %     % TODO: don't do the MAtsuoka Sim if we only have GA!
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5%%%
 	% Simulation settings:
 	options = odeset('MaxStep',t_step/10,'RelTol',.5e-7,'AbsTol',.5e-8);
 	
@@ -86,6 +88,9 @@ if strcmp(wSim.Con.name, 'Matsuoka')
             && strcmp(wSim.Con.name, 'Matsuoka')
         % Use NN to select best value for tau gene
         thisSeq = GA.NNFcn(GA.Gen, GA.NN, thisSeq, XTemp, TTemp);
+        wSim = GA.Gen.Decode(wSim,thisSeq);
+        wSim.Con = wSim.Con.HandleEvent(1, wSim.IC(wSim.ConCo));
+        wSim.Con = wSim.Con.Adaptation();
     end    
 
     if ~isempty(GA.rescaleFcn)
@@ -112,6 +117,13 @@ end
 Sim_tic = tic;
 wSim = wSim.Run();
 Sim_runTime = toc(Sim_tic);
+
+% check the end_Type of the simulation (why did it stop)
+sim_endCond = wSim.Out.Type;
+
+% check the ration of T_end/Sim.out.Tend:
+T = wSim.Out.T;
+Tend_ratio = T(end)/wSim.Out.Tend;
 
 wSim.Con.startup_t = 0;
 wSim.ConvProgr = [0, 0];
@@ -197,6 +209,9 @@ switch nargout
         varargout = {thisFit, thisSeq};
 	case 4
 		varargout = {thisFit, thisSeq,Matsuoka_runTime,Sim_runTime};
+    case 6
+		varargout = {thisFit, thisSeq,Matsuoka_runTime,...
+            Sim_runTime,sim_endCond,Tend_ratio};
 end
 
 end

@@ -23,6 +23,18 @@ classdef Simulation < handle & matlab.mixin.Copyable
         
         % Performance tracking / Statistics
         Out; % output holder
+            % Out.Type:
+            %   -1 - 'Simulation stopped by user'
+            %   0 - 'Reached end of tspan'
+            %   1 - 'Robot fell down (hip height too low)'
+            %   2 - 'Step length too small'
+            %   3 - 'Robot hit the ground before extending the leg'
+            %   4 - 'Finished taking _ steps on slope of _ rad' (when EndCond = 1)
+            %   5 - 'Reached steady state limit cycle of period _ after _ steps'
+            %   6 - 'GO: Sim was converging' (check if necessary)
+            %   7 - 'NO-GO: Simulation was diverging' (check if necessary)
+            %   8 - 'ZMP crossed the limits'
+
         EndCond = 0;
         % Set EndCond to run the sim until:
         % 0 - the end of time

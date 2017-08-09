@@ -73,9 +73,13 @@ ids = osc_ids & diff_ids;
 
 periodsMean = mean(periods(:,ids),1);
 
-ids_des_period = ids & ((periods(1,:) > 0.6) & (periods(1,:) < 0.86));
+ids_des_period = ids &...
+    ( (periods(1,:) > MML.perLimOut(1,1)) &...
+    (periods(1,:) < MML.perLimOut(1,2)) );
 
-ids_not_des_period = ids & ((periods(1,:) < 0.6) | (periods(1,:) > 0.86));
+ids_not_des_period = ids & ...
+    ( (periods(1,:) < MML.perLimOut(1,1)) |...
+    (periods(1,:) > MML.perLimOut(1,2)) );
 
 results_osc = results(ids);     % oscillatory CPGs
 results_n_osc = results(~ids);  % non-oscillatory CPGs
@@ -90,7 +94,7 @@ seq_n_osc = seq_n_osc(1:18,:);
 
 seq_in_range = (vertcat(results_in_range(:).seq))';
 seq_in_range = seq_in_range(1:18,:);
-periods_in_range = mean(periods(ids_des_period),1);
+periods_in_range = mean(periods(:,ids_des_period),1);
 
 seq_not_in_range = (vertcat(results_not_in_range(:).seq))';
 seq_not_in_range = seq_not_in_range(1:18,:);
@@ -505,9 +509,9 @@ plot_bars_with_errors(means,stdevs,...
 
 
 % plot MSE net perf:
-means = [MSE_testErr;...
-    MSE_testErr_tau;...
-    MSE_testErr_b];
+means = [MSE_testErr_mean;...
+    MSE_testErr_tau_mean;...
+    MSE_testErr_b_mean];
 stdevs = [MSE_testErr_std;...
     MSE_testErr_tau_std;...
     MSE_testErr_b_std];
