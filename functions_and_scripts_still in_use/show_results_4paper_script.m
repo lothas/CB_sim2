@@ -8,10 +8,15 @@ colors1 = {'r','b','g','m','c','k'};
 set(0,'defaultlinelinewidth',2);
 
 % Load data:
-GA1 = load('VGAM_08_01_08_00_GA_only.mat');
-GA2 = load('VGAM_07_31_08_02_NN_only.mat');
-GA3 = load('VGAM_07_30_20_59_rescale_only.mat');
-GA4 = load('VGAM_07_30_08_43_NN_and_rescale.mat');
+% GA1 = load('VGAM_08_01_08_00_GA_only.mat');
+% GA2 = load('VGAM_07_31_08_02_NN_only.mat');
+% GA3 = load('VGAM_07_30_20_59_rescale_only.mat');
+% GA4 = load('VGAM_07_30_08_43_NN_and_rescale.mat');
+
+GA1 = load('VGAM_08_07_18_43_GA_only_NEW.mat');
+GA2 = load('VGAM_08_11_10_50_NN_only_NEW.mat');
+GA3 = load('VGAM_08_13_12_40_rescale_only_NEW.mat');
+GA4 = load('VGAM_08_09_19_43_NN_and_rescale_NEW.mat');
 
 legends = {'MOGA','MOGA + NN',...
         'MOGA + re-scaling','MOGA + NN + re-scaling'};
@@ -27,6 +32,11 @@ seqOrder = {'tau','b','c_1','c_2','c_3','c_4',...
     'w_{12}','w_{13}','w_{14}','w_{21}','w_{23}','w_{24}',...
     'w_{31}','w_{32}','w_{34}','w_{41}','w_{42}','w_{43}'};
 
+seqOrder_extend = {'tau','b','c_1','c_2','c_3','c_4',...
+                 'w_{12}','w_{13}','w_{14}','w_{21}','w_{23}','w_{24}',...
+                 'w_{31}','w_{32}','w_{34}','w_{41}','w_{42}','w_{43}',...
+                 'ks_\tau','ks_c1','ks_c2','ks_c3','ks_c4'};
+
 % define the class for CPG simulation:
 MML = MatsuokaML();
 MML.perLim = [0.68 0.78];
@@ -38,85 +48,88 @@ MML.nNeurons = 4;
 % which fit to plot:
 FitNum = 3;
 % get x-axis data:
-x_data = 1:GA1.GA.Generations;
+last_gen = 20;
+x_data = 1:last_gen;
 
+%%
+close all;
 if true
-% for i=1% 1:11 % get max fitness over generation:
-%     FitNum = i;
-%     % get y-axis data:
-%     y_data1 = squeeze(max(GA1.GA.Fit(:,FitNum,:),[],1));
-%     y_data2 = squeeze(max(GA2.GA.Fit(:,FitNum,:),[],1));
-%     y_data3 = squeeze(max(GA3.GA.Fit(:,FitNum,:),[],1));
-%     y_data4 = squeeze(max(GA4.GA.Fit(:,FitNum,:),[],1));
-% 
-%     figure
-%     hold on
-%     h1=plot(x_data, y_data1);
-%     h2=plot(x_data, y_data2);
-%     h3=plot(x_data, y_data3);
-%     h4=plot(x_data, y_data4);
-%     grid minor;
-%     legend([h1,h2,h3,h4], legends, 'Location', 'Southeast');
-%     xlabel('Generation');   ylabel('Vel fitness');
-%     title(['Fitness "',fitnessOrder{1,i},'" over Generation']);
-%     set(gca,'FontSize',12, 'FontWeight','bold');
-% end
-
-for i=1:11 % get mean+std fitness over generation:
+for i = 1:3 % get max fitness over generation:
     FitNum = i;
-    
-    fit_GA1 = GA1.GA.Fit(:,FitNum,:);
-    fit_GA2 = GA2.GA.Fit(:,FitNum,:);
-    fit_GA3 = GA3.GA.Fit(:,FitNum,:);
-    fit_GA4 = GA4.GA.Fit(:,FitNum,:);
-    
-    % get Max fit:
-    y_data1 = squeeze(max(fit_GA1,[],1));
-    y_data2 = squeeze(max(fit_GA2,[],1));
-    y_data3 = squeeze(max(fit_GA3,[],1));
-    y_data4 = squeeze(max(fit_GA4,[],1));
-    
-    % get Mean fit:
-    y_data1_mean = squeeze(mean(fit_GA1,1));
-    y_data2_mean = squeeze(mean(fit_GA2,1));
-    y_data3_mean = squeeze(mean(fit_GA3,1));
-    y_data4_mean = squeeze(mean(fit_GA4,1));
+    % get y-axis data:
+    y_data1 = squeeze(max(GA1.GA.Fit(:,FitNum,1:last_gen),[],1));
+    y_data2 = squeeze(max(GA2.GA.Fit(:,FitNum,1:last_gen),[],1));
+    y_data3 = squeeze(max(GA3.GA.Fit(:,FitNum,1:last_gen),[],1));
+    y_data4 = squeeze(max(GA4.GA.Fit(:,FitNum,1:last_gen),[],1));
 
-    % get STdev fit:
-    y_data1_std = squeeze(std(fit_GA1,[],1));
-    y_data2_std = squeeze(std(fit_GA2,[],1));
-    y_data3_std = squeeze(std(fit_GA3,[],1));
-    y_data4_std = squeeze(std(fit_GA4,[],1));
-
-    figure; hold on;
-%     h1=plot(x_data, y_data1_mean,'b',x_data, y_data1_mean,'*b');
-%     h2=plot(x_data, y_data2_mean,'g',x_data, y_data2_mean,'*g');
-%     h3=plot(x_data, y_data3_mean,'r',x_data, y_data3_mean,'*r');
-%     h4=plot(x_data, y_data4_mean,'y',x_data, y_data4_mean,'*y');
-
-    errorbar(x_data, y_data1_mean,y_data1_std);
-    plot(x_data, y_data1,'db');
-    
-    errorbar(x_data, y_data2_mean,y_data2_std);
-    plot(x_data, y_data2,'dr');
-    
-    errorbar(x_data, y_data3_mean,y_data3_std);
-    plot(x_data, y_data3,'dy');
-    
-    errorbar(x_data, y_data4_mean,y_data4_std);
-    plot(x_data, y_data4,'dm');
-    
+    figure
+    hold on
+    h1=plot(x_data, y_data1);
+    h2=plot(x_data, y_data2);
+    h3=plot(x_data, y_data3);
+    h4=plot(x_data, y_data4);
     grid minor;
-    legendsTemp = {'MOGA mean','MOGA max',...
-        'MOGA + NN mean','MOGA + NN mean max',...
-        'MOGA + re-scaling mean','MOGA + re-scaling max',...
-        'MOGA + NN + re-scaling mean','MOGA + NN + re-scaling max'};
-    legend(legendsTemp, 'Location', 'Southeast');
-    xlabel('Generation');   ylabel('fitness');
+    legend([h1,h2,h3,h4], legends, 'Location', 'Southeast');
+    xlabel('Generation');   ylabel('Vel fitness');
     title(['Fitness "',fitnessOrder{1,i},'" over Generation']);
     set(gca,'FontSize',12, 'FontWeight','bold');
-    hold off;
 end
+
+% for i=1:3 % get mean+std fitness over generation:
+%     FitNum = i;
+%     
+%     fit_GA1 = GA1.GA.Fit(:,FitNum,1:last_gen);
+%     fit_GA2 = GA2.GA.Fit(:,FitNum,1:last_gen);
+%     fit_GA3 = GA3.GA.Fit(:,FitNum,1:last_gen);
+%     fit_GA4 = GA4.GA.Fit(:,FitNum,1:last_gen);
+%     
+%     % get Max fit:
+%     y_data1 = squeeze(max(fit_GA1,[],1));
+%     y_data2 = squeeze(max(fit_GA2,[],1));
+%     y_data3 = squeeze(max(fit_GA3,[],1));
+%     y_data4 = squeeze(max(fit_GA4,[],1));
+%     
+%     % get Mean fit:
+%     y_data1_mean = squeeze(mean(fit_GA1,1));
+%     y_data2_mean = squeeze(mean(fit_GA2,1));
+%     y_data3_mean = squeeze(mean(fit_GA3,1));
+%     y_data4_mean = squeeze(mean(fit_GA4,1));
+% 
+%     % get STdev fit:
+%     y_data1_std = squeeze(std(fit_GA1,[],1));
+%     y_data2_std = squeeze(std(fit_GA2,[],1));
+%     y_data3_std = squeeze(std(fit_GA3,[],1));
+%     y_data4_std = squeeze(std(fit_GA4,[],1));
+% 
+%     figure; hold on;
+% %     h1=plot(x_data, y_data1_mean,'b',x_data, y_data1_mean,'*b');
+% %     h2=plot(x_data, y_data2_mean,'g',x_data, y_data2_mean,'*g');
+% %     h3=plot(x_data, y_data3_mean,'r',x_data, y_data3_mean,'*r');
+% %     h4=plot(x_data, y_data4_mean,'y',x_data, y_data4_mean,'*y');
+% 
+%     errorbar(x_data, y_data1_mean,y_data1_std);
+%     plot(x_data, y_data1,'db');
+%     
+%     errorbar(x_data, y_data2_mean,y_data2_std);
+%     plot(x_data, y_data2,'dr');
+%     
+%     errorbar(x_data, y_data3_mean,y_data3_std);
+%     plot(x_data, y_data3,'dy');
+%     
+%     errorbar(x_data, y_data4_mean,y_data4_std);
+%     plot(x_data, y_data4,'dm');
+%     
+%     grid minor;
+%     legendsTemp = {'MOGA mean','MOGA max',...
+%         'MOGA + NN mean','MOGA + NN mean max',...
+%         'MOGA + re-scaling mean','MOGA + re-scaling max',...
+%         'MOGA + NN + re-scaling mean','MOGA + NN + re-scaling max'};
+%     legend(legendsTemp, 'Location', 'Southeast');
+%     xlabel('Generation');   ylabel('fitness');
+%     title(['Fitness "',fitnessOrder{1,i},'" over Generation']);
+%     set(gca,'FontSize',12, 'FontWeight','bold');
+%     hold off;
+% end
 end
 
 %% Get parameters from the last generation and normalize them:
@@ -129,18 +142,13 @@ Param = zeros(size(allSeqs,1),size(allSeqs,2));
 normParam = zeros(size(allSeqs,1),size(allSeqs,2));
 
 for i=1:23
-    Param(:,i) = allSeqs(:,i,end);
+    Param(:,i) = allSeqs(:,i,last_gen);
     minParam = paramRanges(1,i);
     maxParam = paramRanges(2,i);
     normParam(:,i) = ( Param(:,i) - minParam ) ./ ( maxParam - minParam );
 end
 
 %% Choose two parameters to plot:
-seqOrder_extend = {'tau','b','c_1','c_2','c_3','c_4',...
-                 'w_{12}','w_{13}','w_{14}','w_{21}','w_{23}','w_{24}',...
-                 'w_{31}','w_{32}','w_{34}','w_{41}','w_{42}','w_{43}',...
-                 'ks_\tau','ks_c1','ks_c2','ks_c3','ks_c4'};
-
 Param_names = seqOrder_extend;% fitnessOrder;
 Param_name2Plot = {'tau','b'};
 
@@ -248,11 +256,16 @@ for j=1:4
     opts = statset('Display','final');
     [idx,C,~,~] = kmeans([X1,X2],num_of_clusters,'Distance','sqeuclidean',...
         'Replicates',5,'Options',opts);
-
+    
+    Tend_ratio = chosen_method{1,j}.GA.Tend_ratio(:,1,last_gen);
+    ids_good = (Tend_ratio >0.99);
+    
     ax = subplot(2,2,j); hold on;
     for i=1:num_of_clusters
-        plot(ax,X1(idx==i,1),X2(idx==i,1),...
-            colors{1,i},'MarkerSize',12)
+        plot(ax,X1(idx==i & ids_good,1),X2(idx==i & ids_good,1),...
+            colors{1,i},'MarkerSize',18);
+        plot(ax,X1(idx==i & ~ids_good,1),X2(idx==i & ~ids_good,1),...
+            colors{1,i},'MarkerSize',5,'Marker','o','MarkerFaceColor','none');
         legends{1,2*i-1} = sprintf('Cluster %d',i);
         legends{1,2*i} = sprintf('Centroids %d',i);
 
@@ -266,6 +279,7 @@ for j=1:4
         ' clusters: ',titleAdd{1,j}]);
     xlabel([X1name,' norm']);
     ylabel([X2name,' norm']);
+    axis([0,1,0,1]);
     legend(legends{1,:},'Location','best');
 
 end
@@ -411,7 +425,7 @@ y_data1 = squeeze(max(fit_GA1,[],1));
 
 %% try stuff:
 
-X = GA1.GA.Tend_ratio(:,1,:);
+X = GA1.GA.Tend_ratio(:,1,last_gen);
 y_data1_max = squeeze(max(X,[],1));
 y_data1_mean = squeeze(mean(X,1));
 
