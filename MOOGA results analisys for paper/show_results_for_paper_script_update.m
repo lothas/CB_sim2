@@ -36,6 +36,9 @@ seqOrder_extend = {'tau','b','c_1','c_2','c_3','c_4',...
                  'w_{31}','w_{32}','w_{34}','w_{41}','w_{42}','w_{43}',...
                  'ks_\tau','ks_c1','ks_c2','ks_c3','ks_c4'};
 
+ % define cell array with all of the data:
+chosen_method = {GA1,GA2,GA3,GA4};
+             
 % define the class for CPG simulation:
 MML = MatsuokaML();
 MML.perLim = [0.68 0.78];
@@ -50,8 +53,9 @@ FitNum = 3;
 last_gen = 20;
 x_data = 1:last_gen;
 
+clear GA1 GA2 GA3 GA4
 %% plot max fit over generation:
-whichFit2Plot = 1:3;
+whichFit2Plot = 1:11;
 plot_max_fit_over_gen(whichFit2Plot,fitnessOrder,...
     legends,...
     {GA1,GA2,GA3,GA4},...
@@ -109,11 +113,7 @@ kMean_plot_clusters_and_centers(gca,X1,X2,...
 num_of_clusters = 5;
 
 figure; hold on;
-legends = cell(1,num_of_clusters*2);
 
-chosen_method = {GA1,GA2,GA3,GA4};
-
-Param_names = seqOrder_extend;
 Param_name2Plot = {'tau','b'};
 X1name = Param_name2Plot{1,1};
 X2name = Param_name2Plot{1,2};
@@ -130,8 +130,8 @@ for j=1:4
     Xtemp = chosen_method{1,j}.GA.Seqs(:,:,last_gen);
     
     % get the norm seq:
-    X1 = normParam(:,strcmp(X1name,Param_names));
-    X2 = normParam(:,strcmp(X2name,Param_names));
+    X1 = normParam(:,strcmp(X1name,seqOrder_extend));
+    X2 = normParam(:,strcmp(X2name,seqOrder_extend));
 
     % clustering using 'kmeans':
     opts = statset('Display','final');
@@ -146,11 +146,60 @@ for j=1:4
     X_label = [X1name,' norm'];
     Y_label = [X2name,' norm'];
     kMean_plot_clusters_and_centers(ax,X1,X2,...
-        X_label,Y_label,C,idx,ids_good,titleAdd{1,j})
+        X_label,Y_label,C,idx,ids_good,titleAdd{1,j});
+    axis([0,1,0,1]);
     
 
 end
 
+%% display fitness divercity:
+num_of_clusters = 5;
 
+figure; hold on;
 
+Param_name2Plot = {'VelFit','VelRangeFit #1'};
 
+for j=1:4
+    
+    % exstract the fitnesses:
+    X = chosen_method{1,j}.GA.Fit(:,:,last_gen);
+    
+    X1 = X(:,strcmp(Param_name2Plot{1,1},fitnessOrder));
+    X2 = X(:,strcmp(Param_name2Plot{1,2},fitnessOrder));
+    X1name = Param_name2Plot{1,1};
+    X2name = Param_name2Plot{1,2};
+    
+    % clustering using 'kmeans':
+    opts = statset('Display','final');
+    [idx,C,~,~] = kmeans([X1,X2],num_of_clusters,'Distance','sqeuclidean',...
+        'Replicates',5,'Options',opts);
+
+    % get "good CPGs" (CBs that walking):
+    Tend_ratio = chosen_method{1,j}.GA.Tend_ratio(:,1,last_gen);
+    ids_good = (Tend_ratio >0.99);
+    
+    ax = subplot(2,2,j); hold on;
+    X_label = X1name;
+    Y_label = X2name;
+    kMean_plot_clusters_and_centers(ax,X1,X2,...
+        X_label,Y_label,C,idx,ids_good,titleAdd{1,j})
+    axis(ax,[0,1,0,1]);
+
+end
+
+%% plot Pareto:
+fit1Num = 1; % 'VelFit'
+fit2Num = 3; % 'VelRangeFit#1'
+MOGA_pareto_plot(chosen_method,fit1Num,fit2Num,...
+    fitnessOrder,last_gen,titleAdd);
+
+%% plot Tend ratio:
+plot_Tend_ratio(chosen_method,last_gen,titleAdd);
+
+%% plot generation runTime:
+plot_gen_runTime(chosen_method,last_gen,titleAdd);
+
+%% plot Hist of parameter over generation
+whichParam = 'VelRangeFit #1';
+plot_param_hist_over_genNum(chosen_method,whichParam,last_gen,...
+    fitnessOrder,seqOrder_extend,titleAdd);

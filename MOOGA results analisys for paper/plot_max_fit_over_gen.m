@@ -13,11 +13,29 @@ x_data = 1:gen_num;
 
 for i = 1:length(whichFit)
     FitNum = whichFit(1,i);
+    
+    y1 = data{1,1}.GA.Fit(:,FitNum,x_data);
+    y2 = data{1,2}.GA.Fit(:,FitNum,x_data);
+    y3 = data{1,3}.GA.Fit(:,FitNum,x_data);
+    y4 = data{1,4}.GA.Fit(:,FitNum,x_data);
+    
     % get y-axis data:
-    y_data1 = squeeze(max(data{1,1}.GA.Fit(:,FitNum,1:gen_num),[],1));
-    y_data2 = squeeze(max(data{1,2}.GA.Fit(:,FitNum,1:gen_num),[],1));
-    y_data3 = squeeze(max(data{1,3}.GA.Fit(:,FitNum,1:gen_num),[],1));
-    y_data4 = squeeze(max(data{1,4}.GA.Fit(:,FitNum,1:gen_num),[],1));
+    switch fitnessOrder{1,i}
+        case {'VelFit','NrgEffFit','VelRangeFit #1','VelRangeFit #2',...
+                'VelRangeFit #4','VelRangeFit #5','VelRangeFit #6',...
+                'VelRangeFit #7','VelRangeFit #8','EigenFit'}
+            y_data1 = squeeze(max(y1,[],1));
+            y_data2 = squeeze(max(y2,[],1));
+            y_data3 = squeeze(max(y3,[],1));
+            y_data4 = squeeze(max(y4,[],1));
+        case {'VelRangeFit #3'} % because 's_slow" can be negative!
+            y_data1 = squeeze(min(y1,[],1));
+            y_data2 = squeeze(min(y2,[],1));
+            y_data3 = squeeze(min(y3,[],1));
+            y_data4 = squeeze(min(y4,[],1));
+        otherwise
+            error('no such fitness');
+    end
 
     figure
     hold on

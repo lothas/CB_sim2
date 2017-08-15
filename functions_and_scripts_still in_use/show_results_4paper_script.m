@@ -346,7 +346,7 @@ Param2 = X(:,strcmp(Param_name2Plot{1,2},Param_names));
 XParam = Param_name2Plot{1,1};
 YParam = Param_name2Plot{1,2};
 
-inputs = ([Param1,Param1])';
+inputs = ([Param1,Param2])';
 
 net = competlayer(num_of_clusters);
 net = train(net,inputs);
