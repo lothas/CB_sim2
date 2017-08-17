@@ -1,4 +1,4 @@
-function dist = KL_div_4paper(vec1,vec2)
+function dist = KL_div_4paper(obj,vec1,vec2)
 % this function get two vectors (don't need to be the same length).
 % than, it uses hist counts with predefined bins in order to create two
 % distributions with the same x-axis (defined as bins center)
@@ -21,13 +21,13 @@ Prob_vec2 = histcounts(vec2,edges, 'Normalization', 'probability');
 
 bin_center = (edges(1:end-1)+ edges(2:end))/2;
 
-dist = kldiv(bin_center,Prob_vec1,Prob_vec2);
+dist = obj.kldiv(bin_center,Prob_vec1,Prob_vec2);
 
-figure;
-plot(bin_center,Prob_vec1,'LineWidth',2); hold on;
-plot(bin_center,Prob_vec2,'LineWidth',2);
-legend('n-osc CPGs','osc CPGs');
-hold off;
+% figure;
+% plot(bin_center,Prob_vec1,'LineWidth',2); hold on;
+% plot(bin_center,Prob_vec2,'LineWidth',2);
+% legend('n-osc CPGs','osc CPGs');
+% hold off;
 
 end
 

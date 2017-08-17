@@ -1,4 +1,4 @@
-function KL = kldiv(varValue,pVect1,pVect2,varargin)
+function KL = kldiv(obj,varValue,pVect1,pVect2,varargin)
   
 %KLDIV Kullback-Leibler or Jensen-Shannon divergence between two distributions.
 %   KLDIV(X,P1,P2) returns the Kullback-Leibler divergence between two

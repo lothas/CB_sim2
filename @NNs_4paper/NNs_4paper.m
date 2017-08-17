@@ -13,6 +13,7 @@ classdef NNs_4paper
             'w_{31}','w_{32}','w_{34}','w_{41}','w_{42}','w_{43}'};
 
         results = [];
+        periods = []; % Save the periods
         
         osc_ids = []; % ids of oscillating CPGs
         num_of_osc_ids = [] % the number of oscillating CPGs
@@ -20,7 +21,14 @@ classdef NNs_4paper
         osc_inRange_ids = []; % ids CPGs which oscillates in range
         num_of_inRange_ids = [] % the number of oscillating CPGs
         
-        Inputs = []; % inputs to NN or MoE
+        Inputs_names_train = [];
+        Inputs_train = []; % inputs to NN or MoE
+        
+        % same but with 'period_desired' instead of 'periods'
+        Inputs_names_actual = [];
+        Inputs_actual = [];
+        
+        Targets_names = [];
         Targets = []; % targets to NN or MoE
         
         % Neural network object
@@ -30,7 +38,10 @@ classdef NNs_4paper
         % "Mixture of Experts" object:
         MoE = [];
         
-        
+        % save cahnges in 'seq':
+        seq = [];
+        tau_rescaled = []; %change in seq due to rescaling of 'tau'
+        seq_NN = [];
         
         
     end
@@ -44,6 +55,8 @@ classdef NNs_4paper
             
             obj.MML = MatsuokaSimObject;
             
+            obj.seq = vertcat(obj.results(:).seq);
+            
             obj = obj.filter_ids;
             
             
@@ -55,7 +68,7 @@ classdef NNs_4paper
 
             % get CPG periods:
             periods = horzcat(obj.results(:).periods);
-
+            
             % Filter CPG's where not both signals oscillating:
             osc_ids_temp = ~isnan(periods);
             osc_ids_temp = osc_ids_temp(1,:) & osc_ids_temp(2,:);
@@ -90,6 +103,10 @@ classdef NNs_4paper
             
             obj.num_of_osc_ids = sum(obj.osc_ids);
             obj.num_of_inRange_ids = sum(obj.osc_inRange_ids);
+            
+            % save the good periods
+            obj.periods = mean(periods,1);
+            
         end
     end
     

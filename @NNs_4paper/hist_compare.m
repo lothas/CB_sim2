@@ -19,7 +19,7 @@ str1 = sprintf('p_value of %s is %0.3f and the hypotesis got %d',...
 disp([str1,' real pval is ',num2str(pvalue)]);
 
 % check "kullbacl-Leiblar" divergence (dist of the two distrubutions)
-KL_div_4paper(vec1,vec2)
+obj.KL_div_4paper(vec1,vec2)
 
 switch typeOfGraph
     case 'bars'
@@ -49,7 +49,8 @@ switch typeOfGraph
         ylabel('probability density');
         title(['histogram of ',vec_name]);
         legend(legendNames);
-        set(gca,'Ylim',[0,max(Est_pdf_vec1)*1.5],'FontSize',13);
+        axis tight
+        set(gca,'FontSize',13);
         fileName = sprintf('figure_TBD_Histogram_of_%s',vec_name);
         savefig(fileName)
         hold off;
