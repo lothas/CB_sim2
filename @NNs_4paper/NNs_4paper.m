@@ -1,0 +1,97 @@
+classdef NNs_4paper
+    % this class contains all of the NN analisys for paper
+    
+    properties
+        
+        % name of the file contain the training data
+        results_fileName = [];
+        MML = []; %Matsuoka object for the sims (contains the parametrs border);
+        
+        % the order of the parametrs in CPG Sequence:
+        seqOrder = {'tau','b','c_1','c_2','c_3','c_4',...
+            'w_{12}','w_{13}','w_{14}','w_{21}','w_{23}','w_{24}',...
+            'w_{31}','w_{32}','w_{34}','w_{41}','w_{42}','w_{43}'};
+
+        results = [];
+        
+        osc_ids = []; % ids of oscillating CPGs
+        num_of_osc_ids = [] % the number of oscillating CPGs
+        
+        osc_inRange_ids = []; % ids CPGs which oscillates in range
+        num_of_inRange_ids = [] % the number of oscillating CPGs
+        
+        Inputs = []; % inputs to NN or MoE
+        Targets = []; % targets to NN or MoE
+        
+        % Neural network object
+        NN = [];
+        NN_training_data = [];
+        
+        % "Mixture of Experts" object:
+        MoE = [];
+        
+        
+        
+        
+    end
+    
+    methods
+        function obj = NNs_4paper(results_fileName,MatsuokaSimObject)
+            obj.results_fileName = [];
+            
+            res = load(results_fileName);
+            obj.results = res.results;
+            
+            obj.MML = MatsuokaSimObject;
+            
+            obj = obj.filter_ids;
+            
+            
+        end
+        
+        function obj = filter_ids(obj)
+            % this function get the CPGs in 'results' and filer out the osc CPGs and
+            % the CPGs with missdefined periods.
+
+            % get CPG periods:
+            periods = horzcat(obj.results(:).periods);
+
+            % Filter CPG's where not both signals oscillating:
+            osc_ids_temp = ~isnan(periods);
+            osc_ids_temp = osc_ids_temp(1,:) & osc_ids_temp(2,:);
+
+            % Filter CPG's where the is a big difference between hip and ankle:
+            periods_ratios = (periods(1,:)./periods(2,:));
+            diff_ids = (periods_ratios >  0.85) & (periods_ratios <  1.15); 
+
+            % % plot the distribution of the missdefined CPG periods:
+            if false
+                figure;
+                h=histogram(periods_ratios,100); grid minor;
+                h.BinLimits = [0,2.5];
+                h.BinWidth = 0.1;
+                h.Normalization = 'pdf';
+                xlabel('P_{hip} / P_{ankle} : the ratio between the two CPG outputs');
+                ylabel('probability density');
+                title('histogram of the ratio between the two CPG outputs');
+                set(gca,'FontSize',10);
+                savefig('figure_TBD_Histogram_of_ratio_between_periods_hipAnkle')
+            end
+
+            obj.osc_ids = osc_ids_temp & diff_ids;
+
+            obj.osc_inRange_ids = obj.osc_ids &...
+                ( (periods(1,:) > obj.MML.perLimOut(1,1)) &...
+                (periods(1,:) < obj.MML.perLimOut(1,2)) );
+
+%             obj.ids_not_des_period = obj.osc_ids & ...
+%                 ( (periods(1,:) < obj.MML.perLimOut(1,1)) |...
+%                 (periods(1,:) > obj.MML.perLimOut(1,2)) );
+            
+            obj.num_of_osc_ids = sum(obj.osc_ids);
+            obj.num_of_inRange_ids = sum(obj.osc_inRange_ids);
+        end
+    end
+    
+end
+

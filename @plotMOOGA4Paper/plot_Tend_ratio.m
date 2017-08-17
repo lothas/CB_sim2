@@ -1,16 +1,12 @@
-function plot_Tend_ratio(data,gen_num,titleAdd)
+function plot_Tend_ratio(obj,gen_num)
 % plot the ratio of: 
 %               T(end)          the time in which the sim stopped
 %   ratio = --------------- = -------------------------------------
 %               Sim.Tend        the run sim max time (as defined)
 % 
 % Inputs:
-% *) 'data' - cell array contain MOGa results
 % *) 'gen_num' - the generation to focus
-% *) 'titleAdd' - the title for each case
-% 
-% 
-% 
+
 
 % generation numbers:
 X_data = 1:gen_num;
@@ -18,7 +14,7 @@ X_data = 1:gen_num;
 %% plot the maxRatio + mean and stdev
 figure;
 for i=1:4
-    Y = data{1,i}.GA.Tend_ratio(:,1,X_data);
+    Y = obj.data{1,i}.GA.Tend_ratio(:,1,X_data);
     
     y_data_max = squeeze(max(Y,[],1));
     y_data_mean = squeeze(mean(Y,1));
@@ -29,7 +25,7 @@ for i=1:4
     plot(ax,X_data,y_data_mean);
     errorbar(ax,X_data,y_data_mean,y_data_std);
     legend('Max','mean');
-    title(['T(end)/Sim.Tend  for case: ',titleAdd{1,i}]);
+    title(['T(end)/Sim.Tend  for case: ',obj.titleAdd{1,i}]);
     xlabel('generation num');
     ylabel('T(end)/Sim.Tend');
     grid minor
@@ -44,7 +40,7 @@ good_ratio_threshold = 0.99;
 figure; hold on;
 ax = gca;
 for i=1:4
-    Y = squeeze(data{1,i}.GA.Tend_ratio(:,1,X_data));
+    Y = squeeze(obj.data{1,i}.GA.Tend_ratio(:,1,X_data));
     
     good_ids = (Y > good_ratio_threshold);
     amount_of_good_ids = sum(good_ids,1);
@@ -58,21 +54,21 @@ title(['percent of Sims that got: T(end)/Sim.Tend > ',...
 xlabel('generation num');
 ylabel('%');
 grid minor
-legend(titleAdd,'Location','Best');
+legend(obj.titleAdd,'Location','Best');
 hold off;
 
 %% LAST: plot the ratio distribution in each generation (on heatmap):
 figure; 
 
 for i=1:4
-    Y = squeeze(data{1,i}.GA.Tend_ratio(:,1,X_data));
+    Y = squeeze(obj.data{1,i}.GA.Tend_ratio(:,1,X_data));
     
-    Prob = distribution_over_genNum(Y,1);
+    Prob = obj.distribution_over_genNum(Y,1);
     
     subplot(2,2,i); hold on
     imagesc(Prob');
     title({'the distribution of the ratio: T(end)/Sim.Tend over generation',...
-        ['for case: ',titleAdd{1,i}]});
+        ['for case: ',obj.titleAdd{1,i}]});
     xlabel('generation num');
     ylabel('T(end)/Sim.Tend');
     grid minor
@@ -84,15 +80,15 @@ end
 figure; 
 
 for i=1:4
-    Y = squeeze(data{1,i}.GA.Tend_ratio(:,1,X_data));
+    Y = squeeze(obj.data{1,i}.GA.Tend_ratio(:,1,X_data));
     
-    Prob = distribution_over_genNum(Y,1);
+    Prob = obj.distribution_over_genNum(Y,1);
 
     subplot(2,2,i); hold on
     bar3(Prob');
     view(-56,43);
     title({'the distribution oaf the ratio: T(end)/Sim.Tend over generation',...
-        ['for case: ',titleAdd{1,i}]});
+        ['for case: ',obj.titleAdd{1,i}]});
     xlabel('generation num');
     ylabel('T(end)/Sim.Tend [%]');
     zlabel('probability');

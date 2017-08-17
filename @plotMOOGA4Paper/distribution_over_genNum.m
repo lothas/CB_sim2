@@ -1,4 +1,4 @@
-function [Prob,edges] = distribution_over_genNum(Y,lastBinEdge)
+function [Prob,edges] = distribution_over_genNum(obj,Y,lastBinEdge)
 % this function prepare a matrix with 'm' number of histigrams of a given
 % parameter (one for each GA generation).
 % 

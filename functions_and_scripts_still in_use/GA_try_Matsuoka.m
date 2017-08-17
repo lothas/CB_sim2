@@ -1,40 +1,49 @@
-function [  ] = GA_try_Matsuoka( gen, pop, file_in, file_out )
+function [  ] = GA_try_Matsuoka(whichCase,fileIn)
 % Run MOOGA using only Vel, Nrg and Speed-range fitness but limiting the
 % simulation with a bounded foot size (ZMP threshold)
 
-% initialize the random number generator such that the first population
-%   of the GA will be the same every time
-% % % Warning! this will effect ALL calls for 'rand', 'randi' and 'randn'!
+% % initialize the random number generator such that the first population
+% %   of the GA will be the same every time
+% % % % Warning! this will effect ALL calls for 'rand', 'randi' and 'randn'!
 % rng('default');
-% rng(0)
+% rng(0);
 
-if nargin<4
-%     GA = MOOGA(25,500);
-% %     GA = MOOGA(20,1000);
-    GA = MOOGA(20,500);
-    GA = GA.SetFittest(15,15,0.5);
-    GA.JOAT = 2; GA.Quant = 0.6;
-    % GA.Fittest = [20,20,1];
-%     GA.FileIn = 'VGAM_11_22_00_00.mat';
-%     GA.FileOut = GA.FileIn;
 
-%     GA.FileOut = ['VGAM_',datestr(now,'mm_dd_hh_MM'),'_NN_and_rescale_NEW','.mat'];
-%     GA.FileOut = ['VGAM_',datestr(now,'mm_dd_hh_MM'),'_NN_only_NEW','.mat'];
-%     GA.FileOut = ['VGAM_',datestr(now,'mm_dd_hh_MM'),'_rescale_only_NEW','.mat'];
-%     GA.FileOut = ['VGAM_',datestr(now,'mm_dd_hh_MM'),'_GA_only_NEW','.mat'];
-else
-    GA = MOOGA(gen,pop);
-    GA = GA.SetFittest(20,20,0.5);
-    GA.JOAT = 2; GA.Quant = 0.6;
-    % GA.Fittest = [20,20,1];
-    GA.FileIn = file_in;
-    GA.FileOut = file_out;
+
+% GA = MOOGA(20,500);
+GA = MOOGA(3,500);
+GA = GA.SetFittest(15,15,0.5);
+GA.JOAT = 0; GA.Quant = 0.6;
+
+GA.FileIn = fileIn;
+
+switch whichCase
+    case 'GA only'
+        % Use NN?
+        use_NN = 0;
+        % Rescale?
+        GA.rescaleFcn = [];
+        % out file name:
+        GA.FileOut = ['VGAM_',datestr(now,'mm_dd_hh_MM'),...
+            '_GA_only','.mat'];
+        
+    case 'GA + NN'
+        use_NN = 1;
+        GA.rescaleFcn = [];
+        GA.FileOut = ['VGAM_',datestr(now,'mm_dd_hh_MM'),...
+            '_NN_only','.mat'];
+    case 'GA + rescale'
+        use_NN = 0;
+        GA.rescaleFcn = @rescaleFcn;
+        GA.FileOut = ['VGAM_',datestr(now,'mm_dd_hh_MM'),...
+            '_rescale_only','.mat'];
+    case 'GA + NN + rescale'
+        use_NN = 1;
+        GA.rescaleFcn = @rescaleFcn;
+        GA.FileOut = ['VGAM_',datestr(now,'mm_dd_hh_MM'),...
+            '_NN_and_rescale','.mat'];
 end
-
-% Use NN?
-use_NN = 0;
-% Rescale?
-GA.rescaleFcn = @rescaleFcn;
+        
 
 GA.Graphics = 0;
 GA.ReDo = 1;
