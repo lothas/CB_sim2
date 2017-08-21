@@ -1,5 +1,5 @@
-function kMean_plot_clusters_and_centers(obj,ax,X1,X2,...
-    X_label,Y_label,Title,centers,idx,goodSims_ids)
+function kMean_plot_clusters_and_centers(obj,ax,X,...
+    X_label,Title,centers,idx,goodSims_ids)
 % takes results from 'kmeans' function and plot the clustering and 
 %   the clusters' centes
 % 
@@ -12,68 +12,71 @@ function kMean_plot_clusters_and_centers(obj,ax,X1,X2,...
 % 'goodSims_ids' - logic row vector containing the ids of the sims that
 %                   "walked" all the way
 
-num_of_clusters = size(centers,1);
+
+
+num_of_clusters = max(idx);
 ids = goodSims_ids;
 
 % legends = cell(1,num_of_clusters*3);
+switch size(X,1)
+    case 2 % 2D plot:
+        for i=1:num_of_clusters
+            % full Marker to "good" CPG:
+            plot(ax,X(1,idx==i & ids),X(2,idx==i & ids),...
+                    obj.colors{1,i},'MarkerSize',18);
 
-for i=1:num_of_clusters
-    % full Marker to "good" CPG:
-    plot(ax,X1(idx==i & ids,1),X2(idx==i & ids,1),...
-            obj.colors{1,i},'MarkerSize',18);
-%     % empty Marker for "bad" CPG:
-%     plot(ax,X1(idx==i & ~ids,1),X2(idx==i & ~ids,1),...
-%         obj.colors{1,i},'MarkerSize',5,'Marker','o','MarkerFaceColor','none');
-%     
-    % 'X' Markers for "bad" CPG:
-    plot(ax,X1(idx==i & ~ids,1),X2(idx==i & ~ids,1),...
-        obj.colors{1,i},'MarkerSize',10,'Marker','X');
-    
-%     legends{1,2*i-1} = sprintf('Cluster %d',i);
-%     legends{1,2*i} = sprintf('Centroids %d',i);
-    
-    plot(centers(i,1),centers(i,2),'ko',...
-     'MarkerSize',10,'LineWidth',4,...
-     'MarkerFaceColor',obj.colors1{1,i},'MarkerEdgeColor','k');
- 
-end
+            % 'X' Markers for "bad" CPG:
+            plot(ax,X(1,idx==i & ~ids),X(2,idx==i & ~ids),...
+                obj.colors{1,i},'MarkerSize',10,'Marker','X');
+            
+            if any(~isnan(centers))
+                plot(centers(i,1),centers(i,2),'ko',...
+                 'MarkerSize',10,'LineWidth',4,...
+                 'MarkerFaceColor',obj.colors1{1,i},'MarkerEdgeColor','k');
+            end
+        end
+        grid minor;
+        title(Title);
+        xlabel(X_label{1,1});
+        ylabel(X_label{1,2});
+        
+    case 3 % 3D scatter
+        for i=1:num_of_clusters
+            X1_good = X(1,idx==i & ids);
+            X2_good = X(2,idx==i & ids);
+            X3_good = X(3,idx==i & ids);
+            
+            X1_bad = X(1,idx==i & ~ids);
+            X2_bad = X(2,idx==i & ~ids);
+            X3_bad = X(3,idx==i & ~ids);
+        % full Marker to "good" CPG:
+            scatter3(ax,X1_good,X2_good,X3_good,40,obj.colors{1,i},...
+                'Marker','o');
 
-grid minor;
-title(Title);
-xlabel(X_label);
-ylabel(Y_label);
-% legend(legends{1,:},'Location','best');
+            % 'X' Markers for "bad" CPG:
+            scatter3(ax,X1_bad,X2_bad,X3_bad,40,obj.colors{1,i},...
+                'Marker','x');
+            
+%             scatter3(X1_good, X2_good, 0*X3_good);    %projection from Z+
+%             scatter3(X1_good, 0*X2_good, X3_good);    %projection from Y-
+%             scatter3(0*X1_good, X2_good, X3_good);    %projection from X+
 
-% plot clusters areas:
-% TODO: add it to independet function
-if false
-    %Use kmeans to compute the distance from each centroid to
-    % points on a grid. To do this, pass the centroids (C) and points on
-    % a grid to kmeans, and implement one iteration of the algorithm.
-
-    p1 = min(X1):0.001:max(X1);
-    p2 = min(X2):0.01:max(X2);
-    [p1G,p2G] = meshgrid(p1,p2);
-    P_Grid = [p1G(:),p2G(:)]; % Defines a fine grid on the plot
-
-    idx2Region = kmeans(P_Grid,num_of_clusters,...
-        'MaxIter',1,'Start',centers);
-        % Assigns each node in the grid to the closest centroid
-
-    % kmeans displays a warning stating that the algorithm did not
-    % converge, which you should expect since the
-    % software only implemented one iteration.    
-
-    figure; hold on;
-    for i=1:num_of_clusters
-        plot(P_Grid(idx2Region==i,1),P_Grid(idx2Region==i,2),obj.colors{1,i});
-    end
-    plot(X1,X2,'k*','MarkerSize',5);
-    xlabel(X1name);
-    ylabel(X2name);
-    legend(legends{1,1:2:end});
-    hold off;
-end
+            if any(~isnan(centers))
+                scatter3(centers(i,1),centers(i,2),centers(i,3),100,'ko',...
+                 'LineWidth',4,...
+                 'MarkerFaceColor',obj.colors1{1,i},'MarkerEdgeColor','k');
+            end
+        end
+        grid minor;
+        
+        title(Title);
+        xlabel(X_label{1,1});
+        ylabel(X_label{1,2});
+        zlabel(X_label{1,3});
+        
+    otherwise
+        error('invalid number of parameters')
+end          
 
 end
 

@@ -35,6 +35,8 @@ MML.perLimOut = MML.perLim + [-0.08 0.08]; % Desired period range
 MML.tStep = 0.05;
 MML.tEnd = 15;
 MML.nNeurons = 4;
+% % change tau_a/tau_r to 12 (instead of 5)
+MML.Sim.Con.tau_ratio = 12;
 %% Train data:
 
 N = 200000; % the number of samples
@@ -46,7 +48,8 @@ N = 200000; % the number of samples
 tau_min = 0.02;     tau_max = 0.25;
 tau = (tau_max-tau_min).*rand(1,N) + tau_min;
 
-b_min = 0.2;     b_max = 10;
+% b_min = 0.2;     b_max = 10;
+b_min = 0.2;     b_max = 2.5;
 b = (b_max-b_min).*rand(1,N) + b_min;
 
 c_hip_min = 0;     c_hip_max = 8;
@@ -129,7 +132,7 @@ t_elapsed = toc(t_cur);
 avg_sim_time = t_elapsed/N;
 disp(['avg sim time is ',num2str(avg_sim_time),' [sec]']);
 
-save('MatsRandomRes_4Neurons_4Paper_7.mat','results');
+save('MatsRandomRes_4Neurons_4Paper_tau_ratio_equalTo_12_more_natural.mat','results','MML');
 
 %% Phase 2 - Re-run simulations that converged outside the desired range,
 % this time with scaled temporal parameters

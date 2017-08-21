@@ -75,7 +75,50 @@ switch plotType
             legend(Label,'Location','Best');
 
         end
-    case {'showBest'}
+    case {'showBest_subPlots'}
+        % show the first 4 fronts on different subplots
+        Color = {[0,0.447,0.741],...
+            [0.850,0.325,0.098],...
+            [0.929,0.694,0.125],...
+            [0.494,0.184,0.556]};
+        markers = {'-x','-d','-o','-s'};
+        
+        Legend = {'GA only','GA + NN','GA + rescale','GA + NN + rescale'};
+        
+        Fi_vec = [1,2,3,4]; % which fronts to show
+        for k=1:4
+            subplot(2,2,k);
+            for i = 1:4
+
+                GA = obj.data{1,i}.GA;
+
+                Fi = Fi_vec(1,k);
+
+                Data = [GA.Fit(:,[fit1Num,fit2Num],gen_num),(1:GA.Population)'];
+                Fronts = GA.Pareto(Data);
+
+                hold on
+
+                FrData = sortrows(Data(Fronts{Fi},:));
+                x = FrData(:,1);
+                y = FrData(:,2);
+                
+                plot(x,y,markers{1,i},'Color',Color{1,i},...
+                    'MarkerSize',12,'LineWidth',1);
+
+            end
+            
+            xlabel(obj.fitnessOrder{1,fit1Num},'FontSize',FontSize)
+            ylabel(obj.fitnessOrder{1,fit2Num},'FontSize',FontSize)
+            set(gca,'FontSize',FontSize2,'LineWidth',LnWidth/2)
+            title({['Pareto plot of generation #',num2str(gen_num)],...
+                ['Front num #',num2str(Fi)]},...
+                'FontSize',FontSizeT);
+            legend(Legend,'Location','Best');
+        end
+        
+        
+    case {'showBest_onOnePlot'}
         Color = {[0,0.447,0.741],...
             [0.850,0.325,0.098],...
             [0.929,0.694,0.125],...
@@ -87,8 +130,8 @@ switch plotType
             
             GA = obj.data{1,i}.GA;
 
-%             Fi = [1,2,3];
-            Fi = [4];
+            Fi = [1,2,3];
+            
             NF = length(Fi);
 
             Data = [GA.Fit(:,[fit1Num,fit2Num],gen_num),(1:GA.Population)'];
@@ -113,7 +156,6 @@ switch plotType
             ['Front num #',num2str(Fi)]},...
             'FontSize',FontSizeT);
         legend(Legend,'Location','Best');
-        
     otherwise
         error('invalid plotType');
 end

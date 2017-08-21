@@ -24,116 +24,135 @@ function map_divercity_based_on_topPop(obj,gen_num,num_of_clusters,...
 
 figure; hold on;
 
-X1name = whichParam_from{1,1};
-X2name = whichParam_from{1,2};
-
 % Plot the original sapce:
 for j=1:4
-      
+    X = [];  
     switch type_from
         case {'fit','Fit'}
             % than we are doing fitness divercity:
             % exstract the fitnesses:
-            X = obj.data{1,j}.GA.Fit(:,:,gen_num);
-            X1 = X(:,strcmp(X1name,obj.fitnessOrder));
-            X2 = X(:,strcmp(X2name,obj.fitnessOrder));
-
-            X_label = X1name;
-            Y_label = X2name;
+            Y = obj.data{1,j}.GA.Fit(:,:,gen_num);
+            for i=1:length(whichParam_from)
+                X(:,i) = Y(:,strcmp(whichParam_from{1,i},obj.fitnessOrder));
+                X_label{1,i} = whichParam_from{1,i};
+            end
+            X = X';
         case {'param','Param'}
             % than we are doint parameters divercity
             % normalize the seq parameters to be between '0' to '1':
             normParam = obj.param_norm_minMax(gen_num,j);
 
             % get the norm seq:
-            X1 = normParam(:,strcmp(X1name,obj.seqOrder_extend));
-            X2 = normParam(:,strcmp(X2name,obj.seqOrder_extend));
-
-            X_label = [X1name,' norm'];
-            Y_label = [X2name,' norm'];
+            for i=1:length(whichParam_from)
+                X(i,:) =  normParam(:,strcmp(whichParam_from{1,i},...
+                    obj.seqOrder_extend));
+                X_label{1,i} = [whichParam_from{1,i},' norm'];
+            end
+            
         otherwise
             error('invalid type');
     end
    
     % % only fot the top 15% genes:
-    howMany = floor(0.15 * size(X1,1));
+    howMany = floor(0.15 * size(X,2));
     [ID,~] = obj.data{1,j}.GA.GetTopPop(howMany);
-    X1 = X1(ID,1);
-    X2 = X2(ID,1);
-    % plot all that are left:
-    ids_good = true(length(X1),1);
+    for i=1:length(whichParam_from)
+        X_temp(i,:) = X(i,ID);
+    end
+    X = X_temp;
 
-    Title = sprintf('clustering with %d clusters:  %s \n for the Top 15%% of the population',...
+    % plot all that are left:
+    ids_good = true(size(X,2),1);
+
+    Title = sprintf('clustering with %d clusters:  %s \n for the Top 15%% of the population \n',...
                     num_of_clusters,obj.titleAdd{1,j});
     
     
     % clustering using 'kmeans':
     opts = statset('Display','final');
-    [idx,C,~,~] = kmeans([X1,X2],num_of_clusters,'Distance','sqeuclidean',...
+    [idx,C,~,~] = kmeans(X',num_of_clusters,'Distance','sqeuclidean',...
         'Replicates',5,'Options',opts);
     
     
     ax = subplot(2,2,j); hold on;
     
-    Title = [Title,sprintf('\n num of "good" points = %d',sum(ids_good))];
-    obj.kMean_plot_clusters_and_centers(ax,X1,X2,...
-        X_label,Y_label,Title,C,idx,ids_good);
+    idx_vec{1,j} = idx;
+    
+    Title = [Title,sprintf('num of points in each cluster = [')];
+    for n=1:max(idx)
+        Title = [Title,sprintf(' %d ',sum(idx==n))];
+    end
+    Title = [Title,sprintf(' ] \n Color order: [')];
+    for n=1:max(idx)
+        Title = [Title,sprintf(' %s , ',obj.colors{1,n})];
+    end
+    Title = [Title,sprintf(' ]')];
+    
+    obj.kMean_plot_clusters_and_centers(ax,X,...
+        X_label,Title,C,idx,ids_good);
+    
     axis([0,1,0,1]);
     
 
 end
 
+fileName = sprintf('the graph in which we did the clsutering');
+savefig(fileName);
+
 figure; hold on;
 
-X1name = whichParam_to{1,1};
-X2name = whichParam_to{1,2};
 
+clear X_label
 % map to the other space:
 for j=1:4
-    
+    clear X Y ID X_temp
     switch type_to
         case {'fit','Fit'}
             % than we are doing fitness divercity:
             % exstract the fitnesses:
-            X = obj.data{1,j}.GA.Fit(:,:,gen_num);
-            X1 = X(:,strcmp(X1name,obj.fitnessOrder));
-            X2 = X(:,strcmp(X2name,obj.fitnessOrder));
-
-            X_label = X1name;
-            Y_label = X2name;
+            Y = obj.data{1,j}.GA.Fit(:,:,gen_num);
+            for i=1:length(whichParam_to)
+                X(:,i) = Y(:,strcmp(whichParam_to{1,i},obj.fitnessOrder));
+                X_label{1,i} = whichParam_to{1,i};
+            end
+            X = X';
         case {'param','Param'}
             % than we are doint parameters divercity
             % normalize the seq parameters to be between '0' to '1':
             normParam = obj.param_norm_minMax(gen_num,j);
-
-            % get the norm seq:
-            X1 = normParam(:,strcmp(X1name,obj.seqOrder_extend));
-            X2 = normParam(:,strcmp(X2name,obj.seqOrder_extend));
-
-            X_label = [X1name,' norm'];
-            Y_label = [X2name,' norm'];
+            for i=1:length(whichParam_to)
+                X(i,:) =  normParam(:,strcmp(whichParam_to{1,i},...
+                    obj.seqOrder_extend));
+                X_label{1,i} = [whichParam_to{1,i},' norm'];
+            end
+            
         otherwise
             error('invalid type');
     end
     
     % % only fot the top 15% genes:
-    howMany = floor(0.15 * size(X1,1));
+    howMany = floor(0.15 * size(X,2));
     [ID,~] = obj.data{1,j}.GA.GetTopPop(howMany);
-    X1 = X1(ID,1);
-    X2 = X2(ID,1);
+    for i=1:length(whichParam_to)
+        X_temp(i,:) = X(i,ID);
+    end
+    X = X_temp;
     % plot all that are left:
-    ids_good = true(length(X1),1);
+    ids_good = true(size(X,2),1);
 
     Title = sprintf('map to fitness space with \n the same clusters IDs');
         
     
     ax = subplot(2,2,j); hold on;
-    C = NaN(num_of_clusters,2);
-    obj.kMean_plot_clusters_and_centers(ax,X1,X2,...
-        X_label,Y_label,Title,C,idx,ids_good);
+    C = NaN(size(X));
+    idx = idx_vec{1,j};
+    obj.kMean_plot_clusters_and_centers(ax,X,X_label,Title,C,idx,ids_good);
     axis([0,1,0,1]);
     
 
 end
+
+fileName = sprintf('the graph in which we map the clusters ids');
+savefig(fileName);
 end
 

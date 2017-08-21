@@ -18,17 +18,34 @@ obj.NN.net = net;
 NNoutput = net(inputs);
 perf = cell(1,targets_num);
 for i=1:targets_num
-    perf{1,i} = immse(NNoutput(i,:),targets(i,:));
+    perf{1,i} = sqrt(immse(NNoutput(i,:),targets(i,:)));
 end
-obj.NN.NN_errMSE = perf;
+obj.NN.NN_errRMSE = perf;
 
 
-% % % R^2 = 1 - (error variance/input variance)
-% calc R^2
-% err = Targets-NNoutput;
-% errVar = var(err,0,2);
-% inputVar = var(Targets,0,2);
-% R_squar = 1-(errVar/inputVar);
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Xedges = linspace(0,0.25,100);
+% Yedges = linspace(0,10,100);
+% 
+% figure; hold on;
+% % scatter(tau_out_on_train_set,b_out_on_train_set,'.k');
+% histogram2(NNoutput(1,:),NNoutput(2,:),Xedges,Yedges,...
+%     'DisplayStyle','tile','ShowEmptyBins','on',...
+%     'Normalization','pdf');
+% % scatter(tau_out_on_train_set,b_out_on_train_set,'.k');
+% title(sprintf('2D distribution of tau and b  \n on training data \n NN output'));
+% xlabel('tau');
+% ylabel('b');
+% 
+% figure; hold on;
+% % scatter(tau_out_on_train_set,b_out_on_train_set,'.k');
+% histogram2(targets(1,:),targets(2,:),Xedges,Yedges,...
+%     'DisplayStyle','tile','ShowEmptyBins','on',...
+%     'Normalization','pdf');
+% % scatter(tau_out_on_train_set,b_out_on_train_set,'.k');
+% title(sprintf('2D distribution of tau and b  \n on training data \n NN targets'));
+% xlabel('tau');
+% ylabel('b');
 
 end
 

@@ -16,8 +16,9 @@ for i = 1:length(inputsNames)
             per_des_Max = obj.MML.perLim(1,2);
             sampl(i,:) = per_des_Min + ...
                 ((per_des_Max-per_des_Min) * rand(1,length(seq)));
-        case 'periods'
-            error('cant be "periods", need to be "periods_desired"');
+        case 'period'
+%             sampl(i,:) = periods;
+              error('should nor be periods');
         otherwise
             sampl(i,:) = seq(strcmp(p_name,obj.seqOrder),:);
     end   
@@ -32,6 +33,17 @@ for i=1:length(targetsNames)
 end
 
 seq_after_NN(change_index,:) = theta_S1_new;
+
+% Xedges = linspace(0,0.25,100);
+% Yedges = linspace(0,10,100);
+% figure;
+% histogram2(theta_S1_new(1,:),theta_S1_new(2,:),Xedges,Yedges,...
+%     'DisplayStyle','tile','ShowEmptyBins','on',...
+%     'Normalization','pdf');
+% title('2D distribution of tau and b after the NN');
+% xlabel('tau');
+% ylabel('b');
+% axis([0,0.25,0,10]);
 
 seq_after_NN = seq_after_NN';
 

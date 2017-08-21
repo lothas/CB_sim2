@@ -34,32 +34,28 @@ end
 
 figure; hold on;
 
-X1name = whichParam{1,1};
-X2name = whichParam{1,2};
-
 for j=1:4
-    
-%     allSeqs = data{1,j}.GA.Seqs;
-    
+    X=[];
     if any(strcmp('tau',order))
         % than we are doint parameters divercity
         % normalize the seq parameters to be between '0' to '1':
         normParam = obj.param_norm_minMax(gen_num,j);
 
         % get the norm seq:
-        X1 = normParam(:,strcmp(X1name,order));
-        X2 = normParam(:,strcmp(X2name,order));
-        
-        X_label = [X1name,' norm'];
-        Y_label = [X2name,' norm'];
+        for i=1:length(whichParam)
+           X(i,:) =  normParam(:,strcmp(whichParam{1,i},order));
+           X_label{1,i} = [whichParam{1,i},' norm'];
+        end
+
     else % than we are doing fitness divercity:
         % exstract the fitnesses:
-        X = obj.data{1,j}.GA.Fit(:,:,gen_num);
-        X1 = X(:,strcmp(X1name,order));
-        X2 = X(:,strcmp(X2name,order));
-        
-        X_label = X1name;
-        Y_label = X2name;
+        Y = obj.data{1,j}.GA.Fit(:,:,gen_num);
+        for i=1:length(whichParam)
+            X(:,i) = Y(:,strcmp(whichParam{1,i},order));
+            X_label{1,i} = whichParam{1,i};
+        end
+        X = X';
+
     end
     
     % waht type of plot we want:
@@ -74,12 +70,16 @@ for j=1:4
                     
         case 'plot by TopPop'
             % % only fot the top 15% genes:
-            howMany = floor(0.15 * size(X1,1));
+            howMany = floor(0.15 * size(X,2));
             [ID,~] = obj.data{1,j}.GA.GetTopPop(howMany);
-            X1 = X1(ID,1);
-            X2 = X2(ID,1);
+            for i=1:length(whichParam)
+                X_temp(i,:) = X(i,ID);
+            end
+            X = X_temp;
+%             X1 = X1(ID,1);
+%             X2 = X2(ID,1);
             % plot all that are left:
-            ids_good = true(length(X1),1);
+            ids_good = true(size(X,2),1);
             
             Title = sprintf('clustering with %d clusters:  %s \n for the Top 15%% of the population',...
                             num_of_clusters,obj.titleAdd{1,j});
@@ -103,15 +103,21 @@ for j=1:4
     
     % clustering using 'kmeans':
     opts = statset('Display','final');
-    [idx,C,~,~] = kmeans([X1,X2],num_of_clusters,'Distance','sqeuclidean',...
+    [idx,C,~,~] = kmeans(X',num_of_clusters,'Distance','sqeuclidean',...
         'Replicates',5,'Options',opts);
+%     [idx,C,~,~] = kmeans([X1,X2],num_of_clusters,'Distance','sqeuclidean',...
+%         'Replicates',5,'Options',opts);
     
     
     ax = subplot(2,2,j); hold on;
     
-    Title = [Title,sprintf('\n num of "good" points = %d',sum(ids_good))];
-    obj.kMean_plot_clusters_and_centers(ax,X1,X2,...
-        X_label,Y_label,Title,C,idx,ids_good);
+    Title = [Title,sprintf('\n num of points in each cluster = [')];
+    for n=1:max(idx)
+        Title = [Title,sprintf(' %d ',sum(idx==n))];
+    end
+    Title = [Title,sprintf(' ]')];
+    
+    obj.kMean_plot_clusters_and_centers(ax,X,X_label,Title,C,idx,ids_good);
     axis([0,1,0,1]);
     
 

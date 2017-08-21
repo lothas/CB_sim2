@@ -90,23 +90,29 @@ classdef NNs_4paper
                 set(gca,'FontSize',10);
                 savefig('figure_TBD_Histogram_of_ratio_between_periods_hipAnkle')
             end
-
-            obj.osc_ids = osc_ids_temp & diff_ids;
+            
+            % % check that all of the parameters are in the genome range:
+            seq = (vertcat(obj.results(:).seq))';
+            ids_in_genome_range = true(1,size(seq,2));
+            for n=1:obj.MML.Gen.Length
+                ids_temp = (seq(n,:) > obj.MML.Gen.Range(1,n)) &...
+                    (seq(n,:) < obj.MML.Gen.Range(2,n));
+                ids_in_genome_range = ids_in_genome_range & ids_temp;
+            end
+            
+            obj.osc_ids = osc_ids_temp & diff_ids & ids_in_genome_range;
 
             obj.osc_inRange_ids = obj.osc_ids &...
                 ( (periods(1,:) > obj.MML.perLimOut(1,1)) &...
                 (periods(1,:) < obj.MML.perLimOut(1,2)) );
-
-%             obj.ids_not_des_period = obj.osc_ids & ...
-%                 ( (periods(1,:) < obj.MML.perLimOut(1,1)) |...
-%                 (periods(1,:) > obj.MML.perLimOut(1,2)) );
             
             obj.num_of_osc_ids = sum(obj.osc_ids);
             obj.num_of_inRange_ids = sum(obj.osc_inRange_ids);
             
             % save the good periods
+%             periods_mean = mean(periods,1);
+%             obj.periods = periods_mean(1,obj.osc_ids);
             obj.periods = mean(periods,1);
-            
         end
     end
     

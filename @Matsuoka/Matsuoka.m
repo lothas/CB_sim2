@@ -6,25 +6,25 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
     properties
         name = 'Matsuoka'
         
-        % Parameters fo 4 nueons CPG
-%         tau0 = 1; tau = 1;
-%         tav0 = 1; tav = 1;
-%         tau_ratio = 5;
-%         beta = 0.1;
-%         u0 = 1;
-%         win = [0, 3; 1, 0];
-%         wex = [];
-%         W = [];
-        
-        % Parameters fo 2 nueons CPG
-        tau0 = 0.25; tau = 0.25;
-        tav0 = 0.5; tav = 0.5;
+%         Parameters for 4 nueons CPG
+        tau0 = 1; tau = 1;
+        tav0 = 1; tav = 1;
         tau_ratio = 5;
-        beta = 2.5;
+        beta = 0.1;
         u0 = 1;
-        win = [];
+        win = [0, 3; 1, 0];
         wex = [];
         W = [];
+        
+%         % Parameters fo 2 nueons CPG
+%         tau0 = 0.25; tau = 0.25;
+%         tav0 = 0.5; tav = 0.5;
+%         tau_ratio = 5;
+%         beta = 2.5;
+%         u0 = 1;
+%         win = [];
+%         wex = [];
+%         W = [];
 
 
         
