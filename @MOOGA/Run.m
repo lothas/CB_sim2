@@ -59,58 +59,7 @@ for g = GA.Progress+1:GA.Generations
             gSRT(i,1),sim_endCond(i,1),Tend_ratio(i,1)] =...
             feval(ParRunSeq, gSeqs(i,:));
         
-%         % Set-up the simulation wSim = deepcopy(Sim); wSim =
-%         Gen.Decode(wSim,gSeqs(i,:)); %#ok<PFBNS> wSim = wSim.Init();
-%         wSim.Con = wSim.Con.HandleEvent(1, wSim.IC(wSim.ConCo));
-%         
-%         % Run the simulation wSim = wSim.Run(); wSim.Con.startup_t = 0;
-        
-%         % Calculate the genome's fitness thisFit =
-%         zeros(1,max(cell2mat(FitInd'))); thisOuts = cell(1,NFit); for f =
-%         1:NFit
-%             % Preprocessing for ZMPFit if
-%             ~isempty(strfind(func2str(FitFcn{f}),'ZMPFit')) %#ok<PFBNS>
-%                 % Prepare all the required vectors % (torques, state,
-%                 etc) and put them in wSim.Out
-%                 
-%                 % ZMP Fit should be the last one as it uses the % output
-%                 from all previous fitness functions Outs =
-%                 find(~cellfun(@isempty,thisOuts)); for o = 1:length(Outs)
-%                     wSim.Out = wSim.JoinOuts(thisOuts{Outs(o)});
-%                 end wSim.Con.FBType = 2;
-%             end
-%             
-%             % Call the fitness function [thisFit(FitInd{f}),thisOuts{f}]
-%             = FitFcn{f}(wSim);
-%             
-%             % Postprocessing for VelFit if
-%             ~isempty(strfind(func2str(FitFcn{f}),'VelFit'))
-%                 % Switch direction if the model walks backwards if
-%                 thisFit(FitInd{f})<0
-%                     revSeq = Gen.SwitchDir(gSeqs(i,:)); [Res,revSeq] =
-%                     Gen.CheckGenome(revSeq);
-%                     
-%                     if Res{1}
-%                         gSeqs(i,:) = revSeq; thisFit(FitInd{f}) =
-%                         -thisFit(FitInd{f});
-%                     end
-%                 end
-%             end
-%             
-%             % Postprocessing for VelRangeFit if
-%             ~isempty(strfind(func2str(FitFcn{f}),'VelRangeFit')) && ...
-%                 ~any(strcmp(Gen.Keys(1,:),'ks_tau'))
-%                     % ^ This genome uses a single gain for positive and %
-%                     negative s_in, thus a change is irrelevant
-%                 % If high-level signal only works in one direction, %
-%                 copy those parameters for the other direction newSeq =
-%                 gSeqs(i,:); if abs(thisFit(3))>0 && thisFit(5)==0
-%                     newSeq(15:18) = 0.33*newSeq(11:14);
-%                 end if abs(thisFit(5))>0 && thisFit(3)==0
-%                     newSeq(11:14) = 0.33*newSeq(15:18);
-%                 end gSeqs(i,:) = newSeq;
-%             end
-%         end gFits(i,:) = thisFit;
+
     end
 	
 	GA.MLseqRunTime(:,:,g) = gMRT;

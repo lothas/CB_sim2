@@ -11,9 +11,9 @@ function [  ] = GA_try_Matsuoka(whichCase,fileIn)
 
 
 % GA = MOOGA(20,500);
-GA = MOOGA(3,500);
+GA = MOOGA(10,2000);
 GA = GA.SetFittest(15,15,0.5);
-GA.JOAT = 0; GA.Quant = 0.6;
+GA.JOAT = 2; GA.Quant = 0.3;
 
 GA.FileIn = fileIn;
 

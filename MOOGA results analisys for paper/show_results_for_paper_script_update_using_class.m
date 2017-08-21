@@ -21,13 +21,13 @@ x_data = 1:last_gen;
 whichFit2Plot = 1:11;
 GA_graphs.plot_fit_over_gen(whichFit2Plot,last_gen)
 
-%% plot max and Mean fir over generation num:
+%% plot max and Mean fit over generation num:
 whichFit2Plot = 1:3;
 GA_graphs.plot_mean_fit_over_gen(whichFit2Plot,last_gen,'all')
 
 GA_graphs.plot_mean_fit_over_gen(whichFit2Plot,last_gen,'top_pop')
 %% display parameters divercity:
-num_of_clusters = 5;
+num_of_clusters = 3;
 whichParam = {'tau','b'};
 GA_graphs.plot_divercity(last_gen,num_of_clusters,...
     whichParam,'param','plot by Tend ratio')
@@ -40,6 +40,12 @@ GA_graphs.plot_divercity(last_gen,num_of_clusters,...
 whichParam = {'VelFit','VelRangeFit #1'};
 GA_graphs.plot_divercity(last_gen,num_of_clusters,...
     whichParam,'fit','plot by TopPop')
+
+GA_graphs.map_divercity_based_on_topPop(last_gen,num_of_clusters,...
+    {'tau','b'},'param',{'VelFit','VelRangeFit #1'},'fit')
+
+GA_graphs.map_divercity_based_on_topPop(last_gen,num_of_clusters,...
+    {'VelFit','VelRangeFit #1'},'fit',{'tau','b'},'param')
 %% display divercity plot from endCond:
 % every 'Sim' as a 'endCond' as follow:
 % Out.Type:
@@ -55,7 +61,7 @@ GA_graphs.plot_divercity(last_gen,num_of_clusters,...
             %   8 - 'ZMP crossed the limits'
             
 % We are looking for (endCond == 0)
-num_of_clusters = 5;
+num_of_clusters = 3;
 
 whichParam = {'tau','b'};
 GA_graphs.plot_divercity(last_gen,num_of_clusters,...

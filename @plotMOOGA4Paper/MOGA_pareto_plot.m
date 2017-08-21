@@ -23,7 +23,7 @@ FontSize2 = 10;
 figure();
 
 switch plotType
-    case {'showAll','subplot'}
+    case {'showAll'}
         for i = 1:4
 
             subplot(2,2,i);
@@ -80,12 +80,14 @@ switch plotType
             [0.850,0.325,0.098],...
             [0.929,0.694,0.125],...
             [0.494,0.184,0.556]};
+        markers = {'-x','-d','-o','-s'};
+        
         Legend = {'GA only','GA + NN','GA + rescale','GA + NN + rescale'};
         for i = 1:4
             
             GA = obj.data{1,i}.GA;
 
-            %Fi = [1,2,3];
+%             Fi = [1,2,3];
             Fi = [4];
             NF = length(Fi);
 
@@ -100,7 +102,8 @@ switch plotType
                 x = [x;FrData(:,1)];
                 y = [y;FrData(:,2)];
             end
-            plot(x,y,'x','Color',Color{1,i},'MarkerSize',12);
+            plot(x,y,markers{1,i},'Color',Color{1,i},...
+                'MarkerSize',12,'LineWidth',1);
             
         end
         xlabel(obj.fitnessOrder{1,fit1Num},'FontSize',FontSize)
