@@ -72,12 +72,12 @@ parfor i=1:N % Simulate and calculate the frequecy (also calc from Matsuoka exti
     t = signal.T;
     x = signal.signal(1,:);
     
-    [periodsFFT,sine_coef,cos_coef,a0,~] = ...
-        MML.processResults_LSQ(x,t,0);
-    results(i).periods_LSQ = periodsFFT;
-    results(i).bias_coef = a0;
-    results(i).sine_coef = sine_coef;
-    results(i).cos_coef = cos_coef;
+%     [periodsFFT,sine_coef,cos_coef,a0,~] = ...
+%         MML.processResults_LSQ(x,t,0);
+%     results(i).periods_LSQ = periodsFFT;
+%     results(i).bias_coef = a0;
+%     results(i).sine_coef = sine_coef;
+%     results(i).cos_coef = cos_coef;
     
     results(i).pos_work = out.pos_work;
     results(i).neg_work = out.neg_work;
@@ -88,13 +88,13 @@ parfor i=1:N % Simulate and calculate the frequecy (also calc from Matsuoka exti
     results(i).neuronActive = out.neuronActive;
     results(i).neuronOsc = out.neuronOsc;
     
-    T = 5*tau(1,i);
-    wn = (1/T)*sqrt(((tau(1,i)+T)*b(1,i)-tau(1,i)*a(1,i))/(tau(1,i)*a(1,i)));
-    results(i).period_matsuoka_est = 2*pi./wn;
-    
-    Kn = (tau(1,i)+T)/(T*a(1,i));
-    results(i).amp_matsuoka_est = c(1,i) / (2*Kn-1+(2/pi)*(a(1,i)+b(1,i))*asin(Kn))
-%     clear t x periodsFFT sine_coef cos_coef a0
+%     T = 5*tau(1,i);
+%     wn = (1/T)*sqrt(((tau(1,i)+T)*b(1,i)-tau(1,i)*a(1,i))/(tau(1,i)*a(1,i)));
+%     results(i).period_matsuoka_est = 2*pi./wn;
+%     
+%     Kn = (tau(1,i)+T)/(T*a(1,i));
+%     results(i).amp_matsuoka_est = c(1,i) / (2*Kn-1+(2/pi)*(a(1,i)+b(1,i))*asin(Kn))
+% %     clear t x periodsFFT sine_coef cos_coef a0
 end 
 disp('sim end...');
 

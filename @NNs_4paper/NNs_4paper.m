@@ -17,6 +17,9 @@ classdef NNs_4paper
         
         osc_ids = []; % ids of oscillating CPGs
         num_of_osc_ids = [] % the number of oscillating CPGs
+        num_of_osc_ids_exluded_param_range = []; % self checking about 
+                                                 % the amount of osc ids when i dont
+                                                 % care about the parameters range
         
         osc_inRange_ids = []; % ids CPGs which oscillates in range
         num_of_inRange_ids = [] % the number of oscillating CPGs
@@ -48,10 +51,13 @@ classdef NNs_4paper
     
     methods
         function obj = NNs_4paper(results_fileName,MatsuokaSimObject)
-            obj.results_fileName = [];
+            obj.results_fileName = results_fileName;
             
-            res = load(results_fileName);
+            res = load(results_fileName,'results','header');
             obj.results = res.results;
+            
+            disp(' The header of the data file:');
+            disp(res.header);
             
             obj.MML = MatsuokaSimObject;
             
@@ -72,11 +78,14 @@ classdef NNs_4paper
             % Filter CPG's where not both signals oscillating:
             osc_ids_temp = ~isnan(periods);
             osc_ids_temp = osc_ids_temp(1,:) & osc_ids_temp(2,:);
-
+            disp(['Number of non-osc CPGs: ',num2str(sum(~osc_ids_temp))]);
+            
             % Filter CPG's where the is a big difference between hip and ankle:
             periods_ratios = (periods(1,:)./periods(2,:));
             diff_ids = (periods_ratios >  0.85) & (periods_ratios <  1.15); 
-
+            disp(['Number of CPGs with not matching periods: (from the osc ones)',...
+                num2str(sum(osc_ids_temp & ~diff_ids))]);
+            
             % % plot the distribution of the missdefined CPG periods:
             if false
                 figure;
@@ -99,7 +108,10 @@ classdef NNs_4paper
                     (seq(n,:) < obj.MML.Gen.Range(2,n));
                 ids_in_genome_range = ids_in_genome_range & ids_temp;
             end
+            disp(['Number of CPGs with parameters not in range: ',...
+                num2str(sum(~ids_in_genome_range))]);
             
+            obj.num_of_osc_ids_exluded_param_range = sum(osc_ids_temp & diff_ids);
             obj.osc_ids = osc_ids_temp & diff_ids & ids_in_genome_range;
 
             obj.osc_inRange_ids = obj.osc_ids &...

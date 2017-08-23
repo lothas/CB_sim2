@@ -12,10 +12,10 @@ function vec_norm = norm_min_max(obj,vec,paramName)
 
 paramID = strcmp(paramName,obj.seqOrder);
 
-samplNum = size(vec,1);
+samplNum = size(vec,2);
 
-minRange = ones(samplNum,1) * obj.MML.Gen.Range(1,paramID);
-maxRange = ones(samplNum,1) * obj.MML.Gen.Range(2,paramID);
+minRange = ones(1,samplNum) * obj.MML.Gen.Range(1,paramID);
+maxRange = ones(1,samplNum) * obj.MML.Gen.Range(2,paramID);
 
 vec_norm = (vec - minRange) ./ (maxRange - minRange);
 

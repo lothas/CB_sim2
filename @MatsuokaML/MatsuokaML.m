@@ -29,6 +29,9 @@ classdef MatsuokaML
         norm_weights = 0;
         sample_genes1 = {};
         sample_genes2 = {};
+        
+        % the genome file (with the ranges and everything)
+%         genome_file = 
     end
     
     methods

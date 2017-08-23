@@ -4,7 +4,7 @@ function plot_2D_hist(obj,paramNames,norm_flag)
 
 % *) 'paramNames' - 1X2 cell array with the names of the params
 %number of bins to show:
-binsNum = 20;
+binsNum = 100;
 
 % oscillating CPGs:
 seq_osc = (vertcat(obj.results(obj.osc_ids).seq))';

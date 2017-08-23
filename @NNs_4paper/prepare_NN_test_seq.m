@@ -1,4 +1,4 @@
-function seq_after_NN = prepare_NN_test_seq(obj,seq,inputsNames,targetsNames)
+function [seq_after_NN,theta_S1_new] = prepare_NN_test_seq(obj,seq,inputsNames,targetsNames)
 % this function prepare the matrices for the NN tesing in MOOGA
 
 seq = seq';
@@ -26,6 +26,20 @@ end
 
 net = obj.NN.net;
 theta_S1_new = net(sampl);
+
+% check the the NN outputs are not crossing the allowed genome range:
+for i=1:size(theta_S1_new,1)
+    param_id = strcmp(targetsNames{1,i},obj.seqOrder);
+    gen_min = obj.MML.Gen.Range(1,param_id);
+    gen_max = obj.MML.Gen.Range(2,param_id);
+    ids = (theta_S1_new(i,:) < gen_min) | (theta_S1_new(i,:) > gen_max);
+    disp([num2str(sum(ids)),' are outside of the parameter range']);
+    ind = find(ids);
+    for j=1:sum(ids)
+        theta_S1_new(i,ind(j)) =...
+            min(max(theta_S1_new(i,ind(j)),gen_min),gen_max);
+    end
+end
 
 change_index = false(1,length(obj.seqOrder));
 for i=1:length(targetsNames)
