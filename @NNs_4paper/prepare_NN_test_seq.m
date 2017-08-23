@@ -1,4 +1,5 @@
-function [seq_after_NN,theta_S1_new] = prepare_NN_test_seq(obj,seq,inputsNames,targetsNames)
+function [seq_after_NN,theta_S1_new] =...
+    prepare_NN_test_seq(obj,seq,inputsNames,targetsNames,method)
 % this function prepare the matrices for the NN tesing in MOOGA
 
 seq = seq';
@@ -24,8 +25,18 @@ for i = 1:length(inputsNames)
     end   
 end
 
-net = obj.NN.net;
-theta_S1_new = net(sampl);
+switch method
+    case 'NN'
+        net = obj.NN.net;
+        theta_S1_new = net(sampl);
+    case 'MoE'
+        [theta_S1_new,~,~,~] =...
+            obj.MoE_testNet(sampl,obj.MoE.expertsNN,...
+            obj.MoE.gateNet,'collaboration');
+    otherwise
+        error('unknown method...')
+        
+end
 
 % check the the NN outputs are not crossing the allowed genome range:
 for i=1:size(theta_S1_new,1)

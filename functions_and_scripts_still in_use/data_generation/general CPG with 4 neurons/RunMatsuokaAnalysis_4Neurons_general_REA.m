@@ -2,7 +2,7 @@
 close all; clc; clear all;
 
 %%
-genome_file = 'MatsuokaGenome.mat';
+genome_file = 'MatsuokaGenome_4Neuron_general.mat';
 nAnkle = 1; % Number of ankle torques
 nHip = 1;   % Number of hip torques
 maxAnkle = 20;   % Max ankle torque
@@ -40,7 +40,7 @@ MML.Sim.Con.tau_ratio = 12;
 MML.Gen.Range(2,2) = 2.5; % the class will filter genes that are not in the new range.
 %% Train data:
 
-N = 50000; % the number of samples
+N = 200000; % the number of samples
 % % % % CPG parameters:
 % seqOrder = {'tau','b','c_1','c_2','c_3','c_4',...
 %     'w_{12}','w_{13}','w_{14}','w_{21}','w_{23}','w_{24}',...
@@ -133,7 +133,7 @@ t_elapsed = toc(t_cur);
 avg_sim_time = t_elapsed/N;
 disp(['avg sim time is ',num2str(avg_sim_time),' [sec]']);
 
-save('MatsRandomRes_4Neurons_4Paper_tau_ratio_equalTo_12_more_natural_H.mat','results','MML');
+save('MatsRandomRes_4Neurons_4Paper_tau_ratio_equalTo_12_more_natural_D.mat','results','MML');
 
 %% Phase 2 - Re-run simulations that converged outside the desired range,
 % this time with scaled temporal parameters

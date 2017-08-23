@@ -2,7 +2,7 @@
 close all; clc; clear all;
 
 %%
-genome_file = 'MatsuokaGenome.mat';
+genome_file = 'MatsuokaGenome_2Neuron_Symm.mat';
 nAnkle = 1;%1; % Number of ankle torques
 nHip = 0;   % Number of hip torques
 maxAnkle = 20;   % Max ankle torque
@@ -15,8 +15,8 @@ mw = 0*Mw;
 % %     % 2neuron symmetric specific range%%
 Keys = {'\tau_r', 'beta',     'amp_2n',        '2neuron_symm_weights', 'ks_\tau',     'ks_c', 'IC_matsuoka';
               1 ,      1,          2*N,                             1,        1 ,       2*N ,            0 };
-Range = {  0.02 ,    1.1,         mamp,                             1,   -0.001 ,  -0.2*Mamp; % Min
-           0.6  ,    8.0,         Mamp,                             6,   0.001 ,   0.2*Mamp}; % Max
+Range = {  0.02 ,    0.2,         mamp,                             1,   -0.001 ,  -0.2*Mamp; % Min
+           0.25  ,   2.5,         Mamp,                             6,   0.001 ,   0.2*Mamp}; % Max
 
 MutDelta0 = 0.04;   MutDelta1 = 0.02;
 
@@ -31,8 +31,11 @@ MML = MatsuokaML();
 MML.perLim = [0.68 0.78];
 MML.perLimOut = MML.perLim + [-0.08 0.08]; % Desired period range
 MML.tStep = 0.05;
-MML.tEnd = 50; % 15
+MML.tEnd = 15;
 MML.nNeurons = 2;
+
+% % change tau_a/tau_r to 12 (instead of 5)
+MML.Sim.Con.tau_ratio = 12;
 %% Train data:
 N = 100000; % the number of samples
 % CPG parameters:

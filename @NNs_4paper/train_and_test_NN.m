@@ -1,10 +1,12 @@
 function [seq_after_NN,NNoutputs] = train_and_test_NN(obj,caseNum,...
-    architecture,testOn)
+    architecture,method,testOn)
 % this function test the NN for the wanted case.
 % if we check the 'training' data, then we also plot the NN perf.
 
 % *) 'caseNum' - the wanted case from the paper
 % *) 'architecture' - row vector with the NN architecture
+% *) 'method' - either: 'NN' - for neural networ
+%                       'MoE' - for Mixture of Experts
 % *) 'testOn' - wether to test on a random data, external data, or the same
 % training data.
 % 
@@ -18,8 +20,17 @@ function [seq_after_NN,NNoutputs] = train_and_test_NN(obj,caseNum,...
 [Inputs_train,Targets_train] = ...
     obj.prepare_NN_train_data(Inputs_names_train,Targets_names_train);
 
-% train NN:
-obj = obj.train_NN(architecture,Inputs_train,Targets_train);
+switch method
+    case 'NN'
+        % train NN:
+        obj = obj.train_NN(architecture,Inputs_train,Targets_train);
+    case 'MoE'
+        numOfIteretions = 10;
+        obj = MoE_train_collaboration(obj,numOfIteretions,...
+            architecture,Inputs_train,Targets_train);
+    otherwise
+        error('invalid method...');
+end
 
 
 %% NN testing:
@@ -43,7 +54,7 @@ end
 % acrivate the NN and change the right parameters according to the NN
 % output:
 [seq_after_NN,NNoutputs] = obj.prepare_NN_test_seq(seq_test,...
-    Inputs_names_test,Targets_names_test);
+    Inputs_names_test,Targets_names_test,method);
 
 %% plot:
 targetsNum = size(Targets_names_train,2);

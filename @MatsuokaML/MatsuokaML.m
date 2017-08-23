@@ -30,13 +30,17 @@ classdef MatsuokaML
         sample_genes1 = {};
         sample_genes2 = {};
         
-        % the genome file (with the ranges and everything)
-%         genome_file = 
     end
     
     methods
         function obj = MatsuokaML()
-            genome_file = 'MatsuokaGenome.mat';
+            
+            % genome for 4Neurons Matsuoka:
+            genome_file = 'MatsuokaGenome_4Neuron_general.mat';
+            
+            % genome for 2Neurons Symmetric Matsuoka:
+            % genome_file = 'MatsuokaGenome_2Neuron_Symm.mat';
+            
             load(genome_file);
             Keys(:,strcmp(Keys(1,:),'IC_matsuoka')) = []; %#ok<NODEF>
             obj.Gen = Genome(Keys, Range);

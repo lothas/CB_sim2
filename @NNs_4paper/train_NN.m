@@ -9,6 +9,18 @@ targets_num = size(targets,1);
 
 % Create and train the NN
 net = feedforwardnet(architecture);
+
+% net.trainFcn = 'trainlm';
+% net.trainFcn = 'trainbr';
+% net.trainFcn = 'trainscg';
+% net.trainFcn = 'trainrp';
+
+if false % train only on some of the samples (not all of them)
+    ind = randsample(size(targets,2),50000);
+    inputs = inputs(:,ind);
+    targets = targets(:,ind);
+end
+
 [net, ~] = train(net, inputs, targets);
 
 % saving the 'net' object:

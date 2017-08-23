@@ -46,6 +46,7 @@ classdef NNs_4paper
         tau_rescaled = []; %change in seq due to rescaling of 'tau'
         seq_NN = [];
         
+        disp_information = 1; % show garphs and stuff while training
         
     end
     

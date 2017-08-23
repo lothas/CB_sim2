@@ -62,8 +62,8 @@ NNs_4paper.hist_compare(tau_before,tau_after,'tau',...
 close all; clc;
 
 caseNum = 7;
-architecture = [20,20];
-NNs_4paper.train_and_test_NN(caseNum,architecture,'test_on_training_data');
+architecture = [20];
+NNs_4paper.train_and_test_NN(caseNum,architecture,'MoE','test_on_training_data');
 
 %% correlation between targets and NN outputs:
 % a = [tau_out_on_train_set;b_out_on_train_set];

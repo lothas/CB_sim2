@@ -1,6 +1,6 @@
 function [netOut,gateOut,belongToExpert,cluster_i_train_ind] =...
-    my_MoE_testNet(obj,NNinputs,NNtargets,expertsNN,...
-    gateNet,competetiveFlag,graphGO)
+    MoE_testNet(obj,NNinputs,expertsNN,...
+    gateNet,MoE_method)
 %this function train a "Mixture of Experts" newural networks
 
 %%%%%%%%% TODO: make this code to work with multiple NN outputs! %%%%%%%
@@ -12,9 +12,9 @@ function [netOut,gateOut,belongToExpert,cluster_i_train_ind] =...
 %                matrix of (#targets x #samples) dimention
 % 3) expertsNN - cell array containing the experts and their performance.
 % 4) gateNet - the Gate NN.
-% 5) competetiveFlag - if '1'- hardCompetetetive = "winner takes all"
-%                         '2'- softCompetetetive = "chance for everybody"
-%                         '3'- collaboration = (out = expertsOut*gateOut)
+% 5) MoE_method - *) 'hardCompetetetive' = "winner takes all"
+%                 *) 'softCompetetetive' = "chance for everybody"
+%                 *) 'collaboration' = (out = expertsOut*gateOut)
 
 % outputs:
 % 1) netOut - output from MoE
@@ -34,7 +34,7 @@ cluster_i_train_ind = cell(1,expertCount);
 % sending samples (inputs) to gate net:
 gateOut = gateNet(NNinputs);
 
-switch competetiveFlag
+switch MoE_method
     case 1
        % each data sample is classified based on the highest probability. 
        % for expample, given 2 experts and a datasample with
@@ -52,7 +52,7 @@ switch competetiveFlag
             acumulativeProb = tril(ones(expertCount,expertCount))*gateOut(:,k);
             belongToExpert(1,k) = find(acumulativeProb > rand(1),1);
        end
-    case 3
+    case 'collaboration'
         % the MoE network output is the sum of each expert output times the
         % probability of this expert (this method was taken from
         % jacobs1990 paper).
@@ -68,31 +68,33 @@ switch competetiveFlag
         error('wrong "competetiveFlag", try again');
 end
 
-if competetiveFlag==1 || competetiveFlag==2
-    if num_of_samples > 1 % many samples, performance analisys
-        % sending the samples to their experts
-        netOut = zeros(1,num_of_samples);
-        for j=1:expertCount
-            % check wich sample belongs to which cluster (expert):
-            cluster_i_train_ind{1,j} = find(belongToExpert == j);
-            
-            % define each expert as a temporary 'net' object:
-            tempNet = expertsNN{1,j};
-            
-            % make expert outputs and rearrange it according to the
-            % original smaples order:
-            netOut(1,cluster_i_train_ind{1,j}) = tempNet(NNinputs(:,cluster_i_train_ind{1,j}));
+switch MoE_method
+    case {1,2}
+        if num_of_samples > 1 % many samples, performance analisys
+            % sending the samples to their experts
+            netOut = zeros(1,num_of_samples);
+            for j=1:expertCount
+                % check wich sample belongs to which cluster (expert):
+                cluster_i_train_ind{1,j} = find(belongToExpert == j);
+
+                % define each expert as a temporary 'net' object:
+                tempNet = expertsNN{1,j};
+
+                % make expert outputs and rearrange it according to the
+                % original smaples order:
+                netOut(1,cluster_i_train_ind{1,j}) = tempNet(NNinputs(:,cluster_i_train_ind{1,j}));
+            end
+        else
+            % if only one sampl was sent for testing:
+            tempNet = expertsNN{1,belongToExpert};
+            netOut = tempNet(NNinputs(:,1));
         end
-    else
-        % if only one sampl was sent for testing:
-        tempNet = expertsNN{1,belongToExpert};
-        netOut = tempNet(NNinputs(:,1));
-    end
 end
 
-if graphGO
-    obj.my_MoE_plot_test_perf(expertCount,netOut,NNtargets,...
-        cluster_i_train_ind,gateOut,competetiveFlag)
-end
+% if graphGO
+%     obj.my_MoE_plot_test_perf(expertCount,netOut,NNtargets,...
+%         cluster_i_train_ind,gateOut,competetiveFlag)
+% end
+
 end
 
