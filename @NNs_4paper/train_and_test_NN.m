@@ -24,9 +24,17 @@ switch method
     case 'NN'
         % train NN:
         obj = obj.train_NN(architecture,Inputs_train,Targets_train);
-    case 'MoE'
-        numOfIteretions = 10;
-        obj = MoE_train_collaboration(obj,numOfIteretions,...
+    case 'MoE colaboration'
+        numOfIteretions = 50;
+        obj = obj.MoE_train_collaboration(numOfIteretions,...
+            architecture,Inputs_train,Targets_train);
+    case 'MoE hard'
+        numOfIteretions = 50;
+        obj = obj.MoE_train_Competetive('hardCompetetetive',numOfIteretions,...
+            architecture,Inputs_train,Targets_train);
+    case 'MoE soft'
+        numOfIteretions = 50;
+        obj = obj.MoE_train_Competetive('softCompetetetive',numOfIteretions,...
             architecture,Inputs_train,Targets_train);
     otherwise
         error('invalid method...');

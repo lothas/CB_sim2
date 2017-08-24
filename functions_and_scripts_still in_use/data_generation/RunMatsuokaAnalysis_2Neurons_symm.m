@@ -5,8 +5,8 @@ close all; clc; clear all;
 genome_file = 'MatsuokaGenome_2Neuron_Symm.mat';
 nAnkle = 1;%1; % Number of ankle torques
 nHip = 0;   % Number of hip torques
-maxAnkle = 20;   % Max ankle torque
-maxHip = 20;    % Max hip torque
+maxAnkle = 10;   % Max ankle torque
+maxHip = 10;    % Max hip torque
 Mamp = [maxAnkle*ones(1,2*nAnkle), maxHip*ones(1,2*nHip)];
 mamp = 0*Mamp;
 N = nAnkle+nHip;
@@ -14,9 +14,9 @@ Mw = 10*ones(1,(2*N-1)*2*N);
 mw = 0*Mw;
 % %     % 2neuron symmetric specific range%%
 Keys = {'\tau_r', 'beta',     'amp_2n',        '2neuron_symm_weights', 'ks_\tau',     'ks_c', 'IC_matsuoka';
-              1 ,      1,          2*N,                             1,        1 ,       2*N ,            0 };
-Range = {  0.02 ,    0.2,         mamp,                             1,   -0.001 ,  -0.2*Mamp; % Min
-           0.25  ,   2.5,         Mamp,                             6,   0.001 ,   0.2*Mamp}; % Max
+              1 ,      1,            2,                             1,        1 ,          2,            0 };
+Range = {  0.02 ,    0.2,            0,                             0,   -0.001 ,  -0.2*Mamp; % Min
+           0.25  ,   2.5,           10,                            10,   0.001 ,   0.2*Mamp}; % Max
 
 MutDelta0 = 0.04;   MutDelta1 = 0.02;
 
@@ -37,25 +37,23 @@ MML.nNeurons = 2;
 % % change tau_a/tau_r to 12 (instead of 5)
 MML.Sim.Con.tau_ratio = 12;
 %% Train data:
-N = 100000; % the number of samples
+N = 100; % the number of samples
 % CPG parameters:
-% tau_min = 0.4;     tau_max = 0.6;
-tau_min = 0.02;     tau_max = 0.6;
+tau_min = 0.02;     tau_max = 0.25;
 tau = (tau_max-tau_min).*rand(1,N) + tau_min;
 
-% b_min = 2;     b_max = 3;
-b_min = 1.1;     b_max = 5;
+b_min = 0.2;     b_max = 2.5;
 b = (b_max-b_min).*rand(1,N) + b_min;
 
-c_min = 2.5;     c_max = 7;
+c_min = 0;     c_max = 10;
 c = (c_max-c_min).*rand(1,N) + c_min;
 
-a_min = 1;     a_max = 6;
+a_min = 0;     a_max = 10;
 a = (a_max-a_min).*rand(1,N) + a_min;
 
 disp('start with the sim:');
-parfor i=1:N % Simulate and calculate the frequecy (also calc from Matsuoka extimation)
-% for i=1:N
+% parfor i=1:N % Simulate and calculate the frequecy (also calc from Matsuoka extimation)
+for i=1:N
     disp(['at sim #',num2str(i)]);
     seq = [tau(1,i),b(1,i),c(1,i),0,a(1,i),0,0,0];
     [out, ~, signal] = MML.runSim(seq);
@@ -101,7 +99,7 @@ parfor i=1:N % Simulate and calculate the frequecy (also calc from Matsuoka exti
 end 
 disp('sim end...');
 
-save('MatsRandomRes_2Neurons_symm_test_for_FFT_new_3.mat','results');
+save('MatsRandomRes_2Neurons_symm_A.mat','results');
 
 
 %% Test data:

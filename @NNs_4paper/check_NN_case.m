@@ -14,6 +14,7 @@ function [Inputs_names,Targets_names] = check_NN_case(obj,caseNum,perORfreq)
 %                      | '8'  |tau_r, ci, W_ij_hat |b               |
 %                      | '9'  |W_ij_hat            |tau_r, b        |
 %                      | '10' |ci, W_ij_hat        |tau_r, b        |
+%                      | '11' |tau_r               |b               |
 %          *) 'perORfreq' - whter to choose to use the period or the
 %                           frequency
 
@@ -80,6 +81,10 @@ switch caseNum
         tempCell = {[theta_s0,ci,W_ij]};
         parametersCells = tempCell{1,1};
         targetCells = {'tau','b'};
+    case 11
+        tempCell = {[theta_s0,{'tau'}]};
+        parametersCells = tempCell{1,1};
+        targetCells = {'b'};
     otherwise
         error('wrong case number');
 end

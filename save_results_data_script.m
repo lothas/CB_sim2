@@ -2,30 +2,30 @@
 close all; clc; clear all;
 
 % % Load peridos oscillating and periods which oscillates in range:
-load('MatsRandomRes_4Neurons_4Paper_tau_ratio_equalTo_12_more_natural_D','results','MML');
+load('MatsRandomRes_4Neurons_4Paper_tau_ratio_equalTo_12_more_natural_A','results','MML');
 results1 = results;    clear results
-load('MatsRandomRes_4Neurons_4Paper_tau_ratio_equalTo_12_more_natural_E','results');
+load('MatsRandomRes_4Neurons_4Paper_tau_ratio_equalTo_12_more_natural_B','results');
 results2 = results;    clear results
-load('MatsRandomRes_4Neurons_4Paper_tau_ratio_equalTo_12_more_natural_F','results');
+load('MatsRandomRes_4Neurons_4Paper_tau_ratio_equalTo_12_more_natural_C','results');
 results3 = results;    clear results
 results = [results1,results2,results3];  clear results1 results2 results3
 
 
 header = sprintf('tau ratio is equal to 12 \n');
-header = [header,sprintf('added 400k sample with b in range (0.2,2.5)')];
+header = [header,sprintf('b in range (0.2,2.5)')];
 
-save('MatsRandomRes_4Neurons_4Paper_tau_ratio_equalTo_12_added_b_All_samples2.mat',...
+save('MatsRandomRes_4Neurons_4Paper_tau_ratio_equalTo_12_added_b_All_samples.mat',...
     'header','results','MML');
 
 %% save the "good" samples:
 
 header = sprintf('tau ratio is equal to 12 \n');
-header = [header,sprintf('added 400k sample with b in range (0.2,2.5) \n')];
+header = [header,sprintf('sample with b in range (0.2,2.5) \n')];
 header = [header,sprintf('filtered the non-osc samples')];
 
 results = NNs_4paper.results(NNs_4paper.osc_ids);
 
-save('MatsRandomRes_4Neurons_4Paper_tau_ratio_equalTo_12_added_b3.mat',...
+save('MatsRandomRes_4Neurons_4Paper_tau_ratio_equalTo_12_more_osc_samples.mat',...
     'header','results');
 
 %% combaining the filtered CPGs
@@ -42,7 +42,7 @@ clear results1 results2
 
 
 header = sprintf('tau ratio is equal to 12 \n');
-header = [header,sprintf('added 400k sample with b in range (0.2,2.5) \n')];
+header = [header,sprintf('b in range (0.2,2.5) \n')];
 header = [header,sprintf('filtered the non-osc samples and then added around 40k non-osc samples for later \n')];
 header = [header,sprintf('originally, the ratio between osc to non-osc was 1 (osc) to 6 (n-osc')];
 

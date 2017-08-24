@@ -35,14 +35,14 @@ cluster_i_train_ind = cell(1,expertCount);
 gateOut = gateNet(NNinputs);
 
 switch MoE_method
-    case 1
+    case 'hardCompetetetive'
        % each data sample is classified based on the highest probability. 
        % for expample, given 2 experts and a datasample with
        % p1=0.6 chance to belong to the 1st expert and p2=0.4 chance to
        % belong to the 2nd expert. so this sample belongs to 1st expert. 
        [~,belongToExpert] = max(gateOut,[],1); % indecies of points to #clusters
 %        belongToExpert = vec2ind(gateOut); 
-    case 2
+    case 'softCompetetetive'
        % each data sample has a chance to be classified based on it's
        % probability. for expample, given 2 experts and a datasample with
        % p1=0.6 chance to belong to the 1st expert and p2=0.4 chance to
@@ -69,7 +69,7 @@ switch MoE_method
 end
 
 switch MoE_method
-    case {1,2}
+    case {'hardCompetetetive','softCompetetetive'}
         if num_of_samples > 1 % many samples, performance analisys
             % sending the samples to their experts
             netOut = zeros(1,num_of_samples);

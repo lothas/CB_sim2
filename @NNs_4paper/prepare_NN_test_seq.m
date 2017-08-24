@@ -29,10 +29,18 @@ switch method
     case 'NN'
         net = obj.NN.net;
         theta_S1_new = net(sampl);
-    case 'MoE'
+    case 'MoE colaboration'
         [theta_S1_new,~,~,~] =...
             obj.MoE_testNet(sampl,obj.MoE.expertsNN,...
             obj.MoE.gateNet,'collaboration');
+    case 'MoE hard'
+        [theta_S1_new,~,~,~] =...
+            obj.MoE_testNet(sampl,obj.MoE.expertsNN,...
+            obj.MoE.gateNet,'hardCompetetetive');
+    case 'MoE soft'
+        [theta_S1_new,~,~,~] =...
+            obj.MoE_testNet(sampl,obj.MoE.expertsNN,...
+            obj.MoE.gateNet,'softCompetetetive');
     otherwise
         error('unknown method...')
         
