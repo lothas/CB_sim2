@@ -3,17 +3,17 @@ clear all; close all; clc
 % set default options
 set(0,'defaultlinelinewidth',2);
 
-InFiles_names = {'VGAM_08_07_18_43_GA_only_NEW.mat',...
-    'VGAM_08_11_10_50_NN_only_NEW.mat',...
-    'VGAM_08_13_12_40_rescale_only_NEW.mat',...
-    'VGAM_08_09_19_43_NN_and_rescale_NEW.mat'};
+InFiles_names = {'VGAM_08_17_17_41_GA_only_2000genes_10Gen.mat',...
+    'VGAM_08_20_11_12_NN_only_2000genes_10Gen.mat',...
+    'VGAM_08_17_17_44_rescale_only_2000genes_10Gen.mat',...
+    'VGAM_08_22_22_36_NN_and_rescale_2000genes_10Gen.mat'};
 
 GA_graphs = plotMOOGA4Paper(InFiles_names);
 
 % which fit to plot:
 FitNum = 3;
 % get x-axis data:
-last_gen = 20;
+last_gen = 10;
 x_data = 1:last_gen;
 
 % home many clusters in divesity plots:

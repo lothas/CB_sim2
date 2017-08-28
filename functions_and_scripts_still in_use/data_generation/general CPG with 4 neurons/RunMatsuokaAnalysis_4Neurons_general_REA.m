@@ -40,7 +40,7 @@ MML.Sim.Con.tau_ratio = 12;
 MML.Gen.Range(2,2) = 2.5; % the class will filter genes that are not in the new range.
 %% Train data:
 
-N = 200000; % the number of samples
+N = 500000; % the number of samples
 % % % % CPG parameters:
 % seqOrder = {'tau','b','c_1','c_2','c_3','c_4',...
 %     'w_{12}','w_{13}','w_{14}','w_{21}','w_{23}','w_{24}',...
@@ -59,7 +59,8 @@ c_ankle_min = 0;     c_ankle_max = 20;
 c_ankle = (c_ankle_max-c_ankle_min).*rand(2,N) + c_ankle_min;
 c = [c_ankle;c_hip];
 
-W_min = 0;     W_max = 10;
+% W_min = 0;     W_max = 10;
+W_min = 0;     W_max = 5;
 W = (W_max-W_min).*rand(12,N) + W_min;
 
 ks_tau_min = -10;     ks_tau_max = 10;
@@ -133,7 +134,16 @@ t_elapsed = toc(t_cur);
 avg_sim_time = t_elapsed/N;
 disp(['avg sim time is ',num2str(avg_sim_time),' [sec]']);
 
-save('MatsRandomRes_4Neurons_4Paper_tau_ratio_equalTo_12_more_natural_E.mat','results','MML');
+header = sprintf('tau ratio is equal to 12 \n');
+header = [header,sprintf('data is for 4N general CPG case \n')];
+header = [header,sprintf('seq Order: \n')];
+header = [header,sprintf('"tau","b","c_1","c_2","c_3","c_4" \n')];
+header = [header,sprintf('"w_{12}","w_{13}","w_{14}","w_{21}","w_{23}","w_{24}" \n')];
+header = [header,sprintf('"w_{31}","w_{32}","w_{34}","w_{41}","w_{42}","w_{43}" \n')];
+header = [header,sprintf('b in range (0.2,2.5) \n')];
+header = [header,sprintf('W_ij in range (0,5) \n')];
+
+save('MatsRandomRes_4Neurons_4Paper_narrower_W_range.mat','results','MML','header');
 
 %% Phase 2 - Re-run simulations that converged outside the desired range,
 % this time with scaled temporal parameters

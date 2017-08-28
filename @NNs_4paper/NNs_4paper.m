@@ -54,22 +54,25 @@ classdef NNs_4paper
         function obj = NNs_4paper(results_fileName,MatsuokaSimObject)
             obj.results_fileName = results_fileName;
             
-            res = load(results_fileName,'results','header');
+            res = load(results_fileName,'results');
             obj.results = res.results;
             
-            disp(' The header of the data file:');
-            disp(res.header);
-            
+%             % Show header:
+%             hed = load(results_fileName,'header');
+%             disp(' The header of the data file:');
+%             disp(hed.header);
+
             obj.MML = MatsuokaSimObject;
             
             obj.seq = vertcat(obj.results(:).seq);
             
-            obj = obj.filter_ids;
+%             obj = obj.filter_ids_4N_general;
+            obj = obj.filter_ids_2N_Symm;
             
             
         end
         
-        function obj = filter_ids(obj)
+        function obj = filter_ids_4N_general(obj)
             % this function get the CPGs in 'results' and filer out the osc CPGs and
             % the CPGs with missdefined periods.
 
@@ -86,7 +89,8 @@ classdef NNs_4paper
             diff_ids = (periods_ratios >  0.85) & (periods_ratios <  1.15); 
             disp(['Number of CPGs with not matching periods: (from the osc ones)',...
                 num2str(sum(osc_ids_temp & ~diff_ids))]);
-            
+            obj.periods = mean(periods,1);
+
             % % plot the distribution of the missdefined CPG periods:
             if false
                 figure;
@@ -125,7 +129,53 @@ classdef NNs_4paper
             % save the good periods
 %             periods_mean = mean(periods,1);
 %             obj.periods = periods_mean(1,obj.osc_ids);
-            obj.periods = mean(periods,1);
+        end
+        
+        function obj = filter_ids_2N_Symm(obj)
+            % same as 'filter_ids_4N_general()' but for 2N symmetric CPG
+            
+            % Change the sequence order to match the new case:
+            obj.seqOrder = ...
+                {'tau','b','c','NR','a','NR','NR','NR'}; % 'NR'-not relevant
+            
+            % get CPG periods:
+            periods = horzcat(obj.results(:).periods);
+            
+            % Filter CPG's where not both signals oscillating:
+            osc_ids_temp = ~isnan(periods);
+            disp(['Number of non-osc CPGs: ',num2str(sum(~osc_ids_temp))]);
+            
+            % Filter CPG's where the is a big difference between hip and ankle:
+            % if we have only 2 Matsuoka neurons,
+            %   then assume that the period is correct
+            diff_ids = true(1,size(periods,2));
+            obj.periods = periods;
+            
+            % % check that all of the parameters are in the genome range:
+            seq = (vertcat(obj.results(:).seq))';
+            ids_in_genome_range = true(1,size(seq,2));
+            
+            for n=1:obj.MML.Gen.Length
+                if ~strcmp(obj.seqOrder{1,n},'NR')
+                    ids_temp = (seq(n,:) > obj.MML.Gen.Range(1,n)) &...
+                        (seq(n,:) < obj.MML.Gen.Range(2,n));
+                    ids_in_genome_range = ids_in_genome_range & ids_temp;
+                end
+            end
+            
+            disp(['Number of CPGs with parameters not in range: ',...
+                num2str(sum(~ids_in_genome_range))]);
+            
+            obj.num_of_osc_ids_exluded_param_range = sum(osc_ids_temp & diff_ids);
+            obj.osc_ids = osc_ids_temp & diff_ids & ids_in_genome_range;
+
+            obj.osc_inRange_ids = obj.osc_ids &...
+                ( (periods(1,:) > obj.MML.perLimOut(1,1)) &...
+                (periods(1,:) < obj.MML.perLimOut(1,2)) );
+            
+            obj.num_of_osc_ids = sum(obj.osc_ids);
+            obj.num_of_inRange_ids = sum(obj.osc_inRange_ids);
+            
         end
     end
     

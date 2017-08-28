@@ -8,7 +8,8 @@ binsNum = 100;
 
 % oscillating CPGs:
 seq_osc = (vertcat(obj.results(obj.osc_ids).seq))';
-arr = seq_osc(1:18,:);
+% arr = seq_osc(1:18,:);
+arr = seq_osc;
 
 % % oscillating CPGs (in range):
 % seq_osc_inRange = (vertcat(obj.results(obj.osc_inRange_ids).seq))';

@@ -8,10 +8,10 @@ function plot_oscParam_vs_oscInRangeParam_hist(obj,paramName,norm_flag)
 binsNum = 20;
 
 seq_osc = (vertcat(obj.results(obj.osc_ids & ~obj.osc_inRange_ids).seq))';
-seq_osc = seq_osc(1:18,:);
+% seq_osc = seq_osc(1:18,:);
 
 seq_osc_inRange = (vertcat(obj.results(obj.osc_inRange_ids).seq))';
-seq_osc_inRange = seq_osc_inRange(1:18,:);
+% seq_osc_inRange = seq_osc_inRange(1:18,:);
 
 switch paramName
     case {'all'}

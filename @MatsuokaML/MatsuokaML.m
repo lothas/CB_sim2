@@ -35,10 +35,10 @@ classdef MatsuokaML
     methods
         function obj = MatsuokaML()
             
-            % genome for 4Neurons Matsuoka:
+%             % genome for 4Neurons Matsuoka:
 %             genome_file = 'MatsuokaGenome_4Neuron_general.mat';
             
-            % genome for 2Neurons Symmetric Matsuoka:
+%             % genome for 2Neurons Symmetric Matsuoka:
             genome_file = 'MatsuokaGenome_2Neuron_Symm.mat';
             
             load(genome_file);

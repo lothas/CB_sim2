@@ -2,30 +2,38 @@
 close all; clc; clear all;
 
 % % Load peridos oscillating and periods which oscillates in range:
-load('MatsRandomRes_4Neurons_4Paper_tau_ratio_equalTo_12_more_natural_A','results','MML');
+load('MatsRandomRes_2Neurons_symm_osc_in_range.mat','results');
 results1 = results;    clear results
-load('MatsRandomRes_4Neurons_4Paper_tau_ratio_equalTo_12_more_natural_B','results');
+load('MatsRandomRes_2Neurons_symm_osc_in_range1.mat','results');
 results2 = results;    clear results
-load('MatsRandomRes_4Neurons_4Paper_tau_ratio_equalTo_12_more_natural_C','results');
-results3 = results;    clear results
-results = [results1,results2,results3];  clear results1 results2 results3
+results = [results1,results2];  clear results1 results2
 
 
 header = sprintf('tau ratio is equal to 12 \n');
-header = [header,sprintf('b in range (0.2,2.5)')];
+header = [header,sprintf('data is for 2N symmetric CPG case \n')];
+header = [header,sprintf('seq Order: \n')];
+header = [header,sprintf('"tau" ,"b", "c", NR, "a", NR... \n')];
+header = [header,sprintf('"NR" - not relevnt param \n')];
+header = [header,sprintf('b in range (0.2,2.5) \n')];
+header = [header,sprintf('All oscillating in range')];
 
-save('MatsRandomRes_4Neurons_4Paper_tau_ratio_equalTo_12_added_b_All_samples.mat',...
-    'header','results','MML');
+save('MatsRandomRes_2Neurons_symm_4Paper_All_in_range.mat',...
+    'header','results');
 
 %% save the "good" samples:
 
 header = sprintf('tau ratio is equal to 12 \n');
-header = [header,sprintf('sample with b in range (0.2,2.5) \n')];
-header = [header,sprintf('filtered the non-osc samples')];
+header = [header,sprintf('data is for 2N symmetric CPG case \n')];
+header = [header,sprintf('seq Order: \n')];
+header = [header,sprintf('"tau" ,"b", "c", NR, "a", NR... \n')];
+header = [header,sprintf('"NR" - not relevnt param \n')];
+header = [header,sprintf('b in range (0.2,2.5) \n')];
+header = [header,sprintf('All oscillating in range')];
 
-results = NNs_4paper.results(NNs_4paper.osc_ids);
+% results = NNs_4paper.results(NNs_4paper.osc_ids);
+results = NNs_4paper.results(NNs_4paper.osc_inRange_ids);
 
-save('MatsRandomRes_4Neurons_4Paper_tau_ratio_equalTo_12_more_osc_samples.mat',...
+save('MatsRandomRes_2Neurons_symm_osc_in_range1.mat',...
     'header','results');
 
 %% combaining the filtered CPGs

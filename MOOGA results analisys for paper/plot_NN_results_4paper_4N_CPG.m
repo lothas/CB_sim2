@@ -17,6 +17,8 @@ MML.nNeurons = 4;
 
 % % data with tau_ratio=12 and (0.2 < b < 2.5)
 results_fileName = 'MatsRandomRes_4Neurons_4Paper_tau_ratio_equalTo_12_added_b_4Paper1.mat';
+% results_fileName = 'MatsRandomRes_4Neurons_4Paper_narrower_W_range';
+
 % % change tau_a/tau_r to 12 (instead of 5)
 MML.Sim.Con.tau_ratio = 12;
 % % change b_max:
@@ -31,6 +33,11 @@ NNs_4paper.plot_oscParam_vs_NoscParam_hist(paramName,norm_flag)
 NNs_4paper.plot_oscParam_vs_oscInRangeParam_hist(paramName,norm_flag);
 
 paramName = 'b';
+norm_flag = false;
+NNs_4paper.plot_oscParam_vs_NoscParam_hist(paramName,norm_flag);
+NNs_4paper.plot_oscParam_vs_oscInRangeParam_hist(paramName,norm_flag);
+
+paramName = 'w_{12}';
 norm_flag = false;
 NNs_4paper.plot_oscParam_vs_NoscParam_hist(paramName,norm_flag);
 NNs_4paper.plot_oscParam_vs_oscInRangeParam_hist(paramName,norm_flag);
@@ -61,7 +68,7 @@ NNs_4paper.hist_compare(tau_before,tau_after,'tau',...
 %% check NN on training data:
 close all; clc;
 
-caseNum = 7;
+caseNum = 9;
 architecture = [20,20];
 % NNs_4paper.train_and_test_NN(caseNum,architecture,'MoE colaboration','test_on_training_data');
 

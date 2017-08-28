@@ -8,10 +8,10 @@ function plot_oscParam_vs_NoscParam_hist(obj,paramName,norm_flag)
 binsNum = 20;
 
 seq_osc = (vertcat(obj.results(obj.osc_ids).seq))';
-seq_osc = seq_osc(1:18,:);
+% seq_osc = seq_osc(1:18,:);
 
 seq_n_osc = (vertcat(obj.results(~obj.osc_ids).seq))';
-seq_n_osc = seq_n_osc(1:18,:);
+% seq_n_osc = seq_n_osc(1:18,:);
 
 switch paramName
     case {'all'}

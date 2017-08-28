@@ -19,7 +19,7 @@ for i = 1:length(inputsNames)
                 ((per_des_Max-per_des_Min) * rand(1,length(seq)));
         case 'period'
 %             sampl(i,:) = periods;
-              error('should nor be periods');
+              error('should not be periods');
         otherwise
             sampl(i,:) = seq(strcmp(p_name,obj.seqOrder),:);
     end   
@@ -47,16 +47,18 @@ switch method
 end
 
 % check the the NN outputs are not crossing the allowed genome range:
-for i=1:size(theta_S1_new,1)
-    param_id = strcmp(targetsNames{1,i},obj.seqOrder);
-    gen_min = obj.MML.Gen.Range(1,param_id);
-    gen_max = obj.MML.Gen.Range(2,param_id);
-    ids = (theta_S1_new(i,:) < gen_min) | (theta_S1_new(i,:) > gen_max);
-    disp([num2str(sum(ids)),' are outside of the parameter range']);
-    ind = find(ids);
-    for j=1:sum(ids)
-        theta_S1_new(i,ind(j)) =...
-            min(max(theta_S1_new(i,ind(j)),gen_min),gen_max);
+if false % wether to limit the NN output
+    for i=1:size(theta_S1_new,1)
+        param_id = strcmp(targetsNames{1,i},obj.seqOrder);
+        gen_min = obj.MML.Gen.Range(1,param_id);
+        gen_max = obj.MML.Gen.Range(2,param_id);
+        ids = (theta_S1_new(i,:) < gen_min) | (theta_S1_new(i,:) > gen_max);
+        disp([num2str(sum(ids)),' are outside of the parameter range']);
+        ind = find(ids);
+        for j=1:sum(ids)
+            theta_S1_new(i,ind(j)) =...
+                min(max(theta_S1_new(i,ind(j)),gen_min),gen_max);
+        end
     end
 end
 

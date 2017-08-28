@@ -65,12 +65,15 @@ end
     Inputs_names_test,Targets_names_test,method);
 
 %% plot:
+net = obj.NN.net;
+NNoutputs_on_train = net(Inputs_train);
+
 targetsNum = size(Targets_names_train,2);
 
 % plot histograms to compare the outputs to the inputs:
 if strcmp(testOn,'test_on_training_data')
     
-    if true % norm the outputs or not
+    if false % norm the outputs or not
         % norm the targets:
         temp = zeros(size(Targets_train));
         for i=1:targetsNum
@@ -80,12 +83,13 @@ if strcmp(testOn,'test_on_training_data')
         Targets_train = temp;
         
         % norm the outputs::
-        temp = zeros(size(NNoutputs));
+        temp = zeros(size(NNoutputs_on_train));
         for i=1:targetsNum
             temp(i,:) = ...
-                obj.norm_min_max(NNoutputs(i,:),Targets_names_train{1,i});
+                obj.norm_min_max(NNoutputs_on_train(i,:),...
+                Targets_names_train{1,i});
         end
-        NNoutputs = temp;
+        NNoutputs_on_train = temp;
         
         % set the axis between '0' to '1':
         Axis = [0,1,0,1];
@@ -102,7 +106,7 @@ if strcmp(testOn,'test_on_training_data')
         case 1
             figure;
             histogram(Targets_train,100,'Normalization','pdf'); hold on;
-            histogram(NNoutputs,100,'Normalization','pdf');
+            histogram(NNoutputs_on_train,100,'Normalization','pdf');
             xlabel(Targets_names_train);
             legend('NNtargets','NNoutputs');
             grid minor;
@@ -123,7 +127,8 @@ if strcmp(testOn,'test_on_training_data')
             axis(Axis);
             
             figure;
-            histogram2(NNoutputs(1,:),NNoutputs(2,:),...
+            histogram2(NNoutputs_on_train(1,:),...
+                NNoutputs_on_train(2,:),...
                 xedges,yedges,...
                 'DisplayStyle','tile','ShowEmptyBins','on',...
                 'Normalization','pdf');
@@ -139,12 +144,14 @@ if strcmp(testOn,'test_on_training_data')
         % only plotting random 5000 samples:
         rand_ind = randsample(size(Targets_train,2),5000);
         
-        RMSE = sqrt(immse(Targets_train(i,rand_ind),NNoutputs(i,rand_ind)));
+        RMSE = sqrt(immse(Targets_train(i,rand_ind),...
+            NNoutputs_on_train(i,rand_ind)));
         disp(['the RMSE of ',Targets_names_train{1,i},' is: ',...
             num2str(RMSE)]);
 
         figure;
-        scatter(Targets_train(i,rand_ind),NNoutputs(i,rand_ind)); hold on;
+        scatter(Targets_train(i,rand_ind),...
+            NNoutputs_on_train(i,rand_ind)); hold on;
         xlabel('targets');
         ylabel('outputs');
         title({'reggression graph: target vs. outputs',...

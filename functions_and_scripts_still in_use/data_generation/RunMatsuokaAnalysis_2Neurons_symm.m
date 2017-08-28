@@ -13,10 +13,10 @@ N = nAnkle+nHip;
 Mw = 10*ones(1,(2*N-1)*2*N);
 mw = 0*Mw;
 % %     % 2neuron symmetric specific range%%
-Keys = {'\tau_r', 'beta',     'amp_2n',        '2neuron_symm_weights', 'ks_\tau',     'ks_c', 'IC_matsuoka';
-              1 ,      1,            2,                             1,        1 ,          2,            0 };
-Range = {  0.02 ,    0.2,            0,                             0,   -0.001 ,  -0.2*Mamp; % Min
-           0.25  ,   2.5,           10,                            10,   0.001 ,   0.2*Mamp}; % Max
+Keys = {'\tau_r', 'beta',     'amp_2n',    '2neuron_symm_weights', 'ks_\tau',     'ks_c', 'IC_matsuoka';
+              1 ,      1,            2,                         1,        1 ,          2,            0 };
+Range = {  0.02 ,    0.2,        [0,0],                         0,   -0.001 ,[-0.2,-0.2]; % Min
+           0.25  ,   2.5,      [10,10],                        10,    0.001 , [0.2,0.2]}; % Max
 
 MutDelta0 = 0.04;   MutDelta1 = 0.02;
 
@@ -37,7 +37,7 @@ MML.nNeurons = 2;
 % % change tau_a/tau_r to 12 (instead of 5)
 MML.Sim.Con.tau_ratio = 12;
 %% Train data:
-N = 100; % the number of samples
+N = 300000; % the number of samples
 % CPG parameters:
 tau_min = 0.02;     tau_max = 0.25;
 tau = (tau_max-tau_min).*rand(1,N) + tau_min;
@@ -48,12 +48,19 @@ b = (b_max-b_min).*rand(1,N) + b_min;
 c_min = 0;     c_max = 10;
 c = (c_max-c_min).*rand(1,N) + c_min;
 
-a_min = 0;     a_max = 10;
+% a_min = 0;     a_max = 10;
+a_min = 0;     a_max = 5;
 a = (a_max-a_min).*rand(1,N) + a_min;
 
+% tau = 0.1*ones(1,N);
+% b_min = 0.2;     b_max = 2.5;
+% b = (b_max-b_min).*rand(1,N) + b_min;
+% c = 5*ones(1,N);
+% a = 5*ones(1,N);
+
 disp('start with the sim:');
-% parfor i=1:N % Simulate and calculate the frequecy (also calc from Matsuoka extimation)
-for i=1:N
+parfor i=1:N % Simulate and calculate the frequecy (also calc from Matsuoka extimation)
+% for i=1:N
     disp(['at sim #',num2str(i)]);
     seq = [tau(1,i),b(1,i),c(1,i),0,a(1,i),0,0,0];
     [out, ~, signal] = MML.runSim(seq);
@@ -99,12 +106,13 @@ for i=1:N
 end 
 disp('sim end...');
 
-save('MatsRandomRes_2Neurons_symm_A.mat','results');
+save('MatsRandomRes_2Neurons_symm_A_1.mat','results');
+% save('MatsRandomRes_2Neurons_symm_only_b_change.mat','results');
 
 
 %% Test data:
 % the test data has only change of 'a'
-N = 1000; % the number of samples
+N = 50000; % the number of samples
 % CPG parameters:
 tau_min = 0.02;     tau_max = 0.6;
 tau = 0.5.*ones(1,N);%(tau_max-tau_min).*rand(1,N) + tau_min;
