@@ -66,8 +66,8 @@ classdef NNs_4paper
             
             obj.seq = vertcat(obj.results(:).seq);
             
-%             obj = obj.filter_ids_4N_general;
-            obj = obj.filter_ids_2N_Symm;
+            obj = obj.filter_ids_4N_general;
+%             obj = obj.filter_ids_2N_Symm;
             
             
         end

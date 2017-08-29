@@ -68,7 +68,7 @@ NNs_4paper.hist_compare(tau_before,tau_after,'tau',...
 %% check NN on training data:
 close all; clc;
 
-caseNum = 9;
+caseNum = 7;
 architecture = [20,20];
 % NNs_4paper.train_and_test_NN(caseNum,architecture,'MoE colaboration','test_on_training_data');
 

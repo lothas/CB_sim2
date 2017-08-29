@@ -83,7 +83,9 @@ fit1Num = 1; % 'VelFit'
 fit2Num = 3; % 'VelRangeFit#1'
 GA_graphs.MOGA_pareto_plot(fit1Num,fit2Num,last_gen,'showAll');
 
-GA_graphs.MOGA_pareto_plot(fit1Num,fit2Num,last_gen,'showBest');
+GA_graphs.MOGA_pareto_plot(fit1Num,fit2Num,last_gen,'showBest_subPlots');
+
+GA_graphs.MOGA_pareto_plot(fit1Num,fit2Num,last_gen,'showBest_onOnePlot');
 %% plot Tend ratio:
 GA_graphs.plot_Tend_ratio(last_gen);
 
@@ -91,7 +93,7 @@ GA_graphs.plot_Tend_ratio(last_gen);
 GA_graphs.plot_gen_runTime(last_gen);
 
 %% plot Hist of parameter over generation
-whichParam = 'VelRangeFit #1';
+whichParam = 'tau';
 GA_graphs.plot_param_hist_over_genNum(whichParam,last_gen);
 
 
