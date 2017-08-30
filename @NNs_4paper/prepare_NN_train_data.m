@@ -15,6 +15,8 @@ for i = 1:length(inputsNames)
     switch p_name
         case {'periods','period'}
             sampl(i,:) = periods;
+        case {'freq'}
+            sampl(i,:) = 1./periods;
         otherwise
             sampl(i,:) = seq(strcmp(p_name,obj.seqOrder),:);
     end   
@@ -25,6 +27,8 @@ for i = 1:length(outputsNames)
     switch p_name
         case {'periods','period'}
             targ(i,:) = periods;
+        case {'freq'}
+            targ(i,:) = 1./periods;
         otherwise
             targ(i,:) = seq(strcmp(p_name,obj.seqOrder),:);
     end

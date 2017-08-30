@@ -41,6 +41,11 @@ classdef MatsuokaML
 %             % genome for 2Neurons Symmetric Matsuoka:
 %             genome_file = 'MatsuokaGenome_2Neuron_Symm.mat';
             
+            % genome for 2Neurons General Matsuoka:
+%             genome_file = 'MatsuokaGenome_2Neuron_General.mat';
+            
+            % genome for TagaLike Matsuoka:
+%             genome_file = '';
             load(genome_file);
             Keys(:,strcmp(Keys(1,:),'IC_matsuoka')) = []; %#ok<NODEF>
             obj.Gen = Genome(Keys, Range);

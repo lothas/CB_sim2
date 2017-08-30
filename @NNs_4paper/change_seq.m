@@ -1,7 +1,13 @@
 function [seq_after_NN,theta_S1_new] =...
-    prepare_NN_test_seq(obj,seq,inputsNames,targetsNames,method)
-% this function prepare the matrices for the NN tesing in MOOGA
+    change_seq(obj,seq,method)
+% this function use the NN/MoE to change the CPG sequece.
 
+% create the inputs names for the test case
+% (=using 'period_des' instead of 'period')
+[inputsNames,targetsNames] = ...
+    obj.check_NN_case(caseNum,'period_desired');
+
+% save the Seq
 seq = seq';
 seq_after_NN = seq;
 
@@ -25,26 +31,7 @@ for i = 1:length(inputsNames)
     end   
 end
 
-switch method
-    case 'NN'
-        net = obj.NN.net;
-        theta_S1_new = net(sampl);
-    case 'MoE colaboration'
-        [theta_S1_new,~,~,~] =...
-            obj.MoE_testNet(sampl,obj.MoE.expertsNN,...
-            obj.MoE.gateNet,'collaboration');
-    case 'MoE hard'
-        [theta_S1_new,~,~,~] =...
-            obj.MoE_testNet(sampl,obj.MoE.expertsNN,...
-            obj.MoE.gateNet,'hardCompetetetive');
-    case 'MoE soft'
-        [theta_S1_new,~,~,~] =...
-            obj.MoE_testNet(sampl,obj.MoE.expertsNN,...
-            obj.MoE.gateNet,'softCompetetetive');
-    otherwise
-        error('unknown method...')
-        
-end
+theta_S1_new = obj.apply_net(sampl,method);
 
 % check the the NN outputs are not crossing the allowed genome range:
 if false % wether to limit the NN output

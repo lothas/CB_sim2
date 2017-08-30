@@ -55,15 +55,25 @@ NNs_4paper.hist_compare(tau_before,tau_after,'tau',...
 %% check NN on training data:
 close all; clc;
 
-caseNum = 22;
+caseNum = 7;
+
+% get the names of the training parameters:
+Inputs_names = {'period','tau','a'};
+Targets_names = {'b'};
+
 architecture = [20,20];
-% NNs_4paper.train_and_test_NN(caseNum,architecture,'MoE colaboration','test_on_training_data');
 
-% NNs_4paper.train_and_test_NN(caseNum,architecture,'MoE hard','test_on_training_data');
+NNs_4paper = NNs_4paper.train_and_test(Inputs_names,Targets_names,...
+    architecture,'NN','test_on_training_data');
 
-% NNs_4paper.train_and_test_NN(caseNum,architecture,'MoE soft','test_on_training_data');
-
-NNs_4paper.train_and_test_NN(caseNum,architecture,'NN','test_on_training_data');
+% NNs_4paper.train_and_test(Inputs_names,Targets_names,...
+%     architecture,'MoE colaboration','test_on_training_data');
+% 
+% NNs_4paper.train_and_test(Inputs_names,Targets_names,...
+%     architecture,'MoE hard','test_on_training_data');
+% 
+% NNs_4paper.train_and_test(Inputs_names,Targets_names,...
+%     architecture,'MoE soft','test_on_training_data');
 
 %% save data to CSV file:
 caseNum = 9;

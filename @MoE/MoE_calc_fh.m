@@ -7,8 +7,8 @@ function fh = MoE_calc_fh(obj,inputs,targets,...
 % % % % 2 parameters in the NN output.
 num_of_train_samples = size(targets,2);
 
-errMat = zeros(obj.MoE.expertCount,num_of_train_samples);
-for j=1:obj.MoE.expertCount % run the data throught the experts to get initial clustering
+errMat = zeros(obj.expertCount,num_of_train_samples);
+for j=1:obj.expertCount % run the data throught the experts to get initial clustering
     tempNet = expertsNN{1,j};
     outMat = tempNet(inputs);
     errMat(j,:) = outMat - targets;
@@ -17,7 +17,7 @@ seMat = errMat.^2; % squar error
 
 % calc f_h from the equation in Jacobs1990 paper
 % as seMat = yStar_yi in the paper.
-fh = zeros(obj.MoE.expertCount,num_of_train_samples);
+fh = zeros(obj.expertCount,num_of_train_samples);
 for k=1:num_of_train_samples
     fh(:,k) = g(:,k) .* exp(-0.5 .* seMat(:,k) );
     fh(:,k) = fh(:,k) ./ sum(fh(:,k),1);

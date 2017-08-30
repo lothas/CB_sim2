@@ -1,6 +1,5 @@
 function [netOut,gateOut,belongToExpert,cluster_i_train_ind] =...
-    MoE_testNet(obj,NNinputs,expertsNN,...
-    gateNet,MoE_method)
+    MoE_testNet(obj,NNinputs,expertsNN,gateNet)
 %this function train a "Mixture of Experts" newural networks
 
 %%%%%%%%% TODO: make this code to work with multiple NN outputs! %%%%%%%
@@ -12,7 +11,7 @@ function [netOut,gateOut,belongToExpert,cluster_i_train_ind] =...
 %                matrix of (#targets x #samples) dimention
 % 3) expertsNN - cell array containing the experts and their performance.
 % 4) gateNet - the Gate NN.
-% 5) MoE_method - *) 'hardCompetetetive' = "winner takes all"
+% #) MoE_method - *) 'hardCompetetetive' = "winner takes all"
 %                 *) 'softCompetetetive' = "chance for everybody"
 %                 *) 'collaboration' = (out = expertsOut*gateOut)
 
@@ -24,17 +23,16 @@ function [netOut,gateOut,belongToExpert,cluster_i_train_ind] =...
 % 4) cluster_i_train_ind - in case of clustering. this is the indecies
 %   specify which samples went to which expert.
 
-expertCount = size(expertsNN,2);
 num_of_samples = size(NNinputs,2);
 
 belongToExpert = zeros(1,num_of_samples);
-expertsOut = zeros(expertCount,num_of_samples); % Experts output matrix 
-cluster_i_train_ind = cell(1,expertCount);
+expertsOut = zeros(obj.expertCount,num_of_samples); % Experts output matrix 
+cluster_i_train_ind = cell(1,obj.expertCount);
 
 % sending samples (inputs) to gate net:
 gateOut = gateNet(NNinputs);
 
-switch MoE_method
+switch obj.MoE_method
     case 'hardCompetetetive'
        % each data sample is classified based on the highest probability. 
        % for expample, given 2 experts and a datasample with
@@ -49,7 +47,7 @@ switch MoE_method
        % belong to the 2nd expert. so this method will classify this point
        % according to the probability.
        for k=1:size(gateOut,2)
-            acumulativeProb = tril(ones(expertCount,expertCount))*gateOut(:,k);
+            acumulativeProb = tril(ones(obj.expertCount,obj.expertCount))*gateOut(:,k);
             belongToExpert(1,k) = find(acumulativeProb > rand(1),1);
        end
     case 'collaboration'
@@ -57,7 +55,7 @@ switch MoE_method
         % probability of this expert (this method was taken from
         % jacobs1990 paper).
         netOut = zeros(1,num_of_samples);
-        for j=1:expertCount
+        for j=1:obj.expertCount
             tempNet = expertsNN{1,j};
             expertsOut(j,:) = tempNet(NNinputs);
         end
@@ -68,12 +66,12 @@ switch MoE_method
         error('wrong "competetiveFlag", try again');
 end
 
-switch MoE_method
+switch obj.MoE_method
     case {'hardCompetetetive','softCompetetetive'}
         if num_of_samples > 1 % many samples, performance analisys
             % sending the samples to their experts
             netOut = zeros(1,num_of_samples);
-            for j=1:expertCount
+            for j=1:obj.expertCount
                 % check wich sample belongs to which cluster (expert):
                 cluster_i_train_ind{1,j} = find(belongToExpert == j);
 
@@ -82,7 +80,8 @@ switch MoE_method
 
                 % make expert outputs and rearrange it according to the
                 % original smaples order:
-                netOut(1,cluster_i_train_ind{1,j}) = tempNet(NNinputs(:,cluster_i_train_ind{1,j}));
+                netOut(1,cluster_i_train_ind{1,j}) =...
+                    tempNet(NNinputs(:,cluster_i_train_ind{1,j}));
             end
         else
             % if only one sampl was sent for testing:

@@ -85,18 +85,7 @@ switch caseNum
         tempCell = {[theta_s0,{'tau'}]};
         parametersCells = tempCell{1,1};
         targetCells = {'b'};
-    case 21 % inputs: 'period','tau' | Outputs: 'b'
-        tempCell = {[theta_s0,{'tau'}]};
-        parametersCells = tempCell{1,1};
-        targetCells = {'b'};
-    case 22 % inputs: 'period','tau','a' | Outputs: 'b'
-        tempCell = {[theta_s0,{'tau','a'}]};
-        parametersCells = tempCell{1,1};
-        targetCells = {'b'};
-    case 23 % inputs: 'period','a' | Outputs: 'tau','b'
-        tempCell = {[theta_s0,{'a'}]};
-        parametersCells = tempCell{1,1};
-        targetCells = {'tau','b'};
+        
     otherwise
         error('wrong case number');
 end
