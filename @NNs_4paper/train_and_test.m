@@ -1,5 +1,5 @@
 function obj = train_and_test(obj,Inputs_names,Targets_names,...
-    architecture,method,testOn)
+    architecture,method,graphFlag)
 % this function test the NN for the wanted case.
 % if we check the 'training' data, then we also plot the NN perf.
 
@@ -8,7 +8,7 @@ function obj = train_and_test(obj,Inputs_names,Targets_names,...
 %                       'MoE' - for Mixture of Experts
 % *) 'testOn' - wether to test on a random data, external data, or the same
 % training data.
-% 
+% *) 'graphFlag' - plot the graphs or not
 
 %% NN training:
 
@@ -22,6 +22,7 @@ switch method
         obj.NN = NeuralNetwork(architecture,Inputs_train,Targets_train);
         obj.NN = obj.NN.train_NN();
         targ_train = Targets_train(:,obj.NN.net_train_perf.trainInd);
+%         obj.NN.net_train_function = 'trainrp';
     case 'MoE colaboration'
         obj.MoE = MoE(Inputs_train,Targets_train,'collaboration');
         obj.MoE.numOfIteretions = 5;
@@ -56,7 +57,7 @@ end
 NNoutputs_on_train = obj.apply_net(in,method);
 
 % plot histograms to compare the outputs to the inputs:
-if strcmp(testOn,'test_on_training_data')
+if graphFlag
     
     if false % norm the outputs or not
         % norm the targets:

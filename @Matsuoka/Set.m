@@ -80,18 +80,25 @@ else
                 MO.win = 0;
                 MO.wex = zeros(2*MO.nPulses);
                 MO.wex = [0,value;value,0];
-           case '2neuron_general_weights' % Neuron connection weights, general 2neuron CPG
+            case '2neuron_general_weights' % Neuron connection weights, general 2neuron CPG
                 MO.win = 0;
                 MO.wex = zeros(2*MO.nPulses);
                 MO.wex = [0,value(1);value(2),0];
-           case '4neuron_symm_weights' % Neuron connection weights, symmetric 2neuron CPG
+            case '4neuron_symm_weights' % Neuron connection weights, symmetric 4neuron CPG
                 MO.win = 0;
                 MO.wex = zeros(2*MO.nPulses);
                 MO.wex = [0       ,value(1),value(2),value(3);
                           value(1),0       ,value(4),value(5);
                           value(2),value(4),0       ,value(6);
                           value(3),value(5),value(6),0       ];
-
+            case '4neuron_taga_like'
+                MO.win = 0;
+                MO.wex = zeros(2*MO.nPulses);
+                MO.wex = [0       ,value(1),value(2),0;
+                          value(1),0       ,value(3),0;
+                          value(2),value(3),0       ,value(4);
+                          0       ,0       ,value(4),0       ];
+                      
             % Controller Output
             case {'amp0', 'amp', 'c_i'} % Base neuron amplitude multiplier
                 N = length(value);
@@ -104,7 +111,7 @@ else
                 end
                 MO.Amp = MO.Amp0; 
                 
-             case 'amp_2n' % Base neuron amplitude multiplier, symmetric, 2 neurons
+            case 'amp_2n' % Base neuron amplitude multiplier, symmetric, 2 neurons
                 MO.Amp0 = reshape([value(1); value(1)], [], 1);
                 MO.Amp = MO.Amp0;
                 

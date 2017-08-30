@@ -77,17 +77,113 @@ caseNum = 7;
 architecture = [10];
 
 NNs_4paper = NNs_4paper.train_and_test(Inputs_names,Targets_names,...
-    architecture,'NN','test_on_training_data');
+    architecture,'NN',1);
 
 % NNs_4paper.train_and_test(Inputs_names,Targets_names,...
-%     architecture,'MoE colaboration','test_on_training_data');
+%     architecture,'MoE colaboration',1);
 % 
 % NNs_4paper.train_and_test(Inputs_names,Targets_names,...
-%     architecture,'MoE hard','test_on_training_data');
+%     architecture,'MoE hard',1);
 % 
 % NNs_4paper.train_and_test(Inputs_names,Targets_names,...
-%     architecture,'MoE soft','test_on_training_data');
+%     architecture,'MoE soft',1);
 
+%% train NN 5 times and collect statistics about the Perf:
+close all; clc;
+% caseNum = 7;
+% % get the names of the training parameters:
+% [Inputs_names,Targets_names] =...
+%     NNs_4paper.check_NN_case(caseNum,'period');
+
+Inputs_names = {'tau','b','w_{12}','w_{13}','w_{14}',...
+        'w_{21}','w_{23}','w_{24}',...
+        'w_{31}','w_{32}','w_{34}',...
+        'w_{41}','w_{42}','w_{43}'};
+Targets_names = {'period'};
+
+architecture = {[20]};
+numOfRepeats = 5;
+
+train_RMSE = zeros(numOfRepeats,length(architecture));
+valid_RMSE = zeros(numOfRepeats,length(architecture));
+test_RMSE = zeros(numOfRepeats,length(architecture));
+
+train_R2 = zeros(numOfRepeats,length(architecture));
+valid_R2 = zeros(numOfRepeats,length(architecture));
+test_R2 = zeros(numOfRepeats,length(architecture));
+
+train_slope = zeros(numOfRepeats,length(architecture));
+valid_slope = zeros(numOfRepeats,length(architecture));
+test_slope = zeros(numOfRepeats,length(architecture));
+
+for i=1:length(architecture)
+    disp(['at NN arch :  ',num2str(architecture{1,i})]);
+    for j=1:5
+        disp(['    trail num #',num2str(j)])
+        NNs_4paper = NNs_4paper.train_and_test(Inputs_names,Targets_names,...
+        architecture{1,i},'NN',0);
+
+        train_RMSE(j,i) = NNs_4paper.NN.train_RMSE;
+        valid_RMSE(j,i) = NNs_4paper.NN.valid_RMSE;
+        test_RMSE(j,i) = NNs_4paper.NN.test_RMSE;
+
+        train_R2(j,i) = NNs_4paper.NN.train_R2;
+        valid_R2(j,i) = NNs_4paper.NN.valid_R2;
+        test_R2(j,i) = NNs_4paper.NN.test_R2;
+
+        train_slope(j,i) = NNs_4paper.NN.train_slope;
+        valid_slope(j,i) = NNs_4paper.NN.valid_slope;
+        test_slope(j,i) = NNs_4paper.NN.test_slope;
+    end
+end
+
+train_RMSE_mean = mean(train_RMSE,1);
+valid_RMSE_mean = mean(valid_RMSE,1);
+test_RMSE_mean = mean(test_RMSE,1);
+
+train_R2_mean = mean(train_R2,1);
+valid_R2_mean = mean(valid_R2,1);
+test_R2_mean = mean(test_R2,1);
+
+train_slope_mean = mean(train_slope,1);
+valid_slope_mean = mean(valid_slope,1);
+test_slope_mean = mean(test_slope,1);
+
+figure;
+boxplot(train_RMSE,'Colors',[0,0,128]./256); hold on;
+boxplot(valid_RMSE,'Colors',[34,139,34]./256);
+boxplot(test_RMSE,'Colors',[178,34,34]./256);
+xlabel('NN arcith');
+ylabel('RMSE');
+grid minor
+title('RMSE over hidden neurons num');
+
+figure;
+boxplot(train_R2,'Colors',[0,0,128]./256); hold on;
+boxplot(valid_R2,'Colors',[34,139,34]./256);
+boxplot(test_R2,'Colors',[178,34,34]./256);
+xlabel('NN arcith');
+ylabel('R^2');
+grid minor
+title('R^2 over hidden neurons num');
+
+figure;
+boxplot(train_slope,'Colors',[0,0,128]./256); hold on;
+boxplot(valid_slope,'Colors',[34,139,34]./256);
+boxplot(test_slope,'Colors',[178,34,34]./256);
+xlabel('NN arcith');
+ylabel('reggresion graph slope');
+grid minor
+title('slope over hidden neurons num');
+
+% figure;hold on;
+% H(1) = shadedErrorBar(x, y, {@mean, @(x) 2*std(x)  }, '-r', 0);
+% H(2) = shadedErrorBar(x, y, {@mean, @(x) 1*std(x)  }, '-m', 0);
+% H(3) = shadedErrorBar(x, y, {@mean, @(x) 0.5*std(x)}, {'-b', 'LineWidth', 2}, 0);
+% 
+% legend([H(3).mainLine, H.patch], ...
+%     '\mu', '2\sigma', '\sigma', '0.5\sigma', ...
+%     'Location', 'Northwest');
 %% save data to CSV file:
 caseNum = 9;
 fileName = 'data_to_CSV_case_7_tauRatio_12_';

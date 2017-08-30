@@ -9,14 +9,18 @@ targets_num = size(obj.targets,1);
 
 % Create and train the NN
 % net = feedforwardnet(obj.architecture);
-net = feedforwardnet(obj.architecture,'useGPU','yes');
-% net = fitnet(obj.architecture);
+% net = feedforwardnet(obj.architecture,'useGPU','yes');
+net = fitnet(obj.architecture);
 % net = cascadeforwardnet(obj.architecture);
 
+net.trainFcn = obj.net_train_function;
 % net.trainFcn = 'trainlm';
 % net.trainFcn = 'trainbr';
 % net.trainFcn = 'trainscg';
 % net.trainFcn = 'trainrp';
+
+% dont show training window:
+net.trainParam.showWindow = 1; 
 
 if false % train only on some of the samples (not all of them)
     ind = randsample(size(obj.targets,2),50000);

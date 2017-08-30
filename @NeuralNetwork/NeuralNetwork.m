@@ -4,11 +4,12 @@ classdef NeuralNetwork < handle & matlab.mixin.Copyable
     
     properties
         
-        architecture = []; % row vector with neural network architecture
         inputs = []; % NN inputs
         targets = []; % NN targets
         
         net = []; % the NN 
+        net_train_function = 'trainlm'; % the NN training function
+        architecture = []; % row vector with neural network architecture
         net_train_perf = []; % contain the structure of the NN training performancwe
         
         train_RMSE = []; % Root Mean Squar Error on train group
