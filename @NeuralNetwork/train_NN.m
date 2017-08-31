@@ -13,11 +13,11 @@ targets_num = size(obj.targets,1);
 net = fitnet(obj.architecture);
 % net = cascadeforwardnet(obj.architecture);
 
-net.trainFcn = obj.net_train_function;
+% net.trainFcn = obj.net_train_function;
 % net.trainFcn = 'trainlm';
 % net.trainFcn = 'trainbr';
 % net.trainFcn = 'trainscg';
-% net.trainFcn = 'trainrp';
+net.trainFcn = 'trainrp';
 
 % dont show training window:
 net.trainParam.showWindow = 1; 

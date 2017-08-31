@@ -2,38 +2,39 @@
 close all; clc; clear all;
 
 % % Load peridos oscillating and periods which oscillates in range:
-load('MatsRandomRes_2Neurons_symm_osc_in_range.mat','results');
+load('MatsRandomRes_4Neurons_Large_b_Large_W_All_osc1.mat','results','header');
 results1 = results;    clear results
-load('MatsRandomRes_2Neurons_symm_osc_in_range1.mat','results');
+load('MatsRandomRes_4Neurons_Large_b_Large_W_All_osc2.mat','results');
 results2 = results;    clear results
 results = [results1,results2];  clear results1 results2
 
 
-header = sprintf('tau ratio is equal to 12 \n');
-header = [header,sprintf('data is for 2N symmetric CPG case \n')];
-header = [header,sprintf('seq Order: \n')];
-header = [header,sprintf('"tau" ,"b", "c", NR, "a", NR... \n')];
-header = [header,sprintf('"NR" - not relevnt param \n')];
-header = [header,sprintf('b in range (0.2,2.5) \n')];
-header = [header,sprintf('All oscillating in range')];
+% header = sprintf('tau ratio is equal to 12 \n');
+% header = [header,sprintf('data is for 2N symmetric CPG case \n')];
+% header = [header,sprintf('seq Order: \n')];
+% header = [header,sprintf('"tau" ,"b", "c", NR, "a", NR... \n')];
+% header = [header,sprintf('"NR" - not relevnt param \n')];
+% header = [header,sprintf('b in range (0.2,2.5) \n')];
+% header = [header,sprintf('All oscillating in range')];
 
-save('MatsRandomRes_2Neurons_symm_4Paper_All_in_range.mat',...
+save('MatsRandomRes_4Neurons_Large_b_Large_W_All_osc.mat',...
     'header','results');
 
 %% save the "good" samples:
 
 header = sprintf('tau ratio is equal to 12 \n');
-header = [header,sprintf('data is for 2N symmetric CPG case \n')];
+header = [header,sprintf('data is for 4N general CPG case \n')];
 header = [header,sprintf('seq Order: \n')];
-header = [header,sprintf('"tau" ,"b", "c", NR, "a", NR... \n')];
-header = [header,sprintf('"NR" - not relevnt param \n')];
-header = [header,sprintf('b in range (0.2,2.5) \n')];
-header = [header,sprintf('All oscillating in range')];
+header = [header,sprintf('"tau","b","c_1","c_2","c_3","c_4" \n')];
+header = [header,sprintf('"w_{12}","w_{13}","w_{14}","w_{21}","w_{23}","w_{24}" \n')];
+header = [header,sprintf('"w_{31}","w_{32}","w_{34}","w_{41}","w_{42}","w_{43}" \n')];
+header = [header,sprintf('b in range (0.2,10) \n')];
+header = [header,sprintf('W_ij in range (0,10) \n')];
 
 % results = NNs_4paper.results(NNs_4paper.osc_ids);
-results = NNs_4paper.results(NNs_4paper.osc_inRange_ids);
+results = NNs_4paper.results(NNs_4paper.osc_ids);
 
-save('MatsRandomRes_2Neurons_symm_osc_in_range1.mat',...
+save('MatsRandomRes_4Neurons_Large_b_Large_W_All_osc2.mat',...
     'header','results');
 
 %% combaining the filtered CPGs

@@ -95,15 +95,16 @@ if use_NN
     inFilenames = {'MatsRandomRes_4Neurons_4Paper_for_MOOGA_try.mat'};
 
     MML.sample_genes = {'weights'};
-%     MML.target_genes = {'beta'};
-    MML.target_genes = {'\tau_r','beta'};
+    MML.target_genes = {'beta'};
+%     MML.target_genes = {'\tau_r','beta'};
 
     [samples, targets, normParams] = MML.prepareNNData(inFilenames, maxN);
     MML.normParams = normParams;
     
 %     if exist(GANN_file, 'file') ~= 2
+        architecture = 80;
         [net, ~, ~, ~, ~, ~] = ...
-                MML.trainNN(samples, targets, 20, NNSamples);
+                MML.trainNN(samples, targets, architecture, NNSamples);
         save(GANN_file,'net');
 %     else
 %         GANN_net = load(GANN_file);

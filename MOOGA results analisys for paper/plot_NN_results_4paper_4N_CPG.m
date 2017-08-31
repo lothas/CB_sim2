@@ -11,18 +11,18 @@ MML.nNeurons = 4;
 
 % % % data with many CPG's that oscillates in range:
 % results_fileName = 'MatsRandomRes_4Neurons_4Paper_for_MOOGA_try.mat';
-
+results_fileName = 'MatsRandomRes_4Neurons_Large_b_Large_W_All_osc';
 % % data with small amount of CPGs that oscillate in range:
 % results_fileName = 'MatsRandomRes_4Neurons_4Paper.mat';
 
 % % data with tau_ratio=12 and (0.2 < b < 2.5)
-results_fileName = 'MatsRandomRes_4Neurons_4Paper_tau_ratio_equalTo_12_added_b_4Paper1.mat';
+% results_fileName = 'MatsRandomRes_4Neurons_4Paper_tau_ratio_equalTo_12_added_b_4Paper1.mat';
 % results_fileName = 'MatsRandomRes_4Neurons_4Paper_narrower_W_range';
 
 % % change tau_a/tau_r to 12 (instead of 5)
 MML.Sim.Con.tau_ratio = 12;
 % % change b_max:
-MML.Gen.Range(2,2) = 2.5; % the class will filter genes that are not in the new range.
+% MML.Gen.Range(2,2) = 2.5; % the class will filter genes that are not in the new range.
 
 NNs_4paper = NNs_4paper(results_fileName,MML);
 
@@ -74,7 +74,7 @@ caseNum = 7;
 [Inputs_names,Targets_names] =...
     NNs_4paper.check_NN_case(caseNum,'period');
 
-architecture = [10];
+architecture = [30,30,30];
 
 NNs_4paper = NNs_4paper.train_and_test(Inputs_names,Targets_names,...
     architecture,'NN',1);
@@ -90,16 +90,16 @@ NNs_4paper = NNs_4paper.train_and_test(Inputs_names,Targets_names,...
 
 %% train NN 5 times and collect statistics about the Perf:
 close all; clc;
-% caseNum = 7;
-% % get the names of the training parameters:
-% [Inputs_names,Targets_names] =...
-%     NNs_4paper.check_NN_case(caseNum,'period');
+caseNum = 7;
+% get the names of the training parameters:
+[Inputs_names,Targets_names] =...
+    NNs_4paper.check_NN_case(caseNum,'period');
 
-Inputs_names = {'tau','b','w_{12}','w_{13}','w_{14}',...
-        'w_{21}','w_{23}','w_{24}',...
-        'w_{31}','w_{32}','w_{34}',...
-        'w_{41}','w_{42}','w_{43}'};
-Targets_names = {'period'};
+% Inputs_names = {'tau','b','w_{12}','w_{13}','w_{14}',...
+%         'w_{21}','w_{23}','w_{24}',...
+%         'w_{31}','w_{32}','w_{34}',...
+%         'w_{41}','w_{42}','w_{43}'};
+% Targets_names = {'period'};
 
 architecture = {[20]};
 numOfRepeats = 5;

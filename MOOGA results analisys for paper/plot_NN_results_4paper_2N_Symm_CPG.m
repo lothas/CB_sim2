@@ -39,47 +39,89 @@ histogram(periods,100,'Normalization','pdf');
 xlabel('period [sec]');
 title('histogram of the CPGs period');
 
-%% rescale tau
-NNs_4paper = NNs_4paper.rescale_CPGs();
-
-tau_before = NNs_4paper.seq(:,1);
-tau_after = NNs_4paper.tau_rescaled;
-
-% norm results with min,max:
-tau_before = NNs_4paper.norm_min_max(tau_before,'tau');
-tau_after = NNs_4paper.norm_min_max(tau_after,'tau');
-
-NNs_4paper.hist_compare(tau_before,tau_after,'tau',...
-    20,{'tau','tau_{rescaled}'},'plot')
-
-%% check NN on training data:
+%% train NN 5 times and collect statistics about the Perf:
 close all; clc;
 
-caseNum = 7;
+% % get the names of the training parameters: (inverse)
+% Inputs_names = {'period','tau','a'};
+% Targets_names = {'b'};
 
-% get the names of the training parameters:
-Inputs_names = {'period','tau','a'};
-Targets_names = {'b'};
+% get the names of the training parameters: (farward)
+Inputs_names = {'tau','b','a'};
+Targets_names = {'period'};
 
-architecture = [20,20];
+architecture = {[20]};
+numOfRepeats = 5;
 
-NNs_4paper = NNs_4paper.train_and_test(Inputs_names,Targets_names,...
-    architecture,'NN','test_on_training_data');
+train_RMSE = zeros(numOfRepeats,length(architecture));
+valid_RMSE = zeros(numOfRepeats,length(architecture));
+test_RMSE = zeros(numOfRepeats,length(architecture));
 
-% NNs_4paper.train_and_test(Inputs_names,Targets_names,...
-%     architecture,'MoE colaboration','test_on_training_data');
-% 
-% NNs_4paper.train_and_test(Inputs_names,Targets_names,...
-%     architecture,'MoE hard','test_on_training_data');
-% 
-% NNs_4paper.train_and_test(Inputs_names,Targets_names,...
-%     architecture,'MoE soft','test_on_training_data');
+train_R2 = zeros(numOfRepeats,length(architecture));
+valid_R2 = zeros(numOfRepeats,length(architecture));
+test_R2 = zeros(numOfRepeats,length(architecture));
 
-%% save data to CSV file:
-caseNum = 9;
-fileName = 'data_to_CSV_case_7_tauRatio_12_';
-NNs_4paper.save_data_CSV(caseNum,fileName);
-%% correlation between targets and NN outputs:
-% a = [tau_out_on_train_set;b_out_on_train_set];
-% b = [tau_training;b_training];
-% [RHO,PVAL] = corr(a',b')
+train_slope = zeros(numOfRepeats,length(architecture));
+valid_slope = zeros(numOfRepeats,length(architecture));
+test_slope = zeros(numOfRepeats,length(architecture));
+
+for i=1:length(architecture)
+    disp(['at NN arch :  ',num2str(architecture{1,i})]);
+    for j=1:5
+        disp(['    trail num #',num2str(j)])
+        NNs_4paper = NNs_4paper.train_and_test(Inputs_names,Targets_names,...
+        architecture{1,i},'NN',0);
+
+        train_RMSE(j,i) = NNs_4paper.NN.train_RMSE;
+        valid_RMSE(j,i) = NNs_4paper.NN.valid_RMSE;
+        test_RMSE(j,i) = NNs_4paper.NN.test_RMSE;
+
+        train_R2(j,i) = NNs_4paper.NN.train_R2;
+        valid_R2(j,i) = NNs_4paper.NN.valid_R2;
+        test_R2(j,i) = NNs_4paper.NN.test_R2;
+
+        train_slope(j,i) = NNs_4paper.NN.train_slope;
+        valid_slope(j,i) = NNs_4paper.NN.valid_slope;
+        test_slope(j,i) = NNs_4paper.NN.test_slope;
+    end
+end
+
+train_RMSE_mean = mean(train_RMSE,1);
+valid_RMSE_mean = mean(valid_RMSE,1);
+test_RMSE_mean = mean(test_RMSE,1)
+
+train_R2_mean = mean(train_R2,1);
+valid_R2_mean = mean(valid_R2,1);
+test_R2_mean = mean(test_R2,1)
+
+train_slope_mean = mean(train_slope,1);
+valid_slope_mean = mean(valid_slope,1);
+test_slope_mean = mean(test_slope,1)
+
+figure;
+boxplot(train_RMSE,'Colors',[0,0,128]./256); hold on;
+boxplot(valid_RMSE,'Colors',[34,139,34]./256);
+boxplot(test_RMSE,'Colors',[178,34,34]./256);
+xlabel('NN arcith');
+ylabel('RMSE');
+grid minor
+title('RMSE over hidden neurons num');
+
+figure;
+boxplot(train_R2,'Colors',[0,0,128]./256); hold on;
+boxplot(valid_R2,'Colors',[34,139,34]./256);
+boxplot(test_R2,'Colors',[178,34,34]./256);
+xlabel('NN arcith');
+ylabel('R^2');
+grid minor
+title('R^2 over hidden neurons num');
+
+figure;
+boxplot(train_slope,'Colors',[0,0,128]./256); hold on;
+boxplot(valid_slope,'Colors',[34,139,34]./256);
+boxplot(test_slope,'Colors',[178,34,34]./256);
+xlabel('NN arcith');
+ylabel('reggresion graph slope');
+grid minor
+title('slope over hidden neurons num');
+
