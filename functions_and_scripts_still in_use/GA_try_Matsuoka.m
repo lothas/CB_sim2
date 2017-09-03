@@ -11,9 +11,9 @@ function [  ] = GA_try_Matsuoka(whichCase,fileIn)
 
 
 % GA = MOOGA(20,500);
-GA = MOOGA(10,2000);
+GA = MOOGA(10,1000);
 GA = GA.SetFittest(15,15,0.5);
-GA.JOAT = 2; GA.Quant = 0.3;
+GA.JOAT = 2; GA.Quant = 0.7;
 
 GA.FileIn = fileIn;
 
@@ -49,33 +49,8 @@ GA.Graphics = 0;
 GA.ReDo = 1;
 
 % Set up the genome
-genome_file = 'MatsuokaGenome.mat';
-if exist(genome_file, 'file') ~= 2
-    nAnkle = 1; % Number of ankle torques
-    nHip = 1;   % Number of hip torques
-    maxAnkle = 20;   % Max ankle torque
-    maxHip = 8;    % Max hip torque
-    Mamp = [maxAnkle*ones(1,2*nAnkle), maxHip*ones(1,2*nHip)];
-    mamp = 0*Mamp;
-    N = nAnkle+nHip;
-    Mw = 10*ones(1,12);
-    mw = 0*Mw;
-
-        %%%%%%%%%%%% For the 4-neuron case!!!
-    %     % Final genome with tau_r + beta (constant tau_u/tau_v ratio) 
-        Keys = {'\tau_r', 'beta', 'amp',   'weights', 'ks_\tau',     'ks_c', 'IC_matsuoka';
-                      1 ,      1,    4 ,          12,        1 ,         4 ,            0 };
-        Range = {  0.02 ,    0.2,  mamp,          mw,      -10 ,  -0.1*Mamp; % Min
-                   0.25 ,   10.0,  Mamp,          Mw,       10 ,   0.1*Mamp}; % Max
-
-    MutDelta0 = 0.04;   MutDelta1 = 0.02;
-
-    save(genome_file, 'nAnkle', 'nHip', 'maxAnkle', 'maxHip', ...
-        'Mamp', 'mamp', 'N', 'Mw', 'mw', ...
-        'MutDelta0', 'MutDelta1', 'Keys', 'Range');
-else
-    load(genome_file);
-end
+load('MatsuokaGenome_4Neuron_general.mat','Keys','Range','N',...
+    'nAnkle','nHip','maxAnkle', 'maxHip','MutDelta0','MutDelta1');
 
 GA.Gen = Genome(Keys, Range);
 
@@ -92,7 +67,7 @@ if use_NN
     NNSamples = 500;
     
 %     inFilenames = {'MatsRandomRes.mat', 'MatsScaledRes.mat'};
-    inFilenames = {'MatsRandomRes_4Neurons_4Paper_for_MOOGA_try.mat'};
+    inFilenames = {'MatsRandomRes_4Neurons_Large_b_Large_W_All_osc'};
 
     MML.sample_genes = {'weights'};
     MML.target_genes = {'beta'};

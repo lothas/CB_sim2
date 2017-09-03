@@ -16,7 +16,7 @@ seqOrder = {'tau','b','c','NR','a','NR','NR','NR'}; % 'NR'-not relevant
 
 % Load data:
 % results_fileName = 'MatsRandomRes_2Neurons_symm_4Paper_All_in_range.mat';
-results_fileName = 'MatsRandomRes_2Neurons_symm_4Paper.mat';
+results_fileName = 'MatsRandomRes_4Neurons_Large_b_Large_W_All_osc';
 load(results_fileName,'results');
 
 % get CPG periods:
@@ -47,13 +47,15 @@ osc_inRange_ids = osc_ids &...
     ( (periods(1,:) > MML.perLimOut(1,1)) &...
     (periods(1,:) < MML.perLimOut(1,2)) );
 
-%% make NN in and out:
+%% stage 2: make NN in and out:
 inputs = [periods;...
     seq(1,:);...
     seq(5,:)];
 
 targets = seq(2,:);
 
+
+%% Stage 3a: use "normal" NN
 % Create and train the NN
 net = feedforwardnet(5);
 
@@ -77,3 +79,34 @@ axis equal
 figure;
 scatter(targets,outputs);
     
+%% Stage 3b: use Matlab's other toolbox:
+
+% define NN layers
+layers = [reluLayer
+    fullyConnectedLayer(1)
+    regressionLayer];
+
+% training options:
+options = trainingOptions('sgdm','InitialLearnRate',0.001, ...
+    'MaxEpochs',15);
+
+
+net = trainNetwork(inputs,targets,layers,options);
+
+outputs = predict(net,inputs);
+
+% calc RMSE:
+err = targets - outputs;
+sqrErr = err .^ 2;
+RMSE = sqrt(mean(sqrErr))
+
+figure;
+histogram2(targets,outputs,100,...
+    'DisplayStyle','tile','ShowEmptyBins','on',...
+    'Normalization','pdf');
+xlabel('targets');
+ylabel('outputs');
+axis equal
+
+figure;
+scatter(targets,outputs);
