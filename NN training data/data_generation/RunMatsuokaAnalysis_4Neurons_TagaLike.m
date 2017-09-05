@@ -10,7 +10,6 @@ maxHip = 8;    % Max hip torque
 Mamp = [maxAnkle*ones(1,2*nAnkle), maxHip*ones(1,2*nHip)];
 mamp = 0*Mamp;
 N = nAnkle+nHip;
-Mw = 10*ones(1,4);
 mw = 0*ones(1,4);
 
 % CPG strucute: (ALSO Symm W_ij = W_ji)
@@ -25,13 +24,34 @@ mw = 0*ones(1,4);
 %                       % w24=w42 = w3
 %                       % w43=w34 = w4
 
-    %%%%%%%%%%%% For the 4-neuron case!!!
+%     %%%%%%%%%%%% For the 4-neuron case!!!
+% % large b, large W
+% Mw = 10*ones(1,4);
+% %     % Final genome with tau_r + beta (constant tau_u/tau_v ratio) 
+%     Keys = {'\tau_r', 'beta', 'amp',   '4neuron_taga_like', 'ks_\tau',     'ks_c', 'IC_matsuoka';
+%                   1 ,      1,    4 ,           4,        1 ,         4 ,            0 };
+%     Range = {  0.02 ,    0.2,  mamp,          mw,      -10 ,  -0.1*Mamp; % Min
+%                0.25 ,   10.0,  Mamp,          Mw,       10 ,   0.1*Mamp}; % Max
+%          
+
+% %%%%%%%%%%% For the 4-neuron case!!!
+% % Narrow b, Narrow W
+% Mw = 5*ones(1,4);
 %     % Final genome with tau_r + beta (constant tau_u/tau_v ratio) 
-    Keys = {'\tau_r', 'beta', 'amp',   '4neuron_taga_like', 'ks_\tau',     'ks_c', 'IC_matsuoka';
-                  1 ,      1,    4 ,           4,        1 ,         4 ,            0 };
-    Range = {  0.02 ,    0.2,  mamp,          mw,      -10 ,  -0.1*Mamp; % Min
-               0.25 ,   10.0,  Mamp,          Mw,       10 ,   0.1*Mamp}; % Max
-         
+% Keys = {'\tau_r', 'beta', 'amp',   '4neuron_taga_like', 'ks_\tau',     'ks_c', 'IC_matsuoka';
+%               1 ,      1,    4 ,           4,        1 ,         4 ,            0 };
+% Range = {  0.02 ,    0.2,  mamp,          mw,      -10 ,  -0.1*Mamp; % Min
+%            0.25 ,    2.5,  Mamp,          Mw,       10 ,   0.1*Mamp}; % Max
+
+%%%%%%%%%%%% For the 4-neuron case!!!
+% Narrow b, Large W
+Mw = 10*ones(1,4);
+%     % Final genome with tau_r + beta (constant tau_u/tau_v ratio) 
+Keys = {'\tau_r', 'beta', 'amp',   '4neuron_taga_like', 'ks_\tau',     'ks_c', 'IC_matsuoka';
+              1 ,      1,    4 ,           4,        1 ,         4 ,            0 };
+Range = {  0.02 ,    0.2,  mamp,          mw,      -10 ,  -0.1*Mamp; % Min
+           0.25 ,    2.5,  Mamp,          Mw,       10 ,   0.1*Mamp}; % Max
+
 MutDelta0 = 0.04;   MutDelta1 = 0.02;
 
 save(genome_file, 'nAnkle', 'nHip', 'maxAnkle', 'maxHip', ...
@@ -53,17 +73,14 @@ MML.Sim.Con.tau_ratio = 12;
 % MML.Gen.Range(2,2) = 2.5; % the class will filter genes that are not in the new range.
 %% Train data:
 
-N = 100; % the number of samples
+N = 400000; % the number of samples
 % % % % CPG parameters:
-% seqOrder = {'tau','b','c_1','c_2','c_3','c_4',...
-%     'w_{12}','w_{13}','w_{14}','w_{21}','w_{23}','w_{24}',...
-%     'w_{31}','w_{32}','w_{34}','w_{41}','w_{42}','w_{43}'};
 
 tau_min = 0.02;     tau_max = 0.25;
 tau = (tau_max-tau_min).*rand(1,N) + tau_min;
 
-b_min = 0.2;     b_max = 10;
-% b_min = 0.2;     b_max = 2.5;
+% b_min = 0.2;     b_max = 10;
+b_min = 0.2;     b_max = 2.5;
 b = (b_max-b_min).*rand(1,N) + b_min;
 
 c_hip_min = 0;     c_hip_max = 8;
@@ -89,8 +106,8 @@ tic
 t_cur = tic;
 
 disp('start with the sim:');
-% parfor i=1:N % Simulate and calculate the frequecy (also calc from Matsuoka extimation)
-for i=1:N
+parfor i=1:N % Simulate and calculate the frequecy (also calc from Matsuoka extimation)
+% for i=1:N
     disp(['at sim #',num2str(i)]);
     seq = [tau(1,i),b(1,i),c(:,i)',W(:,i)',ks_tau(1,i),ks_c(:,i)'];
     [out, sim, signal] = MML.runSim(seq);
@@ -129,20 +146,29 @@ header = [header,sprintf('data is for 4N TagaLike case \n')];
 header = [header,sprintf('seq Order: \n')];
 header = [header,sprintf('"tau","b","c_1","c_2","c_3","c_4" \n')];
 header = [header,sprintf('"w_{1}","w_{2}","w_{3}","w_{4}" \n')];
-header = [header,sprintf('b in range (0.2,10) \n')];
+header = [header,sprintf('b in range (0.2,2.5) \n')];
 header = [header,sprintf('W_i in range (0,10) \n')];
 
-save('MatsRandomRes_4Neurons_TagaLike_test.mat','results','MML','header');
+save('MatsRandomRes_4Neurons_TagaLike_Narrow_b_Large_W_2.mat','results','MML','header');
 
 %% plot example:
-close all
-% load(filename1)
-[out, ~, signal] = MML.runSim(results(randsample(1:N,1)).seq);
+clc; close all
+
+N = length(results);
+rand_id = randsample(1:N,1);
+
+[out, ~, signal] = MML.runSim(results(rand_id).seq);
 
 figure;
 subplot(2,1,1);
 plot(signal.T,signal.X);
 xlabel('time[sec]');    ylabel('X_i');
-title('X_i over time');
+title({'X_i over time',...
+    ['id #',num2str(rand_id),...
+    '    periods: ',...
+    num2str(results(rand_id).periods(1)),...
+    ' ',num2str(results(rand_id).periods(2))]});
 subplot(2,1,2)
-plot(signal.T,signal.signal(1,:));
+plot(signal.T,signal.signal(1,:),'b',signal.T,signal.signal(2,:),'r');
+
+clear out signal
