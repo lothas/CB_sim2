@@ -10,17 +10,16 @@ MML.tEnd = 15;
 MML.nNeurons = 4;
 
 % % % data with many CPG's that oscillates in range:
-% results_fileName = 'MatsRandomRes_4Neurons_4Paper_for_MOOGA_try.mat';
-% results_fileName = 'MatsRandomRes_4Neurons_Large_b_Large_W_All_osc';
+results_fileName = 'MatsRandomRes_4Neurons_Large_b_Large_W_All_osc';
 
 % % data with small amount of CPGs that oscillate in range:
 % results_fileName = 'MatsRandomRes_4Neurons_4Paper.mat';
 
 % % % % data with tau_ratio=12 and (0.2 < b < 2.5):
 % % change b_max:
-MML.Gen.Range(2,2) = 2.5; % the class will filter genes that are not in the new range.
+% MML.Gen.Range(2,2) = 2.5; % the class will filter genes that are not in the new range.
 % results_fileName = 'MatsRandomRes_4Neurons_4Paper_tau_ratio_equalTo_12_added_b_4Paper1.mat';
-results_fileName = 'MatsRandomRes_4Neurons_4Paper_narrower_W_range';
+% results_fileName = 'MatsRandomRes_4Neurons_4Paper_narrower_W_range';
 
 % % change tau_a/tau_r to 12 (instead of 5)
 MML.Sim.Con.tau_ratio = 12;
@@ -69,16 +68,16 @@ NNs_4paper.hist_compare(tau_before,tau_after,'tau',...
 %% check NN on training data:
 close all; clc;
 
-caseNum = 7;
-% get the names of the training parameters:
-[Inputs_names,Targets_names] =...
-    NNs_4paper.check_NN_case(caseNum,'period');
+% caseNum = 7;
+% % get the names of the training parameters:
+% [Inputs_names,Targets_names] =...
+%     NNs_4paper.check_NN_case(caseNum,'period');
 
-% Inputs_names = {'tau','b','w_{12}','w_{13}','w_{14}',...
-%         'w_{21}','w_{23}','w_{24}',...
-%         'w_{31}','w_{32}','w_{34}',...
-%         'w_{41}','w_{42}','w_{43}'};
-% Targets_names = {'period'};
+Inputs_names = {'tau','b','w_{12}','w_{13}','w_{14}',...
+        'w_{21}','w_{23}','w_{24}',...
+        'w_{31}','w_{32}','w_{34}',...
+        'w_{41}','w_{42}','w_{43}'};
+Targets_names = {'period'};
 
 
 architecture = [20,20];

@@ -94,10 +94,10 @@ else
             case '4neuron_taga_like'
                 MO.win = 0;
                 MO.wex = zeros(2*MO.nPulses);
-                MO.wex = [0       ,value(1),value(2),0;
-                          value(1),0       ,value(3),0;
-                          value(2),value(3),0       ,value(4);
-                          0       ,0       ,value(4),0       ];
+                MO.wex = [0       ,value(1),0       ,0;
+                          value(1),0       ,value(2),value(3);
+                          0       ,value(3),0       ,value(4);
+                          0       ,value(2),value(4),0       ];
                       
             % Controller Output
             case {'amp0', 'amp', 'c_i'} % Base neuron amplitude multiplier
