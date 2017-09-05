@@ -16,6 +16,13 @@ function obj = train_and_test(obj,Inputs_names,Targets_names,...
 [Inputs_train,Targets_train] = ...
     obj.prepare_NN_train_data(Inputs_names,Targets_names);
 
+% save inputs to class:
+obj.Inputs_names_train = Inputs_names;
+obj.Inputs_train = Inputs_train;
+% save targets to class:
+obj.Targets_names = Targets_names;
+obj.Targets = Targets_train;
+
 switch method
     case 'NN'
         % train NN:

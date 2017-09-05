@@ -15,9 +15,12 @@ net = fitnet(obj.architecture);
 
 % net.trainFcn = obj.net_train_function;
 % net.trainFcn = 'trainlm';
-% net.trainFcn = 'trainbr';
+net.trainFcn = 'trainbr';
 % net.trainFcn = 'trainscg';
-net.trainFcn = 'trainrp';
+
+% the two best options:
+% net.trainFcn = 'trainrp';
+% net.trainFcn = 'traingdm';
 
 % dont show training window:
 net.trainParam.showWindow = 1; 
@@ -28,6 +31,7 @@ if false % train only on some of the samples (not all of them)
     targets = targets(:,ind);
 end
 
+% [net, tr] = train(net, obj.inputs, obj.targets,'useParallel','yes','useGPU','yes');
 [net, tr] = train(net, obj.inputs, obj.targets);
 
 % saving the 'net' object:
@@ -43,6 +47,12 @@ out_test = net(obj.inputs(:,tr.testInd));
 targ_train = obj.targets(:,tr.trainInd);
 targ_valid = obj.targets(:,tr.valInd);
 targ_test = obj.targets(:,tr.testInd);
+
+% % % % test code, delete after use
+% ind1 = find(obj.targets <= 2.5);
+% out_test = net(obj.inputs(:,ind1));
+% targ_test = obj.targets(:,ind1);
+% % % % % % % % % % % % % % % % % % % % % 
 
 % calculating NN perf for each target:
 RMSE_train = zeros(1,targets_num);
@@ -65,7 +75,7 @@ for i=1:targets_num
         obj.NN_perf_calc(targ_test(i,:),out_test(i,:),0);
     
     RMSE_train(1,i) = sqrt(MSE_train);
-    RMSE_valid(1,i) = sqrt(MSE_val);
+    RMSE_valid(1,i) = NaN;%sqrt(MSE_val);
     RMSE_test(1,i) = sqrt(MSE_test);
 %     perf_train(1,i) = sqrt(immse(out_train(i,:),targ_train(i,:)));
 %     perf_valid(1,i) = sqrt(immse(out_valid(i,:),targ_valid(i,:)));

@@ -8,7 +8,7 @@ classdef NeuralNetwork < handle & matlab.mixin.Copyable
         targets = []; % NN targets
         
         net = []; % the NN 
-        net_train_function = 'trainlm'; % the NN training function
+        net_train_function = []; %'trainlm'; % the NN training function
         architecture = []; % row vector with neural network architecture
         net_train_perf = []; % contain the structure of the NN training performancwe
         

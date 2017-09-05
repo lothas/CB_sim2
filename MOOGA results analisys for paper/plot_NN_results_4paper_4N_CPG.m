@@ -11,18 +11,19 @@ MML.nNeurons = 4;
 
 % % % data with many CPG's that oscillates in range:
 % results_fileName = 'MatsRandomRes_4Neurons_4Paper_for_MOOGA_try.mat';
-results_fileName = 'MatsRandomRes_4Neurons_Large_b_Large_W_All_osc';
+% results_fileName = 'MatsRandomRes_4Neurons_Large_b_Large_W_All_osc';
+
 % % data with small amount of CPGs that oscillate in range:
 % results_fileName = 'MatsRandomRes_4Neurons_4Paper.mat';
 
-% % data with tau_ratio=12 and (0.2 < b < 2.5)
+% % % % data with tau_ratio=12 and (0.2 < b < 2.5):
+% % change b_max:
+MML.Gen.Range(2,2) = 2.5; % the class will filter genes that are not in the new range.
 % results_fileName = 'MatsRandomRes_4Neurons_4Paper_tau_ratio_equalTo_12_added_b_4Paper1.mat';
-% results_fileName = 'MatsRandomRes_4Neurons_4Paper_narrower_W_range';
+results_fileName = 'MatsRandomRes_4Neurons_4Paper_narrower_W_range';
 
 % % change tau_a/tau_r to 12 (instead of 5)
 MML.Sim.Con.tau_ratio = 12;
-% % change b_max:
-% MML.Gen.Range(2,2) = 2.5; % the class will filter genes that are not in the new range.
 
 NNs_4paper = NNs_4paper(results_fileName,MML);
 
@@ -69,12 +70,18 @@ NNs_4paper.hist_compare(tau_before,tau_after,'tau',...
 close all; clc;
 
 caseNum = 7;
-
 % get the names of the training parameters:
 [Inputs_names,Targets_names] =...
     NNs_4paper.check_NN_case(caseNum,'period');
 
-architecture = [30,30,30];
+% Inputs_names = {'tau','b','w_{12}','w_{13}','w_{14}',...
+%         'w_{21}','w_{23}','w_{24}',...
+%         'w_{31}','w_{32}','w_{34}',...
+%         'w_{41}','w_{42}','w_{43}'};
+% Targets_names = {'period'};
+
+
+architecture = [20,20];
 
 NNs_4paper = NNs_4paper.train_and_test(Inputs_names,Targets_names,...
     architecture,'NN',1);
@@ -88,6 +95,122 @@ NNs_4paper = NNs_4paper.train_and_test(Inputs_names,Targets_names,...
 % NNs_4paper.train_and_test(Inputs_names,Targets_names,...
 %     architecture,'MoE soft',1);
 
+
+%% clustering attempt:
+
+close all; clc
+
+n = 3;
+
+inputs = NNs_4paper.Inputs_train;
+targets = NNs_4paper.Targets;
+x = inputs;
+
+% net_clust = selforgmap([n,n]);
+net_clust = competlayer(n*n);
+net_clust = train(net_clust,x);
+view(net_clust)
+y = net_clust(x);
+classes = vec2ind(y);
+
+figure;
+targets_clustered = cell(1,n*n);
+for i=1:n*n 
+    subplot(n,n,i)
+    ind = find(classes == i);
+    histogram(targets(1,ind));
+    
+    targets_clustered{1,i} = targets(1,ind);
+end
+
+figure;
+net_reg = cell(1,n*n);
+outputs_clustered = cell(1,n*n);
+for i=1:n*n
+    disp(['at i=',num2str(i)]);
+    
+    ind = find(classes == i);
+    
+    tempNet = fitnet(15);
+    tempNet.trainFcn = 'trainscg';
+    tempNet.trainParam.showWindow = 0; 
+    [tempNet, tr] = train(tempNet,...
+        inputs(:,ind),...
+        targets(:,ind),...
+        'useParallel','yes','useGPU','yes');
+
+    net_reg{1,i} = tempNet;
+    
+    outputs_clustered{1,i} = tempNet(inputs(:,ind));
+    RMSE = sqrt(immse(targets(:,ind),outputs_clustered{1,i}));
+    
+    subplot(n,n,i);
+    histogram(targets(:,ind),100); hold on;
+    histogram(outputs_clustered{1,i},100);
+    title(['RMSE = ',num2str(RMSE)]);
+    
+    clear tempNet RMSE tr
+    
+end
+
+figure;
+for i=1:n*n
+    subplot(n,n,i);
+    scatter(targets_clustered{1,i},outputs_clustered{1,i});
+    title([num2str(length(targets_clustered{1,i})),' sample']);
+end
+
+
+%% PCA trying:
+
+% data = [targets;inputs];
+% 
+% categories = {'b','periods','tau',...
+%     'w_{12}','w_{13}','w_{14}',...
+%     'w_{21}','w_{23}','w_{24}',...
+%     'w_{31}','w_{32}','w_{34}',...
+%     'w_{41}','w_{42}','w_{43}'};
+
+data = [inputs];
+
+categories = {'periods','tau',...
+    'w_{12}','w_{13}','w_{14}',...
+    'w_{21}','w_{23}','w_{24}',...
+    'w_{31}','w_{32}','w_{34}',...
+    'w_{41}','w_{42}','w_{43}'};
+
+figure;
+boxplot(data','orientation','horizontal','labels',categories)
+
+% Check the pairwise correlation between the variables:
+C = corr(data',data');
+
+figure;
+imagesc(C);
+
+w = 1./var(data');
+[wcoeff,score,latent,tsquared,explained] = pca(data',...
+'VariableWeights',w);
+
+figure()
+plot(score(:,1),score(:,2),'+')
+xlabel('1st Principal Component')
+ylabel('2nd Principal Component')
+
+figure()
+pareto(explained)
+xlabel('Principal Component')
+ylabel('Variance Explained (%)')
+
+% Transform the coefficients so that they are orthonormal
+coefforth = inv(diag(std(data')))*wcoeff;
+
+figure;
+whichCompo = 1:2;
+ind = randsample(size(data,2),1000);
+biplot(coefforth(:,whichCompo),...
+    'scores',score(ind,whichCompo),...
+    'varlabels',categories);
 %% train NN 5 times and collect statistics about the Perf:
 close all; clc;
 caseNum = 7;
@@ -101,7 +224,7 @@ caseNum = 7;
 %         'w_{41}','w_{42}','w_{43}'};
 % Targets_names = {'period'};
 
-architecture = {[20]};
+architecture = {[20,20]};
 numOfRepeats = 5;
 
 train_RMSE = zeros(numOfRepeats,length(architecture));
@@ -139,42 +262,42 @@ end
 
 train_RMSE_mean = mean(train_RMSE,1);
 valid_RMSE_mean = mean(valid_RMSE,1);
-test_RMSE_mean = mean(test_RMSE,1);
+test_RMSE_mean = mean(test_RMSE,1)
 
 train_R2_mean = mean(train_R2,1);
 valid_R2_mean = mean(valid_R2,1);
-test_R2_mean = mean(test_R2,1);
+test_R2_mean = mean(test_R2,1)
 
 train_slope_mean = mean(train_slope,1);
 valid_slope_mean = mean(valid_slope,1);
-test_slope_mean = mean(test_slope,1);
+test_slope_mean = mean(test_slope,1)
 
-figure;
-boxplot(train_RMSE,'Colors',[0,0,128]./256); hold on;
-boxplot(valid_RMSE,'Colors',[34,139,34]./256);
-boxplot(test_RMSE,'Colors',[178,34,34]./256);
-xlabel('NN arcith');
-ylabel('RMSE');
-grid minor
-title('RMSE over hidden neurons num');
-
-figure;
-boxplot(train_R2,'Colors',[0,0,128]./256); hold on;
-boxplot(valid_R2,'Colors',[34,139,34]./256);
-boxplot(test_R2,'Colors',[178,34,34]./256);
-xlabel('NN arcith');
-ylabel('R^2');
-grid minor
-title('R^2 over hidden neurons num');
-
-figure;
-boxplot(train_slope,'Colors',[0,0,128]./256); hold on;
-boxplot(valid_slope,'Colors',[34,139,34]./256);
-boxplot(test_slope,'Colors',[178,34,34]./256);
-xlabel('NN arcith');
-ylabel('reggresion graph slope');
-grid minor
-title('slope over hidden neurons num');
+% figure;
+% boxplot(train_RMSE,'Colors',[0,0,128]./256); hold on;
+% boxplot(valid_RMSE,'Colors',[34,139,34]./256);
+% boxplot(test_RMSE,'Colors',[178,34,34]./256);
+% xlabel('NN arcith');
+% ylabel('RMSE');
+% grid minor
+% title('RMSE over hidden neurons num');
+% 
+% figure;
+% boxplot(train_R2,'Colors',[0,0,128]./256); hold on;
+% boxplot(valid_R2,'Colors',[34,139,34]./256);
+% boxplot(test_R2,'Colors',[178,34,34]./256);
+% xlabel('NN arcith');
+% ylabel('R^2');
+% grid minor
+% title('R^2 over hidden neurons num');
+% 
+% figure;
+% boxplot(train_slope,'Colors',[0,0,128]./256); hold on;
+% boxplot(valid_slope,'Colors',[34,139,34]./256);
+% boxplot(test_slope,'Colors',[178,34,34]./256);
+% xlabel('NN arcith');
+% ylabel('reggresion graph slope');
+% grid minor
+% title('slope over hidden neurons num');
 
 % figure;hold on;
 % H(1) = shadedErrorBar(x, y, {@mean, @(x) 2*std(x)  }, '-r', 0);

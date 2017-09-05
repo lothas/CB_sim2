@@ -1,0 +1,22 @@
+
+data file is: MatsRandomRes_4Neurons_Large_b_Large_W_All_osc.mat
+The inputs order is: 
+  1 ) " period " 
+  2 ) " tau " 
+  3 ) " w_{12} " 
+  4 ) " w_{13} " 
+  5 ) " w_{14} " 
+  6 ) " w_{21} " 
+  7 ) " w_{23} " 
+  8 ) " w_{24} " 
+  9 ) " w_{31} " 
+  10 ) " w_{32} " 
+  11 ) " w_{34} " 
+  12 ) " w_{41} " 
+  13 ) " w_{42} " 
+  14 ) " w_{43} " 
+ 
+The targets order is: 
+  1 ) " b " 
+ 
+inputs first, targets second

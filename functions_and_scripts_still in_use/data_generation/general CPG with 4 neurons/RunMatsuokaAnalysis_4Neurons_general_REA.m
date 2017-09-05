@@ -40,7 +40,7 @@ MML.Sim.Con.tau_ratio = 12;
 % MML.Gen.Range(2,2) = 2.5; % the class will filter genes that are not in the new range.
 %% Train data:
 
-N = 200000; % the number of samples
+N = 500000; % the number of samples
 % % % % CPG parameters:
 % seqOrder = {'tau','b','c_1','c_2','c_3','c_4',...
 %     'w_{12}','w_{13}','w_{14}','w_{21}','w_{23}','w_{24}',...
@@ -143,7 +143,7 @@ header = [header,sprintf('"w_{31}","w_{32}","w_{34}","w_{41}","w_{42}","w_{43}" 
 header = [header,sprintf('b in range (0.2,10) \n')];
 header = [header,sprintf('W_ij in range (0,10) \n')];
 
-save('MatsRandomRes_4Neurons_4Paper_Large_b_Large_W_1.mat','results','MML','header');
+save('MatsRandomRes_4Neurons_4Paper_Large_b_Large_W_3.mat','results','MML','header');
 
 %% Phase 2 - Re-run simulations that converged outside the desired range,
 % this time with scaled temporal parameters

@@ -3,10 +3,10 @@ clear all; close all; clc
 % set default options
 set(0,'defaultlinelinewidth',2);
 
-InFiles_names = {'VGAM_08_17_17_41_GA_only_2000genes_10Gen.mat',...
-    'VGAM_08_20_11_12_NN_only_2000genes_10Gen.mat',...
-    'VGAM_08_17_17_44_rescale_only_2000genes_10Gen.mat',...
-    'VGAM_08_22_22_36_NN_and_rescale_2000genes_10Gen.mat'};
+InFiles_names = {'VGAM_09_01_12_58_GA_only.mat',...
+    'VGAM_09_02_00_01_NN_only.mat',...
+    'VGAM_09_03_07_47_rescale_only.mat',...
+    'VGAM_09_01_12_55_NN_and_rescale.mat'};
 
 GA_graphs = plotMOOGA4Paper(InFiles_names);
 
@@ -25,7 +25,7 @@ GA_graphs.plot_fit_over_gen(whichFit2Plot,last_gen)
 
 %% plot max and Mean fit over generation num:
 whichFit2Plot = 1:3;
-GA_graphs.plot_mean_fit_over_gen(whichFit2Plot,last_gen,'all')
+% GA_graphs.plot_mean_fit_over_gen(whichFit2Plot,last_gen,'all')
 
 GA_graphs.plot_mean_fit_over_gen(whichFit2Plot,last_gen,'top_pop')
 %% display parameters diversity:
@@ -87,13 +87,16 @@ GA_graphs.MOGA_pareto_plot(fit1Num,fit2Num,last_gen,'showBest_subPlots');
 
 GA_graphs.MOGA_pareto_plot(fit1Num,fit2Num,last_gen,'showBest_onOnePlot');
 %% plot Tend ratio:
+close all
 GA_graphs.plot_Tend_ratio(last_gen);
 
 %% plot generation runTime:
 GA_graphs.plot_gen_runTime(last_gen);
 
 %% plot Hist of parameter over generation
-whichParam = 'tau';
+close all
+
+whichParam = 'c_3';
 GA_graphs.plot_param_hist_over_genNum(whichParam,last_gen);
 
 

@@ -33,7 +33,7 @@ for i=1:4
 end
 
 % waht counts as a successfull Sim: (CB walked)
-good_ratio_threshold = 0.99;
+good_ratio_threshold = 0.95;
 
 
 %% ALSO: plot the percentage of sims that the ratio is close to '1':
