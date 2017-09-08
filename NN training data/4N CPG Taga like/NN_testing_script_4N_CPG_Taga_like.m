@@ -86,7 +86,8 @@ MML.Sim.Con.tau_ratio = 12;
 %     'MatsRandomRes_4Neurons_TagaLike_Narrow_b_Large_W_2.mat',...
 %     'MatsRandomRes_4Neurons_TagaLike_Narrow_b_Large_W_3.mat'};
 
-results_fileName = {'MatsRandomRes_4Neurons_TagaLike_Narrow_b_Narrow_W_All_ocs_1.mat'};
+results_fileName = {'MatsRandomRes_4Neurons_TagaLike_Narrow_b_Narrow_W_All_ocs_1.mat',...
+    'MatsRandomRes_4Neurons_TagaLike_Narrow_b_Narrow_All_osc_1_RESCALED.mat'};
 
 % results_fileName = {'MatsRandomRes_4Neurons_TagaLike_Large_b_Large_W_1.mat',...
 %     'MatsRandomRes_4Neurons_TagaLike_Large_b_Large_W_2.mat'};
@@ -258,7 +259,7 @@ MML.sample_genes = {'\tau_r','4neuron_taga_like'}; % the name of the 'set' optio
 MML.target_genes = {'beta'};
 
 % % % % CPG parameters:
-[ Seq_old ] = MML.Gen.RandSeq(5000); %generate 5000 rand samples
+[ Seq_old ] = MML.Gen.RandSeq(1000); %generate 5000 rand samples
 % % % run the rand samples to check periods:
 disp('start with the sim:');
 % parfor i=1:length(Seq_old) % Simulate and calculate the frequecy (also calc from Matsuoka extimation)
@@ -327,5 +328,5 @@ disp(['the num of osc CPGs before the NN: ',num2str(sum(osc_ids_temp&diff_ids))]
 
 %% rescale the results:
 
-MML.runScaledSims(results, periods,...
-    'MatsRandomRes_4Neurons_TagaLike_Narrow_b_Narrow_All_osc_RESCALED.mat');
+% MML.runScaledSims(results, periods,...
+%     'MatsRandomRes_4Neurons_TagaLike_Narrow_b_Narrow_All_osc_RESCALED.mat');

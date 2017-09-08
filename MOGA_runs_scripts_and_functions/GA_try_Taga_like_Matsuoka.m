@@ -43,7 +43,7 @@ GA.Graphics = 0;
 GA.ReDo = 1;
 
 % Set up the genome
-load('MatsuokaGenome_4Neuron_general.mat','Keys','Range','N',...
+load('MatsuokaGenome_4Neuron_tagaLike.mat','Keys','Range','N',...
     'nAnkle','nHip','maxAnkle', 'maxHip','MutDelta0','MutDelta1');
 
 GA.Gen = Genome(Keys, Range);
@@ -61,7 +61,8 @@ if use_NN
     NNSamples = 500;
     
     inFilenames =...
-        {'MatsRandomRes_4Neurons_TagaLike_Narrow_b_Narrow_W_All_ocs_1.mat'};
+        {'MatsRandomRes_4Neurons_TagaLike_Narrow_b_Narrow_W_All_ocs_1.mat',...
+    'MatsRandomRes_4Neurons_TagaLike_Narrow_b_Narrow_All_osc_1_RESCALED.mat'};
 
     MML.sample_genes = {'\tau_r','4neuron_taga_like'}; % the name of the 'set' options of the Taga like weigths
     MML.target_genes = {'beta'};
