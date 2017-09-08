@@ -74,7 +74,7 @@ if use_NN
     MML.normParams = normParams;
     
 %     if exist(GANN_file, 'file') ~= 2
-        architecture = 80;
+        architecture = [20,20];
         [net, ~, ~, ~, ~, ~] = ...
                 MML.trainNN(samples, targets, architecture, NNSamples);
         save(GANN_file,'net');

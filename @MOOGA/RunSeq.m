@@ -177,22 +177,25 @@ for f = 1:NFit
         end                    
     end
 
-    % Postprocessing for VelRangeFit
-    if ~isempty(strfind(func2str(FitFcn{f}),'VelRangeFit')) && ...
-        ~any(strcmp(GA.Gen.Keys(1,:),'ks_tau'))
-            % ^ This genome uses a single gain for positive and
-            % negative s_in, thus a change is irrelevant
-        % If high-level signal only works in one direction,
-        % copy those parameters for the other direction
-        newSeq = thisSeq;
-        if abs(thisFit(3))>0 && thisFit(5)==0
-            newSeq(15:18) = 0.33*newSeq(11:14);
-        end
-        if abs(thisFit(5))>0 && thisFit(3)==0
-            newSeq(11:14) = 0.33*newSeq(15:18);
-        end
-        thisSeq = newSeq;
-    end
+    %%%% REMOVED FOR THE TAGA-LIKE CASE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % % % % TODO: return this when going back to the general case!!!
+%     % Postprocessing for VelRangeFit
+%     if ~isempty(strfind(func2str(FitFcn{f}),'VelRangeFit')) && ...
+%         ~any(strcmp(GA.Gen.Keys(1,:),'ks_tau'))
+%             % ^ This genome uses a single gain for positive and
+%             % negative s_in, thus a change is irrelevant
+%         % If high-level signal only works in one direction,
+%         % copy those parameters for the other direction
+%         newSeq = thisSeq;
+%         if abs(thisFit(3))>0 && thisFit(5)==0
+%             newSeq(15:18) = 0.33*newSeq(11:14);
+%         end
+%         if abs(thisFit(5))>0 && thisFit(3)==0
+%             newSeq(11:14) = 0.33*newSeq(15:18);
+%         end
+%         thisSeq = newSeq;
+%     end
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 end
 
 % Prepare output
