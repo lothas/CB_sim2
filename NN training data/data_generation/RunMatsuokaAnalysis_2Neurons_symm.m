@@ -13,11 +13,33 @@ N = nAnkle+nHip;
 Mw = 10*ones(1,(2*N-1)*2*N);
 mw = 0*Mw;
 % %     % 2neuron symmetric specific range%%
+
+% % % % Large b Large W
+% Mw = 10*ones(1,(2*N-1)*2*N);
+% mw = 0*Mw;
+% Keys = {'\tau_r', 'beta',     'amp_2n',    '2neuron_symm_weights', 'ks_\tau',     'ks_c', 'IC_matsuoka';
+%               1 ,      1,            2,                         1,        1 ,          2,            0 };
+% Range = {  0.02 ,    0.2,        [0,0],                         0,   -0.001 ,[-0.2,-0.2]; % Min
+%            0.25  ,    10,      [10,10],                        10,    0.001 , [0.2,0.2]}; % Max
+% 
+
+%        % % % Large b Narrow W
+% Mw = 10*ones(1,(2*N-1)*2*N);
+% mw = 0*Mw;
+% Keys = {'\tau_r', 'beta',     'amp_2n',    '2neuron_symm_weights', 'ks_\tau',     'ks_c', 'IC_matsuoka';
+%               1 ,      1,            2,                         1,        1 ,          2,            0 };
+% Range = {  0.02 ,    0.2,        [0,0],                         0,   -0.001 ,[-0.2,-0.2]; % Min
+%            0.25  ,    10,      [10,10],                         5,    0.001 , [0.2,0.2]}; % Max
+
+       % % % Narrow b Narrow W
+Mw = 5*ones(1,(2*N-1)*2*N);
+mw = 0*Mw;
 Keys = {'\tau_r', 'beta',     'amp_2n',    '2neuron_symm_weights', 'ks_\tau',     'ks_c', 'IC_matsuoka';
               1 ,      1,            2,                         1,        1 ,          2,            0 };
 Range = {  0.02 ,    0.2,        [0,0],                         0,   -0.001 ,[-0.2,-0.2]; % Min
-           0.25  ,   2.5,      [10,10],                        10,    0.001 , [0.2,0.2]}; % Max
+           0.25  ,     5,      [10,10],                         5,    0.001 , [0.2,0.2]}; % Max
 
+       
 MutDelta0 = 0.04;   MutDelta1 = 0.02;
 
 save(genome_file, 'nAnkle', 'nHip', 'maxAnkle', 'maxHip', ...
@@ -37,7 +59,7 @@ MML.nNeurons = 2;
 % % change tau_a/tau_r to 12 (instead of 5)
 MML.Sim.Con.tau_ratio = 12;
 %% Train data:
-N = 300000; % the number of samples
+N = 200000; % the number of samples
 % CPG parameters:
 tau_min = 0.02;     tau_max = 0.25;
 tau = (tau_max-tau_min).*rand(1,N) + tau_min;
@@ -106,7 +128,22 @@ parfor i=1:N % Simulate and calculate the frequecy (also calc from Matsuoka exti
 end 
 disp('sim end...');
 
-save('MatsRandomRes_2Neurons_symm_A_1.mat','results');
+
+header = sprintf('tau ratio is equal to 12 \n');
+header = [header,sprintf('data is for 2N symmetric case \n')];
+header = [header,sprintf('seq Order: \n')];
+header = [header,sprintf('"tau","b","c","NR","a" \n')];
+header = [header,sprintf('"b" in range (0.2,2.5) \n')];
+header = [header,sprintf('"a" in range (0,5) \n')];
+
+
+% save('MatsRandomRes_2Neurons_symm_Large_b_Large_W.mat',...
+%     'results','header','MML');
+% save('MatsRandomRes_2Neurons_symm_Large_b_Narrow_W.mat',...
+%     'results','header','MML');
+save('MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W.mat',...
+    'results','header','MML');
+
 % save('MatsRandomRes_2Neurons_symm_only_b_change.mat','results');
 
 

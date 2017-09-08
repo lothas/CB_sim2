@@ -34,23 +34,23 @@ mw = 0*ones(1,4);
 %                0.25 ,   10.0,  Mamp,          Mw,       10 ,   0.1*Mamp}; % Max
 %          
 
-% %%%%%%%%%%% For the 4-neuron case!!!
-% % Narrow b, Narrow W
-% Mw = 5*ones(1,4);
-%     % Final genome with tau_r + beta (constant tau_u/tau_v ratio) 
-% Keys = {'\tau_r', 'beta', 'amp',   '4neuron_taga_like', 'ks_\tau',     'ks_c', 'IC_matsuoka';
-%               1 ,      1,    4 ,           4,        1 ,         4 ,            0 };
-% Range = {  0.02 ,    0.2,  mamp,          mw,      -10 ,  -0.1*Mamp; % Min
-%            0.25 ,    2.5,  Mamp,          Mw,       10 ,   0.1*Mamp}; % Max
-
-%%%%%%%%%%%% For the 4-neuron case!!!
-% Narrow b, Large W
-Mw = 10*ones(1,4);
-%     % Final genome with tau_r + beta (constant tau_u/tau_v ratio) 
+%%%%%%%%%%% For the 4-neuron case!!!
+% Narrow b, Narrow W
+Mw = 5*ones(1,4);
+    % Final genome with tau_r + beta (constant tau_u/tau_v ratio) 
 Keys = {'\tau_r', 'beta', 'amp',   '4neuron_taga_like', 'ks_\tau',     'ks_c', 'IC_matsuoka';
               1 ,      1,    4 ,           4,        1 ,         4 ,            0 };
 Range = {  0.02 ,    0.2,  mamp,          mw,      -10 ,  -0.1*Mamp; % Min
            0.25 ,    2.5,  Mamp,          Mw,       10 ,   0.1*Mamp}; % Max
+
+%%%%%%%%%%%% For the 4-neuron case!!!
+% % Narrow b, Large W
+% Mw = 10*ones(1,4);
+% %     % Final genome with tau_r + beta (constant tau_u/tau_v ratio) 
+% Keys = {'\tau_r', 'beta', 'amp',   '4neuron_taga_like', 'ks_\tau',     'ks_c', 'IC_matsuoka';
+%               1 ,      1,    4 ,           4,        1 ,         4 ,            0 };
+% Range = {  0.02 ,    0.2,  mamp,          mw,      -10 ,  -0.1*Mamp; % Min
+%            0.25 ,    2.5,  Mamp,          Mw,       10 ,   0.1*Mamp}; % Max
 
 MutDelta0 = 0.04;   MutDelta1 = 0.02;
 
@@ -73,7 +73,7 @@ MML.Sim.Con.tau_ratio = 12;
 % MML.Gen.Range(2,2) = 2.5; % the class will filter genes that are not in the new range.
 %% Train data:
 
-N = 400000; % the number of samples
+N = 500000; % the number of samples
 % % % % CPG parameters:
 
 tau_min = 0.02;     tau_max = 0.25;
@@ -89,8 +89,8 @@ c_ankle_min = 0;     c_ankle_max = 20;
 c_ankle = (c_ankle_max-c_ankle_min).*rand(2,N) + c_ankle_min;
 c = [c_ankle;c_hip];
 
-W_min = 0;     W_max = 10;
-% W_min = 0;     W_max = 5;
+% W_min = 0;     W_max = 10;
+W_min = 0;     W_max = 5;
 W = (W_max-W_min).*rand(4,N) + W_min;
 
 ks_tau_min = -10;     ks_tau_max = 10;
@@ -141,15 +141,26 @@ t_elapsed = toc(t_cur);
 avg_sim_time = t_elapsed/N;
 disp(['avg sim time is ',num2str(avg_sim_time),' [sec]']);
 
+% header = sprintf('tau ratio is equal to 12 \n');
+% header = [header,sprintf('data is for 4N TagaLike case \n')];
+% header = [header,sprintf('seq Order: \n')];
+% header = [header,sprintf('"tau","b","c_1","c_2","c_3","c_4" \n')];
+% header = [header,sprintf('"w_{1}","w_{2}","w_{3}","w_{4}" \n')];
+% header = [header,sprintf('b in range (0.2,2.5) \n')];
+% header = [header,sprintf('W_i in range (0,10) \n')];
+% 
+% save('MatsRandomRes_4Neurons_TagaLike_Narrow_b_Large_W_3.mat','results','MML','header');
+
 header = sprintf('tau ratio is equal to 12 \n');
 header = [header,sprintf('data is for 4N TagaLike case \n')];
 header = [header,sprintf('seq Order: \n')];
 header = [header,sprintf('"tau","b","c_1","c_2","c_3","c_4" \n')];
 header = [header,sprintf('"w_{1}","w_{2}","w_{3}","w_{4}" \n')];
 header = [header,sprintf('b in range (0.2,2.5) \n')];
-header = [header,sprintf('W_i in range (0,10) \n')];
+header = [header,sprintf('W_i in range (0,5) \n')];
 
-save('MatsRandomRes_4Neurons_TagaLike_Narrow_b_Large_W_2.mat','results','MML','header');
+save('MatsRandomRes_4Neurons_TagaLike_Narrow_b_Narrow_W_5.mat','results','MML','header');
+
 
 %% plot example:
 clc; close all

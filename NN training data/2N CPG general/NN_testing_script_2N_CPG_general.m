@@ -7,40 +7,42 @@
 clear all; close all; clc;
 
 %% Create genome (only if necessary)
-genome_file = 'MatsuokaGenome_2Neuron_Symm.mat';
+genome_file = 'MatsuokaGenome_2Neuron_General.mat';
 nAnkle = 1;%1; % Number of ankle torques
 nHip = 0;   % Number of hip torques
-maxAnkle = 10;   % Max ankle torque
-maxHip = 10;    % Max hip torque
+maxAnkle = 5;%20;   % Max ankle torque
+maxHip = 5;%20;    % Max hip torque
 Mamp = [maxAnkle*ones(1,2*nAnkle), maxHip*ones(1,2*nHip)];
 mamp = 0*Mamp;
 N = nAnkle+nHip;
 
-% %     %rrr 2neuron symmetric specific range%%
-% % large b Large W
-% Mw = 10;
-% mw = 0;
-% Keys = {'\tau_r', 'beta',     'amp_2n',    '2neuron_symm_weights', 'ks_\tau',     'ks_c', 'IC_matsuoka';
-%               1 ,      1,            2,                         1,        1 ,          2,            0 };
-% Range = {  0.02 ,    0.2,        [0,0],                         0,   -0.001 ,[-0.2,-0.2]; % Min
-%            0.25  ,    10,      [10,10],                        10,    0.001 , [0.2,0.2]}; % Max
 
-%        % Narrow b Large W
-% Mw = 10;
-% mw = 0;
-% Keys = {'\tau_r', 'beta',     'amp_2n',    '2neuron_symm_weights', 'ks_\tau',     'ks_c', 'IC_matsuoka';
-%               1 ,      1,            2,                         1,        1 ,          2,            0 };
-% Range = {  0.02 ,    0.2,        [0,0],                         0,   -0.001 ,[-0.2,-0.2]; % Min
-%            0.25  ,   2.5,      [10,10],                        10,    0.001 , [0.2,0.2]}; % Max
+% %     % 2neuron general specific range%%
+% Large b Large W Ranges
+Mw = 10*ones(1,(2*N-1)*2*N);
+mw = 0*Mw;
+Keys = {'\tau_r', 'beta',        'amp',        '2neuron_general_weights', 'ks_\tau',     'ks_c', 'IC_matsuoka';
+              1 ,      1,            2,                                2,        1 ,       2 ,            0 };
+Range = {  0.02 ,      0,        [0,0],                               mw,   -0.001 ,  [-0.2,-0.2]; % Min
+           0.25 ,     10,        [5,5],                               Mw,    0.001 ,   [0.2,0.2]}; % Max
+   
+% % Narrow b Large W Ranges
+% Mw = 10*ones(1,(2*N-1)*2*N);
+% mw = 0*Mw;
+% Keys = {'\tau_r', 'beta',        'amp',        '2neuron_general_weights', 'ks_\tau',     'ks_c', 'IC_matsuoka';
+%               1 ,      1,            2,                                2,        1 ,       2 ,            0 };
+% Range = {  0.02 ,      0,        [0,0],                               mw,   -0.001 ,  [-0.2,-0.2]; % Min
+%            0.25 ,     10,        [5,5],                               Mw,    0.001 ,   [0.2,0.2]}; % Max
 
-       % Narrow b narrow W
-Mw = 5;
-mw = 0;
-Keys = {'\tau_r', 'beta',     'amp_2n',    '2neuron_symm_weights', 'ks_\tau',     'ks_c', 'IC_matsuoka';
-              1 ,      1,            2,                         1,        1 ,          2,            0 };
-Range = {  0.02 ,    0.2,        [0,0],                         0,   -0.001 ,[-0.2,-0.2]; % Min
-           0.25  ,   2.5,      [10,10],                         5,    0.001 , [0.2,0.2]}; % Max
-
+%        % Narrow b Narrow W Ranges
+% Mw = 5*ones(1,(2*N-1)*2*N);
+% mw = 0*Mw;
+% Keys = {'\tau_r', 'beta',        'amp',        '2neuron_general_weights', 'ks_\tau',     'ks_c', 'IC_matsuoka';
+%               1 ,      1,            2,                                2,        1 ,       2 ,            0 };
+% Range = {  0.02 ,      0,        [0,0],                               mw,   -0.001 ,  [-0.2,-0.2]; % Min
+%            0.25 ,     10,        [5,5],                               Mw,    0.001 ,   [0.2,0.2]}; % Max
+%     
+       
 MutDelta0 = 0.04;   MutDelta1 = 0.02;
 
 save(genome_file, 'nAnkle', 'nHip', 'maxAnkle', 'maxHip', ...
@@ -51,7 +53,7 @@ clear all
 %%
 
 % the order of the parametrs in CPG Sequence:
-seqOrder = {'tau' ,'b', 'c', 'NR', 'a'};
+seqOrder = {'tau' ,'b', 'c_1', 'c_2', 'W_12','W_21'};
 % "NR" - not relevnt param 
 
 % define the class for CPG simulation:
@@ -65,13 +67,10 @@ MML.nNeurons = 2;
 % % change tau_a/tau_r to 12 (instead of 5)
 MML.Sim.Con.tau_ratio = 12;
 
-% fix a problem with the not relevant parameter in the seq:
-MML.Gen.Range(1,4) = -1;
-
 % file name for uploading:L
-% results_fileName = {'MatsRandomRes_2Neurons_symm_Large_b_Large_W.mat'};
-% results_fileName = {'MatsRandomRes_2Neurons_symm_4Paper.mat'};
-results_fileName = {'MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W.mat'};
+results_fileName = {'MatsRandomRes_2Neurons_general_Large_b_Large_W.mat'};
+% results_fileName = {'MatsRandomRes_2Neurons_general_Narrow_b_Narrow_W_1.mat'};
+% results_fileName = {'MatsRandomRes_2Neurons_general_Narrow_b_Large_W_1.mat'};
 %% Load data:
 load(results_fileName{1,1},'results','header');
 disp('data file information:');
@@ -141,18 +140,19 @@ seq = seq(:,osc_ids);
 periods = periods(:,osc_ids);
 
 %% Prepare NN inputs and outputs:
-% input_names = {'b','tau','a'};
+% input_names = {'b','tau','W_12','W_21'};
 % output_names = {'periods'};
 
-input_names = {'periods','tau','a'};
+input_names = {'periods','tau','W_12','W_21'};
 output_names = {'b'};
+
 
 [sampl,targ] = ...
     prepare_NN_data(input_names,output_names,...
     seqOrder,seq,periods);
 
 %% Neural Network:
-architecture = [20,20];
+architecture = [20];
 
 net = fitnet(architecture);
 net.trainFcn = 'trainbr';

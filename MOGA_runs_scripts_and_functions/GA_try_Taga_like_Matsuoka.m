@@ -1,12 +1,6 @@
-function [  ] = GA_try_Matsuoka(whichCase,fileIn)
+function [  ] = GA_try_Taga_like_Matsuoka(whichCase,fileIn)
 % Run MOOGA using only Vel, Nrg and Speed-range fitness but limiting the
 % simulation with a bounded foot size (ZMP threshold)
-
-% % initialize the random number generator such that the first population
-% %   of the GA will be the same every time
-% % % % Warning! this will effect ALL calls for 'rand', 'randi' and 'randn'!
-% rng('default');
-% rng(0);
 
 
 
@@ -24,23 +18,23 @@ switch whichCase
         % Rescale?
         GA.rescaleFcn = [];
         % out file name:
-        GA.FileOut = ['VGAM_',datestr(now,'mm_dd_hh_MM'),...
+        GA.FileOut = ['VGAM_Taga_like_',datestr(now,'mm_dd_hh_MM'),...
             '_GA_only','.mat'];
         
     case 'GA + NN'
         use_NN = 1;
         GA.rescaleFcn = [];
-        GA.FileOut = ['VGAM_',datestr(now,'mm_dd_hh_MM'),...
+        GA.FileOut = ['VGAM_Taga_like_',datestr(now,'mm_dd_hh_MM'),...
             '_NN_only','.mat'];
     case 'GA + rescale'
         use_NN = 0;
         GA.rescaleFcn = @rescaleFcn;
-        GA.FileOut = ['VGAM_',datestr(now,'mm_dd_hh_MM'),...
+        GA.FileOut = ['VGAM_Taga_like_',datestr(now,'mm_dd_hh_MM'),...
             '_rescale_only','.mat'];
     case 'GA + NN + rescale'
         use_NN = 1;
         GA.rescaleFcn = @rescaleFcn;
-        GA.FileOut = ['VGAM_',datestr(now,'mm_dd_hh_MM'),...
+        GA.FileOut = ['VGAM_Taga_like_',datestr(now,'mm_dd_hh_MM'),...
             '_NN_and_rescale','.mat'];
 end
         
@@ -66,11 +60,13 @@ if use_NN
     maxN = 250000;
     NNSamples = 500;
     
-%     inFilenames = {'MatsRandomRes.mat', 'MatsScaledRes.mat'};
-    inFilenames = {'MatsRandomRes_4Neurons_Large_b_Large_W_All_osc'};
+    inFilenames =...
+        {'MatsRandomRes_4Neurons_TagaLike_Narrow_b_Narrow_W_All_ocs_1.mat'};
 
-    MML.sample_genes = {'weights'};
+    MML.sample_genes = {'\tau_r','4neuron_taga_like'}; % the name of the 'set' options of the Taga like weigths
     MML.target_genes = {'beta'};
+    
+%     MML.sample_genes = {'4neuron_taga_like'}; 
 %     MML.target_genes = {'\tau_r','beta'};
 
     [samples, targets, normParams] = MML.prepareNNData(inFilenames, maxN);
