@@ -9,10 +9,10 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
 %         Parameters for 4 nueons CPG
         tau0 = 1; tau = 1;
         tav0 = 1; tav = 1;
-        tau_ratio = 5;
+        tau_ratio = 12;  %5;
         beta = 0.1;
         u0 = 1;
-        win = [0, 3; 1, 0];
+        win = [];%[0, 3; 1, 0];
         wex = [];
         W = [];
         

@@ -58,6 +58,7 @@ MML = MatsuokaML();
 MML.perLim = [0.68 0.78];
 MML.perLimOut = MML.perLim + [-0.08 0.08]; % Desired period range
 MML.nNeurons = 2*N;
+MML.Sim.Con.tau_ratio = 12;
 
 % Use NN?
 if use_NN

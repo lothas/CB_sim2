@@ -5,7 +5,7 @@ function [  ] = GA_try_Taga_like_Matsuoka(whichCase,fileIn)
 
 
 % GA = MOOGA(20,500);
-GA = MOOGA(10,1000);
+GA = MOOGA(20,500);
 GA = GA.SetFittest(15,15,0.5);
 GA.JOAT = 2; GA.Quant = 0.7;
 
@@ -52,6 +52,7 @@ MML = MatsuokaML();
 MML.perLim = [0.68 0.78];
 MML.perLimOut = MML.perLim + [-0.08 0.08]; % Desired period range
 MML.nNeurons = 2*N;
+MML.Sim.Con.tau_ratio = 12;
 
 % Use NN?
 if use_NN

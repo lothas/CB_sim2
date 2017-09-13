@@ -21,6 +21,14 @@ function [Inputs_names,Targets_names] = check_NN_case(obj,caseNum,perORfreq)
 % outputs: *) 'parametersCells' - NN inputs names
 %          *) 'targetCells' - NN outputs names
 
+% % % % % % % % % % % % % % % % % % % % % % % % % % % 
+% NOTE: Jonathan is arranging his NN differently
+% FIRST: the CPG parameters
+% THAN after: the Period
+% e.g. [seq,period]
+% % % % % % % % % % % % % % % % % % % % % % !!!!!!!!!!!
+
+
 switch perORfreq
     case 'period'
         theta_s0 = {'period'};

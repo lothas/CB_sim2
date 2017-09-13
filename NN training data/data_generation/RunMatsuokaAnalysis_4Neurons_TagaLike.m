@@ -68,12 +68,9 @@ MML.tStep = 0.05;
 MML.tEnd = 15;
 MML.nNeurons = 4;
 
-% % change tau_a/tau_r to 12 (instead of 5)
-MML.Sim.Con.tau_ratio = 12;
-% MML.Gen.Range(2,2) = 2.5; % the class will filter genes that are not in the new range.
 %% Train data:
 
-N = 500000; % the number of samples
+N = 400000; % the number of samples
 % % % % CPG parameters:
 
 tau_min = 0.02;     tau_max = 0.25;
@@ -159,7 +156,7 @@ header = [header,sprintf('"w_{1}","w_{2}","w_{3}","w_{4}" \n')];
 header = [header,sprintf('b in range (0.2,2.5) \n')];
 header = [header,sprintf('W_i in range (0,5) \n')];
 
-save('MatsRandomRes_4Neurons_TagaLike_Narrow_b_Narrow_W_5.mat','results','MML','header');
+save('MatsRandomRes_4Neurons_TagaLike_Narrow_b_Narrow_W_4_take_2.mat','results','MML','header');
 
 
 %% plot example:

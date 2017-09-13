@@ -56,8 +56,6 @@ MML.tStep = 0.05;
 MML.tEnd = 15;
 MML.nNeurons = 2;
 
-% % change tau_a/tau_r to 12 (instead of 5)
-MML.Sim.Con.tau_ratio = 12;
 %% Train data:
 N = 200000; % the number of samples
 % CPG parameters:

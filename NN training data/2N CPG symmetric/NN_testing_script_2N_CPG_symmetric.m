@@ -51,7 +51,8 @@ clear all
 %%
 
 % the order of the parametrs in CPG Sequence:
-seqOrder = {'tau' ,'b', 'c', 'NR', 'a'};
+seqOrder = {'tau' ,'b', 'c', 'NR', 'a',...
+    'k_tau','k_{c1}','k_{c2}'};
 % "NR" - not relevnt param 
 
 % define the class for CPG simulation:
@@ -61,9 +62,6 @@ MML.perLimOut = MML.perLim + [-0.08 0.08]; % Desired period range
 MML.tStep = 0.05;
 MML.tEnd = 15;
 MML.nNeurons = 2;
-
-% % change tau_a/tau_r to 12 (instead of 5)
-MML.Sim.Con.tau_ratio = 12;
 
 % fix a problem with the not relevant parameter in the seq:
 MML.Gen.Range(1,4) = -1;
@@ -82,6 +80,8 @@ for i=2:numel(results_fileName)
     results = [results, data.results]; %#ok<AGROW>
 end
 
+results_before = results;
+clear results
 clear data i
 
 %% plot example:
@@ -106,45 +106,64 @@ plot(signal.T,signal.signal(1,:),'b',signal.T,signal.signal(2,:),'r');
 clear out signal N rand_id
 
 %% get and filter periods:
+% % % get oscillating:
+% [results,periods,seq] = get_CPGs(results_before,'osc',MML);
+% 
+% % % also filter out abnormaly big periods:
+% good_ids = periods < 5;
+% results = results(good_ids);
+% periods = periods(:,good_ids);
+% seq = seq(:,good_ids);
+% clear good_ids
 
-% get CPG periods:
-periods = horzcat(results(:).periods);
+% get oscillating in period range:
+[results,periods,seq] = get_CPGs(results_before,'osc_in_per_range',MML);
 
-% Filter CPG's where not both signals oscillating:
-osc_ids_temp = ~isnan(periods);
-osc_ids_temp = osc_ids_temp(1,:);
-disp(['Number of non-osc CPGs: ',num2str(sum(~osc_ids_temp))]);
+figure;
+boxplot(seq','orientation','horizontal','labels',seqOrder)
 
-% % check that all of the parameters are in the genome range:
-seq = (vertcat(results(:).seq))';
-ids_in_genome_range = true(1,size(seq,2));
-for n=1:MML.Gen.Length
-    ids_temp = (seq(n,:) > MML.Gen.Range(1,n)) &...
-        (seq(n,:) < MML.Gen.Range(2,n));
-    ids_in_genome_range = ids_in_genome_range & ids_temp;
+plot_param_hist(seq,periods,seqOrder)
+
+%% remove outliers:
+% https://www.mathworks.com/matlabcentral/answers/121247-how-can-i-detect-and-remove-outliers-from-a-large-dataset
+
+ids = true(1,size(seq,2));
+
+for i=1:(MML.Gen.Length+1)
+    
+    if i > MML.Gen.Length
+        vector = periods;
+    else
+        vector = seq(i,:);
+    end
+
+    percntiles = prctile(vector,[5 95]); %5th and 95th percentile
+    % the distance between the %5th and 95th percentiles is four stdevs
+    
+    outlierIndexes = vector < percntiles(1) | vector > percntiles(2);
+    
+    ids = ~outlierIndexes & ids;
+%     % Extract outlier values:
+%     outliers = vector(outlierIndexes);
+%     % Extract non-outlier values:
+%     nonOutliers = vector(~outlierIndexes);
 end
-disp(['Number of CPGs with parameters not in range: ',...
-    num2str(sum(~ids_in_genome_range))]);
 
-num_of_osc_ids_exluded_param_range = sum(osc_ids_temp);
-osc_ids = osc_ids_temp & ids_in_genome_range;
+periods = periods(:,ids);
+seq = seq(:,ids);
 
-osc_inRange_ids = osc_ids &...
-    ( (periods(1,:) > MML.perLimOut(1,1)) &...
-    (periods(1,:) < MML.perLimOut(1,2)) );
+figure;
+subplot(2,1,1);
+boxplot(seq','orientation','horizontal','labels',seqOrder);
+subplot(2,1,2);
+boxplot(periods,'orientation','horizontal','labels',{'periods'});
 
-num_of_osc_ids = sum(osc_ids);
-num_of_inRange_ids = sum(osc_inRange_ids);
-
-%% keep the good seq and periods
-seq = seq(:,osc_ids);
-periods = periods(:,osc_ids);
-
+clear ids
 %% Prepare NN inputs and outputs:
 % input_names = {'b','tau','a'};
 % output_names = {'periods'};
 
-input_names = {'periods','tau','a'};
+input_names = {'tau','a','periods'};
 output_names = {'b'};
 
 [sampl,targ] = ...
@@ -152,10 +171,99 @@ output_names = {'b'};
     seqOrder,seq,periods);
 
 %% Neural Network:
-architecture = [20,20];
+architecture = [5];
 
 net = fitnet(architecture);
 net.trainFcn = 'trainbr';
 net.trainParam.showWindow = 1; 
 
 [net, tr] = train(net, sampl, targ);
+
+figure;
+histogram(targ,100,'Normalization','pdf'); hold on;
+histogram(net(sampl),100,'Normalization','pdf');
+legend('targets','NN outputs');
+
+%%
+clc; close all
+
+N = 100;
+M = 5;
+
+tau = 0.03;
+a = linspace(0.1,5,M);
+p = linspace(0.68,0.78,N);%0.7;
+
+NNout = zeros(M,N);
+
+for j=1:M
+    for i=1:N
+        NNout(j,i) = net([tau;a(1,j);p(1,i)]);
+    end
+end
+N = length(results);
+rand_id = randsample(1:N,1);
+
+% % seqOrder = {'tau' ,'b', 'c', 'NR', 'a',...
+% %     'k_tau','k_{c1}','k_{c2}'};
+% [~, ~, signal] = MML.runSim([0.021,2,7,0.001,2,0,0,0]);
+% figure;
+% subplot(2,1,1);
+% plot(signal.T,signal.X);
+% xlabel('time[sec]');    ylabel('X_i');
+% subplot(2,1,2)
+% plot(signal.T,signal.signal(1,:),'b',signal.T,signal.signal(2,:),'r');
+% clear signal
+
+figure; hold on;
+for j=1:M
+    plot(p,NNout(j,:),'Marker','o');
+    LABELS{1,j} = sprintf('a = %f',a(1,j));
+end
+grid minor;
+legend(LABELS);
+xlabel('periods');
+ylabel('NN outputs');
+
+clear N tau a p NNout LABELS
+%% % test NN with training data (only with des period)
+close all
+
+desPeriod = MML.perLim(1) + ...
+                 rand(1,size(targ,2))*(MML.perLim(2)-MML.perLim(1));
+[NN_in,~] = ...
+    prepare_NN_data(input_names,output_names,...
+    seqOrder,seq,desPeriod);
+
+% % % %  test on rande seq #1:
+% rand_seq = MML.Gen.RandSeq(length(targ));
+% [NN_in,~] = ...
+%     prepare_NN_data(input_names,output_names,...
+%     seqOrder,rand_seq',desPeriod);
+% figure;
+% boxplot(rand_seq,'orientation','horizontal','labels',seqOrder)
+% clear rand_seq
+
+NN_out = net(NN_in);
+plotregression(targ,NN_out)
+
+% NN_out = net(sampl(:,tr.testInd));
+% plotregression(targ(:,tr.testInd),NN_out)
+
+figure;
+histogram(NN_out,100,'Normalization','pdf');
+title('histogram of NN_{output}');
+xlabel('NN_{output}');
+
+figure;
+histogram(periods,100,'Normalization','pdf');
+title('histogram of periods');
+xlabel('periods');
+
+figure;
+subplot(2,1,1);
+boxplot(sampl','orientation','horizontal','labels',input_names)
+subplot(2,1,2);
+boxplot(targ','orientation','horizontal','labels',output_names)
+
+clear NN_in NN_out desPeriod

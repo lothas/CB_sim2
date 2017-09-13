@@ -68,7 +68,8 @@ clear all
 
 % the order of the parametrs in CPG Sequence:
 seqOrder = {'tau','b','c_1','c_2','c_3','c_4',... 
-'w_{1}','w_{2}','w_{3}','w_{4}'};
+'w_{1}','w_{2}','w_{3}','w_{4}',...
+'k_tau','k_{c1}','k_{c2}','k_{c3}','k_{c4}'};
 
 % define the class for CPG simulation:
 MML = MatsuokaML();
@@ -78,16 +79,16 @@ MML.tStep = 0.05;
 MML.tEnd = 15;
 MML.nNeurons = 4;
 
-% % change tau_a/tau_r to 12 (instead of 5)
-MML.Sim.Con.tau_ratio = 12;
-
 % % % file name for uploading:L
 % results_fileName = {'MatsRandomRes_4Neurons_TagaLike_Narrow_b_Large_W_1.mat',...
 %     'MatsRandomRes_4Neurons_TagaLike_Narrow_b_Large_W_2.mat',...
 %     'MatsRandomRes_4Neurons_TagaLike_Narrow_b_Large_W_3.mat'};
 
 results_fileName = {'MatsRandomRes_4Neurons_TagaLike_Narrow_b_Narrow_W_All_ocs_1.mat',...
-    'MatsRandomRes_4Neurons_TagaLike_Narrow_b_Narrow_All_osc_1_RESCALED.mat'};
+    'MatsRandomRes_4Neurons_TagaLike_Narrow_b_Narrow_All_osc_1_RESCALED.mat',...
+    'MatsRandomRes_4Neurons_TagaLike_Narrow_b_Narrow_W_All_ocs_2.mat',...
+    'MatsRandomRes_4Neurons_TagaLike_Narrow_b_Narrow_W_All_ocs_3.mat'};
+% results_fileName = {'MatsRandomRes_4Neurons_TagaLike_Narrow_b_Narrow_All_osc_1_RESCALED.mat'};
 
 % results_fileName = {'MatsRandomRes_4Neurons_TagaLike_Large_b_Large_W_1.mat',...
 %     'MatsRandomRes_4Neurons_TagaLike_Large_b_Large_W_2.mat'};
@@ -102,6 +103,8 @@ for i=2:numel(results_fileName)
     results = [results, data.results]; %#ok<AGROW>
 end
 
+results_before = results;
+clear results
 clear data i
 
 %% plot example:
@@ -128,56 +131,57 @@ clear out signal N rand_id
 
 %% get and filter periods:
 
-% get CPG periods:
-periods = horzcat(results(:).periods);
+% % get oscillating:
+[results,periods,seq] = get_CPGs(results_before,'osc',MML);
 
-% Filter CPG's where not both signals oscillating:
-osc_ids_temp = ~isnan(periods);
-osc_ids_temp = osc_ids_temp(1,:) & osc_ids_temp(2,:);
-disp(['Number of non-osc CPGs: ',num2str(sum(~osc_ids_temp))]);
+% % also filter out abnormaly big periods:
+good_ids = periods < 5;
+results = results(good_ids);
+periods = periods(:,good_ids);
+seq = seq(:,good_ids);
+clear good_ids
 
-% Filter CPG's where the is a big difference between hip and ankle:
-periods_ratios = (periods(1,:)./periods(2,:));
-diff_ids = (periods_ratios >  0.85) & (periods_ratios <  1.15); 
-disp(['Number of CPGs with not matching periods: (from the osc ones)',...
-    num2str(sum(osc_ids_temp & ~diff_ids))]);
-periods = mean(periods,1);
+% % get oscillating in period range:
+% [results,periods,seq] = get_CPGs(results_before,'osc_in_per_range',MML);
 
-% % plot the distribution of the missdefined CPG periods:
-if false
-    figure;
-    h=histogram(periods_ratios,100); grid minor;
-    h.BinLimits = [0,2.5];
-    h.BinWidth = 0.1;
-    h.Normalization = 'pdf';
-    xlabel('P_{hip} / P_{ankle} : the ratio between the two CPG outputs');
-    ylabel('probability density');
-    title('histogram of the ratio between the two CPG outputs');
-    set(gca,'FontSize',10);
-    savefig('figure_TBD_Histogram_of_ratio_between_periods_hipAnkle')
+figure;
+boxplot(seq','orientation','horizontal','labels',seqOrder)
+
+plot_param_hist(seq,periods,seqOrder)
+
+%% remove outliers:
+% https://www.mathworks.com/matlabcentral/answers/121247-how-can-i-detect-and-remove-outliers-from-a-large-dataset
+
+ids = true(1,size(seq,2));
+
+for i=1:(MML.Gen.Length+1)
+    
+    if i > MML.Gen.Length
+        vector = periods;
+    else
+        vector = seq(i,:);
+    end
+
+    percntiles = prctile(vector,[5 95]); %5th and 95th percentile
+    % the distance between the %5th and 95th percentiles is four stdevs
+    
+    outlierIndexes = vector < percntiles(1) | vector > percntiles(2);
+    
+    ids = ~outlierIndexes & ids;
+%     % Extract outlier values:
+%     outliers = vector(outlierIndexes);
+%     % Extract non-outlier values:
+%     nonOutliers = vector(~outlierIndexes);
 end
 
-% % check that all of the parameters are in the genome range:
-seq = (vertcat(results(:).seq))';
-ids_in_genome_range = true(1,size(seq,2));
-for n=1:MML.Gen.Length
-    ids_temp = (seq(n,:) > MML.Gen.Range(1,n)) &...
-        (seq(n,:) < MML.Gen.Range(2,n));
-    ids_in_genome_range = ids_in_genome_range & ids_temp;
-end
-disp(['Number of CPGs with parameters not in range: ',...
-    num2str(sum(~ids_in_genome_range))]);
+periods = periods(:,ids);
+seq = seq(:,ids);
 
-num_of_osc_ids_exluded_param_range = sum(osc_ids_temp & diff_ids);
-osc_ids = osc_ids_temp & diff_ids & ids_in_genome_range;
-
-osc_inRange_ids = osc_ids &...
-    ( (periods(1,:) > MML.perLimOut(1,1)) &...
-    (periods(1,:) < MML.perLimOut(1,2)) );
-
-num_of_osc_ids = sum(osc_ids);
-num_of_inRange_ids = sum(osc_inRange_ids);
-
+figure;
+subplot(2,1,1);
+boxplot(seq','orientation','horizontal','labels',seqOrder);
+subplot(2,1,2);
+boxplot(periods,'orientation','horizontal','labels',{'periods'});
 %% OPTION: keep and save only good CPGs
 % header = sprintf('tau ratio is equal to 12 \n');
 % header = [header,sprintf('data is for 4N TagaLike case \n')];
@@ -189,14 +193,9 @@ num_of_inRange_ids = sum(osc_inRange_ids);
 % 
 % results_old = results;
 % clear results
-% results = results_old(osc_ids);
-% save('MatsRandomRes_4Neurons_TagaLike_Narrow_b_Narrow_W_All_ocs_2.mat',...
+% results = results_old;
+% save('MatsRandomRes_4Neurons_TagaLike_Narrow_b_Narrow_W_All_ocs_4.mat',...
 %     'results','header');
-
-
-%% keep the good seq and periods
-seq = seq(:,osc_ids);
-periods = periods(:,osc_ids);
 
 %% Plot Historiograms:
 % seqOrder = {'tau','b','c_1','c_2','c_3','c_4',... 
@@ -226,8 +225,9 @@ histogram(seq(7,~osc_ids),100,'Normalization','probability');
 legend('osc','n-osc');
 title({'hist of "W_1"','norm by probability'});
 %% Prepare NN inputs and outputs:
-input_names = {'periods','tau',...
-    'w_{1}','w_{2}','w_{3}','w_{4}'};
+input_names = {'tau',...
+    'w_{1}','w_{2}','w_{3}','w_{4}',...
+    'periods'};
 
 output_names = {'b'};
 
@@ -241,30 +241,100 @@ output_names = {'b'};
     seqOrder,seq,periods);
 
 %% Neural Network:
-architecture = [20,20];
+close all;
+
+architecture = [30];
 
 net = fitnet(architecture);
-net.trainFcn = 'trainbr';
 net.trainParam.showWindow = 1; 
 
+net.performParam.regularization = 0;%0.01;
+net.performParam.normalization = 'none'; %It must be 'none', 'standard' or 'percent'
+% net.performFcn = 'sse';
+% net.divideParam.trainRatio = 0.6;
+% net.divideParam.valRatio = 0.25;
+% net.divideParam.testRatio = 0.15;
+
+
+% net.trainFcn = 'trainbr';
 [net, tr] = train(net, sampl, targ);
+
+% sampl = sampl(:,1:10000);
+% targ = targ(:,1:10000);
+% [net, tr] = train(net, sampl, targ,'useParallel','yes','useGPU','yes');
 
 figure;
 histogram(targ,100,'Normalization','pdf'); hold on;
 histogram(net(sampl),100,'Normalization','pdf');
 legend('targets','NN outputs');
+%% % test NN with training data (only with des period)
+close all
+
+desPeriod = MML.perLim(1) + ...
+                 rand(1,size(targ,2))*(MML.perLim(2)-MML.perLim(1));
+[NN_in,~] = ...
+    prepare_NN_data(input_names,output_names,...
+    seqOrder,seq,desPeriod);
+
+% % % %  test on rande seq #1:
+% [NN_in,~] = ...
+%     prepare_NN_data(input_names,output_names,...
+%     seqOrder,MML.Gen.RandSeq(length(targ))',desPeriod);
+
+% % % %  test on rande seq #2 (my function):
+% [NN_in,~] = ...
+%     prepare_NN_data(input_names,output_names,...
+%     seqOrder,generate_randSeq_tagaLike(length(targ),seqOrder),desPeriod);
+
+
+NN_out = net(NN_in);
+plotregression(targ,NN_out)
+
+% NN_out = net(sampl(:,tr.testInd));
+% plotregression(targ(:,tr.testInd),NN_out)
+
+figure;
+histogram(NN_out,100,'Normalization','pdf');
+title('histogram of NN_{output}');
+xlabel('NN_{output}');
+
+figure;
+histogram(periods,100,'Normalization','pdf');
+title('histogram of periods');
+xlabel('periods');
+
+figure;
+subplot(2,1,1);
+boxplot(sampl','orientation','horizontal','labels',input_names)
+subplot(2,1,2);
+boxplot(targ','orientation','horizontal','labels',output_names)
+
+clear NN_in NN_out desPeriod
 
 %% test the NN:
+clc;
+clear results_old results_new b_UnBound Seq_old b_UnBound_other_method
+clear sampl_temp 
+ 
 MML.sample_genes = {'\tau_r','4neuron_taga_like'}; % the name of the 'set' options of the Taga like weigths
 MML.target_genes = {'beta'};
 
 % % % % CPG parameters:
-[ Seq_old ] = MML.Gen.RandSeq(1000); %generate 5000 rand samples
+[ Seq_old ] = MML.Gen.RandSeq(500); %generate 5000 rand samples
 % % % run the rand samples to check periods:
+
+% ini the structures to the right size:
+results_old(length(Seq_old)).seq = [];
+results_old(length(Seq_old)).periods = [];
+results_new(length(Seq_old)).seq = [];
+results_new(length(Seq_old)).periods = [];
+b_UnBound = zeros(1,length(Seq_old));
+b_UnBound_other_method = zeros(1,length(Seq_old));
+
 disp('start with the sim:');
-% parfor i=1:length(Seq_old) % Simulate and calculate the frequecy (also calc from Matsuoka extimation)
-for i=1:length(Seq_old)
-    disp(['at sim #',num2str(i)]);
+parfor i=1:length(Seq_old) % Simulate and calculate the frequecy (also calc from Matsuoka extimation)
+% for i=1:length(Seq_old)
+%     disp(['at sim #',num2str(i)]);
     [out, sim, signal] = MML.runSim(Seq_old(i,:));
         % Prepare output:
     % Parameters
@@ -280,17 +350,44 @@ for i=1:length(Seq_old)
         continue;
     end
 
-    % Use NN to select best value for tau gene
+%     % Use NN to select best value for tau gene
     desPeriod = MML.perLim(1) + ...
                  rand()*(MML.perLim(2)-MML.perLim(1));
+%     desPeriod = 0.001 + rand()*(5 - 0.001);
 
-    seq_temp = MML.getNNPar(net, Seq_old(i,:), desPeriod);
+%     seq_temp = MML.getNNPar(net, Seq_old(i,:), desPeriod);
 
+    % % % % test code
+    seq_temp = Seq_old(i,:);
+    [NN_in_temp,~] = ...
+    prepare_NN_data(input_names,output_names,...
+    seqOrder,Seq_old(i,:)',desPeriod);
+    b_new = net(NN_in_temp);
+    seq_temp(2) = b_new;
+
+    % % % % %
+    
+    b_UnBound(1,i) = seq_temp(2);
+    
+    % varifying the NN output calculation:
+    sampl_temp = [Seq_old(i,1),...
+        Seq_old(i,7:10),...
+        desPeriod];
+    b_UnBound_other_method(1,i) = net(sampl_temp');
+    
+    disp(['at sim #',num2str(i),...
+        '    b = ',num2str(seq_temp(2)),...
+        '    and b varifyied = ',num2str(b_UnBound_other_method(1,i))]);
+    
     ids = seq_temp < MML.Gen.Range(1,:) |...
         seq_temp > MML.Gen.Range(2,:);
+    % don't let it ecceed the range:
     seq_temp(ids) = ...
         min(max(seq_temp(ids),MML.Gen.Range(1,ids)),MML.Gen.Range(2,ids));
-   
+%     % get random 'b' in range:
+%     seq_temp(ids) = MML.Gen.Range(1,ids) +...
+%             rand()*(MML.Gen.Range(2,ids) - MML.Gen.Range(1,ids))
+    
     % run sim again:
     [out, sim, signal] = MML.runSim(seq_temp);
         % Prepare output:
@@ -326,6 +423,19 @@ diff_ids = (periods_ratios >  0.85) & (periods_ratios <  1.15);
 
 disp(['the num of osc CPGs before the NN: ',num2str(sum(osc_ids_temp&diff_ids))]);
 
+seq_old = vertcat(results_old(:).seq);
+seq_new = vertcat(results_new(:).seq);
+
+figure;
+histogram(seq_old(:,2),100,'Normalization','pdf'); hold on;
+histogram(seq_new(:,2),100,'Normalization','pdf');
+
+figure;
+histogram(b_UnBound,100,'Normalization','pdf'); hold on;
+histogram(b_UnBound_other_method,100,'Normalization','pdf');
+legend('calc by Jonathan','calc directly');
+xlabel('b from the NN');
+title({'Histogram of "b"','norm by pdf'});
 %% rescale the results:
 
 % MML.runScaledSims(results, periods,...
