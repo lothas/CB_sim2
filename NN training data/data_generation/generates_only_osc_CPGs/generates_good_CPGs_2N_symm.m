@@ -56,14 +56,16 @@ MML.tStep = 0.05;
 MML.tEnd = 15;
 MML.nNeurons = 2;
 
-%% Train data:
-N = 100; % the number of samples
+%% Train data: (get good ones)
+N = 1000; % the number of samples
 good_CPGs_num = 0;
 results = [];
 
+wanted_num_CPGs = 100000;
+
 disp('start with the sim:');
 
-while good_CPGs_num < 100
+while good_CPGs_num < wanted_num_CPGs
     rand_seq = MML.Gen.RandSeq(N);
 %     results_temp(N) = [];
     parfor i=1:N % Simulate and calculate the frequecy (also calc from Matsuoka extimation)
@@ -76,7 +78,7 @@ while good_CPGs_num < 100
 
         % Results- caculate perdiods using different methods:
         results_temp(i).periods = out.periods;  
-        
+
         results_temp(i).pos_work = out.pos_work;
         results_temp(i).neg_work = out.neg_work;
         results_temp(i).perError1 = out.perError1;
@@ -91,7 +93,7 @@ while good_CPGs_num < 100
     periods = horzcat(results_temp(:).periods);
     % get oscillatory CPGs ids:
     osc_ids = ~isnan(periods);
-    
+
     % get neural oscillation check:
     neuronOsc = (vertcat(results_temp(:).neuronOsc))';
     osc_check_ids = true(1,N);
@@ -99,13 +101,10 @@ while good_CPGs_num < 100
         % mark as "good" if we have at least one osc neuron
         osc_check_ids = osc_check_ids & ~neuronOsc(k,:);
     end
-    
+
     % get perOK1 check:
     perOK1 = (vertcat(results_temp(:).perOK1))';
-    
-%     % get perOK2 check:
-%     perOK1 = (vertcat(results_temp(:).perOK1))';
-    
+
     good_ids = osc_ids & ~osc_check_ids & perOK1;
 
     results = [results,results_temp(good_ids)];
@@ -118,7 +117,6 @@ while good_CPGs_num < 100
 
 end
 
-
 disp('sim end...');
 
 
@@ -130,9 +128,92 @@ disp('sim end...');
 % header = [header,sprintf('"a" in range (0,5) \n')];
 % 
 % 
-% % save('MatsRandomRes_2Neurons_symm_Large_b_Large_W.mat',...
-% %     'results','header','MML');
+% save('MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_only_osc_3.mat',...
+%     'results','header','MML');
 
+%% Train data: (get uniformly dist of 'b')
+N = 1000; % the number of samples
+good_CPGs_num = 0;
+results = [];
+results_temp = [];
+results_store = [];
+
+wanted_num_CPGs = 100;
+b_ranges = linspace(0.2001,2.4999,100);
+
+disp('start with the sim:');
+
+for j=2:length(b_ranges)
+    good_CPGs_num = 0;
+    disp(['at bin #',num2str(j-1)]);
+    while good_CPGs_num < wanted_num_CPGs
+        MML.Gen.Range(1,2) = b_ranges(1,j-1);
+        MML.Gen.Range(2,2) = b_ranges(1,j);
+        rand_seq = MML.Gen.RandSeq(N);
+    %     results_temp(N) = [];
+        parfor i=1:N % Simulate and calculate the frequecy (also calc from Matsuoka extimation)
+        % for i=1:N
+    %         disp(['at sim #',num2str(i)]);
+            [out, ~, signal] = MML.runSim(rand_seq(i,:));
+                % Prepare output:
+            % Parameters
+            results_temp(i).seq = rand_seq(i,:);
+
+            % Results- caculate perdiods using different methods:
+            results_temp(i).periods = out.periods;  
+
+            results_temp(i).pos_work = out.pos_work;
+            results_temp(i).neg_work = out.neg_work;
+            results_temp(i).perError1 = out.perError1;
+            results_temp(i).perOK1 = out.perOK1;
+            results_temp(i).perError2 = out.perError2;
+            results_temp(i).perOK2 = out.perOK2;
+            results_temp(i).neuronActive = out.neuronActive;
+            results_temp(i).neuronOsc = out.neuronOsc;
+        end 
+
+        % get the periods
+        periods = horzcat(results_temp(:).periods);
+        % get oscillatory CPGs ids:
+        osc_ids = ~isnan(periods);
+
+        % get neural oscillation check:
+        neuronOsc = (vertcat(results_temp(:).neuronOsc))';
+        osc_check_ids = true(1,N);
+        for k=1:size(neuronOsc,1) % run on all neurons
+            % mark as "good" if we have at least one osc neuron
+            osc_check_ids = osc_check_ids & ~neuronOsc(k,:);
+        end
+
+        % get perOK1 check:
+        perOK1 = (vertcat(results_temp(:).perOK1))';
+
+        good_ids = osc_ids & ~osc_check_ids & perOK1;
+
+        results_store = [results_store,results_temp(good_ids)];
+        good_CPGs_num = length(results_store);
+
+        clear results_temp periods rand_seq osc_check_ids neuronOsc
+        clear osc_check_ids good_ids osc_ids
+
+    end
+    results = [results,...
+        results_store(randsample(1:length(results_store),wanted_num_CPGs))];
+    disp(['so far we have ',num2str(length(results)),' CPGs']);
+end
+disp('sim end...');
+
+
+% header = sprintf('tau ratio is equal to 12 \n');
+% header = [header,sprintf('data is for 2N symmetric case \n')];
+% header = [header,sprintf('seq Order: \n')];
+% header = [header,sprintf('"tau","b","c","NR","a" \n')];
+% header = [header,sprintf('"b" in range (0.2,2.5) \n')];
+% header = [header,sprintf('"a" in range (0,5) \n')];
+% 
+% 
+% save('MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_only_osc_3.mat',...
+%     'results','header','MML');
 %% plot CPG output:
 close all;
 

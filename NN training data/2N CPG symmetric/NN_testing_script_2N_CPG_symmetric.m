@@ -66,9 +66,8 @@ MML.nNeurons = 2;
 % fix a problem with the not relevant parameter in the seq:
 MML.Gen.Range(1,4) = -1;
 
-% file name for uploading:L
-% results_fileName = {'MatsRandomRes_2Neurons_symm_Large_b_Large_W.mat'};
-% results_fileName = {'MatsRandomRes_2Neurons_symm_4Paper.mat'};
+% file name for uploading:
+% results_fileName = {'MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_only_osc_1.mat'};
 results_fileName = {'MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W.mat'};
 %% Load data:
 load(results_fileName{1,1},'results','header');
@@ -106,9 +105,9 @@ plot(signal.T,signal.signal(1,:),'b',signal.T,signal.signal(2,:),'r');
 clear out signal N rand_id
 
 %% get and filter periods:
-% % % get oscillating:
-% [results,periods,seq] = get_CPGs(results_before,'osc',MML);
-% 
+% % get oscillating:
+[results,periods,seq,~] = get_CPGs(results_before,'osc',MML);
+
 % % % also filter out abnormaly big periods:
 % good_ids = periods < 5;
 % results = results(good_ids);
@@ -116,8 +115,8 @@ clear out signal N rand_id
 % seq = seq(:,good_ids);
 % clear good_ids
 
-% get oscillating in period range:
-[results,periods,seq] = get_CPGs(results_before,'osc_in_per_range',MML);
+% % get oscillating in period range:
+% [results,periods,seq,~] = get_CPGs(results_before,'osc_in_per_range',MML);
 
 figure;
 boxplot(seq','orientation','horizontal','labels',seqOrder)
@@ -170,50 +169,104 @@ output_names = {'b'};
     prepare_NN_data(input_names,output_names,...
     seqOrder,seq,periods);
 
-%% Neural Network:
-architecture = [5];
+% % % normalizing the inputs and outputs:
+% [sampl_n,sampl_s] = mapstd(sampl);
+% [targ_n,targ_s] = mapstd(targ);
+
+%% Neural Network #1:
+architecture = [3,20,10];
 
 net = fitnet(architecture);
+% net = feedforwardnet(architecture);
 net.trainFcn = 'trainbr';
 net.trainParam.showWindow = 1; 
+net.trainParam.showCommandLine = 1;
+net.trainParam.epochs = 10000;
+% net.performParam.normalization = 'percent'; %It must be 'none', 'standard' or 'percent'
 
 [net, tr] = train(net, sampl, targ);
+[r,m,b] = regression(targ,net(sampl));
+disp(['r = ',num2str(r),'    m = ',num2str(m),'    b = ',num2str(b)]);
+clear r m b
 
 figure;
 histogram(targ,100,'Normalization','pdf'); hold on;
 histogram(net(sampl),100,'Normalization','pdf');
 legend('targets','NN outputs');
 
+% [net, tr] = train(net, sampl_n, targ_n);
+% figure;
+% histogram(targ_n,100,'Normalization','pdf'); hold on;
+% histogram(net(sampl_n),100,'Normalization','pdf');
+% legend('targets','NN outputs');
+%% Neural Network #2:
+X=sampl ;
+T=targ;
+%Train an autoencoder with a hidden layer of size 10 and a linear transfer function for the decoder. Set the L2 weight regularizer to 0.001, sparsity regularizer to 4 and sparsity proportion to 0.05.
+
+hiddenSize = 2;
+autoenc1 = trainAutoencoder(X,hiddenSize,...
+    'L2WeightRegularization',0.001,...
+    'SparsityRegularization',4,...
+    'SparsityProportion',0.05,...
+    'DecoderTransferFunction','purelin');
+%
+%Extract the features in the hidden layer.
+
+features1 = encode(autoenc1,X);
+%Train a second autoencoder using the features from the first autoencoder. Do not scale the data.
+
+hiddenSize = 1;
+autoenc2 = trainAutoencoder(features1,hiddenSize,...
+    'L2WeightRegularization',0.001,...
+    'SparsityRegularization',4,...
+    'SparsityProportion',0.05,...
+    'DecoderTransferFunction','purelin',...
+    'ScaleData',false);
+
+features2 = encode(autoenc2,features1);
+
+%
+% softnet = trainSoftmaxLayer(features2,T,'LossFunction','crossentropy');
+% %Stack the encoders and the softmax layer to form a deep network.
+net1 = fitnet(10);
+net1.trainFcn = 'trainbr';
+net1 = train(net1,features2,T);
+
+deepnet = stack(autoenc1,autoenc2,net1);
+%Train the deep network on the wine data.
+
+deepnet = train(deepnet,X,T);
+%Estimate the deep network, deepnet.
+
+y = deepnet(X);
+net = deepnet;
+% clear X T y deepnet softnet features2 autoenc2 hiddenSize features1 autoenc1
 %%
-clc; close all
+clc;% close all
+% 
+% input_names = {'tau','a','periods'};
+% output_names = {'b'};
+% plot_param_hist(seq,periods,seqOrder)
 
 N = 100;
 M = 5;
 
-tau = 0.03;
-a = linspace(0.1,5,M);
-p = linspace(0.68,0.78,N);%0.7;
+tau = 0.1;
+a = linspace(1,3.5,M);
+p = linspace(0.5,0.8,N);%0.7;
 
 NNout = zeros(M,N);
 
 for j=1:M
     for i=1:N
-        NNout(j,i) = net([tau;a(1,j);p(1,i)]);
+        NNin = [tau;a(1,j);p(1,i)];
+        NNout(j,i) = net(NNin);
+%         NNin_n = mapstd('apply',NNin,sampl_s);
+%         NNout_n = sim(net,NNin_n);
+%         NNout(j,i) = mapstd('reverse',NNout_n,targ_s);        
     end
 end
-N = length(results);
-rand_id = randsample(1:N,1);
-
-% % seqOrder = {'tau' ,'b', 'c', 'NR', 'a',...
-% %     'k_tau','k_{c1}','k_{c2}'};
-% [~, ~, signal] = MML.runSim([0.021,2,7,0.001,2,0,0,0]);
-% figure;
-% subplot(2,1,1);
-% plot(signal.T,signal.X);
-% xlabel('time[sec]');    ylabel('X_i');
-% subplot(2,1,2)
-% plot(signal.T,signal.signal(1,:),'b',signal.T,signal.signal(2,:),'r');
-% clear signal
 
 figure; hold on;
 for j=1:M
@@ -222,10 +275,11 @@ for j=1:M
 end
 grid minor;
 legend(LABELS);
+title(['tau = ',num2str(tau)]);
 xlabel('periods');
 ylabel('NN outputs');
 
-clear N tau a p NNout LABELS
+clear N tau a p NNout LABELS rand_id N
 %% % test NN with training data (only with des period)
 close all
 
