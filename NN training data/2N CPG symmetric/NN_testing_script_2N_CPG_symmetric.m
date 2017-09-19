@@ -67,8 +67,16 @@ MML.nNeurons = 2;
 MML.Gen.Range(1,4) = -1;
 
 % file name for uploading:
+results_fileName = {'MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_in_des_range_1.mat'};
+
 % results_fileName = {'MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_only_osc_1.mat'};
-results_fileName = {'MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W.mat'};
+
+% results_fileName = {'MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_smaller_per_range_1mat'};
+
+% results_fileName = {'MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W.mat'};
+
+% results_fileName = {'MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_uniform_b_1.mat',...
+%     'MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_uniform_b_2.mat'};
 %% Load data:
 load(results_fileName{1,1},'results','header');
 disp('data file information:');
@@ -107,7 +115,7 @@ clear out signal N rand_id
 %% get and filter periods:
 % % get oscillating:
 [results,periods,seq,~] = get_CPGs(results_before,'osc',MML);
-
+% 
 % % % also filter out abnormaly big periods:
 % good_ids = periods < 5;
 % results = results(good_ids);
@@ -115,7 +123,7 @@ clear out signal N rand_id
 % seq = seq(:,good_ids);
 % clear good_ids
 
-% % get oscillating in period range:
+% % % get oscillating in period range:
 % [results,periods,seq,~] = get_CPGs(results_before,'osc_in_per_range',MML);
 
 figure;
@@ -174,14 +182,14 @@ output_names = {'b'};
 % [targ_n,targ_s] = mapstd(targ);
 
 %% Neural Network #1:
-architecture = [3,20,10];
+architecture = [20];
 
 net = fitnet(architecture);
 % net = feedforwardnet(architecture);
 net.trainFcn = 'trainbr';
 net.trainParam.showWindow = 1; 
 net.trainParam.showCommandLine = 1;
-net.trainParam.epochs = 10000;
+net.trainParam.epochs = 1000;
 % net.performParam.normalization = 'percent'; %It must be 'none', 'standard' or 'percent'
 
 [net, tr] = train(net, sampl, targ);
@@ -252,9 +260,9 @@ clc;% close all
 N = 100;
 M = 5;
 
-tau = 0.1;
+tau = 0.03;
 a = linspace(1,3.5,M);
-p = linspace(0.5,0.8,N);%0.7;
+p = linspace(0.1,15,N);%0.7;
 
 NNout = zeros(M,N);
 
@@ -300,6 +308,16 @@ desPeriod = MML.perLim(1) + ...
 
 NN_out = net(NN_in);
 plotregression(targ,NN_out)
+
+% % % % % find nearest neighbours:
+[IDX,D] = knnsearch(NN_out',targ');
+
+figure;
+scatter(NN_out(1:1000),targ(1,IDX(1:1000)));
+xlabel('NN output "b"');
+ylabel('nearest neighbor from the training data')
+% axis([0 2.5 0 2.5])
+% % % % % % % % % % % % % % % 
 
 % NN_out = net(sampl(:,tr.testInd));
 % plotregression(targ(:,tr.testInd),NN_out)

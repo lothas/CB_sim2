@@ -31,13 +31,21 @@ mw = 0*Mw;
 % Range = {  0.02 ,    0.2,        [0,0],                         0,   -0.001 ,[-0.2,-0.2]; % Min
 %            0.25  ,    10,      [10,10],                         5,    0.001 , [0.2,0.2]}; % Max
 
-       % % % Narrow b Narrow W
+%        % % % Narrow b Narrow W
+% Mw = 5*ones(1,(2*N-1)*2*N);
+% mw = 0*Mw;
+% Keys = {'\tau_r', 'beta',     'amp_2n',    '2neuron_symm_weights', 'ks_\tau',     'ks_c', 'IC_matsuoka';
+%               1 ,      1,            2,                         1,        1 ,          2,            0 };
+% Range = {  0.02 ,    0.2,        [0,0],                         0,   -0.001 ,[-0.2,-0.2]; % Min
+%            0.25  ,     5,      [10,10],                         5,    0.001 , [0.2,0.2]}; % Max
+
+       % % % Narrow b Narrow W Narrow tau
 Mw = 5*ones(1,(2*N-1)*2*N);
 mw = 0*Mw;
 Keys = {'\tau_r', 'beta',     'amp_2n',    '2neuron_symm_weights', 'ks_\tau',     'ks_c', 'IC_matsuoka';
               1 ,      1,            2,                         1,        1 ,          2,            0 };
 Range = {  0.02 ,    0.2,        [0,0],                         0,   -0.001 ,[-0.2,-0.2]; % Min
-           0.25  ,     5,      [10,10],                         5,    0.001 , [0.2,0.2]}; % Max
+           0.10  ,     5,      [10,10],                         5,    0.001 , [0.2,0.2]}; % Max
 
        
 MutDelta0 = 0.04;   MutDelta1 = 0.02;
@@ -61,7 +69,7 @@ N = 1000; % the number of samples
 good_CPGs_num = 0;
 results = [];
 
-wanted_num_CPGs = 100000;
+wanted_num_CPGs = 70000;
 
 disp('start with the sim:');
 
@@ -104,8 +112,12 @@ while good_CPGs_num < wanted_num_CPGs
 
     % get perOK1 check:
     perOK1 = (vertcat(results_temp(:).perOK1))';
-
-    good_ids = osc_ids & ~osc_check_ids & perOK1;
+    
+    % % % OPTION: get CPGs which oscillates with smaller period:
+%     % TODO: remove this if necessary!
+%     osc_ids1 = (periods > 0) & (periods < 1);
+    
+    good_ids = osc_ids & ~osc_check_ids & perOK1 ;% & osc_ids1;
 
     results = [results,results_temp(good_ids)];
     good_CPGs_num = length(results);
@@ -120,16 +132,18 @@ end
 disp('sim end...');
 
 
-% header = sprintf('tau ratio is equal to 12 \n');
-% header = [header,sprintf('data is for 2N symmetric case \n')];
-% header = [header,sprintf('seq Order: \n')];
-% header = [header,sprintf('"tau","b","c","NR","a" \n')];
-% header = [header,sprintf('"b" in range (0.2,2.5) \n')];
-% header = [header,sprintf('"a" in range (0,5) \n')];
-% 
-% 
-% save('MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_only_osc_3.mat',...
-%     'results','header','MML');
+header = sprintf('tau ratio is equal to 12 \n');
+header = [header,sprintf('data is for 2N symmetric case \n')];
+header = [header,sprintf('seq Order: \n')];
+header = [header,sprintf('"tau","b","c","NR","a" \n')];
+header = [header,sprintf('"b" in range (0.2,2.5) \n')];
+header = [header,sprintf('"a" in range (0,5) \n')];
+header = [header,sprintf('"tau" in range (0.02,0.1) \n')];
+header = [header,sprintf('limeted the period in des range')];
+
+
+save('MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_Narrow_tau_2.mat',...
+    'results','header','MML');
 
 %% Train data: (get uniformly dist of 'b')
 N = 1000; % the number of samples
@@ -138,8 +152,8 @@ results = [];
 results_temp = [];
 results_store = [];
 
-wanted_num_CPGs = 100;
-b_ranges = linspace(0.2001,2.4999,100);
+wanted_num_CPGs = 1000;
+b_ranges = linspace(0.2,2.5,100);
 
 disp('start with the sim:');
 
@@ -204,16 +218,16 @@ end
 disp('sim end...');
 
 
-% header = sprintf('tau ratio is equal to 12 \n');
-% header = [header,sprintf('data is for 2N symmetric case \n')];
-% header = [header,sprintf('seq Order: \n')];
-% header = [header,sprintf('"tau","b","c","NR","a" \n')];
-% header = [header,sprintf('"b" in range (0.2,2.5) \n')];
-% header = [header,sprintf('"a" in range (0,5) \n')];
-% 
-% 
-% save('MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_only_osc_3.mat',...
-%     'results','header','MML');
+header = sprintf('tau ratio is equal to 12 \n');
+header = [header,sprintf('data is for 2N symmetric case \n')];
+header = [header,sprintf('seq Order: \n')];
+header = [header,sprintf('"tau","b","c","NR","a" \n')];
+header = [header,sprintf('"b" in range (0.2,2.5) \n')];
+header = [header,sprintf('"a" in range (0,5) \n')];
+header = [header,sprintf('"b" is forced to distribute uniformly')];
+
+save('MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_uniform_b_2.mat',...
+    'results','header','MML');
 %% plot CPG output:
 close all;
 
