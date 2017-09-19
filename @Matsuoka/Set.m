@@ -79,11 +79,20 @@ else
             case '2neuron_symm_weights' % Neuron connection weights, symmetric 2neuron CPG
                 MO.win = 0;
                 MO.wex = zeros(2*MO.nPulses);
-                MO.wex = [0,value;value,0];
+                % MO.wex = [0,value;value,0];
+                % only the hip neurons are connects to each other
+                MO.wex = [0       ,0       ,0       ,0       ;
+                          0       ,0       ,0       ,0       ;
+                          0       ,0       ,0       ,value   ;
+                          0       ,0       ,value   ,0       ];
             case '2neuron_general_weights' % Neuron connection weights, general 2neuron CPG
                 MO.win = 0;
                 MO.wex = zeros(2*MO.nPulses);
-                MO.wex = [0,value(1);value(2),0];
+                % MO.wex = [0,value(1);value(2),0];
+                MO.wex = [0       ,0       ,0       ,0       ;
+                          0       ,0       ,0       ,0       ;
+                          0       ,0       ,0       ,value(1);
+                          0       ,0       ,value(2),0       ];
             case '4neuron_symm_weights' % Neuron connection weights, symmetric 4neuron CPG
                 MO.win = 0;
                 MO.wex = zeros(2*MO.nPulses);
@@ -94,6 +103,7 @@ else
             case '4neuron_taga_like'
                 MO.win = 0;
                 MO.wex = zeros(2*MO.nPulses);
+                % TODO: change it to the Taga-like case
                 MO.wex = [0       ,value(1),0       ,0;
                           value(1),0       ,value(2),value(3);
                           0       ,value(3),0       ,value(4);
@@ -111,8 +121,11 @@ else
                 end
                 MO.Amp = MO.Amp0; 
                 
-            case 'amp_2n' % Base neuron amplitude multiplier, symmetric, 2 neurons
-                MO.Amp0 = reshape([value(1); value(1)], [], 1);
+            case 'amp_2n_same_inputs' % same tonic inputs to both MN
+                MO.Amp0 = [0;0;value(1);value(1)];
+                MO.Amp = MO.Amp0;
+            case 'amp_2n_dif_inputs' % different tonic inputs to both MN
+                MO.Amp0 = [0;0;value(1);value(2)];
                 MO.Amp = MO.Amp0;
                 
             case 'amp_4n_symm'
@@ -128,6 +141,8 @@ else
                 MO.ks_tau = value;
             case {'ks_out', 'speed_out', 'torque_speed_gain', 'ks_c'}
                 MO.ks_out = value';
+            case {'ks_c_2n_symm'} % when we have only the hip joint
+                MO.ks_out = [0;0;value;value];
             
             otherwise
                 error(['Set failed: ',key,' property not found']);
