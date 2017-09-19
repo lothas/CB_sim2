@@ -83,16 +83,27 @@ if strcmp(wSim.Con.name, 'Matsuoka')
 %     plot(TTemp, wMOSim.Con.Output(TTemp, XTemp', 0));
 %     grid on
 
-    % % % use NN to change the gene:
-    if ~isempty(GA.NN) && ~isempty(GA.NNFcn) ...
+    
+    % % % use regression NN to change the gene:
+    if ~isempty(GA.NN_reg) && ~isempty(GA.NN_reg_Fcn) ...
             && strcmp(wSim.Con.name, 'Matsuoka')
         % Use NN to select best value for tau gene
-        thisSeq = GA.NNFcn(GA.Gen, GA.NN, thisSeq, XTemp, TTemp);
+        thisSeq = GA.NN_reg_Fcn(GA.Gen, GA.NN_reg, thisSeq, XTemp, TTemp);
         wSim = GA.Gen.Decode(wSim,thisSeq);
         wSim.Con = wSim.Con.HandleEvent(1, wSim.IC(wSim.ConCo));
         wSim.Con = wSim.Con.Adaptation();
     end    
 
+    % % % use classifier NN to get good gene change the gene:
+    if ~isempty(GA.NN_classi) && ~isempty(GA.NN_classi_Fcn) ...
+            && strcmp(wSim.Con.name, 'Matsuoka')
+        % Use NN to select best value for tau gene
+        thisSeq = GA.NN_classi_Fcn(GA.Gen, GA.NN_classi, thisSeq, XTemp, TTemp);
+        wSim = GA.Gen.Decode(wSim,thisSeq);
+        wSim.Con = wSim.Con.HandleEvent(1, wSim.IC(wSim.ConCo));
+        wSim.Con = wSim.Con.Adaptation();
+    end    
+    
     if ~isempty(GA.rescaleFcn)
         % Run simulation again to do the rescaling
         [TTemp,XTemp] = ode45(@MatsDerivative,t_span,IC0,options);

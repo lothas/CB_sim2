@@ -25,8 +25,10 @@ classdef MOOGA
 
         % Use NN to modify some genes, akin to fancy epigenetic gene
         % expression. How cool is that?
-        NN = [];
-        NNFcn = [];
+        NN_reg = [];        % regression neural network
+        NN_classi = [];     % classification neural network (classes: 'n-osc' and 'osc' CPGs)
+        NN_reg_Fcn = [];
+        NN_classi_Fcn = [];
         
         % Rescale some genes to get a certain temporal performance
         rescaleFcn = [];

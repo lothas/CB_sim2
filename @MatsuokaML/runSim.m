@@ -106,6 +106,11 @@ function [out, sim, signal] = runSim(obj, sequence)
         % Setup initial conditions
         x0 = zeros(2*obj.nNeurons,1);
 %         x0(1:2:end) = (1-2*rand(obj.nNeurons,1)).*c/(1-b);
+        
+        % make IC = [x_i, x'_i] = [rand(N); 0...0]
+        %   x'_i = are all zero at the begining
+        %   the devision by '6' is to limit the IC to get consistent
+        %       convergace to the same limit cycle.
         x0(1:obj.nNeurons) = randn(obj.nNeurons,1)/6.*sim.Con.Amp0;
 
         tend = min(3*obj.tEnd, obj.tEnd/sim.Con.tau);

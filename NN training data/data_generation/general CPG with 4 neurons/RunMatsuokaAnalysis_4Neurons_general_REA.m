@@ -35,55 +35,29 @@ MML.perLimOut = MML.perLim + [-0.08 0.08]; % Desired period range
 MML.tStep = 0.05;
 MML.tEnd = 15;
 MML.nNeurons = 4;
-% % change tau_a/tau_r to 12 (instead of 5)
-MML.Sim.Con.tau_ratio = 12;
+
 % MML.Gen.Range(2,2) = 2.5; % the class will filter genes that are not in the new range.
 %% Train data:
 
-N = 500000; % the number of samples
+N = 100; % the number of samples
 % % % % CPG parameters:
 % seqOrder = {'tau','b','c_1','c_2','c_3','c_4',...
 %     'w_{12}','w_{13}','w_{14}','w_{21}','w_{23}','w_{24}',...
 %     'w_{31}','w_{32}','w_{34}','w_{41}','w_{42}','w_{43}'};
 
-tau_min = 0.02;     tau_max = 0.25;
-tau = (tau_max-tau_min).*rand(1,N) + tau_min;
-
-b_min = 0.2;     b_max = 10;
-% b_min = 0.2;     b_max = 2.5;
-b = (b_max-b_min).*rand(1,N) + b_min;
-
-c_hip_min = 0;     c_hip_max = 8;
-c_hip = (c_hip_max-c_hip_min).*rand(2,N) + c_hip_min;
-c_ankle_min = 0;     c_ankle_max = 20;
-c_ankle = (c_ankle_max-c_ankle_min).*rand(2,N) + c_ankle_min;
-c = [c_ankle;c_hip];
-
-W_min = 0;     W_max = 10;
-% W_min = 0;     W_max = 5;
-W = (W_max-W_min).*rand(12,N) + W_min;
-
-ks_tau_min = -10;     ks_tau_max = 10;
-ks_tau = (ks_tau_max-ks_tau_min).*rand(1,N) + ks_tau_min;
-
-ks_c_hip_min = -0.8;     ks_c_hip_max = 0.8;
-ks_c_hip = (ks_c_hip_max-ks_c_hip_min).*rand(2,N) + ks_c_hip_min;
-ks_c_ankle_min = -2;     ks_c_ankle_max = 2;
-ks_c_ankle = (ks_c_ankle_max-ks_c_ankle_min).*rand(2,N) + ks_c_ankle_min;
-ks_c = [ks_c_ankle;ks_c_hip];
+seq = MML.Gen.RandSeq(N);
 
 tic
 t_cur = tic;
 
 disp('start with the sim:');
-parfor i=1:N % Simulate and calculate the frequecy (also calc from Matsuoka extimation)
-% for i=1:N
+% parfor i=1:N % Simulate and calculate the frequecy (also calc from Matsuoka extimation)
+for i=1:N
     disp(['at sim #',num2str(i)]);
-    seq = [tau(1,i),b(1,i),c(:,i)',W(:,i)',ks_tau(1,i),ks_c(:,i)'];
-    [out, sim, signal] = MML.runSim(seq);
+    [out, sim, signal] = MML.runSim(seq(i,:));
         % Prepare output:
     % Parameters
-    results(i).seq = seq;
+    results(i).seq = seq(i,:);
     results(i).b = sim.Con.beta;
     results(i).c = sim.Con.Amp0;
     results(i).Worig = sim.Con.wex;
@@ -134,16 +108,16 @@ t_elapsed = toc(t_cur);
 avg_sim_time = t_elapsed/N;
 disp(['avg sim time is ',num2str(avg_sim_time),' [sec]']);
 
-header = sprintf('tau ratio is equal to 12 \n');
-header = [header,sprintf('data is for 4N general CPG case \n')];
-header = [header,sprintf('seq Order: \n')];
-header = [header,sprintf('"tau","b","c_1","c_2","c_3","c_4" \n')];
-header = [header,sprintf('"w_{12}","w_{13}","w_{14}","w_{21}","w_{23}","w_{24}" \n')];
-header = [header,sprintf('"w_{31}","w_{32}","w_{34}","w_{41}","w_{42}","w_{43}" \n')];
-header = [header,sprintf('b in range (0.2,10) \n')];
-header = [header,sprintf('W_ij in range (0,10) \n')];
-
-save('MatsRandomRes_4Neurons_4Paper_Large_b_Large_W_3.mat','results','MML','header');
+% header = sprintf('tau ratio is equal to 12 \n');
+% header = [header,sprintf('data is for 4N general CPG case \n')];
+% header = [header,sprintf('seq Order: \n')];
+% header = [header,sprintf('"tau","b","c_1","c_2","c_3","c_4" \n')];
+% header = [header,sprintf('"w_{12}","w_{13}","w_{14}","w_{21}","w_{23}","w_{24}" \n')];
+% header = [header,sprintf('"w_{31}","w_{32}","w_{34}","w_{41}","w_{42}","w_{43}" \n')];
+% header = [header,sprintf('b in range (0.2,10) \n')];
+% header = [header,sprintf('W_ij in range (0,10) \n')];
+% 
+% save('MatsRandomRes_4Neurons_4Paper_Large_b_Large_W_3.mat','results','MML','header');
 
 %% Phase 2 - Re-run simulations that converged outside the desired range,
 % this time with scaled temporal parameters

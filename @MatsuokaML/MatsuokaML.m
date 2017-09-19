@@ -3,8 +3,9 @@ classdef MatsuokaML
     %   Detailed explanation goes here
     
     properties
-        nNeurons = 4;%nNeurons = 2;
-        NN = [];
+        nNeurons = 4;
+        NN_reg = [];        % regression neural network
+        NN_classi = [];     % classification neural network (classes: 'n-osc' and 'osc' CPGs)
         SVM = [];
         normParams = [];
         
@@ -49,6 +50,7 @@ classdef MatsuokaML
             
             % genome for TagaLike Matsuoka:
 %             genome_file = '';
+
             load(genome_file);
             Keys(:,strcmp(Keys(1,:),'IC_matsuoka')) = []; %#ok<NODEF>
             obj.Gen = Genome(Keys, Range);

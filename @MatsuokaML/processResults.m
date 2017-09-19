@@ -135,8 +135,8 @@ function [y, periods, signals, pos_work, neg_work, neuronActive, ...
             end
         catch
             warning('"interp1" exsecution failed');
-            perError1 = [NaN,NaN];
-            perOK1 = false;
+            % perError1 = [NaN,NaN];
+            % perOK1 = false;
         end
 
         % Get the last 33% of the signal

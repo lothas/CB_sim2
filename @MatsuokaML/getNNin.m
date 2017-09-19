@@ -2,6 +2,7 @@ function in = getNNin(obj, seq, period)
 %GETNNPAR Use neural network to obtain new values of tau
     % Get tonic inputs and connection weights from genetic sequence
     if obj.norm_weights
+        warning('We are trying to normalize by the general 4N CPG param');
         genes1 = obj.Gen.GetGenes(seq, obj.sample_genes1); % weights
         amp = obj.Gen.GetGenes(seq, {'amp'}); % weights
         for r = 1:obj.nNeurons
