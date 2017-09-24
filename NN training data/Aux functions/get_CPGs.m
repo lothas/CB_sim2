@@ -1,51 +1,64 @@
 function [results_filtered,period_filtered,seq_filtered,ids] =...
-    get_CPGs(results,Type,MML)
+    get_CPGs(results,wantedCPGs,CPG_size,MML)
 %GET_CPGS - take 'results' structure and filter out the right 'Type' of
 %CPGs. either Oscillatory ones or not oscillatory ones.
-% 'MML' - is the Matsuoka Sim class
 
+% Inputs:
+% *) 'results' - structure containing the results from MatsuokaSim
+% *) 'wantedCPGs' - can be:
+%             #) 'osc' - for oscillating CPGs
+%             #) 'n-osc' - fot not oscillating CPGs
+%             #) 'osc_in_per_range' - for CPGs which oscillates in the desired range.
+% *) 'CPG_size' - can be:
+%             #) '4N' - for CPG with four neurons
+%             #) '2N' - for CPG with two neurons  
+%           in the '2N' case the hip period need to be ignored
+% *) 'MML' - is the Matsuoka Sim class
+% 
+% Outputs: the CPG wanted CPG data
+% 
 
 % get CPG periods:
 periods = horzcat(results(:).periods);
 
-if size(periods,1) == 2 % 4N CPG:
-    % Filter CPG's where not both signals oscillating:
-    osc_ids_temp = ~isnan(periods);
-    osc_ids_temp = osc_ids_temp(1,:) & osc_ids_temp(2,:);
-    disp(['Number of non-osc CPGs: ',num2str(sum(~osc_ids_temp))]);
+switch CPG_size
+    case '4N'
+        % Filter CPG's where not both signals oscillating:
+        osc_ids_temp = ~isnan(periods);
+        osc_ids_temp = osc_ids_temp(1,:) & osc_ids_temp(2,:);
+        disp(['Number of non-osc CPGs: ',num2str(sum(~osc_ids_temp))]);
 
-    % Filter CPG's where the is a big difference between hip and ankle:
-    periods_ratios = (periods(1,:)./periods(2,:));
-    diff_ids = (periods_ratios >  0.85) & (periods_ratios <  1.15); 
-    disp(['Number of CPGs with not matching periods: (from the osc ones)',...
-        num2str(sum(osc_ids_temp & ~diff_ids))]);
-    periods = mean(periods,1);
+        % Filter CPG's where the is a big difference between hip and ankle:
+        periods_ratios = (periods(1,:)./periods(2,:));
+        diff_ids = (periods_ratios >  0.85) & (periods_ratios <  1.15); 
+        disp(['Number of CPGs with not matching periods: (from the osc ones)',...
+            num2str(sum(osc_ids_temp & ~diff_ids))]);
+        periods = mean(periods,1);
 
-    % % plot the distribution of the missdefined CPG periods:
-    if false
-        figure;
-        h=histogram(periods_ratios,100); grid minor;
-        h.BinLimits = [0,2.5];
-        h.BinWidth = 0.1;
-        h.Normalization = 'pdf';
-        xlabel('P_{hip} / P_{ankle} : the ratio between the two CPG outputs');
-        ylabel('probability density');
-        title('histogram of the ratio between the two CPG outputs');
-        set(gca,'FontSize',10);
-        savefig('figure_TBD_Histogram_of_ratio_between_periods_hipAnkle')
-    end
+        % % plot the distribution of the missdefined CPG periods:
+        if false
+            figure;
+            h=histogram(periods_ratios,100); grid minor;
+            h.BinLimits = [0,2.5];
+            h.BinWidth = 0.1;
+            h.Normalization = 'pdf';
+            xlabel('P_{hip} / P_{ankle} : the ratio between the two CPG outputs');
+            ylabel('probability density');
+            title('histogram of the ratio between the two CPG outputs');
+            set(gca,'FontSize',10);
+            savefig('figure_TBD_Histogram_of_ratio_between_periods_hipAnkle')
+        end
 
+    case '2N' % 2N CPG:
+        % Filter CPG's where not both signals oscillating:
+        periods = periods(2,:); % ignore the hip period which is always NaN
+        osc_ids_temp = ~isnan(periods);
+        disp(['Number of non-osc CPGs: ',num2str(sum(~osc_ids_temp))]);
+
+        diff_ids = ones(size(osc_ids_temp));
     
-    
-elseif size(periods,1) == 1  % 2N CPG:
-    % Filter CPG's where not both signals oscillating:
-    osc_ids_temp = ~isnan(periods);
-    disp(['Number of non-osc CPGs: ',num2str(sum(~osc_ids_temp))]);
-
-    diff_ids = ones(size(osc_ids_temp));
-    
-else
-    error('invalid period structure');
+    otherwise
+        error('invalid CPG structure');
     
 end
 
@@ -82,7 +95,7 @@ osc_inRange_ids = osc_ids &...
 disp(['num of CPG which oscillate in range: ',...
     num2str(sum(osc_inRange_ids))]);
 
-switch Type
+switch wantedCPGs
     case {'osc','oscillating'}
         ids = osc_ids;
         results_filtered = results(ids);

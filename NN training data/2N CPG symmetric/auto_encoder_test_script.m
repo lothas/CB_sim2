@@ -4,7 +4,7 @@ clear all; close all; clc;
 
 % the order of the parametrs in CPG Sequence:
 seqOrder = {'tau' ,'b', 'c', 'NR', 'a',...
-    'k_tau','k_{c1}','k_{c2}'};
+    'k_tau','k_{c}'};
 % "NR" - not relevnt param 
 
 % define the class for CPG simulation:
@@ -13,45 +13,26 @@ MML.perLim = [0.68 0.78];
 MML.perLimOut = MML.perLim + [-0.08 0.08]; % Desired period range
 MML.tStep = 0.05;
 MML.tEnd = 15;
-MML.nNeurons = 2;
-
-% fix a problem with the not relevant parameter in the seq:
-MML.Gen.Range(1,4) = -1;
 
 % file name for uploading:
-results_fileName = {'MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W.mat'};
+results_fileName = {'MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_Narrow_tau_All_1.mat'};
 
 %% Load data:
-load(results_fileName{1,1},'results','header');
-disp('data file information:');
-disp(header);
-% if I have more than 1 data file:
-for i=2:numel(results_fileName)
-    data = load(results_fileName{1,i},'results');
-    results = [results, data.results]; %#ok<AGROW>
-end
-
-results_before = results;
-clear results
-clear data i
+results = load_results(results_fileName);
 
 %% get and filter periods:
 % % get groups:
-[~,~,~,ids_osc] = get_CPGs(results_before,'osc',MML);
-[~,~,~,ids_in_range] = get_CPGs(results_before,'osc_in_per_range',MML);
-[~,~,~,ids_n_osc] = get_CPGs(results_before,'n-osc',MML);
+[~,~,~,ids_osc] = get_CPGs(results,'osc','2N',MML);
+[~,~,~,ids_n_osc] = get_CPGs(results,'n-osc','2N',MML);
 
-targ = [ids_osc; ids_in_range; ids_n_osc];
+targ = [ids_osc; ids_n_osc];
 
-seq = (vertcat(results_before(:).seq))';
-periods = horzcat(results_before(:).periods);
+seq = (vertcat(results(:).seq))';
+periods = horzcat(results(:).periods);
 
-% figure;
-% boxplot(seq','orientation','horizontal','labels',seqOrder)
-% 
-% plot_param_hist(seq,periods,seqOrder)
-
-input_names = {'tau','b','c','a'};
+% input_names = {'tau','b','c','a'};
+% output_names = {'b'};
+input_names = {'tau','b','a'};
 output_names = {'b'};
 
 [sampl,~] = ...
@@ -137,19 +118,19 @@ features1 = encode(autoenc1,X);
 rand_ids = randsample(1:size(sampl,2),1000);
 figure;
 gscatter(features1(1,rand_ids),features1(1,rand_ids),...
-    {ids_osc(rand_ids),ids_in_range(rand_ids),ids_n_osc(rand_ids)},...
-    'bgr','..x');
+    {ids_osc(rand_ids),ids_n_osc(rand_ids)},...
+    'br','.x');
 xlabel('feature1'); ylabel('feature2');
-legend('osc','osc in range','n-osc');
+legend('osc','n-osc');
 clear rand_ids
 
 rand_ids = randsample(1:size(sampl,2),10000);
 figure;
 gscatter(sampl(1,rand_ids),sampl(2,rand_ids),...
-    {ids_osc(rand_ids),ids_in_range(rand_ids),ids_n_osc(rand_ids)},...
-    'bgr','..x');
+    {ids_osc(rand_ids),ids_n_osc(rand_ids)},...
+    'br','.x');
 xlabel('tau'); ylabel('b');
-legend('osc','osc in range','n-osc');
+legend('osc','n-osc');
 clear rand_ids
 
 %
@@ -165,6 +146,29 @@ deepnet = train(deepnet,X,T);
 y = deepnet(X);
 plotconfusion(T,deepnet(X));
 
+%% Neural Network #4: (using 'patternnet')
+X=sampl;
+T=double(targ);
+%Train an autoencoder with a hidden layer of size 10 and a linear transfer function for the decoder. Set the L2 weight regularizer to 0.001, sparsity regularizer to 4 and sparsity proportion to 0.05.
+
+architecture = [3,2];
+net = patternnet(architecture);
+[net, tr] = train(net, X, T);
+
+rand_ids = randsample(1:size(sampl,2),10000);
+figure;
+gscatter(sampl(1,rand_ids),sampl(2,rand_ids),...
+    {ids_osc(rand_ids),ids_n_osc(rand_ids)},...
+    'br','.x');
+xlabel('tau'); ylabel('b');
+legend('osc','n-osc');
+clear rand_ids
+
+deepnet = net; % for now...
+
+y = deepnet(X);
+plotconfusion(T,deepnet(X));
+
 %%
 close all;
 
@@ -175,7 +179,7 @@ rand_seq = MML.Gen.RandSeq(1);
     seqOrder,rand_seq',0.7);
 check = deepnet(NN_in_test);
 [~,ind] = max(check);
-states = {'osc','osc_in_range','n-osc'};
+states = {'osc','n-osc'};
 
 [out, ~, signal] = MML.runSim(rand_seq);
 figure;
@@ -184,7 +188,7 @@ plot(signal.T,signal.X);
 xlabel('time[sec]');    ylabel('X_i');
 title({'X_i over time',...
     ['periods: ',...
-    num2str(out.periods),...
+    num2str(out.periods'),...
     '     CPG identified: ',states{1,ind}]});
 subplot(2,1,2)
 plot(signal.T,signal.signal(1,:),'b',signal.T,signal.signal(2,:),'r');
@@ -194,7 +198,7 @@ clear signal rand seq out ind states
 clc;
 
 % % % % CPG parameters:
-[ Seq_old ] = MML.Gen.RandSeq(1000); %generate 5000 rand samples
+[ Seq_old ] = MML.Gen.RandSeq(500); %generate 'N' rand samples
 % % % run the rand samples to check periods:
 
 % ini the structures to the right size:
@@ -263,6 +267,7 @@ disp('sim end...');
 
 % get CPG periods:
 periods_old = horzcat(results_old(:).periods);
+periods_old = periods_old(2,:); % get rid of hip period
 % Filter CPG's where not both signals oscillating:
 osc_ids_temp = ~isnan(periods_old);
 
@@ -270,6 +275,7 @@ disp(['the num of osc CPGs before the NN: ',num2str(sum(osc_ids_temp))]);
 
 % get CPG periods:
 periods_new = horzcat(results_new(:).periods);
+periods_new = periods_new(2,:); % get rid of hip period
 % Filter CPG's where not both signals oscillating:
 osc_ids_temp = ~isnan(periods_new);
 

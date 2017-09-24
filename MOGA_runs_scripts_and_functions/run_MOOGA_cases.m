@@ -30,6 +30,6 @@ save(genome_file, 'nAnkle', 'nHip', 'maxAnkle', 'maxHip', ...
 clear all
 
 %%
-GA_try_2N_Symm_Matsuoka('GA only',[]);
+GA_try_2N_Symm_Matsuoka('GA + NN_classi',[]);
 
 % GA_try_2N_Symm_Matsuoka('GA + rescale',[]);

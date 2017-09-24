@@ -6,7 +6,10 @@ function [ samples, targets, normParams ] = ...
 % *) 'CPG_Type' - can be '2N_CPG' or '4N_CPG'
 %           in '2N_CPG' case the ankle period will always be NaN and we
 %           dont need to care about it.
-
+    
+    results = [];
+    periods = [];
+    
     % Load data from files
     for i = 1:numel(filenames)
         data = load(filenames{i});
@@ -63,13 +66,15 @@ function [ samples, targets, normParams ] = ...
        
     samples = zeros(n_in, maxN);
     targets = zeros(n_out, maxN);
+    
     for i = 1:maxN
         sample = results(ids(i));
         period = periods(ids(i));
         
         % Build sample and target vectors
-%         samples(:,i) = obj.getNNin(sample.seq, 1/period);
-        samples(:,i) = obj.getNNin(sample.seq, period);
+        temp = obj.getNNin(sample.seq, period);
+            % remove the periods from the inputs:
+        samples(:,i) = temp(1:end-1,:);
         
         % devide to classes:
         %   targ=[1;0] if CPG is n_osc
@@ -77,14 +82,14 @@ function [ samples, targets, normParams ] = ...
         targets(:,i) = [isnan(period);...
             ~isnan(period)];
     end
-
-% Normalize samples
-normParams = zeros(size(samples, 1), 2);
-for i = 1:size(samples, 1)
-    feat = samples(i, :);
-    normParams(i, :) = [mean(feat), std(feat)];
-    samples(i, :) = (feat - normParams(i, 1))/normParams(i, 2);
-end
+    
+    % Normalize samples
+    normParams = zeros(size(samples, 1), 2);
+    for i = 1:size(samples, 1)
+        feat = samples(i, :);
+        normParams(i, :) = [mean(feat), std(feat)];
+        samples(i, :) = (feat - normParams(i, 1))/normParams(i, 2);
+    end
 
 end
 

@@ -7,18 +7,18 @@ nAnkle = 1;%1; % Number of ankle torques
 nHip = 1;   % Number of hip torques
 maxAnkle = 10;   % Max ankle torque
 maxHip = 10;    % Max hip torque
-Mamp = [maxAnkle*ones(1,2*nAnkle), maxHip*ones(1,2*nHip)];
+Mamp = [10,10];
 mamp = 0*Mamp;
 N = nAnkle+nHip;
 % %     % 2neuron symmetric specific range%%
 
        % % % Narrow b Narrow W Narrow tau
-Mw = 5*ones(1,(2*N-1)*2*N);
+Mw = 5*1;
 mw = 0*Mw;
 Keys = {'\tau_r', 'beta','amp_2n_same_inputs',    '2neuron_symm_weights', 'ks_\tau',     'ks_c_2n_symm', 'IC_matsuoka';
               1 ,      1,                   2,                         1,        1 ,          1,            0 };
 Range = {  0.02 ,    0.2,               [0,0],                         0,   -0.001 ,       -0.2; % Min
-           0.10  ,     5,             [10,10],                         5,    0.001 ,       0.2}; % Max
+           0.10  ,   2.5,             [10,10],                         5,    0.001 ,       0.2}; % Max
 
        
 MutDelta0 = 0.04;   MutDelta1 = 0.02;
@@ -103,10 +103,10 @@ clear N
 N = 1000; % the number of samples
 good_CPGs_num = 0;
 round_count = 0;
-max_round = 500; % maximum iteraion for while loop (saftey reasons:)
+max_round = 1000; % maximum iteraion for while loop (saftey reasons:)
 results = [];
 
-wanted_num_CPGs = 100000;
+wanted_num_CPGs = 50000;
 
 disp('start with the sim:');
 
@@ -180,7 +180,7 @@ header = [header,sprintf('"a" in range ( %.2f , %.2f ) \n',...
     MML.Gen.Range(1,5),MML.Gen.Range(2,5))];
 
 
-save('MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_Narrow_tau_only_osc_2.mat',...
+save('MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_Narrow_tau_only_osc_3.mat',...
     'results','header','MML');
 
 clear N

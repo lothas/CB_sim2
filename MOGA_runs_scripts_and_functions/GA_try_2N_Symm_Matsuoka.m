@@ -4,7 +4,7 @@ function [  ] = GA_try_2N_Symm_Matsuoka(whichCase,fileIn)
 
 
 
-GA = MOOGA(20,500);
+GA = MOOGA(2,200);
 GA = GA.SetFittest(15,15,0.5);
 GA.JOAT = 2; GA.Quant = 0.7;
 
@@ -104,17 +104,17 @@ switch use_NN
         maxN = 250000;
 
         inFilenames =...
-            {'MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_Narrow_tau_1.mat'};
+            {'MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_Narrow_tau_All_1.mat'};
 
-        MML.sample_genes = {'\tau_r','beta',...
-            'amp_2n_same_inputs','2neuron_symm_weights'}; 
+        MML.sample_genes = {'\tau_r','beta','2neuron_symm_weights'}; 
         MML.target_genes = {'n_osc and osc classes'};
 
-        [samples, targets, normParams] = MML.prepareNNData('2N_CPG',inFilenames, maxN);
+        [samples, targets, normParams] = ...
+            MML.prepare_classi_NNData('2N_CPG',inFilenames, maxN);
         MML.normParams = normParams;
 
     %     if exist(GANN_file, 'file') ~= 2
-            architecture = [20];
+            architecture = [3,2];
             [net, ~] = MML.train_classi_NN(samples, targets, architecture);
             save(GANN_file,'net');
     %     else
@@ -123,7 +123,7 @@ switch use_NN
     %     end
 
         GA.NN_classi = net;
-        GA.NNFcn = @NN_classi_Fcn;
+        GA.NN_classi_Fcn = @NN_classi_Fcn;
 end
 
 function seq = NN_reg_Fcn(Gen, net, seq, X, T)
