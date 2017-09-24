@@ -35,16 +35,78 @@ MML.perLim = [0.68 0.78];
 MML.perLimOut = MML.perLim + [-0.08 0.08]; % Desired period range
 MML.tStep = 0.05;
 MML.tEnd = 15;
-% MML.nNeurons = 2;
+
+%% Train data: get All osc and n-osc (train data for classifier)
+N = 1000; % the number of samples
+CPGs_num = 0;
+round_count = 0;
+max_round = 1000; % maximum iteraion for while loop (saftey reasons:)
+results = [];
+
+wanted_num_CPGs = 200000;
+
+disp('start with the sim:');
+
+while (CPGs_num < wanted_num_CPGs) && (round_count <= max_round)
+    
+    rand_seq = MML.Gen.RandSeq(N);
+    parfor i=1:N % Simulate and calculate the frequecy (also calc from Matsuoka extimation)
+%     for i=1:N
+%         disp(['at sim #',num2str(i)]);
+        [out, ~, signal] = MML.runSim(rand_seq(i,:));
+            % Prepare output:
+        % Parameters
+        results_temp(i).seq = rand_seq(i,:);
+
+        % Results- caculate perdiods using different methods:
+        results_temp(i).periods = out.periods;
+        
+        results_temp(i).x0 = out.x0;
+        results_temp(i).neuronActive = out.neuronActive;
+        results_temp(i).neuronOsc = out.neuronOsc;
+    end 
+
+    results = [results,results_temp];
+    CPGs_num = length(results);
+
+    disp(['so far we have ',num2str(CPGs_num),' CPGs'])
+
+    round_count = round_count+1;
+    
+    clear results_temp rand_seq
+
+end
+
+disp('sim end...');
+
+
+header = sprintf('tau ratio is equal to %d \n',MML.Sim.Con.tau_ratio);
+header = [header,sprintf('data is for 2N symmetric case \n')];
+header = [header,sprintf('seq Order: \n')];
+header = [header,sprintf('"tau","b","c","NR","a" \n')];
+header = [header,sprintf('"tau" in range ( %.2f , %.2f ) \n',...
+    MML.Gen.Range(1,1),MML.Gen.Range(2,1))];
+header = [header,sprintf('"b" in range ( %.2f , %.2f ) \n',...
+    MML.Gen.Range(1,2),MML.Gen.Range(2,2))];
+header = [header,sprintf('"c" in range ( %.2f , %.2f ) \n',...
+    MML.Gen.Range(1,3),MML.Gen.Range(2,3))];
+header = [header,sprintf('"a" in range ( %.2f , %.2f ) \n',...
+    MML.Gen.Range(1,5),MML.Gen.Range(2,5))];
+
+
+save('MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_Narrow_tau_All_1.mat',...
+    'results','header');
+
+clear N
 
 %% Train data: (get good ones)
 N = 1000; % the number of samples
 good_CPGs_num = 0;
 round_count = 0;
-max_round = 100; % maximum iteraion for while loop (saftey reasons:)
+max_round = 500; % maximum iteraion for while loop (saftey reasons:)
 results = [];
 
-wanted_num_CPGs = 5000;
+wanted_num_CPGs = 100000;
 
 disp('start with the sim:');
 
@@ -96,8 +158,8 @@ while (good_CPGs_num < wanted_num_CPGs) && (round_count <= max_round)
 
     round_count = round_count+1;
     
-%     clear results_temp periods rand_seq osc_check_ids neuronOsc
-%     clear osc_check_ids good_ids osc_ids str1
+    clear results_temp periods rand_seq osc_check_ids neuronOsc
+    clear good_ids osc_ids str1
 
 end
 
@@ -118,7 +180,7 @@ header = [header,sprintf('"a" in range ( %.2f , %.2f ) \n',...
     MML.Gen.Range(1,5),MML.Gen.Range(2,5))];
 
 
-save('MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_Narrow_tau_1.mat',...
+save('MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_Narrow_tau_only_osc_2.mat',...
     'results','header','MML');
 
 clear N
