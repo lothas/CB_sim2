@@ -103,10 +103,10 @@ clear N
 N = 1000; % the number of samples
 good_CPGs_num = 0;
 round_count = 0;
-max_round = 1000; % maximum iteraion for while loop (sakftey reasons:)
+max_round = 1000; % maximum iteraion for while loop (saftey reasons:)
 results = [];
 
-wanted_num_CPGs = 50000;
+wanted_num_CPGs = 1000;
 
 disp('start with the sim:');
 
@@ -132,8 +132,13 @@ while (good_CPGs_num < wanted_num_CPGs) && (round_count <= max_round)
     % get the periods
     periods = horzcat(results_temp(:).periods);
     periods = periods(2,:);
+    
     % get oscillatory CPGs ids:
     osc_ids = ~isnan(periods);
+    
+%     % get oscillatory CPGs ids in period range::
+%     osc_ids = ~isnan(periods) &...
+%         ((periods > MML.perLimOut(1,1)) & (periods < MML.perLimOut(1,2)));
     
     % get neural oscillation check:
     neuronOsc = (vertcat(results_temp(:).neuronOsc))';
@@ -180,8 +185,10 @@ header = [header,sprintf('"a" in range ( %.2f , %.2f ) \n',...
     MML.Gen.Range(1,5),MML.Gen.Range(2,5))];
 
 
-save('MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_Narrow_tau_only_osc_4.mat',...
-    'results','header','MML');
+save('MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_Narrow_tau_osc_inRange_test_group1.mat',...
+    'results','header');
+% save('MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_Narrow_tau_only_osc_2.mat',...
+%     'results','header');
 
 clear N
 %% plot CPG output:

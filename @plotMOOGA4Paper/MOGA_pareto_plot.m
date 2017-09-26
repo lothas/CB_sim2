@@ -15,30 +15,32 @@ function Fronts = MOGA_pareto_plot(obj,fit1Num,fit2Num,gen_num,plotType)
 % Outputs:
 % *) the Pareto Fronts. Cell array containf the genes Ids
 
+% determine how many subplots:
+    % if one GAfile     --> one plot
+    % if between 2 to 4 --> 2X2
+    % if between 5 to 9 --> 3X3         and ect...
+numSP = ceil(sqrt(numel(obj.data_names)));
+
 LnWidth = 4;
 FontSizeT = 14;
 FontSize = 12;
 FontSize2 = 10;
 
+% define some good colors to use:
+Color = {[0,0.447,0.741],...
+            [0.850,0.325,0.098],...
+            [0.929,0.694,0.125],...
+            [0.494,0.184,0.556]};
+markers = {'-x','-d','-o','-s'};
+
+% start:
 figure();
 
 switch plotType
     case {'showAll'}
-        for i = 1:4
-
-            subplot(2,2,i);
+        for i = 1:numel(obj.data_names)
+            subplot(numSP,numSP,i);
             GA = obj.data{1,i}.GA;
-
-            % % % % uncomment this if you want to normalized the fitnesses by maxFit.
-            % % Normalize fitness
-            % GA.Fit(:,fit1Num,:) = ...
-            %     GA.Fit(:,fit1Num,:)/max(max(GA.Fit(:,fit1Num,:)));
-            % GA.Fit(:,fit2Num,:) = ...
-            %     GA.Fit(:,fit2Num,:)/max(max(GA.Fit(:,fit2Num,:)));
-
-            % % % % % dont forget to add the correct label later:)
-            % xlabel(['normalzed ',fitnessOrder{1,fit1Num}],'FontSize',FontSize)
-            % ylabel(['normalzed ',fitnessOrder{1,fit2Num}],'FontSize',FontSize)
 
             Fi = [1, 10, 20];
             NF = length(Fi);
@@ -70,25 +72,18 @@ switch plotType
             ylabel(obj.fitnessOrder{1,fit2Num},'FontSize',FontSize)
             set(gca,'FontSize',FontSize2,'LineWidth',LnWidth/2)
             title({['Pareto plot of generation #',num2str(gen_num)],...
-                ['for case #',obj.titleAdd{1,i}]},...
+                ['for case #',obj.Legends{1,i}]},...
                 'FontSize',FontSizeT);
             legend(Label,'Location','Best');
 
         end
     case {'showBest_subPlots'}
         % show the first 4 fronts on different subplots
-        Color = {[0,0.447,0.741],...
-            [0.850,0.325,0.098],...
-            [0.929,0.694,0.125],...
-            [0.494,0.184,0.556]};
-        markers = {'-x','-d','-o','-s'};
-        
-        Legend = {'GA only','GA + NN','GA + rescale','GA + NN + rescale'};
-        
+                
         Fi_vec = [1,2,3,4]; % which fronts to show
         for k=1:4
-            subplot(2,2,k);
-            for i = 1:4
+            subplot(numSP,numSP,k);
+            for i = 1:numel(obj.data_names)
 
                 GA = obj.data{1,i}.GA;
 
@@ -114,19 +109,13 @@ switch plotType
             title({['Pareto plot of generation #',num2str(gen_num)],...
                 ['Front num #',num2str(Fi)]},...
                 'FontSize',FontSizeT);
-            legend(Legend,'Location','Best');
+            legend(obj.Legends,'Location','Best');
         end
         
         
     case {'showBest_onOnePlot'}
-        Color = {[0,0.447,0.741],...
-            [0.850,0.325,0.098],...
-            [0.929,0.694,0.125],...
-            [0.494,0.184,0.556]};
-        markers = {'-x','-d','-o','-s'};
         
-        Legend = {'GA only','GA + NN','GA + rescale','GA + NN + rescale'};
-        for i = 1:4
+        for i = 1:numel(obj.data_names)
             
             GA = obj.data{1,i}.GA;
 
@@ -155,7 +144,7 @@ switch plotType
         title({['Pareto plot of generation #',num2str(gen_num)],...
             ['Front num #',num2str(Fi)]},...
             'FontSize',FontSizeT);
-        legend(Legend,'Location','Best');
+        legend(obj.Legends,'Location','Best');
     otherwise
         error('invalid plotType');
 end

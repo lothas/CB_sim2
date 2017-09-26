@@ -12,10 +12,7 @@ classdef plotMOOGA4Paper
         colors1 = {'r','b','g','m','c','k'};
         
         % legend for graph:
-        legends = {'MOGA','MOGA + NN',...
-            'MOGA + re-scaling','MOGA + NN + re-scaling'};
-        % titles additions for different cases
-        titleAdd = {'GA only','GA + NN','GA + rescale','everything'};
+        Legends = [];
         
         % the order of the fitnesses from the GA run:
         fitnessOrder = {'VelFit','NrgEffFit',...
@@ -24,16 +21,7 @@ classdef plotMOOGA4Paper
             'VelRangeFit #7','VelRangeFit #8','EigenFit'};
         
         % the parametrs seq order in the Matsuoka CPG:
-        seqOrder = {'tau','b','c_1','c_2','c_3','c_4',...
-            'w_{12}','w_{13}','w_{14}','w_{21}','w_{23}','w_{24}',...
-            'w_{31}','w_{32}','w_{34}','w_{41}','w_{42}','w_{43}'};
-        
-        % the parametrs seq order in the Matsuoka CPG: (including the
-        % adaption parametrs)
-        seqOrder_extend = {'tau','b','c_1','c_2','c_3','c_4',...
-                         'w_{12}','w_{13}','w_{14}','w_{21}','w_{23}','w_{24}',...
-                         'w_{31}','w_{32}','w_{34}','w_{41}','w_{42}','w_{43}',...
-                         'ks_\tau','ks_c1','ks_c2','ks_c3','ks_c4'};
+        seqOrder = [];
 
         % Matsuoka CPG simulation class (contains the paramets ranges)
         MML = [];
@@ -42,21 +30,23 @@ classdef plotMOOGA4Paper
     end
     
     methods
-        function obj = plotMOOGA4Paper(InFiles_names)
+        function obj = ...
+                plotMOOGA4Paper(MML_in,InFiles_names,Legends1,seqorder)
+            
+            % get MatsuokaML class:
+            obj.MML = MML_in;
+            
+            % get the GA data from the MOGa results files:
             obj.data_names = InFiles_names;
-            for i=1:4
+            for i=1:numel(InFiles_names)
                 obj.data{1,i} = load(InFiles_names{1,i});
             end
             
-            % define the class for CPG simulation:
-            MML = MatsuokaML();
-            MML.perLim = [0.68 0.78];
-            MML.perLimOut = MML.perLim + [-0.08 0.08]; % Desired period range
-            MML.tStep = 0.05;
-            MML.tEnd = 15;
-            MML.nNeurons = 4;
+            % get the names of the Type of results in the MOGA files:
+            obj.Legends = Legends1;
             
-            obj.MML = MML;
+            % get the order of the parameters in the results.seq
+            obj.seqOrder = seqorder;
         end
         
     end

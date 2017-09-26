@@ -10,7 +10,7 @@ X_data = 1:gen_num;
 figure; hold on;
 ax = gca;
 
-for i=1:4
+for i=1:numel(obj.data_names)
    Y =  obj.data{1,i}.GA.totGenTime(1,X_data);
    plot(ax,X_data,Y); 
     
@@ -19,7 +19,7 @@ end
 title('generation runTime');
 xlabel('generation num');
 ylabel('runTime [sec]');
-legend(obj.legends);
+legend(obj.Legends);
 grid minor;
 hold off;
 

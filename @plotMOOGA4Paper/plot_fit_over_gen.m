@@ -10,33 +10,32 @@ y_data = zeros(4,gen_num);
 for i = 1:length(whichFit)
     FitNum = whichFit(1,i);
     
-    for j=1:4
-    y = obj.data{1,j}.GA.Fit(:,FitNum,x_data);
-    
+    for j=1:numel(obj.data_names)
+        % get the fit for all generations:
+        y = obj.data{1,j}.GA.Fit(:,FitNum,x_data);
+        
+        % get wether this fit should be minimize/maximize:
+            % '1'-fot max;      '-1'- for min
+        minORmax = obj.data{1,j}.GA.FitMinMax;
+        
         % get y-axis data:
-        switch obj.fitnessOrder{1,i}
-            case {'VelFit','NrgEffFit','VelRangeFit #1','VelRangeFit #2',...
-                    'VelRangeFit #4','VelRangeFit #6','EigenFit'}
+        switch minORmax(1,j)
+            case 1
                 y_data(j,:) = squeeze(max(y,[],1));
-            case {'VelRangeFit #3','VelRangeFit #5',...
-                    'VelRangeFit #7','VelRangeFit #8'} % because 's_slow" can be negative!
+            case -1
                 y_data(j,:) = squeeze(min(y,[],1));
-            otherwise
-                error('no such fitness');
         end
         
     end
     
-    figure
-    hold on
-    h1=plot(x_data, y_data(1,:));
-    h2=plot(x_data, y_data(2,:));
-    h3=plot(x_data, y_data(3,:));
-    h4=plot(x_data, y_data(4,:));
+    figure; hold on;
+    for j=1:numel(obj.data_names)
+        plot(x_data, y_data(j,:));
+    end
     grid minor;
-    legend([h1,h2,h3,h4], obj.legends, 'Location', 'Southeast');
+    legend(obj.Legends, 'Location', 'Southeast');
     xlabel('Generation');   ylabel('Fitness');
-    title(['Fitness "',obj.fitnessOrder{1,i},'" over Generation']);
+    title(['Fitness "',obj.fitnessOrder{1,FitNum},'" over Generation']);
     set(gca,'FontSize',12, 'FontWeight','bold');
 
 end

@@ -6,31 +6,6 @@
 
 clear all; close all; clc;
 
-%% Create genome (only if necessary)
-genome_file = 'MatsuokaGenome_2Neuron_Symm.mat';
-nAnkle = 1;%1; % Number of ankle torques
-nHip = 0;   % Number of hip torques
-maxAnkle = 10;   % Max ankle torque
-maxHip = 10;    % Max hip torque
-Mamp = [maxAnkle*ones(1,2*nAnkle), maxHip*ones(1,2*nHip)];
-mamp = 0*Mamp;
-N = nAnkle+nHip;
-
-       % Narrow b narrow W narrow tau
-Mw = 5;
-mw = 0;
-Keys = {'\tau_r', 'beta',     'amp_2n',    '2neuron_symm_weights', 'ks_\tau',     'ks_c', 'IC_matsuoka';
-              1 ,      1,            2,                         1,        1 ,          2,            0 };
-Range = {  0.02 ,    0.2,        [0,0],                         0,   -0.001 ,[-0.2,-0.2]; % Min
-           0.10  ,   2.5,      [10,10],                         5,    0.001 , [0.2,0.2]}; % Max
-
-MutDelta0 = 0.04;   MutDelta1 = 0.02;
-
-save(genome_file, 'nAnkle', 'nHip', 'maxAnkle', 'maxHip', ...
-    'Mamp', 'mamp', 'N', 'Mw', 'mw', ...
-    'MutDelta0', 'MutDelta1', 'Keys', 'Range');
-
-clear all
 %%
 
 % the order of the parametrs in CPG Sequence:
@@ -49,7 +24,8 @@ MML.tEnd = 15;
 % results_fileName = {'MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_Narrow_tau_only_osc_1.mat'};
 
 results_fileName = {'MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_Narrow_tau_only_osc_1.mat',...
-    'MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_Narrow_tau_only_osc_2.mat'};
+    'MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_Narrow_tau_only_osc_3.mat',...
+    'MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_Narrow_tau_only_osc_4.mat'};
 
 %% Load data:
 results = load_results(results_fileName);
@@ -77,15 +53,16 @@ clear out signal N rand_id
 
 %% get and filter periods:
 % % get oscillating:
-% [results,periods,seq,~] = get_CPGs(results,'osc','2N',MML);
+[results,periods,seq,~] = get_CPGs(results,'osc','2N',MML);
 
 % % % get oscillating in period range:
-[results,periods,seq,~] = get_CPGs(results,'osc_in_per_range','2N',MML);
-% 
-figure;
-boxplot(seq','orientation','horizontal','labels',seqOrder)
+% [results,periods,seq,~] = get_CPGs(results,'osc_in_per_range','2N',MML);
 
-plot_param_hist(seq,periods,seqOrder)
+% 
+% figure;
+% boxplot(seq','orientation','horizontal','labels',seqOrder)
+% 
+% plot_param_hist(seq,periods,seqOrder)
 
 %% remove outliers:
 % https://www.mathworks.com/matlabcentral/answers/121247-how-can-i-detect-and-remove-outliers-from-a-large-dataset
@@ -212,7 +189,7 @@ title('2D distribution of "a" and "b"');
 xlabel('a');
 ylabel('b');
 
-%%
+%% some 3D histograms
 close all;
 
 Title = '3D histogram '; 
@@ -228,11 +205,15 @@ hist3D_CS(targ(1,:),sampl(2,:),sampl(3,:),Labels,Title,XYbinNum,zbinNum);
 Labels = {'b','a','tau'};
 hist3D_CS(targ(1,:),sampl(2,:),sampl(1,:),Labels,Title,XYbinNum,zbinNum);
 %% Neural Network #1a: (CPU training)
-architecture = [30];
+architecture = [6,20];
 
 net = fitnet(architecture);
 % net = feedforwardnet(architecture);
 net.trainFcn = 'trainbr';
+net.divideParam.trainRatio = 0.5;
+net.divideParam.valRatio = 0.35;
+net.divideParam.testRatio = 0.15;
+
 net.trainParam.showWindow = 1; 
 net.trainParam.showCommandLine = 1;
 net.trainParam.epochs = 1000;
@@ -254,10 +235,14 @@ legend('targets','NN outputs');
 % histogram(net(sampl_n),100,'Normalization','pdf');
 % legend('targets','NN outputs');
 %% Neural Network #1b: (GPU training)
-architecture = [10,20,20,20,5];
+architecture = [10,20,5];
 
 net = fitnet(architecture);
 % net = feedforwardnet(architecture);
+net.divideParam.trainRatio = 0.5;
+net.divideParam.valRatio = 0.35;
+net.divideParam.testRatio = 0.15;
+
 net.trainParam.showWindow = 1; 
 net.trainParam.showCommandLine = 1;
 net.trainParam.epochs = 1000;
@@ -273,7 +258,7 @@ histogram(targ,100,'Normalization','pdf'); hold on;
 histogram(net(sampl),100,'Normalization','pdf');
 legend('targets','NN outputs');
 
-%%
+%% test #1
 clc;% close all
 % 
 % input_names = {'tau','a','periods'};
@@ -283,8 +268,8 @@ clc;% close all
 N = 100;
 M = 6;
 
-tau = 0.03;
-a = linspace(0.1,4.9,M);
+tau = 0.05;
+a = linspace(1.5,3.5,M);
 p = linspace(0.1,1,N);%0.7;
 
 NNout = zeros(M,N);
@@ -314,36 +299,46 @@ clear N tau a p NNout LABELS rand_id N
 %% % test NN with training data (only with des period)
 close all
 
-desPeriod = MML.perLim(1) + ...
-                 rand(1,size(targ,2))*(MML.perLim(2)-MML.perLim(1));
-% % desPeriod = 1 + rand(1,size(targ,2))*(5-1);
-% 
-[NN_in,~] = ...
-    prepare_NN_data(input_names,output_names,...
-    seqOrder,seq,desPeriod);
+% % % % 1) Test with training data (but change the periods)
+% desPeriod = MML.perLim(1) + ...
+%                  rand(1,size(targ,2))*(MML.perLim(2)-MML.perLim(1));
+% seq_test = seq;
 
-% % % %  test on rande seq #1:
-% rand_seq = MML.Gen.RandSeq(length(targ));
-% [NN_in,~] = ...
-%     prepare_NN_data(input_names,output_names,...
-%     seqOrder,rand_seq',desPeriod);
+% % % % % 2) Test with external test data (of osc in range CPGs)
+% results_test = load_results({'MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_Narrow_tau_osc_inRange_test_group1.mat'});
+% [results_test,~,seq_test,~] = get_CPGs(results_test,'osc_in_per_range','2N',MML);
+
+% % % % 3) Test with external test data (of osc CPGs)
+results_test = load_results({'MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_Narrow_tau_only_osc_test_group1.mat'});
+[results_test,~,seq_test,~] = get_CPGs(results_test,'osc','2N',MML);
+
+% % % % 4) test on rande seq #1:
+% seq_test = (MML.Gen.RandSeq(length(targ)))';
+
+% get des_periods in NN inputs:
+desPeriod = MML.perLim(1) + ...
+                 rand(1,size(seq_test,2))*(MML.perLim(2)-MML.perLim(1));
+             
+% get NN inputs:
+[NN_in,targ_test] = ...
+    prepare_NN_data(input_names,output_names,...
+    seqOrder,seq_test,desPeriod);
 
 % % % get NN output:
 NN_out = net(NN_in);
-plotregression(targ,NN_out)
+plotregression(targ_test,NN_out)
 
 % % % % % find nearest neighbours:
-[IDX,D] = knnsearch(NN_out',targ');
-
+[IDX,D] = knnsearch(NN_out',targ_test');
+    % dont plot all:
+IDX = IDX(1:min(length(IDX),1000));
+    
 figure;
-scatter(NN_out(1:1000),targ(1,IDX(1:1000)));
+scatter(NN_out(1,IDX),targ_test(1,IDX));
 xlabel('NN output "b"');
 ylabel('nearest neighbor from the training data')
 % axis([0 2.5 0 2.5])
 % % % % % % % % % % % % % % % 
-
-% NN_out = net(sampl(:,tr.testInd));
-% plotregression(targ(:,tr.testInd),NN_out)
 
 figure;
 histogram(NN_out,100,'Normalization','pdf');
@@ -355,10 +350,79 @@ histogram(periods,100,'Normalization','pdf');
 title('histogram of periods');
 xlabel('periods');
 
-figure;
-subplot(2,1,1);
-boxplot(sampl','orientation','horizontal','labels',input_names)
-subplot(2,1,2);
-boxplot(targ','orientation','horizontal','labels',output_names)
+clear NN_in NN_out desPeriod results_test seq_test
 
-clear NN_in NN_out desPeriod
+%% Neural Network #2: (norm the outputs and change the output layer)
+architecture = [10];
+
+minTar = min(targ);
+maxTar = max(targ);
+targ_norm = (targ - minTar) ./ (maxTar - minTar);
+
+net = fitnet(architecture);
+% net = feedforwardnet(architecture);
+net.trainFcn = 'trainbr';
+
+net.layers{2,1}.transferFcn = 'logsig';
+net.output.processParams{1,2}.ymin = 0;
+
+net.divideParam.trainRatio = 0.5;
+net.divideParam.valRatio = 0.35;
+net.divideParam.testRatio = 0.15;
+
+net.trainParam.showWindow = 1; 
+net.trainParam.showCommandLine = 1;
+net.trainParam.epochs = 1000;
+% net.performParam.normalization = 'percent'; %It must be 'none', 'standard' or 'percent'
+
+[net, tr] = train(net, sampl, targ_norm);
+
+NN_out = minTar + (net(sampl) * (maxTar - minTar));
+
+figure;
+histogram(targ,100,'Normalization','pdf'); hold on;
+histogram(NN_out,100,'Normalization','pdf');
+legend('targets','NN outputs');
+
+clear NN_out
+
+%%
+close all
+% % % % % 2) Test with external test data (of osc in range CPGs)
+% results_test = load_results({'MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_Narrow_tau_osc_inRange_test_group1.mat'});
+% [results_test,~,seq_test,~] = get_CPGs(results_test,'osc_in_per_range','2N',MML);
+
+% % % % 3) Test with external test data (of osc CPGs)
+results_test = load_results({'MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_Narrow_tau_only_osc_test_group1.mat'});
+[results_test,~,seq_test,~] = get_CPGs(results_test,'osc','2N',MML);
+
+% % % % 4) test on rande seq #1:
+% seq_test = (MML.Gen.RandSeq(1000))';
+
+% get des_periods in NN inputs:
+desPeriod = MML.perLim(1) + ...
+                 rand(1,size(seq_test,2))*(MML.perLim(2)-MML.perLim(1));
+             
+% get NN inputs:
+[NN_in,targ_test] = ...
+    prepare_NN_data(input_names,output_names,...
+    seqOrder,seq_test,desPeriod);
+
+% % % get NN output:
+NN_out = minTar + (net(NN_in) * (maxTar - minTar));
+
+plotregression(targ_test,NN_out)
+
+figure;
+histogram(NN_out,'Normalization','Probability'); hold on;
+histogram(targ_test,'Normalization','Probability');
+legend('NN_{out}','targ test');
+title('histogram of NN_{output}');
+xlabel('NN_{output}');
+
+figure;
+histogram(NN_out,100,'Normalization','pdf');
+title('histogram of NN_{output}');
+xlabel('NN_{output}');
+
+clear NN_in NN_out desPeriod results_test seq_test

@@ -1,5 +1,5 @@
-function plot_divercity(obj,gen_num,num_of_clusters,...
-    whichParam,whichTypeOfParam,plotType)
+function clustersID = plot_divercity(obj,gen_num,num_of_clusters,...
+    whichParam,normParam,plotType)
 % this function plot the divercity on a 2D graph with 'kmeans'
 % clusification
 % 
@@ -11,52 +11,56 @@ function plot_divercity(obj,gen_num,num_of_clusters,...
 %          'VelRangeFit #4','VelRangeFit #5','VelRangeFit #6',...
 %          'VelRangeFit #7','VelRangeFit #8','EigenFit'};
 %      
-%      seqOrder_extend = {'tau','b','c_1','c_2','c_3','c_4',...
-%                       'w_{12}','w_{13}','w_{14}','w_{21}','w_{23}','w_{24}',...
-%                       'w_{31}','w_{32}','w_{34}','w_{41}','w_{42}','w_{43}',...
-%                       'ks_\tau','ks_c1','ks_c2','ks_c3','ks_c4'};
-% *) 'whichTypeOfParam' - can be either 'fitnessOrder' for fitness
-%                           divercity. or 'seqOrder_extend' for parameters
-%                           divercity.
+%      seqOrder = {'tau','b',...};
+% *) 'normParam' - 1Xlength(whichParam) boolean array. 
+%                   '1'- norm;    '0'- don't norm
 % *) 'plotType' - 
 % 
 % 
 % 
 
-switch whichTypeOfParam % decide which sequqence to string compare later
-    case {'fitness','fit','Fit'}
-        order = obj.fitnessOrder;
-    case {'param','Param'}
-        order = obj.seqOrder_extend;
-    otherwise
-        error('invalid Type');
-end
+% 1Xn cell array which stores the clusters indices for each case:
+clustersID = cell(1,numel(obj.data_names));
+
+% determine how many subplots:
+    % if one GAfile     --> one plot
+    % if between 2 to 4 --> 2X2
+    % if between 5 to 9 --> 3X3         and ect...
+numSP = ceil(sqrt(numel(obj.data_names)));
 
 figure; hold on;
 
-for j=1:4
+for j=1:numel(obj.data_names)
     X=[];
-    if any(strcmp('tau',order))
-        % than we are doint parameters divercity
-        % normalize the seq parameters to be between '0' to '1':
-        normParam = obj.param_norm_minMax(gen_num,j);
+    X_label = whichParam;
+    
+    for p=1:length(whichParam)
+        % check if which type of parameter is that:
+        if any(strcmp(whichParam{1,p},obj.seqOrder))
+            param_id = strcmp(whichParam{1,p},obj.seqOrder);
+            P = obj.data{1,j}.GA.Seqs(:,param_id,gen_num);
 
-        % get the norm seq:
-        for i=1:length(whichParam)
-           X(i,:) =  normParam(:,strcmp(whichParam{1,i},order));
-           X_label{1,i} = [whichParam{1,i},' norm'];
+            if normParam(1,p) % norm by genome min/Max
+                minParam = obj.MML.Gen.Range(1,param_id);
+                maxParam = obj.MML.Gen.Range(2,param_id);
+                P = ( P - minParam ) ./ ( maxParam - minParam );
+                X_label{1,p} = [whichParam{1,p},' norm'];
+            end
+            
+        elseif any(strcmp(whichParam{1,p},obj.fitnessOrder))
+            param_id = strcmp(whichParam{1,p},obj.fitnessOrder);
+            P = obj.data{1,j}.GA.Fit(:,param_id,gen_num);
+            
+            if normParam(1,p) % norm by fitness min/Max
+                P = ( P - min(P) ) ./ ( max(P) - min(P) );
+                X_label{1,p} = [whichParam{1,p},' norm'];
+            end
+            
         end
-
-    else % than we are doing fitness divercity:
-        % exstract the fitnesses:
-        Y = obj.data{1,j}.GA.Fit(:,:,gen_num);
-        for i=1:length(whichParam)
-            X(:,i) = Y(:,strcmp(whichParam{1,i},order));
-            X_label{1,i} = whichParam{1,i};
-        end
-        X = X';
-
+        
+        X(p,:) = P';
     end
+    
     
     % waht type of plot we want:
     switch plotType
@@ -66,7 +70,7 @@ for j=1:4
             ids_good = (Tend_ratio >0.95);
             
             Title = sprintf('clustering with %d clusters:  %s \n "o" for good CPG and "X" for a bad one \n based on Tend ratio',...
-                        num_of_clusters,obj.titleAdd{1,j});
+                        num_of_clusters,obj.Legends{1,j});
                     
         case 'plot by TopPop'
             % % only fot the top 15% genes:
@@ -76,13 +80,11 @@ for j=1:4
                 X_temp(i,:) = X(i,ID);
             end
             X = X_temp;
-%             X1 = X1(ID,1);
-%             X2 = X2(ID,1);
             % plot all that are left:
             ids_good = true(size(X,2),1);
             
             Title = sprintf('clustering with %d clusters:  %s \n for the Top 15%% of the population',...
-                            num_of_clusters,obj.titleAdd{1,j});
+                            num_of_clusters,obj.Legends{1,j});
                         
         case 'plot by end condition'
             endCond = squeeze(obj.data{1,j}.GA.sim_endCond(:,1,gen_num));
@@ -91,7 +93,7 @@ for j=1:4
             ids_good = (endCond == 0) | (endCond == 5) | (endCond == 6);
             
             Title = sprintf('clustering with %d clusters:  %s \n "o" Marker for good CPG and "X" for a bad one \n based on Sim.outType == 0,5,6',...
-                        num_of_clusters,obj.titleAdd{1,j});
+                        num_of_clusters,obj.Legends{1,j});
                     
         case 'plot by pareto fronts'
             % TODO: add this later
@@ -105,11 +107,8 @@ for j=1:4
     opts = statset('Display','final');
     [idx,C,~,~] = kmeans(X',num_of_clusters,'Distance','sqeuclidean',...
         'Replicates',5,'Options',opts);
-%     [idx,C,~,~] = kmeans([X1,X2],num_of_clusters,'Distance','sqeuclidean',...
-%         'Replicates',5,'Options',opts);
-    
-    
-    ax = subplot(2,2,j); hold on;
+        
+    ax = subplot(numSP,numSP,j); hold on;
     
     Title = [Title,sprintf('\n num of points in each cluster = [')];
     for n=1:max(idx)
@@ -118,9 +117,10 @@ for j=1:4
     Title = [Title,sprintf(' ]')];
     
     obj.kMean_plot_clusters_and_centers(ax,X,X_label,Title,C,idx,ids_good);
-    axis([0,1,0,1]);
+%     axis([0,1,0,1]);
     
-
+    clustersID{1,j} = idx;
 end
+
 end
 
