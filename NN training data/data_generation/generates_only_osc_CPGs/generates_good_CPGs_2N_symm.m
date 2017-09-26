@@ -103,7 +103,7 @@ clear N
 N = 1000; % the number of samples
 good_CPGs_num = 0;
 round_count = 0;
-max_round = 1000; % maximum iteraion for while loop (saftey reasons:)
+max_round = 1000; % maximum iteraion for while loop (sakftey reasons:)
 results = [];
 
 wanted_num_CPGs = 50000;
@@ -180,7 +180,7 @@ header = [header,sprintf('"a" in range ( %.2f , %.2f ) \n',...
     MML.Gen.Range(1,5),MML.Gen.Range(2,5))];
 
 
-save('MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_Narrow_tau_only_osc_3.mat',...
+save('MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_Narrow_tau_only_osc_4.mat',...
     'results','header','MML');
 
 clear N

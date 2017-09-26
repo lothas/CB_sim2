@@ -5,6 +5,9 @@ function seq = get_classi_NNPar(obj, NN, rand_seq)
     
     [genes_id] = obj.Gen.GetGenesId(obj.sample_genes);
     
+    % transpose the array
+    rand_seq = rand_seq';
+    
     % prepare NN inputs:
     NN_in = rand_seq(genes_id,:);
     
@@ -16,5 +19,8 @@ function seq = get_classi_NNPar(obj, NN, rand_seq)
     %   "good" CPG class is '2'
     rand_good_ind = randsample(find(ind==2),1);
     
-    seq = rand_seq(rand_good_ind,:);
+    seq = rand_seq(:,rand_good_ind);
+    
+    % flip to get a raw seq vector:
+    seq = seq';
 end

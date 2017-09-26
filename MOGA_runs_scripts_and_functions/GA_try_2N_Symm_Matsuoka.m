@@ -4,7 +4,7 @@ function [  ] = GA_try_2N_Symm_Matsuoka(whichCase,fileIn)
 
 
 
-GA = MOOGA(2,200);
+GA = MOOGA(20,500);
 GA = GA.SetFittest(15,15,0.5);
 GA.JOAT = 2; GA.Quant = 0.7;
 
