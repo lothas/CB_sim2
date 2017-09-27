@@ -10,9 +10,9 @@ MML.perLimOut = MML.perLim + [-0.08 0.08]; % Desired period range
 MML.tStep = 0.05;
 MML.tEnd = 15;
 
-InFiles_names = {'VGAM_2N_symm_09_19_17_37_GA_only_notGOOD.mat',...
-    'VGAM_2N_symm_09_24_22_47_NN_classi_only.mat',...
-    'VGAM_2N_symm_09_19_17_42_rescale_only_notGOOD.mat',...
+InFiles_names = {'VGAM_2N_symm_09_26_11_51_GA_only.mat',...
+    'VGAM_2N_symm_09_25_08_28_NN_classi_only.mat',...
+    'VGAM_2N_symm_09_26_11_54_rescale_only.mat',...
     'VGAM_2N_symm_09_25_15_08_NNclassi_and_rescale.mat'};
 
 Legends = {'GA only','NN classi','rescale','NN classi + rescale'};
@@ -34,10 +34,12 @@ x_data = 1:last_gen;
 num_of_clusters = 4;
 
 %% plot max fit over generation:
-whichFit2Plot = 1:3;%1:11;
+close all
+whichFit2Plot = 3;%1:3;%1:11;
 GA_graphs.plot_fit_over_gen(whichFit2Plot,last_gen)
 
 %% plot max and Mean fit over generation num:
+close all
 whichFit2Plot = 1:3;
 % GA_graphs.plot_mean_fit_over_gen(whichFit2Plot,last_gen,'all')
 
@@ -93,6 +95,7 @@ GA_graphs.plot_divercity(last_gen,num_of_clusters,...
     whichParam,[0,0],'plot by end condition');
 
 %% plot Pareto:
+close all
 fit1Num = 1; % 'VelFit'
 fit2Num = 3; % 'VelRangeFit#1'
 GA_graphs.MOGA_pareto_plot(fit1Num,fit2Num,last_gen,'showAll');
