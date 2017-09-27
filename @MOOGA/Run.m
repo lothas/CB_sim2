@@ -51,6 +51,8 @@ for g = GA.Progress+1:GA.Generations
     
     parfor i = 1:GA.Population
 %     for i = 1:GA.Population
+        
+        % don't run Seqs that you already run before:
         if any(gFits(i,:)~=0)
             continue;
         end
@@ -69,7 +71,7 @@ for g = GA.Progress+1:GA.Generations
     GA.sim_endCond(:,:,g) = sim_endCond;
     GA.Tend_ratio(:,:,g) = Tend_ratio;
     
-    % Check outliers
+    % % % Check outliers:
     ids = [];
     for n = 1:length(GA.FitIDs)
         ids = [ids; find(GA.Fit(:,n,g) > ...
@@ -78,7 +80,7 @@ for g = GA.Progress+1:GA.Generations
     ids = unique(ids);
     newFits = GA.Fit(ids,:,g);
     parfor i = 1:length(ids)  
-        [newFits(i,:), ~] = feval(ParRunSeq, gSeqs(i,:));
+        [newFits(i,:), ~] = feval(ParRunSeq, gSeqs(ids(i),:));
     end
     GA.Fit(ids,:,g) = min(GA.Fit(ids,:,g), newFits);
     
@@ -107,7 +109,7 @@ for g = GA.Progress+1:GA.Generations
     GA.Progress = g;
     GA.CompTime = GA.CompTime + t_diff;
     
-    if g<GA.Generations
+    if g < GA.Generations
         % Finished running tests, create new generation
         [TopIDs,Weights] = GA.GetTopPop(GA.Fittest(1)); % fitness = genes
 
@@ -118,7 +120,15 @@ for g = GA.Progress+1:GA.Generations
             GA.Fit(TopIDs,:,g);
         GA.Parents(1:GA.Fittest(1),:,g+1) = ...
             GA.Parents(TopIDs,:,g);
-
+        GA.MLseqRunTime(1:GA.Fittest(1),:,g+1) = ...
+            GA.MLseqRunTime(TopIDs,:,g);
+        GA.simRunTime(1:GA.Fittest(1),:,g+1) = ...
+            GA.simRunTime(TopIDs,:,g);
+        GA.sim_endCond(1:GA.Fittest(1),:,g+1) = ...
+            GA.sim_endCond(TopIDs,:,g);
+        GA.Tend_ratio(1:GA.Fittest(1),:,g+1) = ...
+            GA.Tend_ratio(TopIDs,:,g);
+        
         % Add a mutated copy of top IDs
         GA.Seqs(GA.Fittest(1)+1:GA.Fittest(1)+GA.Fittest(2),:,g+1) = ...
             GA.Gen.Mutate(GA.Seqs(1:GA.Fittest(2),:,g+1));
