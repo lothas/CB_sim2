@@ -74,16 +74,6 @@ if strcmp(wSim.Con.name, 'Matsuoka')
     [TTemp,XTemp] = ode45(@MatsDerivative,t_span,IC0,options);
     Matsuoka_runTime = toc(Matsuoka_tic);
     
-%     figure
-%     for i = 1:4
-%         subplot(4,1,i)
-%         plot(TTemp, XTemp(:,wMOSim.ConCo));
-%     end
-%     figure
-%     plot(TTemp, wMOSim.Con.Output(TTemp, XTemp', 0));
-%     grid on
-
-    
     % % % use regression NN to change the gene:
     if ~isempty(GA.NN_reg) && ~isempty(GA.NN_reg_Fcn) ...
             && strcmp(wSim.Con.name, 'Matsuoka')
@@ -94,28 +84,30 @@ if strcmp(wSim.Con.name, 'Matsuoka')
         wSim.Con = wSim.Con.Adaptation();
     end    
 
-    % % % use classifier NN to get good gene change the gene:
+    % % % use classifier NN to get good genes to replace gene:
     if ~isempty(GA.NN_classi) && ~isempty(GA.NN_classi_Fcn) ...
             && strcmp(wSim.Con.name, 'Matsuoka')
-        % Use NN to select best value for tau gene
         thisSeq = GA.NN_classi_Fcn(GA.Gen, GA.NN_classi, thisSeq, XTemp, TTemp);
         wSim = GA.Gen.Decode(wSim,thisSeq);
         wSim.Con = wSim.Con.HandleEvent(1, wSim.IC(wSim.ConCo));
         wSim.Con = wSim.Con.Adaptation();
     end    
     
+    % % Time rescaling
     if ~isempty(GA.rescaleFcn)
+        % Option to consider: use feedforward NN to predict the period.
+        
         % Run simulation again to do the rescaling
+        %   The NN might have change the period.
         [TTemp,XTemp] = ode45(@MatsDerivative,t_span,IC0,options);
-    end
-    
-    % % % use Rescaling to change the gene:
-    if ~isempty(GA.rescaleFcn)
+        
+        % use Rescaling to change the gene:
         thisSeq = GA.rescaleFcn(GA.Gen, thisSeq, XTemp, TTemp);
         wSim = GA.Gen.Decode(wSim,thisSeq);
         wSim.Con = wSim.Con.HandleEvent(1, wSim.IC(wSim.ConCo));
         wSim.Con = wSim.Con.Adaptation();
     end
+    
 end
 
     function xdot = MatsDerivative(t,x)

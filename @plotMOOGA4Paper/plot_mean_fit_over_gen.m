@@ -39,7 +39,7 @@ for i = 1:length(whichFit)
         y_data_std = squeeze(std(y,[],1));
         
         % make plot:
-        errorbar(x_data, y_data_mean,y_data_std);
+        %errorbar(x_data, y_data_mean,y_data_std);
         plot(x_data, y_data_mean,'LineWidth',2);
         
     end

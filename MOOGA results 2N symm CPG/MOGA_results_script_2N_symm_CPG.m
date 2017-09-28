@@ -10,12 +10,12 @@ MML.perLimOut = MML.perLim + [-0.08 0.08]; % Desired period range
 MML.tStep = 0.05;
 MML.tEnd = 15;
 
-InFiles_names = {'VGAM_2N_symm_09_26_11_51_GA_only.mat',...
-    'VGAM_2N_symm_09_25_08_28_NN_classi_only.mat',...
-    'VGAM_2N_symm_09_26_11_54_rescale_only.mat',...
-    'VGAM_2N_symm_09_25_15_08_NNclassi_and_rescale.mat'};
+InFiles_names = {'VGAM_2N_symm_09_27_15_23_GA_only.mat',...
+    'VGAM_2N_symm_09_28_09_05_GA_only.mat',...
+    'VGAM_2N_symm_09_27_15_28_NN_classi_only.mat',...
+    'VGAM_2N_symm_09_27_15_26_rescale_only.mat'};
 
-Legends = {'GA only','NN classi','rescale','NN classi + rescale'};
+Legends = {'GA only 1','GA only 1','NN classi','rescale'};
 
 % the order of the parametrs in CPG Sequence:
 seqOrder = {'tau' ,'b', 'c', 'NR', 'a',...
@@ -35,7 +35,7 @@ num_of_clusters = 4;
 
 %% plot max fit over generation:
 close all
-whichFit2Plot = 3;%1:3;%1:11;
+whichFit2Plot = 1:3;%1:11;
 GA_graphs.plot_fit_over_gen(whichFit2Plot,last_gen)
 
 %% plot max and Mean fit over generation num:
@@ -48,7 +48,7 @@ GA_graphs.plot_mean_fit_over_gen(whichFit2Plot,last_gen,'top_pop')
 whichParam = {'tau','b'};
 normID = [1,1]; % norm or not
 GA_graphs.plot_divercity(last_gen,num_of_clusters,...
-    whichParam,normID,'plot by Tend ratio')
+    whichParam,normID,'plot by Tend ratio');
 %% display parameters diversity for top 15%: 
 whichParam = {'tau','b'};   normID = [1,1]; % norm or not
 % whichParam = {'VelFit','VelRangeFit #1'};   normID = [0,0];

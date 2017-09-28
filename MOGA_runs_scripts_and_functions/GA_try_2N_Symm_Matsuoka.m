@@ -104,7 +104,8 @@ switch use_NN
         maxN = 250000;
 
         inFilenames =...
-            {'MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_Narrow_tau_All_1.mat'};
+            {'MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_Narrow_tau_All_1.mat',...
+            'MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_Narrow_tau_All_2.mat'};
 
         MML.sample_genes = {'\tau_r','beta','2neuron_symm_weights'}; 
         MML.target_genes = {'n_osc and osc classes'};
