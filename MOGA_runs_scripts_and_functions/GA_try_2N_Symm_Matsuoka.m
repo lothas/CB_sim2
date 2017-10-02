@@ -16,9 +16,10 @@ switch whichCase
         use_NN = 0;
         % Rescale?
         GA.rescaleFcn = [];
-        % out file name:
+%         out file name:
         GA.FileOut = ['VGAM_2N_symm_',datestr(now,'mm_dd_hh_MM'),...
             '_GA_only','.mat'];
+
    case 'GA + rescale'
         use_NN = 0;
         GA.rescaleFcn = @rescaleFcn;

@@ -5,7 +5,7 @@ function plot_fit_over_gen(obj,whichFit,gen_num)
 % 'gen_num' - up to which generation number to plot
 
 x_data = 1:gen_num;
-y_data = zeros(4,gen_num);
+y_data = zeros(numel(obj.data_names),gen_num);
 
 for i = 1:length(whichFit)
     FitNum = whichFit(1,i);
@@ -20,7 +20,7 @@ for i = 1:length(whichFit)
         minORmax = obj.data{1,j}.GA.FitMinMax;
         
         % get y-axis data:
-        switch minORmax(1,j)
+        switch minORmax(1,FitNum)
             case 1
                 [bestFit,bestID] = max(squeeze(y),[],1);
                 for g=1:length(x_data)

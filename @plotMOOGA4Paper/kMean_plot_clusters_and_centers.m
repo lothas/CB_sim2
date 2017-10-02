@@ -39,6 +39,7 @@ switch size(X,1)
         title(Title);
         xlabel(X_label{1,1});
         ylabel(X_label{1,2});
+        axis([0 1 0 1]);
         
     case 3 % 3D scatter
         for i=1:num_of_clusters

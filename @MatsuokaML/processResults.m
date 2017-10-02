@@ -10,7 +10,7 @@ function [y, periods, signals, pos_work, neg_work, neuronActive, ...
     signals = obj.Sim.Con.OutM*y';
     pos_work = zeros(obj.nNeurons/2,1);
     neg_work = zeros(obj.nNeurons/2,1);
-%     perError1 = zeros(obj.nNeurons/2,1);
+    perError1 = zeros(obj.nNeurons/2,1);
     perOK1 = false;
     perError2 = nan(obj.nNeurons,1);
     perOK2 = false(obj.nNeurons,1);

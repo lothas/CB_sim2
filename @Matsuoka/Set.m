@@ -103,11 +103,10 @@ else
             case '4neuron_taga_like'
                 MO.win = 0;
                 MO.wex = zeros(2*MO.nPulses);
-                % TODO: change it to the Taga-like case
                 MO.wex = [0       ,value(1),0       ,0;
                           value(1),0       ,value(2),value(3);
-                          0       ,value(3),0       ,value(4);
-                          0       ,value(2),value(4),0       ];
+                          0       ,0       ,0       ,value(4);
+                          0       ,0       ,value(4),0       ];
                       
             % Controller Output
             case {'amp0', 'amp', 'c_i'} % Base neuron amplitude multiplier
@@ -143,6 +142,8 @@ else
                 MO.ks_out = value';
             case {'ks_c_2n_symm'} % when we have only the hip joint
                 MO.ks_out = [0;0;value;value];
+            case {'ks_c_4n_symm'}
+                MO.ks_out = [value;value;value;value];
             
             otherwise
                 error(['Set failed: ',key,' property not found']);
