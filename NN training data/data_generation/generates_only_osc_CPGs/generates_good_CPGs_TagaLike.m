@@ -25,7 +25,7 @@ mw = 0*ones(1,4);
 %                       % w43=w34 = w4
 
 
-Mw = 5*ones(1,4);
+Mw = 10*ones(1,4);
     % Final genome with tau_r + beta (constant tau_u/tau_v ratio) 
 Keys = {'\tau_r', 'beta', 'amp_4n_symm',   '4neuron_taga_like', 'ks_\tau',     'ks_c_4n_symm', 'IC_matsuoka';
               1 ,      1,             1,                     4,        1 ,                 1 ,            0 };
@@ -56,7 +56,7 @@ round_count = 0;
 max_round = 1000; % maximum iteraion for while loop (saftey reasons:)
 results = [];
 
-wanted_num_CPGs = 1000;
+wanted_num_CPGs = 100000;
 
 disp('start with the sim:');
 
@@ -116,7 +116,7 @@ header = [header,sprintf('"k_tau" in range ( %.2f , %.2f ) \n',...
 header = [header,sprintf('"k_c" in range ( %.2f , %.2f ) \n',...
     MML.Gen.Range(1,9),MML.Gen.Range(2,9))];
 
-save('MatsRandomRes_TagaLike_CPG_all_test.mat',...
+save('MatsRandomRes_TagaLike_CPG_all_2.mat',...
     'results','header');
 
 clear N
@@ -128,7 +128,7 @@ round_count = 0;
 max_round = 1000; % maximum iteraion for while loop (saftey reasons:)
 results = [];
 
-wanted_num_CPGs = 500;
+wanted_num_CPGs = 10000;
 
 disp('start with the sim:');
 
@@ -215,7 +215,7 @@ header = [header,sprintf('"k_tau" in range ( %.2f , %.2f ) \n',...
 header = [header,sprintf('"k_c" in range ( %.2f , %.2f ) \n',...
     MML.Gen.Range(1,9),MML.Gen.Range(2,9))];
 
-save('MatsRandomRes_TagaLike_CPG_all_osc_test.mat',...
+save('MatsRandomRes_TagaLike_CPG_all_osc_1.mat',...
     'results','header');
 
 clear N

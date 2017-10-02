@@ -40,10 +40,10 @@ classdef MatsuokaML
 %             genome_file = 'MatsuokaGenome_4Neuron_general.mat';
             
 %             % genome for 4Neurons Taga-like Matsuoka:
-            genome_file = 'MatsuokaGenome_4Neuron_tagaLike.mat';
+%             genome_file = 'MatsuokaGenome_4Neuron_tagaLike.mat';
             
 %             % genome for 2Neurons Symmetric Matsuoka:
-%             genome_file = 'MatsuokaGenome_2Neuron_Symm.mat';
+            genome_file = 'MatsuokaGenome_2Neuron_Symm.mat';
             
             % genome for 2Neurons General Matsuoka:
 %             genome_file = 'MatsuokaGenome_2Neuron_General.mat';

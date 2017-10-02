@@ -1,4 +1,4 @@
-function plot_fit_over_gen(obj,whichFit,gen_num)
+function [x_data,y_data] = plot_fit_over_gen(obj,whichFit,gen_num)
 % this function plots the maximum fitness in every generation
 
 % 'whichFit' - row vector of the fitnesess to plot.
@@ -33,7 +33,7 @@ for i = 1:length(whichFit)
         end
         
 %         % OPTIONAL: check best gene passing
-%         checkGenerationContinuaty(obj,x_data,genes,bestGenes);
+%         checkGenerationContinuety(obj,x_data,genes,bestGenes);
     end
     
     figure; hold on;
@@ -48,7 +48,7 @@ for i = 1:length(whichFit)
 
 end
 
-    function checkGenerationContinuaty(obj,x_data,genes,bestGenes)
+    function checkGenerationContinuety(obj,x_data,genes,bestGenes)
         % check that the best gene is passed to the next geeration
         % check if the best gene is there in the next generation:
         for g=2:length(x_data)

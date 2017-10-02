@@ -1,4 +1,5 @@
-function plot_mean_fit_over_gen(obj,whichFit,gen_num,whichGenes)
+function [x_data,y_data_mean] = ...
+    plot_mean_fit_over_gen(obj,whichFit,gen_num,whichGenes)
 % this function plots the maximum fitness in every generation
 %   and the Mean fitness (+error bars).
 
