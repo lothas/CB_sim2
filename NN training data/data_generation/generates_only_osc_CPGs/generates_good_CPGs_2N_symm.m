@@ -15,10 +15,16 @@ N = nAnkle+nHip;
        % % % Narrow b Narrow W Narrow tau
 Mw = 5*1;
 mw = 0*Mw;
+% Keys = {'\tau_r', 'beta','amp_2n_same_inputs',    '2neuron_symm_weights', 'ks_\tau',     'ks_c_2n_symm', 'IC_matsuoka';
+%               1 ,      1,                   2,                         1,        1 ,          1,            0 };
+% Range = {  0.02 ,    0.2,               [0,0],                         0,   -0.001 ,       -0.2; % Min
+%            0.10  ,   2.5,             [10,10],                         5,    0.001 ,       0.2}; % Max
+
+% Testing 0.2 < b < 100 tau_r_max = 0.25
 Keys = {'\tau_r', 'beta','amp_2n_same_inputs',    '2neuron_symm_weights', 'ks_\tau',     'ks_c_2n_symm', 'IC_matsuoka';
               1 ,      1,                   2,                         1,        1 ,          1,            0 };
 Range = {  0.02 ,    0.2,               [0,0],                         0,   -0.001 ,       -0.2; % Min
-           0.10  ,   2.5,             [10,10],                         5,    0.001 ,       0.2}; % Max
+           0.25 ,   100,             [10,10],                         5,    0.001 ,       0.2}; % Max
 
        
 MutDelta0 = 0.04;   MutDelta1 = 0.02;
@@ -94,7 +100,7 @@ header = [header,sprintf('"a" in range ( %.2f , %.2f ) \n',...
     MML.Gen.Range(1,5),MML.Gen.Range(2,5))];
 
 
-save('MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_Narrow_tau_All_1.mat',...
+save('MatsRandomRes_2Neurons_symm_very_large_b_and_tau_All_1.mat',...
     'results','header');
 
 clear N
