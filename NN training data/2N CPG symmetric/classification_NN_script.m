@@ -14,8 +14,8 @@ MML.perLimOut = MML.perLim + [-0.08 0.08]; % Desired period range
 MML.tStep = 0.05;
 MML.tEnd = 15;
 
-% file name for uploading:
-results_fileName = {'MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_Narrow_tau_All_1.mat'};
+% % file name for uploading:
+% results_fileName = {'MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_Narrow_tau_All_1.mat'};
 
 %% Load data:
 results = load_results(results_fileName);
@@ -30,15 +30,25 @@ targ = [ids_osc; ids_n_osc];
 seq = (vertcat(results(:).seq))';
 periods = horzcat(results(:).periods);
 
+% plot histograms:
+% plot_osc_nosc_hist([3,3],seq,periods,seqOrder,ids_osc,ids_n_osc);
+% plot_param_hist(seq,periods,seqOrder)
+
 % input_names = {'tau','b','c','a'};
 % output_names = {'b'};
+
 input_names = {'tau','b','a'};
 output_names = {'b'};
+
+% input_names = {'tau','a'};
+% output_names = {'b'};
 
 [sampl,~] = ...
     prepare_NN_data(input_names,output_names,...
     seqOrder,seq,periods);
 
+plot_pointCloud_clusters(sampl(1,:),sampl(3,:),sampl(2,:),...
+    ids_osc,ids_n_osc,{'tau','a','b'});
 %% Neural Network #2:
 X=sampl;
 T=double(targ);
@@ -151,7 +161,7 @@ X=sampl;
 T=double(targ);
 %Train an autoencoder with a hidden layer of size 10 and a linear transfer function for the decoder. Set the L2 weight regularizer to 0.001, sparsity regularizer to 4 and sparsity proportion to 0.05.
 
-architecture = [3,2];
+architecture = [10];
 net = patternnet(architecture);
 [net, tr] = train(net, X, T);
 
@@ -198,7 +208,7 @@ clear signal rand seq out ind states
 clc;
 
 % % % % CPG parameters:
-[ Seq_old ] = MML.Gen.RandSeq(500); %generate 'N' rand samples
+[ Seq_old ] = MML.Gen.RandSeq(1000); %generate 'N' rand samples
 % % % run the rand samples to check periods:
 
 % ini the structures to the right size:

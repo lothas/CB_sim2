@@ -2,11 +2,13 @@
 %% NN testing Script:
 % IMPORTANT: dont forget to load the right genome file and to uptade
 % 'MatsuokaML.m' to the right rettings
-% 
+%
+% Seriously: Don't forget to check in each fileheader the right gene
+% boundaries.
 
 clear all; close all; clc;
 
-%%
+%
 
 % the order of the parametrs in CPG Sequence:
 seqOrder = {'tau' ,'b', 'c', 'NR', 'a',...
@@ -23,17 +25,20 @@ MML.tEnd = 15;
 % % file name for uploading:
 % results_fileName = {'MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_Narrow_tau_only_osc_1.mat'};
 
-results_fileName = {'MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_Narrow_tau_only_osc_1.mat',...
-    'MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_Narrow_tau_only_osc_3.mat',...
-    'MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_Narrow_tau_only_osc_4.mat'};
+% results_fileName = {'MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_Narrow_tau_only_osc_1.mat',...
+%     'MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_Narrow_tau_only_osc_3.mat',...
+%     'MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_Narrow_tau_only_osc_4.mat'};
 
+results_fileName = {'MatsRandomRes_2Neurons_symm_very_large_b_and_tau_and_a_All_1.mat'};
 %% Load data:
 results = load_results(results_fileName);
 
-%% plot example:
+%% plot random example:
 clc; close all
 
 N = length(results);
+
+% % show random CPG:
 rand_id = randsample(1:N,1);
 
 [out, ~, signal] = MML.runSim(results(rand_id).seq);
@@ -45,11 +50,11 @@ xlabel('time[sec]');    ylabel('X_i');
 title({'X_i over time',...
     ['id #',num2str(rand_id),...
     '    periods: ',...
-    num2str(results(rand_id).periods(1))]});
+    num2str(results(rand_id).periods(2))]});
 subplot(2,1,2)
 plot(signal.T,signal.signal(1,:),'b',signal.T,signal.signal(2,:),'r');
 
-clear out signal N rand_id
+clear out signal N rand_id periods
 
 %% get and filter periods:
 % % get oscillating:
