@@ -10,6 +10,10 @@ GA.JOAT = 2; GA.Quant = 0.7;
 
 GA.FileIn = fileIn;
 
+FileName_start = 'VGAM_2N_symm_';
+FileName_date = datestr(now,'mm_dd_hh_MM');
+FileName_extra = '_larger_range';
+
 switch whichCase
     case 'GA only'
         % Use NN?
@@ -23,32 +27,32 @@ switch whichCase
    case 'GA + rescale'
         use_NN = 0;
         GA.rescaleFcn = @rescaleFcn;
-        GA.FileOut = ['VGAM_2N_symm_',datestr(now,'mm_dd_hh_MM'),...
+        GA.FileOut = [FileName_start,FileName_date,FileName_extra,...
             '_rescale_only','.mat']; 
         
     case 'GA + NN_reg'
         use_NN = 'NN_reg';
         GA.rescaleFcn = [];
-        GA.FileOut = ['VGAM_2N_symm_',datestr(now,'mm_dd_hh_MM'),...
+        GA.FileOut = [FileName_start,FileName_date,FileName_extra,...
             '_NN_reg_only','.mat'];
         
     case 'GA + NN_classi'
         use_NN = 'NN_classi';
         GA.rescaleFcn = [];
-        GA.FileOut = ['VGAM_2N_symm_',datestr(now,'mm_dd_hh_MM'),...
+        GA.FileOut = [FileName_start,FileName_date,FileName_extra,...
             '_NN_classi_only','.mat'];
         
     
     case 'GA + NN_reg + rescale'
         use_NN = 'NN_reg';
         GA.rescaleFcn = @rescaleFcn;
-        GA.FileOut = ['VGAM_2N_symm_',datestr(now,'mm_dd_hh_MM'),...
+        GA.FileOut = [FileName_start,FileName_date,FileName_extra,...
             '_NNreg_and_rescale','.mat'];
         
     case 'GA + NN_classi + rescale'
         use_NN = 'NN_classi';
         GA.rescaleFcn = @rescaleFcn;
-        GA.FileOut = ['VGAM_2N_symm_',datestr(now,'mm_dd_hh_MM'),...
+        GA.FileOut = [FileName_start,FileName_date,FileName_extra,...
             '_NNclassi_and_rescale','.mat'];
 end
         
@@ -77,7 +81,7 @@ switch use_NN
 
         inFilenames =...
             {'MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_Narrow_tau_1.mat'};
-
+        
         MML.sample_genes = {'\tau_r','2neuron_symm_weights'}; 
         MML.target_genes = {'beta'};
 
@@ -104,10 +108,12 @@ switch use_NN
 
         maxN = 250000;
 
-        inFilenames =...
-            {'MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_Narrow_tau_All_1.mat',...
-            'MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_Narrow_tau_All_2.mat'};
+%         inFilenames =...
+%             {'MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_Narrow_tau_All_1.mat',...
+%             'MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_Narrow_tau_All_2.mat'};
 
+        inFilenames = {'MatsRandomRes_2Neurons_symm_very_large_b_and_tau_and_a_All_1.mat'};
+        
         MML.sample_genes = {'\tau_r','beta','2neuron_symm_weights'}; 
         MML.target_genes = {'n_osc and osc classes'};
 
@@ -116,7 +122,7 @@ switch use_NN
         MML.normParams = normParams;
 
     %     if exist(GANN_file, 'file') ~= 2
-            architecture = [3,2];
+            architecture = [10];
             [net, ~] = MML.train_classi_NN(samples, targets, architecture);
             save(GANN_file,'net');
     %     else
