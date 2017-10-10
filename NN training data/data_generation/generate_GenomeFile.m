@@ -10,7 +10,7 @@ function generate_GenomeFile(whichCase)
 %       #) '4N_tagaLike' - for 4neuron taga-like CPG
 %       #) '4N_general' - for 4neuron general CPG
 % 
-% NOTE: check possible "keys" if you need to change the GA optimization
+% NOTE: change the "keys" if you need to change the GA optimization
 % parameters.
 
 % define Mutation strength:
@@ -34,7 +34,7 @@ switch whichCase
         Keys = {'\tau_r', 'beta','amp_2n_same_inputs',    '2neuron_symm_weights', 'ks_\tau',     'ks_c_2n_symm', 'IC_matsuoka';
                       1 ,      1,                   2,                         1,        1 ,          1,            0 };
         Range = {  0.02 ,    0.2,                  mw,                         0,      -10 ,         -1; % Min
-                   0.25 ,     10,                  Mw,                        10,       10 ,          1}; % Max
+                   0.25 ,    2.5,                  Mw,                        10,       10 ,          1}; % Max
 
         % Note: because of some old mistakes. the tonic input gene ('c') 
         %   is encoded with two values. only one of them is used.          
@@ -45,13 +45,15 @@ switch whichCase
         Mamp = [10,10];
         mamp = 0*Mamp;
         
-        Mw = [10,10];
+%         Mw = [10,10];
+        Mw = [5,5];
         mw = 0*Mw;
         
-        Keys = {'\tau_r', 'beta', 'amp_2n_dif_inputs',    '2neuron_general_weights', 'ks_\tau',     'ks_c_2n_symm', 'IC_matsuoka';
-                      1 ,      1,                   2,                            2,        1 ,          1,            0 };
-        Range = {  0.02 ,    0.2,                mamp,                           mw,      -10 ,         -1; % Min
-                   0.25 ,     10,                Mamp,                           Mw,       10 ,          1}; % Max
+        Keys = {'\tau_r', 'beta', 'amp_2n_dif_inputs',    '2neuron_general_weights', 'ks_\tau', 'ks_c_2n_general', 'IC_matsuoka';
+                      1 ,      1,                   2,                            2,        1 ,                 2,            0 };
+        Range = {  0.02 ,    0.2,                mamp,                           mw,      -10 ,           [-1,-1]; % Min
+                   0.25 ,    2.5,                Mamp,                           Mw,       10 ,             [1,1]}; % Max
+
 
     case '4N_tagaLike'
         genome_file = 'MatsuokaGenome_4Neuron_tagaLike.mat';
@@ -98,7 +100,7 @@ switch whichCase
         Keys = {'\tau_r', 'beta', 'amp',   'weights', 'ks_\tau',     'ks_c', 'IC_matsuoka';
                       1 ,      1,    4 ,          12,        1 ,         4 ,            0 };
         Range = {  0.02 ,    0.2,  mamp,          mw,      -10 ,  -0.1*Mamp; % Min
-                   0.25 ,   10.0,  Mamp,          Mw,       10 ,   0.1*Mamp}; % Max
+                   0.25 ,    2.5,  Mamp,          Mw,       10 ,   0.1*Mamp}; % Max
 
     otherwise
         error('invalid input');

@@ -3,6 +3,7 @@ close all; clc; clear all;
 
 %%
 generate_GenomeFile('2N_general')
+
 %%
 % define the class:
 MML = MatsuokaML();
@@ -11,6 +12,24 @@ MML.perLimOut = MML.perLim + [-0.08 0.08]; % Desired period range
 MML.tStep = 0.05;
 MML.tEnd = 15;
 
+header = sprintf('tau ratio is equal to %d \n',MML.Sim.Con.tau_ratio);
+header = [header,sprintf('data is for 2N general case \n')];
+header = [header,sprintf('seq Order: \n')];
+header = [header,sprintf('"tau","b","c1","c2","w1","w2" \n')];
+header = [header,sprintf('"tau" in range ( %.2f , %.2f ) \n',...
+    MML.Gen.Range(1,1),MML.Gen.Range(2,1))];
+header = [header,sprintf('"b" in range ( %.2f , %.2f ) \n',...
+    MML.Gen.Range(1,2),MML.Gen.Range(2,2))];
+header = [header,sprintf('"c1" in range ( %.2f , %.2f ) \n',...
+    MML.Gen.Range(1,3),MML.Gen.Range(2,3))];
+header = [header,sprintf('"c2" in range ( %.2f , %.2f ) \n',...
+    MML.Gen.Range(1,4),MML.Gen.Range(2,4))];
+header = [header,sprintf('"w1" in range ( %.2f , %.2f ) \n',...
+    MML.Gen.Range(1,5),MML.Gen.Range(2,5))];
+header = [header,sprintf('"w2" in range ( %.2f , %.2f ) \n',...
+    MML.Gen.Range(1,6),MML.Gen.Range(2,6))];
+
+disp(header);
 %% Train data: get All osc and n-osc (train data for classifier)
 N = 1000; % the number of samples
 CPGs_num = 0;
@@ -18,7 +37,7 @@ round_count = 0;
 max_round = 1000; % maximum iteraion for while loop (saftey reasons:)
 results = [];
 
-wanted_num_CPGs = 200000;
+wanted_num_CPGs = 100000;
 
 disp('start with the sim:');
 
@@ -54,26 +73,9 @@ end
 
 disp('sim end...');
 
+[~,~,~,~] = get_CPGs(results,'osc','2N',MML);
 
-header = sprintf('tau ratio is equal to %d \n',MML.Sim.Con.tau_ratio);
-header = [header,sprintf('data is for 2N general case \n')];
-header = [header,sprintf('seq Order: \n')];
-header = [header,sprintf('"tau","b","c1","c2","w1","w2" \n')];
-header = [header,sprintf('"tau" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,1),MML.Gen.Range(2,1))];
-header = [header,sprintf('"b" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,2),MML.Gen.Range(2,2))];
-header = [header,sprintf('"c1" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,3),MML.Gen.Range(2,3))];
-header = [header,sprintf('"c2" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,4),MML.Gen.Range(2,4))];
-header = [header,sprintf('"w1" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,5),MML.Gen.Range(2,5))];
-header = [header,sprintf('"w2" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,6),MML.Gen.Range(2,6))];
-
-
-save('MatsRandomRes_2Neurons_general_All_1.mat',...
+save('MatsRandomRes_2Neurons_general_All_test1.mat',...
     'results','header');
 
 clear N
@@ -148,24 +150,6 @@ while (good_CPGs_num < wanted_num_CPGs) && (round_count <= max_round)
 end
 
 disp('sim end...');
-
-
-header = sprintf('tau ratio is equal to %d \n',MML.Sim.Con.tau_ratio);
-header = [header,sprintf('data is for 2N general case \n')];
-header = [header,sprintf('seq Order: \n')];
-header = [header,sprintf('"tau","b","c1","c2","w1","w2" \n')];
-header = [header,sprintf('"tau" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,1),MML.Gen.Range(2,1))];
-header = [header,sprintf('"b" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,2),MML.Gen.Range(2,2))];
-header = [header,sprintf('"c1" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,3),MML.Gen.Range(2,3))];
-header = [header,sprintf('"c2" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,4),MML.Gen.Range(2,4))];
-header = [header,sprintf('"w1" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,5),MML.Gen.Range(2,5))];
-header = [header,sprintf('"w2" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,6),MML.Gen.Range(2,6))];
 
 
 save('MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_Narrow_tau_osc_inRange_test_group1.mat',...

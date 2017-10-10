@@ -36,16 +36,17 @@ for i = 1:length(whichFit)
 %         checkGenerationContinuety(obj,x_data,genes,bestGenes);
     end
     
-    figure; hold on;
-    for j=1:numel(obj.data_names)
-        plot(x_data, y_data(j,:));
+    if nargout == 0
+        figure; hold on;
+        for j=1:numel(obj.data_names)
+            plot(x_data, y_data(j,:));
+        end
+        grid minor;
+        legend(obj.Legends, 'Location', 'Southeast');
+        xlabel('Generation');   ylabel('Fitness');
+        title(['Fitness "',obj.fitnessOrder{1,FitNum},'" over Generation']);
+        set(gca,'FontSize',12, 'FontWeight','bold');
     end
-    grid minor;
-    legend(obj.Legends, 'Location', 'Southeast');
-    xlabel('Generation');   ylabel('Fitness');
-    title(['Fitness "',obj.fitnessOrder{1,FitNum},'" over Generation']);
-    set(gca,'FontSize',12, 'FontWeight','bold');
-
 end
 
     function checkGenerationContinuety(obj,x_data,genes,bestGenes)

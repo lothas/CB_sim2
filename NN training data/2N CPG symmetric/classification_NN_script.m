@@ -159,7 +159,6 @@ plotconfusion(T,deepnet(X));
 %% Neural Network #4: (using 'patternnet')
 X=sampl;
 T=double(targ);
-%Train an autoencoder with a hidden layer of size 10 and a linear transfer function for the decoder. Set the L2 weight regularizer to 0.001, sparsity regularizer to 4 and sparsity proportion to 0.05.
 
 architecture = [10];
 net = patternnet(architecture);

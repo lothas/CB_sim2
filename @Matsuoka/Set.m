@@ -142,6 +142,8 @@ else
                 MO.ks_out = value';
             case {'ks_c_2n_symm'} % when we have only the hip joint
                 MO.ks_out = [0;0;value;value];
+            case {'ks_c_2n_general'} % when we have only the hip joint
+                MO.ks_out = [0;0;value(1);value(2)];
             case {'ks_c_4n_symm'}
                 MO.ks_out = [value;value;value;value];
             

@@ -2,58 +2,15 @@
 %% NN testing Script:
 % IMPORTANT: dont forget to load the right genome file and to uptade
 % 'MatsuokaML.m' to the right rettings
-% 
+%
+% Seriously: Don't forget to check in each fileheader the right gene
+% boundaries.
 
 clear all; close all; clc;
 
-%% Create genome (only if necessary)
-genome_file = 'MatsuokaGenome_2Neuron_General.mat';
-nAnkle = 1;%1; % Number of ankle torques
-nHip = 0;   % Number of hip torques
-maxAnkle = 5;%20;   % Max ankle torque
-maxHip = 5;%20;    % Max hip torque
-Mamp = [maxAnkle*ones(1,2*nAnkle), maxHip*ones(1,2*nHip)];
-mamp = 0*Mamp;
-N = nAnkle+nHip;
-
-
-% %     % 2neuron general specific range%%
-% Large b Large W Ranges
-Mw = 10*ones(1,(2*N-1)*2*N);
-mw = 0*Mw;
-Keys = {'\tau_r', 'beta',        'amp',        '2neuron_general_weights', 'ks_\tau',     'ks_c', 'IC_matsuoka';
-              1 ,      1,            2,                                2,        1 ,       2 ,            0 };
-Range = {  0.02 ,      0,        [0,0],                               mw,   -0.001 ,  [-0.2,-0.2]; % Min
-           0.25 ,     10,        [5,5],                               Mw,    0.001 ,   [0.2,0.2]}; % Max
-   
-% % Narrow b Large W Ranges
-% Mw = 10*ones(1,(2*N-1)*2*N);
-% mw = 0*Mw;
-% Keys = {'\tau_r', 'beta',        'amp',        '2neuron_general_weights', 'ks_\tau',     'ks_c', 'IC_matsuoka';
-%               1 ,      1,            2,                                2,        1 ,       2 ,            0 };
-% Range = {  0.02 ,      0,        [0,0],                               mw,   -0.001 ,  [-0.2,-0.2]; % Min
-%            0.25 ,     10,        [5,5],                               Mw,    0.001 ,   [0.2,0.2]}; % Max
-
-%        % Narrow b Narrow W Ranges
-% Mw = 5*ones(1,(2*N-1)*2*N);
-% mw = 0*Mw;
-% Keys = {'\tau_r', 'beta',        'amp',        '2neuron_general_weights', 'ks_\tau',     'ks_c', 'IC_matsuoka';
-%               1 ,      1,            2,                                2,        1 ,       2 ,            0 };
-% Range = {  0.02 ,      0,        [0,0],                               mw,   -0.001 ,  [-0.2,-0.2]; % Min
-%            0.25 ,     10,        [5,5],                               Mw,    0.001 ,   [0.2,0.2]}; % Max
-%     
-       
-MutDelta0 = 0.04;   MutDelta1 = 0.02;
-
-save(genome_file, 'nAnkle', 'nHip', 'maxAnkle', 'maxHip', ...
-    'Mamp', 'mamp', 'N', 'Mw', 'mw', ...
-    'MutDelta0', 'MutDelta1', 'Keys', 'Range');
-
-clear all
-%%
-
 % the order of the parametrs in CPG Sequence:
-seqOrder = {'tau' ,'b', 'c_1', 'c_2', 'W_12','W_21'};
+seqOrder = {'tau' ,'b', 'c1', 'c2', 'w1','w2',...
+    'k_tau','k_{c1}','k_{c2}'};
 % "NR" - not relevnt param 
 
 % define the class for CPG simulation:
@@ -62,31 +19,17 @@ MML.perLim = [0.68 0.78];
 MML.perLimOut = MML.perLim + [-0.08 0.08]; % Desired period range
 MML.tStep = 0.05;
 MML.tEnd = 15;
-MML.nNeurons = 2;
 
-% % change tau_a/tau_r to 12 (instead of 5)
-MML.Sim.Con.tau_ratio = 12;
-
-% file name for uploading:L
-results_fileName = {'MatsRandomRes_2Neurons_general_Large_b_Large_W.mat'};
-% results_fileName = {'MatsRandomRes_2Neurons_general_Narrow_b_Narrow_W_1.mat'};
-% results_fileName = {'MatsRandomRes_2Neurons_general_Narrow_b_Large_W_1.mat'};
+results_fileName = {'MatsRandomRes_2Neurons_general_All_test1.mat'};
 %% Load data:
-load(results_fileName{1,1},'results','header');
-disp('data file information:');
-disp(header);
-% if I have more than 1 data file:
-for i=2:numel(results_fileName)
-    data = load(results_fileName{1,i},'results');
-    results = [results, data.results]; %#ok<AGROW>
-end
+results = load_results(results_fileName);
 
-clear data i
-
-%% plot example:
+%% plot random example:
 clc; close all
 
 N = length(results);
+
+% % show random CPG:
 rand_id = randsample(1:N,1);
 
 [out, ~, signal] = MML.runSim(results(rand_id).seq);
@@ -98,64 +41,186 @@ xlabel('time[sec]');    ylabel('X_i');
 title({'X_i over time',...
     ['id #',num2str(rand_id),...
     '    periods: ',...
-    num2str(results(rand_id).periods(1))]});
+    num2str(results(rand_id).periods(2))]});
 subplot(2,1,2)
 plot(signal.T,signal.signal(1,:),'b',signal.T,signal.signal(2,:),'r');
 
-clear out signal N rand_id
+clear out signal N rand_id periods
 
-%% get and filter periods:
+%% Regression NN:
+% % get oscillating:
+[results,periods,seq,~] = get_CPGs(results,'osc','2N',MML);
 
-% get CPG periods:
-periods = horzcat(results(:).periods);
+% 
+% figure;
+% boxplot(seq','orientation','horizontal','labels',seqOrder)
+% 
+% plot_param_hist(seq,periods,seqOrder)
 
-% Filter CPG's where not both signals oscillating:
-osc_ids_temp = ~isnan(periods);
-osc_ids_temp = osc_ids_temp(1,:);
-disp(['Number of non-osc CPGs: ',num2str(sum(~osc_ids_temp))]);
-
-% % check that all of the parameters are in the genome range:
-seq = (vertcat(results(:).seq))';
-ids_in_genome_range = true(1,size(seq,2));
-for n=1:MML.Gen.Length
-    ids_temp = (seq(n,:) > MML.Gen.Range(1,n)) &...
-        (seq(n,:) < MML.Gen.Range(2,n));
-    ids_in_genome_range = ids_in_genome_range & ids_temp;
-end
-disp(['Number of CPGs with parameters not in range: ',...
-    num2str(sum(~ids_in_genome_range))]);
-
-num_of_osc_ids_exluded_param_range = sum(osc_ids_temp);
-osc_ids = osc_ids_temp & ids_in_genome_range;
-
-osc_inRange_ids = osc_ids &...
-    ( (periods(1,:) > MML.perLimOut(1,1)) &...
-    (periods(1,:) < MML.perLimOut(1,2)) );
-
-num_of_osc_ids = sum(osc_ids);
-num_of_inRange_ids = sum(osc_inRange_ids);
-
-%% keep the good seq and periods
-seq = seq(:,osc_ids);
-periods = periods(:,osc_ids);
-
-%% Prepare NN inputs and outputs:
-% input_names = {'b','tau','W_12','W_21'};
-% output_names = {'periods'};
-
-input_names = {'periods','tau','W_12','W_21'};
-output_names = {'b'};
-
+% % Prepare NN inputs and outputs:
+input_names = {'b','tau','w1','w2'};
+output_names = {'periods'};
 
 [sampl,targ] = ...
     prepare_NN_data(input_names,output_names,...
     seqOrder,seq,periods);
 
-%% Neural Network:
-architecture = [20];
+% % % Neural Network #1a: (CPU training)
+architecture = [6,20];
 
 net = fitnet(architecture);
+% net = feedforwardnet(architecture);
 net.trainFcn = 'trainbr';
+net.divideParam.trainRatio = 0.5;
+net.divideParam.valRatio = 0.35;
+net.divideParam.testRatio = 0.15;
+
 net.trainParam.showWindow = 1; 
+net.trainParam.showCommandLine = 1;
+net.trainParam.epochs = 1000;
+% net.performParam.normalization = 'percent'; %It must be 'none', 'standard' or 'percent'
 
 [net, tr] = train(net, sampl, targ);
+[r,m,b] = regression(targ,net(sampl));
+disp(['r = ',num2str(r),'    m = ',num2str(m),'    b = ',num2str(b)]);
+clear r m b
+
+figure;
+histogram(targ,100,'Normalization','pdf'); hold on;
+histogram(net(sampl),100,'Normalization','pdf');
+legend('targets','NN outputs');
+
+% [net, tr] = train(net, sampl_n, targ_n);
+% figure;
+% histogram(targ_n,100,'Normalization','pdf'); hold on;
+% histogram(net(sampl_n),100,'Normalization','pdf');
+% legend('targets','NN outputs');
+
+%% Classification NN:
+% % get groups:
+[~,~,~,ids_osc] = get_CPGs(results,'osc','2N',MML);
+[~,~,~,ids_n_osc] = get_CPGs(results,'n-osc','2N',MML);
+
+targ = [ids_osc; ids_n_osc];
+
+seq = (vertcat(results(:).seq))';
+periods = horzcat(results(:).periods);
+
+% plot histograms:
+% plot_osc_nosc_hist([3,3],seq,periods,seqOrder,ids_osc,ids_n_osc);
+% plot_param_hist(seq,periods,seqOrder)
+
+input_names = {'tau','b','w1','w2'};
+output_names = {'b'};
+
+
+[sampl,~] = ...
+    prepare_NN_data(input_names,output_names,...
+    seqOrder,seq,periods);
+
+% % define the NN:
+X=sampl;
+T=double(targ);
+architecture = [10];
+net = patternnet(architecture);
+[net, tr] = train(net, X, T);
+
+deepnet = net; % for now...
+
+y = deepnet(X);
+plotconfusion(T,deepnet(X));
+
+%% Check classification net prediction:
+close all;
+
+rand_seq = MML.Gen.RandSeq(1);
+
+[NN_in_test,~] = ...
+    prepare_NN_data(input_names,output_names,...
+    seqOrder,rand_seq',0.7);
+check = deepnet(NN_in_test);
+[~,ind] = max(check);
+states = {'osc','n-osc'};
+
+[out, ~, signal] = MML.runSim(rand_seq);
+figure;
+subplot(2,1,1);
+plot(signal.T,signal.X);
+xlabel('time[sec]');    ylabel('X_i');
+title({'X_i over time',...
+    ['periods: ',...
+    num2str(out.periods'),...
+    '     CPG identified: ',states{1,ind}]});
+subplot(2,1,2)
+plot(signal.T,signal.signal(1,:),'b',signal.T,signal.signal(2,:),'r');
+clear signal rand seq out ind states
+
+%% test classification NN [erformance:
+clc;
+
+% % % % CPG parameters:
+[ Seq_old ] = MML.Gen.RandSeq(1000); %generate 'N' rand samples
+% % % run the rand samples to check periods:
+
+% ini the structures to the right size:
+clear results_old results_new
+results_old(length(Seq_old)).seq = [];
+results_old(length(Seq_old)).periods = [];
+results_new(length(Seq_old)).seq = [];
+results_new(length(Seq_old)).periods = [];
+
+disp('start with the sim:');
+parfor i=1:length(Seq_old) % Simulate and calculate the frequecy (also calc from Matsuoka extimation)
+% for i=1:length(Seq_old)
+    disp(['at sim #',num2str(i)]);
+    [out,~, signal] = MML.runSim(Seq_old(i,:));
+    
+    % Prepare output :
+    results_old(i).seq = Seq_old(i,:);
+    results_old(i).periods = out.periods;
+    
+    % don't do anything if CPG IS stable
+    if ~any(isnan(out.periods))
+        results_new(i).seq = results_old(i).seq;
+        results_new(i).periods = out.periods;
+        continue;
+    end
+    
+    rand_seq = MML.Gen.RandSeq(1000);
+    [NN_in_test,~] = ...
+        prepare_NN_data(input_names,output_names,...
+        seqOrder,rand_seq',0.7);
+    check = deepnet(NN_in_test);
+    [~,ind] = max(check);
+    rand_good_ind = randsample(find(ind==1),1);
+    seq_temp = rand_seq(rand_good_ind,:);
+    
+    % run sim again:
+    [out, ~, signal] = MML.runSim(seq_temp);
+        % Prepare output:
+    % Parameters
+    results_new(i).seq = seq_temp;
+
+    results_new(i).periods = out.periods;
+
+end 
+disp('sim end...');
+
+% get CPG periods:
+periods_old = horzcat(results_old(:).periods);
+periods_old = periods_old(2,:); % get rid of hip period
+% Filter CPG's where not both signals oscillating:
+osc_ids_temp = ~isnan(periods_old);
+
+disp(['the num of osc CPGs before the NN: ',num2str(sum(osc_ids_temp))]);
+
+% get CPG periods:
+periods_new = horzcat(results_new(:).periods);
+periods_new = periods_new(2,:); % get rid of hip period
+% Filter CPG's where not both signals oscillating:
+osc_ids_temp = ~isnan(periods_new);
+
+disp(['the num of osc CPGs before the NN: ',num2str(sum(osc_ids_temp))]);
+
+seq_old = vertcat(results_old(:).seq);
+seq_new = vertcat(results_new(:).seq);
