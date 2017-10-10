@@ -1,45 +1,8 @@
 
 close all; clc; clear all;
+%%
 
-%% Create genome (only if necessary)
-genome_file = 'MatsuokaGenome_4Neuron_tagaLike.mat';
-nAnkle = 1; % Number of ankle torques
-nHip = 1;   % Number of hip torques
-maxAnkle = 20;   % Max ankle torque
-maxHip = 20; %8;    % Max hip torque
-Mamp = [maxAnkle*ones(1,2*nAnkle), maxHip*ones(1,2*nHip)];
-mamp = 0*Mamp;
-N = nAnkle+nHip;
-mw = 0*ones(1,4);
-
-% CPG strucute: (ALSO Symm W_ij = W_ji)
-%   H_F   H_E           % 
-% 4 O-----O 3           %   
-%    \    |             %   w = [0  , W12, 0  , 0  ; 
-%     \   |             %        W21, 0  , w23, W24;
-%      \  |             %        0  , 0  , 0  , W34;
-%       \ |             %        0  , 0  , w43, 0  ;
-% 1 O-----O 2           % w12=w21 = w1  
-%  A_F    A_E           % w23 = w2
-%                       % w24 = w3
-%                       % w43=w34 = w4
-
-
-Mw = 10*ones(1,4);
-    % Final genome with tau_r + beta (constant tau_u/tau_v ratio) 
-Keys = {'\tau_r', 'beta', 'amp_4n_symm',   '4neuron_taga_like', 'ks_\tau',     'ks_c_4n_symm', 'IC_matsuoka';
-              1 ,      1,             1,                     4,        1 ,                 1 ,            0 };
-Range = {  0.02 ,    0.2,             0,                    mw,      -10 ,               -0.1; % Min
-           0.25 ,    2.5,        maxHip,                    Mw,       10 ,                0.1}; % Max
-
-       
-MutDelta0 = 0.04;   MutDelta1 = 0.02;
-
-save(genome_file, 'nAnkle', 'nHip', 'maxAnkle', 'maxHip', ...
-    'Mamp', 'mamp', 'N', 'Mw', 'mw', ...
-    'MutDelta0', 'MutDelta1', 'Keys', 'Range');
-
-clear all
+generate_GenomeFile('2N_symm')
 
 %%
 % define the class:
@@ -49,6 +12,20 @@ MML.perLimOut = MML.perLim + [-0.08 0.08]; % Desired period range
 MML.tStep = 0.05;
 MML.tEnd = 15;
 
+% % create header for file:
+header = sprintf('tau ratio is equal to %d \n',MML.Sim.Con.tau_ratio);
+header = [header,sprintf('data is for 2N symmetric case \n')];
+header = [header,sprintf('seq Order: \n')];
+header = [header,sprintf('"tau","b","c","NR","a" \n')];
+header = [header,sprintf('"tau" in range ( %.2f , %.2f ) \n',...
+    MML.Gen.Range(1,1),MML.Gen.Range(2,1))];
+header = [header,sprintf('"b" in range ( %.2f , %.2f ) \n',...
+    MML.Gen.Range(1,2),MML.Gen.Range(2,2))];
+header = [header,sprintf('"c" in range ( %.2f , %.2f ) \n',...
+    MML.Gen.Range(1,3),MML.Gen.Range(2,3))];
+header = [header,sprintf('"a" in range ( %.2f , %.2f ) \n',...
+    MML.Gen.Range(1,5),MML.Gen.Range(2,5))];
+
 %% Train data: get All osc and n-osc (train data for classifier)
 N = 1000; % the number of samples
 CPGs_num = 0;
@@ -56,7 +33,7 @@ round_count = 0;
 max_round = 1000; % maximum iteraion for while loop (saftey reasons:)
 results = [];
 
-wanted_num_CPGs = 100000;
+wanted_num_CPGs = 200000;
 
 disp('start with the sim:');
 
@@ -92,31 +69,7 @@ end
 
 disp('sim end...');
 
-
-header = sprintf('tau ratio is equal to %d \n',MML.Sim.Con.tau_ratio);
-header = [header,sprintf('data is for 4N TagaLike case \n')];
-header = [header,sprintf('seq Order: \n')];
-header = [header,sprintf('"tau","b","c","w1","w2","w3","w4","k_tau","k_c" \n')];
-header = [header,sprintf('"tau" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,1),MML.Gen.Range(2,1))];
-header = [header,sprintf('"b" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,2),MML.Gen.Range(2,2))];
-header = [header,sprintf('"c" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,3),MML.Gen.Range(2,3))];
-header = [header,sprintf('"w_1" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,4),MML.Gen.Range(2,4))];
-header = [header,sprintf('"w_2" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,5),MML.Gen.Range(2,5))];
-header = [header,sprintf('"w_3" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,6),MML.Gen.Range(2,6))];
-header = [header,sprintf('"w_4" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,7),MML.Gen.Range(2,7))];
-header = [header,sprintf('"k_tau" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,8),MML.Gen.Range(2,8))];
-header = [header,sprintf('"k_c" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,9),MML.Gen.Range(2,9))];
-
-save('MatsRandomRes_TagaLike_CPG_all_2.mat',...
+save('MatsRandomRes_2Neurons_symm_very_large_b_and_tau_All_1.mat',...
     'results','header');
 
 clear N
@@ -128,7 +81,7 @@ round_count = 0;
 max_round = 1000; % maximum iteraion for while loop (saftey reasons:)
 results = [];
 
-wanted_num_CPGs = 10000;
+wanted_num_CPGs = 1000;
 
 disp('start with the sim:');
 
@@ -153,10 +106,10 @@ while (good_CPGs_num < wanted_num_CPGs) && (round_count <= max_round)
 
     % get the periods
     periods = horzcat(results_temp(:).periods);
+    periods = periods(2,:);
     
     % get oscillatory CPGs ids:
     osc_ids = ~isnan(periods);
-    osc_ids = osc_ids(1,:) & osc_ids(2,:);
     
 %     % get oscillatory CPGs ids in period range::
 %     osc_ids = ~isnan(periods) &...
@@ -164,6 +117,7 @@ while (good_CPGs_num < wanted_num_CPGs) && (round_count <= max_round)
     
     % get neural oscillation check:
     neuronOsc = (vertcat(results_temp(:).neuronOsc))';
+    neuronOsc = neuronOsc(3:4,:);   % only take hip neurons
     osc_check_ids = true(1,N);
     for k=1:size(neuronOsc,1) % run on all neurons
         % mark as "good" if we have at least one osc neuron
@@ -191,32 +145,10 @@ end
 
 disp('sim end...');
 
-
-header = sprintf('tau ratio is equal to %d \n',MML.Sim.Con.tau_ratio);
-header = [header,sprintf('data is for 4N TagaLike case \n')];
-header = [header,sprintf('seq Order: \n')];
-header = [header,sprintf('"tau","b","c","w1","w2","w3","w4","k_tau","k_c" \n')];
-header = [header,sprintf('"tau" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,1),MML.Gen.Range(2,1))];
-header = [header,sprintf('"b" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,2),MML.Gen.Range(2,2))];
-header = [header,sprintf('"c" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,3),MML.Gen.Range(2,3))];
-header = [header,sprintf('"w_1" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,4),MML.Gen.Range(2,4))];
-header = [header,sprintf('"w_2" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,5),MML.Gen.Range(2,5))];
-header = [header,sprintf('"w_3" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,6),MML.Gen.Range(2,6))];
-header = [header,sprintf('"w_4" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,7),MML.Gen.Range(2,7))];
-header = [header,sprintf('"k_tau" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,8),MML.Gen.Range(2,8))];
-header = [header,sprintf('"k_c" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,9),MML.Gen.Range(2,9))];
-
-save('MatsRandomRes_TagaLike_CPG_all_osc_1.mat',...
+save('MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_Narrow_tau_osc_inRange_test_group1.mat',...
     'results','header');
+% save('MatsRandomRes_2Neurons_symm_Narrow_b_Narrow_W_Narrow_tau_only_osc_2.mat',...
+%     'results','header');
 
 clear N
 %% plot CPG output:
@@ -248,7 +180,7 @@ clear signal out
 %% Run CB:
 
 % Set up the genome
-load('MatsuokaGenome_4Neuron_tagaLike.mat','Keys','Range','N',...
+load('MatsuokaGenome_2Neuron_symm.mat','Keys','Range','N',...
     'nAnkle','nHip','maxAnkle', 'maxHip','MutDelta0','MutDelta1');
 
 GA = MOOGA(2,100);
@@ -293,7 +225,8 @@ GA.Sim.PMFull = 1; % Run poincare map on all coords
 
 GA = GA.InitGen();
 
-thisSeq = results(n).seq;
+thisSeq = GA_temp.Seqs(1,:,5);
+% thisSeq = results(n).seq;
 
 GA.RunSeq(thisSeq)
 
