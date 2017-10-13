@@ -45,8 +45,8 @@ switch whichCase
         Mamp = [10,10];
         mamp = 0*Mamp;
         
-%         Mw = [10,10];
-        Mw = [5,5];
+        Mw = [10,10];
+%         Mw = [5,5];
         mw = 0*Mw;
         
         Keys = {'\tau_r', 'beta', 'amp_2n_dif_inputs',    '2neuron_general_weights', 'ks_\tau', 'ks_c_2n_general', 'IC_matsuoka';
