@@ -87,7 +87,19 @@ if strcmp(wSim.Con.name, 'Matsuoka')
     % % % use classifier NN to get good genes to replace gene:
     if ~isempty(GA.NN_classi) && ~isempty(GA.NN_classi_Fcn) ...
             && strcmp(wSim.Con.name, 'Matsuoka')
-        thisSeq = GA.NN_classi_Fcn(GA.Gen, GA.NN_classi, thisSeq, XTemp, TTemp);
+        % thisSeq = GA.NN_classi_Fcn(GA.Gen, GA.NN_classi, thisSeq, XTemp, TTemp);
+        
+        % % % Testing New code 15/10/2017:
+        lastGen = max(1,GA.Progress-1);
+        lastGenes = [GA.Gen.Mutate(GA.Seqs(1:GA.Fittest(2),:,lastGen));...
+            GA.Gen.Mutate(GA.Seqs(1:GA.Fittest(2),:,lastGen));...
+            GA.Gen.Mutate(GA.Seqs(1:GA.Fittest(2),:,lastGen))];% add mutated copies of the last genes
+        
+        thisSeq = GA.NN_classi_Fcn(GA.Gen, GA.NN_classi,...
+            thisSeq, lastGen,...
+            lastGenes, XTemp, TTemp);
+        % % % % % % % % % % % % % % % % % % %
+        
         wSim = GA.Gen.Decode(wSim,thisSeq);
         wSim.Con = wSim.Con.HandleEvent(1, wSim.IC(wSim.ConCo));
         wSim.Con = wSim.Con.Adaptation();

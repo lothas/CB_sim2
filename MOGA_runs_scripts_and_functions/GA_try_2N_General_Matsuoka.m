@@ -4,7 +4,7 @@ function [  ] = GA_try_2N_General_Matsuoka(whichCase,fileIn)
 
 
 
-GA = MOOGA(10,500);
+GA = MOOGA(10,1000);
 GA = GA.SetFittest(15,15,0.5);
 GA.JOAT = 2; GA.Quant = 0.7;
 
@@ -12,7 +12,8 @@ GA.FileIn = fileIn;
 
 FileName_start = 'VGAM_2N_general_';
 FileName_date = datestr(now,'mm_dd_hh_MM');
-FileName_extra = '_1000genes_';
+% FileName_extra = '_1000genes_';
+FileName_extra = '_Improved1_NN_';
 
 switch whichCase
     case 'GA only'
@@ -61,7 +62,7 @@ GA.Graphics = 0;
 GA.ReDo = 1;
 
 % Set up the genome
-load('MatsuokaGenome_2Neuron_Symm.mat','Keys','Range','N',...
+load('MatsuokaGenome_2Neuron_General.mat','Keys','Range','N',...
     'nAnkle','nHip','maxAnkle', 'maxHip','MutDelta0','MutDelta1');
 
 GA.Gen = Genome(Keys, Range);
@@ -131,7 +132,8 @@ switch use_NN
     %     end
 
         GA.NN_classi = net;
-        GA.NN_classi_Fcn = @NN_classi_Fcn;
+        % GA.NN_classi_Fcn = @NN_classi_Fcn;
+        GA.NN_classi_Fcn = @NN_classi_Fcn_improved;
 end
 
 function seq = NN_reg_Fcn(Gen, net, seq, X, T)
@@ -155,7 +157,26 @@ function seq = NN_reg_Fcn(Gen, net, seq, X, T)
     seq(ids) = min(max(seq(ids),Gen.Range(1,ids)),Gen.Range(2,ids));
 end
 
-function seq = NN_classi_Fcn(Gen, net, seq, X, T)
+% function seq = NN_classi_Fcn(Gen, net, seq, X, T)
+%     
+%     [~, periods, ~, ~, ~] = MML.processResults(X, T);
+%     % don't do anything if CPG IS oscillating
+%     % in the case with 2N (actuated hip only) check the hip_period only:
+%     if ~isnan(periods(2)) 
+%         return
+%     end
+% 
+%     rand_seq = MML.Gen.RandSeq(5000);
+%     seq = MML.get_classi_NNPar(net, rand_seq);
+% 
+%     ids = seq < Gen.Range(1,:) | seq > Gen.Range(2,:);
+%     seq(ids) = min(max(seq(ids),Gen.Range(1,ids)),Gen.Range(2,ids));
+% end
+
+function seq = NN_classi_Fcn_improved(Gen,net,seq,lastGen,lastGenes, X, T)
+    % get MOGA class instead of Gen class. Instead off ruffling random 
+    %   CPGs, it's getting a random CPGs from the Mutated versions of the
+    %   topPop.
     
     [~, periods, ~, ~, ~] = MML.processResults(X, T);
     % don't do anything if CPG IS oscillating
@@ -163,9 +184,15 @@ function seq = NN_classi_Fcn(Gen, net, seq, X, T)
     if ~isnan(periods(2)) 
         return
     end
-
-    rand_seq = MML.Gen.RandSeq(500);
-    seq = MML.get_classi_NNPar(net, rand_seq);
+    
+    try
+        rand_seq = [lastGenes;...
+            MML.Gen.RandSeq(100)];
+        seq = MML.get_classi_NNPar(net, rand_seq);
+    catch % if there are no good CPGs
+        rand_seq = MML.Gen.RandSeq(5000);
+        seq = MML.get_classi_NNPar(net, rand_seq);
+    end
 
     ids = seq < Gen.Range(1,:) | seq > Gen.Range(2,:);
     seq(ids) = min(max(seq(ids),Gen.Range(1,ids)),Gen.Range(2,ids));
