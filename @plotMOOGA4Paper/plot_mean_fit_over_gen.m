@@ -8,13 +8,11 @@ function [x_data,y_data_mean] = ...
 % 'whichGenes' - which genes to take
 
 x_data = 1:gen_num;
+y_data_mean = zeros(numel(obj.data_names),gen_num);
+y_data_std = zeros(numel(obj.data_names),gen_num);
 
 for i = 1:length(whichFit)
     FitNum = whichFit(1,i);
-    
-    % open figure:
-    figure; hold on;
-    
     for j=1:numel(obj.data_names)
         
         % extract the fitness:
@@ -34,35 +32,40 @@ for i = 1:length(whichFit)
         end
         
         % get Mean fit:
-        y_data_mean = squeeze(mean(y,1));
+        y_data_mean(j,:) = squeeze(mean(y,1));
         
         % get STdev fit:
-        y_data_std = squeeze(std(y,[],1));
-        
-        % make plot:
-        %errorbar(x_data, y_data_mean,y_data_std);
-        plot(x_data, y_data_mean,'LineWidth',2);
-        
+        y_data_std(j,:) = squeeze(std(y,[],1));
+            
     end
     
     
-    % make title::
-    switch whichGenes
-        case {'all','All'}
-            Title = sprintf('mean of %s over generations \n All samples',...
-                obj.fitnessOrder{1,FitNum});
-        case {'top_pop','topPop'}
-            Title = sprintf('mean of %s over generations \n top 15%% samples',...
-                obj.fitnessOrder{1,FitNum});
+    if nargout == 0   % make plots only the func is being called with no outputs
+        % make title::
+        switch whichGenes
+            case {'all','All'}
+                Title = sprintf('mean of %s over generations \n All samples',...
+                    obj.fitnessOrder{1,FitNum});
+            case {'top_pop','topPop'}
+                Title = sprintf('mean of %s over generations \n top 15%% samples',...
+                    obj.fitnessOrder{1,FitNum});
 
+        end
+
+        % % % open figure:
+        figure; hold on;
+        for j=1:numel(obj.data_names)
+            plot(x_data, y_data_mean(j,:),'LineWidth',2);
+            %errorbar(x_data, y_data_mean(j,:),y_data_std(j,:));
+        end
+        grid minor;
+        legend(obj.Legends, 'Location', 'Best');
+        xlabel('Generation');   ylabel('Fitness');
+        title(Title);
+        set(gca,'FontSize',12, 'FontWeight','bold');
+        hold off;
     end
-        
-    grid minor;
-    legend(obj.Legends, 'Location', 'Best');
-    xlabel('Generation');   ylabel('Fitness');
-    title(Title);
-    set(gca,'FontSize',12, 'FontWeight','bold');
-    hold off;
+    
 end
 
 end

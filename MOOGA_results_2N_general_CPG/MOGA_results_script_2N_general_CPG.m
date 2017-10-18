@@ -11,11 +11,20 @@ MML.perLimOut = MML.perLim + [-0.08 0.08]; % Desired period range
 MML.tStep = 0.05;
 MML.tEnd = 15;
 
-% LOAD files: VGAM_2N_general_10_15_21_17_Improved_NN__NN_classi_only
-InFiles_names = {'VGAM_2N_general_10_13_17_49_1000genes__GA_only.mat',...
-    'VGAM_2N_general_10_13_17_52_1000genes__NN_classi_only.mat',...
-    'VGAM_2N_general_10_15_21_17_Improved_NN__NN_classi_only.mat'};
-Legends = {'GA only','NN classi','NN classi 2'};
+% % % % LOAD files:
+
+% InFiles_names = {'VGAM_2N_general_10_14_11_23_GA_only.mat',...
+%     'VGAM_2N_general_10_17_08_31_GA_only.mat',...
+%     'VGAM_2N_general_10_14_14_40_GA_only.mat'};
+% Legends = {'GA1','GA2','GA3'};
+
+InFiles_names = {'VGAM_2N_general_10_16_17_45_Improved1_NN__NN_classi_only.mat',...
+    'VGAM_2N_general_10_16_09_01_Improved1_NN__NN_classi_only.mat'};
+Legends = {'NN1','NN2'};
+
+% InFiles_names = {'VGAM_2N_general_10_17_08_31_GA_only.mat',...
+%     'VGAM_2N_general_10_16_17_45_Improved1_NN__NN_classi_only.mat'};
+% Legends = {'GA only','NN classi improved'};
 
 
 % the order of the parametrs in CPG Sequence:
@@ -25,8 +34,7 @@ seqOrder = {'tau' ,'b', 'c1', 'c2', 'w1','w2',...
 GA_graphs = plotMOOGA4Paper(MML,InFiles_names,Legends,seqOrder);
 
 % which fit to plot:
-FitNum = 3;
-% get x-axis data:
+FitNum = 3;% get x-axis data:
 last_gen = 10;
 x_data = 1:last_gen;
 
@@ -36,7 +44,7 @@ num_of_clusters = 4;
 %% plot max fit over generation:
 close all
 whichFit2Plot = 1:3;%1:11;
-[x_data,y_data] = GA_graphs.plot_fit_over_gen(whichFit2Plot,last_gen);
+GA_graphs.plot_fit_over_gen(whichFit2Plot,last_gen);
 
 %% plot max and Mean fit over generation num:
 close all
@@ -136,10 +144,8 @@ clear all; close all; clc
 set(0,'defaultlinelinewidth',2);
 
 % the order of the parametrs in CPG Sequence:
-seqOrder = {'tau' ,'b', 'c', 'NR', 'a',...
-    'k_tau','k_{c}'};
-% "NR" - not relevnt param 
-
+seqOrder = {'tau' ,'b', 'c1', 'c2', 'w1','w2',...
+    'k_tau','k_{c1}','k_{c2}'};
 
 % define the class for CPG simulation:
 MML = MatsuokaML();
@@ -149,21 +155,18 @@ MML.tStep = 0.05;
 MML.tEnd = 15;
 
 % LOAD GA_only files:
-InFiles_names = {'VGAM_2N_symm_09_27_15_23_GA_only.mat',...
-    'VGAM_2N_symm_09_28_09_05_GA_only.mat',...
-    'VGAM_2N_symm_09_28_14_24_GA_only.mat'};
-Legends = {'VGAM 2N symm 09/27 15:23 GA only',...
-    'VGAM 2N symm 09/28 09:05 GA only',...
-    'VGAM 2N symm 09/28 14:24 GA only'};
+InFiles_names = {'VGAM_2N_general_10_14_11_23_GA_only.mat',...
+    'VGAM_2N_general_10_17_08_31_GA_only.mat',...
+    'VGAM_2N_general_10_14_14_40_GA_only.mat'};
+Legends = {'GA1','GA2','GA3'};
 GA_only = plotMOOGA4Paper(MML,InFiles_names,Legends,seqOrder);
 
 % % LOAD GA_NN files:
-InFiles_names = {'VGAM_2N_symm_09_28_21_24_NN_classi_only.mat',...
-    'VGAM_2N_symm_09_29_18_44_NN_classi_only.mat',...
-    'VGAM_2N_symm_10_06_18_40_NN_classi_only.mat'};
-Legends = {'VGAM 2N symm 09/28 21:24 NN classi only',...
-    'VGAM 2N symm 09/29 18:44 NN classi only',...
-    'VGAM 2N symm 10/06 18:40 NN classi only'};
+InFiles_names = {'VGAM_2N_general_10_16_17_45_Improved1_NN__NN_classi_only.mat',...
+    'VGAM_2N_general_10_16_09_01_Improved1_NN__NN_classi_only.mat',...
+    'VGAM_2N_general_10_17_18_49_Improved1_NN__NN_classi_only.mat'};
+Legends = {'NN1','NN2','NN3'};
+
 GA_NN = plotMOOGA4Paper(MML,InFiles_names,Legends,seqOrder);
 
 % get x-axis data:
@@ -172,34 +175,59 @@ last_gen = 10;
 close all;
 Title = {'velFit','NrgFit','rangeVelFit'};
 
+% % Plot mean of maximum fitness for all MOGA runs:
 for j=1:3
     whichFit2Plot = j;
     [x_data,GA_only_max] = GA_only.plot_fit_over_gen(whichFit2Plot,last_gen);
-    [~,GA_rescale_max] = GA_rescale.plot_fit_over_gen(whichFit2Plot,last_gen);
     [~,GA_NN_max] = GA_NN.plot_fit_over_gen(whichFit2Plot,last_gen);
-    [~,GA_NN_rescale_max] = GA_NN_rescale.plot_fit_over_gen(whichFit2Plot,last_gen);
-
-
 
     GA_only_mean = mean(GA_only_max);
     GA_only_std = std(GA_only_max);
 
-    GA_rescale_mean = mean(GA_rescale_max);
-    GA_rescale_std = std(GA_rescale_max);
-
     GA_NN_mean = mean(GA_NN_max);
     GA_NN_std = std(GA_NN_max);
 
-    GA_NN_rescale_mean = mean(GA_NN_rescale_max);
-    GA_NN_rescale_std = std(GA_NN_rescale_max);
-
     figure;
     plot(x_data,GA_only_mean); hold on;
-    plot(x_data,GA_rescale_mean);
+    errorbar(x_data,GA_only_mean,GA_only_std);
     plot(x_data,GA_NN_mean);
-    plot(x_data,GA_NN_rescale_mean);
+    errorbar(x_data,GA_NN_mean,GA_NN_std);
     xlabel('gen num');
     ylabel('mean of Max fitness');
-    legend('GA only','rescale','NN','NN+rescale');
+    legend('GA only','NN');
     title([Title{1,j},'_{mean}']);
+    grid minor
+    
+    clear x_data GA_only_max GA_NN_max 
+    clear GA_only_mean GA_only_std GA_NN_mean GA_NN_std
+end
+
+
+% % Plot mean of "TopPop Mean Fitness" (TPMF) fitness for all MOGA runs:
+if false   % Don't plot it right now
+    for j=1:3
+        whichFit2Plot = j;
+        [x_data,GA_only_TPMF] = ...
+            GA_only.plot_mean_fit_over_gen(whichFit2Plot,last_gen,'top_pop');
+        [~,GA_NN_TPMF] = ...
+            GA_NN.plot_mean_fit_over_gen(whichFit2Plot,last_gen,'top_pop');
+
+        GA_only_mean = mean(GA_only_TPMF);
+        GA_only_std = std(GA_only_TPMF);
+
+        GA_NN_mean = mean(GA_NN_TPMF);
+        GA_NN_std = std(GA_NN_TPMF);
+
+        figure;
+        plot(x_data,GA_only_mean); hold on;
+        plot(x_data,GA_NN_mean);
+        xlabel('gen num');
+        ylabel('mean of TopPop mean fitness');
+        legend('GA only','NN');
+        title([Title{1,j},'_{mean}']);
+        grid minor
+
+        clear x_data GA_only_TPMF GA_NN_TPMF 
+        clear GA_only_mean GA_only_std GA_NN_mean GA_NN_std
+    end
 end
