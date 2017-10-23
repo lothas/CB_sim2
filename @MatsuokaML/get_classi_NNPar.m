@@ -18,7 +18,6 @@ function seq = get_classi_NNPar(obj, NN, rand_seq)
     % find one "good" CPG:
     %   "good" CPG class is '2'
     rand_good_ind = randsample(find(ind==2),1);
-    
     seq = rand_seq(:,rand_good_ind);
     
     % flip to get a raw seq vector:

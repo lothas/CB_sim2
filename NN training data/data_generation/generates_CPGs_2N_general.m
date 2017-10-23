@@ -29,6 +29,8 @@ header = [header,sprintf('"w1" in range ( %.2f , %.2f ) \n',...
 header = [header,sprintf('"w2" in range ( %.2f , %.2f ) \n',...
     MML.Gen.Range(1,6),MML.Gen.Range(2,6))];
 
+
+
 disp(header);
 %% Train data: get All osc and n-osc (train data for classifier)
 N = 1000; % the number of samples

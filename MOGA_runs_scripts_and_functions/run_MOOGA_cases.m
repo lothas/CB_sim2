@@ -13,5 +13,11 @@ close all; clear all; clc
 %% 2N general CPG
 % generate_GenomeFile('2N_general');
 
-% GA_try_2N_General_Matsuoka('GA only',[]);
+GA_try_2N_General_Matsuoka('GA only',[]);
 GA_try_2N_General_Matsuoka('GA + NN_classi',[]);
+
+%% 2N general CPG
+% generate_GenomeFile('4N_tagaLike');
+
+GA_try_TagaLike_Matsuoka('GA only',[]);
+GA_try_TagaLike_Matsuoka('GA + NN_classi',[]);

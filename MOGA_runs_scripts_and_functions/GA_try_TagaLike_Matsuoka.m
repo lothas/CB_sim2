@@ -4,11 +4,15 @@ function [  ] = GA_try_TagaLike_Matsuoka(whichCase,fileIn)
 
 
 
-GA = MOOGA(20,500);
+GA = MOOGA(10,500);
 GA = GA.SetFittest(15,15,0.5);
 GA.JOAT = 2; GA.Quant = 0.7;
 
 GA.FileIn = fileIn;
+
+FileName_start = 'VGAM_4N_TagaLike_';
+FileName_date = datestr(now,'mm_dd_hh_MM');
+FileName_extra = '_test_only_velFit_500genes_';
 
 switch whichCase
     case 'GA only'
@@ -17,41 +21,41 @@ switch whichCase
         % Rescale?
         GA.rescaleFcn = [];
 %         out file name:
-        GA.FileOut = ['VGAM_TagaLike_',datestr(now,'mm_dd_hh_MM'),...
+        GA.FileOut = [FileName_start,FileName_date,FileName_extra,...
             '_GA_only','.mat'];
 
    case 'GA + rescale'
         use_NN = 0;
         GA.rescaleFcn = @rescaleFcn;
-        GA.FileOut = ['VGAM_TagaLike_',datestr(now,'mm_dd_hh_MM'),...
+        GA.FileOut = [FileName_start,FileName_date,FileName_extra,...
             '_rescale_only','.mat']; 
         
     case 'GA + NN_reg'
         use_NN = 'NN_reg';
         GA.rescaleFcn = [];
-        GA.FileOut = ['VGAM_TagaLike_',datestr(now,'mm_dd_hh_MM'),...
+        GA.FileOut = [FileName_start,FileName_date,FileName_extra,...
             '_NN_reg_only','.mat'];
         
     case 'GA + NN_classi'
         use_NN = 'NN_classi';
         GA.rescaleFcn = [];
-        GA.FileOut = ['VGAM_TagaLike_',datestr(now,'mm_dd_hh_MM'),...
+        GA.FileOut = [FileName_start,FileName_date,FileName_extra,...
             '_NN_classi_only','.mat'];
         
     
     case 'GA + NN_reg + rescale'
         use_NN = 'NN_reg';
         GA.rescaleFcn = @rescaleFcn;
-        GA.FileOut = ['VGAM_TagaLike_',datestr(now,'mm_dd_hh_MM'),...
+        GA.FileOut = [FileName_start,FileName_date,FileName_extra,...
             '_NNreg_and_rescale','.mat'];
         
     case 'GA + NN_classi + rescale'
         use_NN = 'NN_classi';
         GA.rescaleFcn = @rescaleFcn;
-        GA.FileOut = ['VGAM_TagaLike_',datestr(now,'mm_dd_hh_MM'),...
+        GA.FileOut = [FileName_start,FileName_date,FileName_extra,...
             '_NNclassi_and_rescale','.mat'];
 end
-        
+             
 
 GA.Graphics = 0;
 GA.ReDo = 1;
@@ -76,26 +80,18 @@ switch use_NN
         NNSamples = 500;
 
         inFilenames =...
-            {'aaa.mat'};
-
-        MML.sample_genes = {'\tau_r','2neuron_symm_weights'}; 
+            {'.mat'};
+        
+        MML.sample_genes = {'\tau_r','4neuron_taga_like'}; 
         MML.target_genes = {'beta'};
-
-    %     MML.sample_genes = {'2neuron_symm_weights'}; 
-    %     MML.target_genes = {'\tau_r','beta'};
 
         [samples, targets, normParams] = MML.prepare_reg_NNData('2N_CPG',inFilenames, maxN);
         MML.normParams = normParams;
 
-    %     if exist(GANN_file, 'file') ~= 2
-            architecture = [10];
-            [net, tr] = ...
-                    MML.train_reg_NN(samples, targets, architecture, NNSamples);
-            save(GANN_file,'net','tr');
-    %     else
-    %         GANN_net = load(GANN_file);
-    %         net = GANN_net.net;
-    %     end
+        architecture = [10];
+        [net, tr] = ...
+                MML.train_reg_NN(samples, targets, architecture, NNSamples);
+        save(GANN_file,'net','tr');
 
         GA.NN_reg = net;
         GA.NN_reg_Fcn = @NN_reg_Fcn;
@@ -104,10 +100,8 @@ switch use_NN
 
         maxN = 250000;
 
-        inFilenames =...
-            {'MatsRandomRes_TagaLike_CPG_all_1.mat',...
-    'MatsRandomRes_TagaLike_CPG_all_2.mat'};
-
+        inFilenames = {'MatsRandomRes_TagaLike_TrainingSet.mat'};
+        
         MML.sample_genes = {'\tau_r','beta',...
             'amp_4n_symm','4neuron_taga_like'}; 
         MML.target_genes = {'n_osc and osc classes'};
@@ -116,17 +110,13 @@ switch use_NN
             MML.prepare_classi_NNData('4N_CPG',inFilenames, maxN);
         MML.normParams = normParams;
 
-    %     if exist(GANN_file, 'file') ~= 2
-            architecture = [7,2];
-            [net, ~] = MML.train_classi_NN(samples, targets, architecture);
-            save(GANN_file,'net');
-    %     else
-    %         GANN_net = load(GANN_file);
-    %         net = GANN_net.net;
-    %     end
+        architecture = [10];
+        [net, ~] = MML.train_classi_NN(samples, targets, architecture);
+        save(GANN_file,'net');
 
         GA.NN_classi = net;
-        GA.NN_classi_Fcn = @NN_classi_Fcn;
+        % GA.NN_classi_Fcn = @NN_classi_Fcn;
+        GA.NN_classi_Fcn = @NN_classi_Fcn_improved;
 end
 
 function seq = NN_reg_Fcn(Gen, net, seq, X, T)
@@ -135,8 +125,7 @@ function seq = NN_reg_Fcn(Gen, net, seq, X, T)
     
     [~, periods, ~, ~, ~] = MML.processResults(X, T);
     % don't do anything if CPG IS oscillating
-    % in the case with 2N (actuated hip only) check the hip_period only:
-    if ~isnan(periods(2)) 
+    if ~any(isnan(periods))
         return
     end
 
@@ -150,17 +139,40 @@ function seq = NN_reg_Fcn(Gen, net, seq, X, T)
     seq(ids) = min(max(seq(ids),Gen.Range(1,ids)),Gen.Range(2,ids));
 end
 
-function seq = NN_classi_Fcn(Gen, net, seq, X, T)
+% function seq = NN_classi_Fcn(Gen, net, seq, X, T)
+%     
+%     [~, periods, ~, ~, ~] = MML.processResults(X, T);
+%     % don't do anything if CPG IS oscillating
+%     if ~any(isnan(periods)) 
+%         return
+%     end
+% 
+%     rand_seq = MML.Gen.RandSeq(5000);
+%     seq = MML.get_classi_NNPar(net, rand_seq);
+% 
+%     ids = seq < Gen.Range(1,:) | seq > Gen.Range(2,:);
+%     seq(ids) = min(max(seq(ids),Gen.Range(1,ids)),Gen.Range(2,ids));
+% end
+
+function seq = NN_classi_Fcn_improved(Gen,net,seq,lastGen,lastGenes, X, T)
+    % get MOGA class instead of Gen class. Instead off ruffling random 
+    %   CPGs, it's getting a random CPGs from the Mutated versions of the
+    %   topPop.
     
     [~, periods, ~, ~, ~] = MML.processResults(X, T);
     % don't do anything if CPG IS oscillating
-    % in the case with 2N (actuated hip only) check the hip_period only:
-    if ~isnan(periods(2)) 
+    if ~any(isnan(periods)) 
         return
     end
-
-    rand_seq = MML.Gen.RandSeq(1000);
-    seq = MML.get_classi_NNPar(net, rand_seq);
+    
+    try
+        rand_seq = [lastGenes;...
+            MML.Gen.RandSeq(2000)];
+        seq = MML.get_classi_NNPar(net, rand_seq);
+    catch % if there are no good CPGs
+        rand_seq = MML.Gen.RandSeq(100000);
+        seq = MML.get_classi_NNPar(net, rand_seq);
+    end
 
     ids = seq < Gen.Range(1,:) | seq > Gen.Range(2,:);
     seq(ids) = min(max(seq(ids),Gen.Range(1,ids)),Gen.Range(2,ids));
@@ -170,11 +182,10 @@ function seq = rescaleFcn(Gen, seq, X, T)
     [~, periods, ~, ~, ~] = MML.processResults(X, T);
 
     % don't do anything if CPG is not oscillating
-    % in the case with 2N (actuated hip only) check the hip_period only:
-    if isnan(periods(2)) 
+    if ~any(isnan(periods))
         return
     end
-    inputPeriod = periods(2);
+    inputPeriod = mean(periods);
 
     % don't do anything if CPG is osc in the right period range
     if (inputPeriod > MML.perLim(1)) && (inputPeriod < MML.perLim(2))
@@ -225,12 +236,18 @@ GA.Sim = GA.Sim.SetTime(0,0.03,20);
 % Some more simulation initialization
 GA.Sim.Mod.LegShift = GA.Sim.Mod.Clearance;
 
+% GA.FitFcn = {1, @MOOGA.VelFit;
+%              2, @MOOGA.NrgEffFit;
+%              3:10, @MOOGA.VelRangeFit;
+%              11, @MOOGA.EigenFit};
+% GA.FitIDs = [1,2,3]; % Velocity and average COT
+% GA.FitMinMax = [1, 1, 1, 1, -1, 1, -1, 1, -1, 1, 1];
+
 GA.FitFcn = {1, @MOOGA.VelFit;
-             2, @MOOGA.NrgEffFit;
-             3:10, @MOOGA.VelRangeFit;
-             11, @MOOGA.EigenFit};
+             2, @MOOGA.NrgEffFit;;
+             3, @MOOGA.EigenFit};
 GA.FitIDs = [1,2,3]; % Velocity and average COT
-GA.FitMinMax = [1, 1, 1, 1, -1, 1, -1, 1, -1, 1, 1];
+GA.FitMinMax = [1, 1, 1];
 
 % GA.FitFcn = {1, @MOOGA.VelFit;
 %              2, @MOOGA.EigenFit;

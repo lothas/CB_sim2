@@ -15,8 +15,6 @@ generate_GenomeFile('4N_tagaLike')
 %                       % w24 = w3
 %                       % w43=w34 = w4
 
-
-
 %%
 % define the class:
 MML = MatsuokaML();
@@ -25,6 +23,30 @@ MML.perLimOut = MML.perLim + [-0.08 0.08]; % Desired period range
 MML.tStep = 0.05;
 MML.tEnd = 15;
 
+header = sprintf('tau ratio is equal to %d \n',MML.Sim.Con.tau_ratio);
+header = [header,sprintf('data is for 4N TagaLike case \n')];
+header = [header,sprintf('seq Order: \n')];
+header = [header,sprintf('"tau","b","c","w1","w2","w3","w4","k_tau","k_c" \n')];
+header = [header,sprintf('"tau" in range ( %.2f , %.2f ) \n',...
+    MML.Gen.Range(1,1),MML.Gen.Range(2,1))];
+header = [header,sprintf('"b" in range ( %.2f , %.2f ) \n',...
+    MML.Gen.Range(1,2),MML.Gen.Range(2,2))];
+header = [header,sprintf('"c" in range ( %.2f , %.2f ) \n',...
+    MML.Gen.Range(1,3),MML.Gen.Range(2,3))];
+header = [header,sprintf('"w_1" in range ( %.2f , %.2f ) \n',...
+    MML.Gen.Range(1,4),MML.Gen.Range(2,4))];
+header = [header,sprintf('"w_2" in range ( %.2f , %.2f ) \n',...
+    MML.Gen.Range(1,5),MML.Gen.Range(2,5))];
+header = [header,sprintf('"w_3" in range ( %.2f , %.2f ) \n',...
+    MML.Gen.Range(1,6),MML.Gen.Range(2,6))];
+header = [header,sprintf('"w_4" in range ( %.2f , %.2f ) \n',...
+    MML.Gen.Range(1,7),MML.Gen.Range(2,7))];
+header = [header,sprintf('"k_tau" in range ( %.2f , %.2f ) \n',...
+    MML.Gen.Range(1,8),MML.Gen.Range(2,8))];
+header = [header,sprintf('"k_c" in range ( %.2f , %.2f ) \n',...
+    MML.Gen.Range(1,9),MML.Gen.Range(2,9))];
+
+disp(header);
 %% Train data: get All osc and n-osc (train data for classifier)
 N = 1000; % the number of samples
 CPGs_num = 0;
@@ -32,7 +54,7 @@ round_count = 0;
 max_round = 1000; % maximum iteraion for while loop (saftey reasons:)
 results = [];
 
-wanted_num_CPGs = 100000;
+wanted_num_CPGs = 200000;
 
 disp('start with the sim:');
 
@@ -68,133 +90,11 @@ end
 
 disp('sim end...');
 
-
-header = sprintf('tau ratio is equal to %d \n',MML.Sim.Con.tau_ratio);
-header = [header,sprintf('data is for 4N TagaLike case \n')];
-header = [header,sprintf('seq Order: \n')];
-header = [header,sprintf('"tau","b","c","w1","w2","w3","w4","k_tau","k_c" \n')];
-header = [header,sprintf('"tau" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,1),MML.Gen.Range(2,1))];
-header = [header,sprintf('"b" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,2),MML.Gen.Range(2,2))];
-header = [header,sprintf('"c" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,3),MML.Gen.Range(2,3))];
-header = [header,sprintf('"w_1" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,4),MML.Gen.Range(2,4))];
-header = [header,sprintf('"w_2" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,5),MML.Gen.Range(2,5))];
-header = [header,sprintf('"w_3" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,6),MML.Gen.Range(2,6))];
-header = [header,sprintf('"w_4" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,7),MML.Gen.Range(2,7))];
-header = [header,sprintf('"k_tau" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,8),MML.Gen.Range(2,8))];
-header = [header,sprintf('"k_c" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,9),MML.Gen.Range(2,9))];
-
-save('MatsRandomRes_TagaLike_CPG_all_2.mat',...
+save('MatsRandomRes_TagaLike_TrainingSet.mat',...
     'results','header');
 
 clear N
 
-%% Train data: (get good ones)
-N = 1000; % the number of samples
-good_CPGs_num = 0;
-round_count = 0;
-max_round = 1000; % maximum iteraion for while loop (saftey reasons:)
-results = [];
-
-wanted_num_CPGs = 10000;
-
-disp('start with the sim:');
-
-while (good_CPGs_num < wanted_num_CPGs) && (round_count <= max_round)
-    rand_seq = MML.Gen.RandSeq(N);
-%     results_temp(N) = [];
-    parfor i=1:N % Simulate and calculate the frequecy (also calc from Matsuoka extimation)
-%     for i=1:N
-%         disp(['at sim #',num2str(i)]);
-        [out, ~, signal] = MML.runSim(rand_seq(i,:));
-            % Prepare output:
-        % Parameters
-        results_temp(i).seq = rand_seq(i,:);
-
-        % Results- caculate perdiods using different methods:
-        results_temp(i).periods = out.periods;
-        
-        results_temp(i).x0 = out.x0;
-        results_temp(i).neuronActive = out.neuronActive;
-        results_temp(i).neuronOsc = out.neuronOsc;
-    end 
-
-    % get the periods
-    periods = horzcat(results_temp(:).periods);
-    
-    % get oscillatory CPGs ids:
-    osc_ids = ~isnan(periods);
-    osc_ids = osc_ids(1,:) & osc_ids(2,:);
-    
-%     % get oscillatory CPGs ids in period range::
-%     osc_ids = ~isnan(periods) &...
-%         ((periods > MML.perLimOut(1,1)) & (periods < MML.perLimOut(1,2)));
-    
-    % get neural oscillation check:
-    neuronOsc = (vertcat(results_temp(:).neuronOsc))';
-    osc_check_ids = true(1,N);
-    for k=1:size(neuronOsc,1) % run on all neurons
-        % mark as "good" if we have at least one osc neuron
-        osc_check_ids = osc_check_ids & ~neuronOsc(k,:);
-    end
-    
-    good_ids = osc_ids & ~osc_check_ids;
-
-    str1 = sprintf('round %d :    osc_CPGs: %d , ',round_count,sum(osc_ids));
-    str1 = [str1,sprintf('    osc_MN_ids: %d ,    ',sum(osc_check_ids))];
-    str1 = [str1,sprintf('    tot_CPG: %d \n',sum(good_ids))];    
-    disp(str1);
-    
-    results = [results,results_temp(good_ids)];
-    good_CPGs_num = length(results);
-
-    disp(['so far we have ',num2str(good_CPGs_num),' CPGs'])
-
-    round_count = round_count+1;
-    
-    clear results_temp periods rand_seq osc_check_ids neuronOsc
-    clear good_ids osc_ids str1
-
-end
-
-disp('sim end...');
-
-
-header = sprintf('tau ratio is equal to %d \n',MML.Sim.Con.tau_ratio);
-header = [header,sprintf('data is for 4N TagaLike case \n')];
-header = [header,sprintf('seq Order: \n')];
-header = [header,sprintf('"tau","b","c","w1","w2","w3","w4","k_tau","k_c" \n')];
-header = [header,sprintf('"tau" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,1),MML.Gen.Range(2,1))];
-header = [header,sprintf('"b" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,2),MML.Gen.Range(2,2))];
-header = [header,sprintf('"c" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,3),MML.Gen.Range(2,3))];
-header = [header,sprintf('"w_1" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,4),MML.Gen.Range(2,4))];
-header = [header,sprintf('"w_2" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,5),MML.Gen.Range(2,5))];
-header = [header,sprintf('"w_3" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,6),MML.Gen.Range(2,6))];
-header = [header,sprintf('"w_4" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,7),MML.Gen.Range(2,7))];
-header = [header,sprintf('"k_tau" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,8),MML.Gen.Range(2,8))];
-header = [header,sprintf('"k_c" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,9),MML.Gen.Range(2,9))];
-
-save('MatsRandomRes_TagaLike_CPG_all_osc_1.mat',...
-    'results','header');
-
-clear N
 %% plot CPG output:
 close all;
 

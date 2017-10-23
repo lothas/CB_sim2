@@ -18,9 +18,10 @@ MML.tEnd = 15;
 %     'VGAM_2N_general_10_14_14_40_GA_only.mat'};
 % Legends = {'GA1','GA2','GA3'};
 
-InFiles_names = {'VGAM_2N_general_10_16_17_45_Improved1_NN__NN_classi_only.mat',...
-    'VGAM_2N_general_10_16_09_01_Improved1_NN__NN_classi_only.mat'};
-Legends = {'NN1','NN2'};
+InFiles_names = {'VGAM_2N_general_10_16_09_01_Improved1_NN__NN_classi_only.mat',...
+    'VGAM_2N_general_10_16_17_45_Improved1_NN__NN_classi_only.mat',...
+    'VGAM_2N_general_10_17_18_49_Improved1_NN__NN_classi_only'};
+Legends = {'NN1','NN2','NN3'};
 
 % InFiles_names = {'VGAM_2N_general_10_17_08_31_GA_only.mat',...
 %     'VGAM_2N_general_10_16_17_45_Improved1_NN__NN_classi_only.mat'};
@@ -176,7 +177,7 @@ close all;
 Title = {'velFit','NrgFit','rangeVelFit'};
 
 % % Plot mean of maximum fitness for all MOGA runs:
-for j=1:3
+for j=3 %j=1:3
     whichFit2Plot = j;
     [x_data,GA_only_max] = GA_only.plot_fit_over_gen(whichFit2Plot,last_gen);
     [~,GA_NN_max] = GA_NN.plot_fit_over_gen(whichFit2Plot,last_gen);
@@ -189,14 +190,16 @@ for j=1:3
 
     figure;
     plot(x_data,GA_only_mean); hold on;
-    errorbar(x_data,GA_only_mean,GA_only_std);
+%     errorbar(x_data,GA_only_mean,GA_only_std);
     plot(x_data,GA_NN_mean);
-    errorbar(x_data,GA_NN_mean,GA_NN_std);
-    xlabel('gen num');
-    ylabel('mean of Max fitness');
-    legend('GA only','NN');
-    title([Title{1,j},'_{mean}']);
+%     errorbar(x_data,GA_NN_mean,GA_NN_std);
+    xlabel('Generation number');
+    ylabel('Velocity Fitness Max');
+    legend('MOGA','MOGA with NN assist');
+%     title([Title{1,j},'_{mean}']);
     grid minor
+    axis([1,10,0,0.4]);
+    set(gca,'fontsize',13)
     
     clear x_data GA_only_max GA_NN_max 
     clear GA_only_mean GA_only_std GA_NN_mean GA_NN_std

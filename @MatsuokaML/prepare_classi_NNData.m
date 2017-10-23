@@ -22,9 +22,6 @@ function [ samples, targets, normParams ] = ...
         case '2N_CPG'
             periods = periods(2,:); % take only hip period
         case '4N_CPG'
-            % take the maximum periods
-            periods = max(periods,[],2);
-            
             % Filter CPG's where not both signals oscillating:
             osc_ids = ~isnan(periods);
             osc_ids = osc_ids(1,:) & osc_ids(2,:);
@@ -35,8 +32,10 @@ function [ samples, targets, normParams ] = ...
 
             good_ids = osc_ids & diff_ids;
             
+            periods = mean(periods,1);
+            
             % classifi all of the "bad" CPGs as "n-osc":
-            periods(1,~good_ids) = NaN(size(good_ids));
+            periods(1,~good_ids) = NaN(1,sum(~good_ids));
     end
     
     % get the number of samples:

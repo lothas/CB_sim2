@@ -4,7 +4,8 @@ function [  ] = GA_try_2N_General_Matsuoka(whichCase,fileIn)
 
 
 
-GA = MOOGA(10,1000);
+% GA = MOOGA(10,200);
+GA = MOOGA(5,5000);
 GA = GA.SetFittest(15,15,0.5);
 GA.JOAT = 2; GA.Quant = 0.7;
 
@@ -12,8 +13,8 @@ GA.FileIn = fileIn;
 
 FileName_start = 'VGAM_2N_general_';
 FileName_date = datestr(now,'mm_dd_hh_MM');
-% FileName_extra = '_1000genes_';
-FileName_extra = '_Improved1_NN_';
+% FileName_extra = '_Test_200genes_';
+FileName_extra = '_5000genes_';
 
 switch whichCase
     case 'GA only'

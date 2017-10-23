@@ -86,6 +86,13 @@ switch whichCase
         % Note: the current encoding is for symmetric tonic inputs. 
         %   you can change it. but don't forget to change 
         %   the adaptation coef ('k_c') as well       
+        
+%         % Final genome with tau_r + beta (constant tau_u/tau_v ratio) 
+%         Keys = {'\tau_r', 'beta',      'amp',   '4neuron_taga_like', 'ks_\tau',             'ks_c', 'IC_matsuoka';
+%                       1 ,      1,          4,                     4,        1 ,                  4,            0 };
+%         Range = {  0.02 ,    0.2,       mamp,                    mw,      -10 ,          -0.1*Mamp; % Min
+%                    0.25 ,    2.5,       Mamp,                    Mw,       10 ,           0.1*Mamp}; % Max
+
 
     case '4N_general'
         genome_file = 'MatsuokaGenome_4Neuron_general.mat';
