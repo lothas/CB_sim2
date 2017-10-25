@@ -1,4 +1,4 @@
-function [ samples, targets, normParams ] = ...
+function [ samples, targets] = ...
     prepare_classi_NNData(obj, CPG_Type, filenames, maxN)
 %PREPARE_CLASSI_NNDATA 
 % Prepares data to train a classification neural network using stored results
@@ -82,13 +82,13 @@ function [ samples, targets, normParams ] = ...
             ~isnan(period)];
     end
     
-    % Normalize samples
-    normParams = zeros(size(samples, 1), 2);
-    for i = 1:size(samples, 1)
-        feat = samples(i, :);
-        normParams(i, :) = [mean(feat), std(feat)];
-        samples(i, :) = (feat - normParams(i, 1))/normParams(i, 2);
-    end
+%     % Normalize samples
+%     normParams = zeros(size(samples, 1), 2);
+%     for i = 1:size(samples, 1)
+%         feat = samples(i, :);
+%         normParams(i, :) = [mean(feat), std(feat)];
+%         samples(i, :) = (feat - normParams(i, 1))/normParams(i, 2);
+%     end
 
 end
 

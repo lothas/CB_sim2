@@ -1,4 +1,33 @@
 
+% % % Generating the genome:
+genome_file = 'MatsuokaGenome_4Neuron_tagaLike.mat';
+maxAnkle = 20;   % Max ankle torque
+maxHip = 8;    % Max hip torque
+Mamp = [maxAnkle*ones(1,2*nAnkle), maxHip*ones(1,2*nHip)];
+mamp = 0*Mamp;
+
+mw = 0*ones(1,4);
+Mw = 10*ones(1,4);
+
+% CPG strucute: (ALSO Symm W_ij = W_ji)
+%   H_F   H_E           % 
+% 4 O-----O 3           %   
+%    \    |             %   w = [0  , W12, 0  , 0  ; 
+%     \   |             %        W21, 0  , w23, W24;
+%      \  |             %        0  , 0  , 0  , W34;
+%       \ |             %        0  , 0  , w43, 0  ;
+% 1 O-----O 2           % w12=w21 = w1  
+%  A_F    A_E           % w23 = w2
+%                       % w24 = w3
+%                       % w43=w34 = w4
+
+% Final genome with tau_r + beta (constant tau_u/tau_v ratio) 
+Keys = {'\tau_r', 'beta', 'amp_4n_symm',   '4neuron_taga_like', 'ks_\tau',     'ks_c_4n_symm', 'IC_matsuoka';
+              1 ,      1,             1,                     4,        1 ,                 1 ,            0 };
+Range = {  0.02 ,    0.2,             0,                    mw,      -10 ,                 -1; % Min
+           0.25 ,    2.5,      maxAnkle,                    Mw,       10 ,                  1}; % Max
+
+%%
 clear all; close all; clc
 
 % set default options
@@ -12,25 +41,26 @@ MML.tStep = 0.05;
 MML.tEnd = 15;
 
 % % % % LOAD files:
+% InFiles_names = {'VGAM_4N_TagaLike_10_24_10_15_1tonicInput__NN_classi_only.mat',...
+%     'VGAM_4N_TagaLike_10_24_14_29_1tonicInput__NN_classi_only.mat',...
+%     'VGAM_4N_TagaLike_10_24_20_35_1tonicInput__NN_classi_only.mat'};
+% Legends = {'NN1','NN2','NN3'};
 
-% InFiles_names = {'VGAM_2N_general_10_14_11_23_GA_only.mat',...
-%     'VGAM_2N_general_10_17_08_31_GA_only.mat',...
-%     'VGAM_2N_general_10_14_14_40_GA_only.mat'};
-% Legends = {'GA1','GA2','GA3'};
+InFiles_names = {'VGAM_4N_TagaLike_10_24_10_15_1tonicInput__NN_classi_only.mat',...
+    'VGAM_4N_TagaLike_10_24_14_29_1tonicInput__NN_classi_only.mat',...
+    'VGAM_4N_TagaLike_10_24_20_35_1tonicInput__NN_classi_only.mat',...
+    'VGAM_4N_TagaLike_10_24_10_25_1tonicInput__GA_only.mat',...
+    'VGAM_4N_TagaLike_10_24_00_32_1tonicInput__GA_only.mat'};
+Legends = {'NN1','NN2','NN3','GA1','GA2'};
 
-InFiles_names = {'VGAM_2N_general_10_16_09_01_Improved1_NN__NN_classi_only.mat',...
-    'VGAM_2N_general_10_16_17_45_Improved1_NN__NN_classi_only.mat',...
-    'VGAM_2N_general_10_17_18_49_Improved1_NN__NN_classi_only'};
-Legends = {'NN1','NN2','NN3'};
-
-% InFiles_names = {'VGAM_2N_general_10_17_08_31_GA_only.mat',...
-%     'VGAM_2N_general_10_16_17_45_Improved1_NN__NN_classi_only.mat'};
-% Legends = {'GA only','NN classi improved'};
-
-
-% the order of the parametrs in CPG Sequence:
-seqOrder = {'tau' ,'b', 'c1', 'c2', 'w1','w2',...
-    'k_tau','k_{c1}','k_{c2}'};
+% % % the order of the parametrs in CPG Sequence:
+% Symm tonic inputs:
+seqOrder = {'tau' ,'b', 'c', 'w1', 'w2', 'w3', 'w4',...
+    'k_tau','k_{c}'};
+% % general tonic inputs:
+% seqOrder = {'tau' ,'b', 'c1', 'c2', 'c3', 'c4',...
+%     'w1','w2','w3','w4',...
+%     'k_tau','k_{c1}','k_{c2}','k_{c3}','k_{c4}'};
 
 GA_graphs = plotMOOGA4Paper(MML,InFiles_names,Legends,seqOrder);
 
@@ -42,25 +72,24 @@ x_data = 1:last_gen;
 % home many clusters in divesity plots:
 num_of_clusters = 4;
 
-
 %% 
-GA_file_num = 3;
+GA_file_num = 2;
 genNum = 10;
 % GA_graphs.plot_seqs_in_gen(GA_file_num,genNum,1:16)
 
 duration = 20;
-geneID = 1;
-GA_graphs.animate_seq(GA_file_num,genNum, geneID, duration, [])
+geneID = 2;
+% GA_graphs.animate_seq(GA_file_num,genNum, geneID, duration, [])
 
 clear GA_file_num genNum duration geneID
 %% plot max fit over generation:
 close all
-whichFit2Plot = 1:3;%1:11;
+whichFit2Plot = 3;%1:11;
 GA_graphs.plot_fit_over_gen(whichFit2Plot,last_gen);
 
 %% plot max and Mean fit over generation num:
 close all
-whichFit2Plot = 1:3;
+whichFit2Plot = 3;%1:3;
 % GA_graphs.plot_mean_fit_over_gen(whichFit2Plot,last_gen,'all')
 
 [x_data,y_data_mean] = ...
@@ -155,9 +184,10 @@ clear all; close all; clc
 % set default options
 set(0,'defaultlinelinewidth',2);
 
-% the order of the parametrs in CPG Sequence:
-seqOrder = {'tau' ,'b', 'c1', 'c2', 'w1','w2',...
-    'k_tau','k_{c1}','k_{c2}'};
+% % % the order of the parametrs in CPG Sequence:
+% Symm tonic inputs:
+seqOrder = {'tau' ,'b', 'c', 'w1', 'w2', 'w3', 'w4',...
+    'k_tau','k_{c}'};
 
 % define the class for CPG simulation:
 MML = MatsuokaML();
@@ -167,18 +197,17 @@ MML.tStep = 0.05;
 MML.tEnd = 15;
 
 % LOAD GA_only files:
-InFiles_names = {'VGAM_2N_general_10_14_11_23_GA_only.mat',...
-    'VGAM_2N_general_10_17_08_31_GA_only.mat',...
-    'VGAM_2N_general_10_14_14_40_GA_only.mat'};
+InFiles_names = {'VGAM_4N_TagaLike_10_24_10_25_1tonicInput__GA_only.mat',...
+    'VGAM_4N_TagaLike_10_23_17_27_1tonicInput__GA_only.mat',...
+    'VGAM_4N_TagaLike_10_24_00_32_1tonicInput__GA_only.mat'};
 Legends = {'GA1','GA2','GA3'};
 GA_only = plotMOOGA4Paper(MML,InFiles_names,Legends,seqOrder);
 
 % % LOAD GA_NN files:
-InFiles_names = {'VGAM_2N_general_10_16_17_45_Improved1_NN__NN_classi_only.mat',...
-    'VGAM_2N_general_10_16_09_01_Improved1_NN__NN_classi_only.mat',...
-    'VGAM_2N_general_10_17_18_49_Improved1_NN__NN_classi_only.mat'};
+InFiles_names = {'VGAM_4N_TagaLike_10_24_10_15_1tonicInput__NN_classi_only.mat',...
+    'VGAM_4N_TagaLike_10_24_14_29_1tonicInput__NN_classi_only.mat',...
+    'VGAM_4N_TagaLike_10_24_20_35_1tonicInput__NN_classi_only.mat'};
 Legends = {'NN1','NN2','NN3'};
-
 GA_NN = plotMOOGA4Paper(MML,InFiles_names,Legends,seqOrder);
 
 % get x-axis data:

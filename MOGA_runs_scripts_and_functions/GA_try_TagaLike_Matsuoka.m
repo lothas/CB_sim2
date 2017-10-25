@@ -4,7 +4,7 @@ function [  ] = GA_try_TagaLike_Matsuoka(whichCase,fileIn)
 
 
 
-GA = MOOGA(10,500);
+GA = MOOGA(10,1000);
 GA = GA.SetFittest(15,15,0.5);
 GA.JOAT = 2; GA.Quant = 0.7;
 
@@ -12,7 +12,7 @@ GA.FileIn = fileIn;
 
 FileName_start = 'VGAM_4N_TagaLike_';
 FileName_date = datestr(now,'mm_dd_hh_MM');
-FileName_extra = '_test_only_velFit_500genes_';
+FileName_extra = '_1tonicInput_';
 
 switch whichCase
     case 'GA only'
@@ -106,9 +106,9 @@ switch use_NN
             'amp_4n_symm','4neuron_taga_like'}; 
         MML.target_genes = {'n_osc and osc classes'};
 
-        [samples, targets, normParams] = ...
+        [samples, targets] = ...
             MML.prepare_classi_NNData('4N_CPG',inFilenames, maxN);
-        MML.normParams = normParams;
+        MML.normParams = [];
 
         architecture = [10];
         [net, ~] = MML.train_classi_NN(samples, targets, architecture);
@@ -236,18 +236,18 @@ GA.Sim = GA.Sim.SetTime(0,0.03,20);
 % Some more simulation initialization
 GA.Sim.Mod.LegShift = GA.Sim.Mod.Clearance;
 
+GA.FitFcn = {1, @MOOGA.VelFit;
+             2, @MOOGA.NrgEffFit;
+             3:10, @MOOGA.VelRangeFit;
+             11, @MOOGA.EigenFit};
+GA.FitIDs = [1,2,3]; % Velocity and average COT
+GA.FitMinMax = [1, 1, 1, 1, -1, 1, -1, 1, -1, 1, 1];
+
 % GA.FitFcn = {1, @MOOGA.VelFit;
 %              2, @MOOGA.NrgEffFit;
-%              3:10, @MOOGA.VelRangeFit;
-%              11, @MOOGA.EigenFit};
+%              3, @MOOGA.EigenFit};
 % GA.FitIDs = [1,2,3]; % Velocity and average COT
-% GA.FitMinMax = [1, 1, 1, 1, -1, 1, -1, 1, -1, 1, 1];
-
-GA.FitFcn = {1, @MOOGA.VelFit;
-             2, @MOOGA.NrgEffFit;;
-             3, @MOOGA.EigenFit};
-GA.FitIDs = [1,2,3]; % Velocity and average COT
-GA.FitMinMax = [1, 1, 1];
+% GA.FitMinMax = [1, 1, 1];
 
 % GA.FitFcn = {1, @MOOGA.VelFit;
 %              2, @MOOGA.EigenFit;
