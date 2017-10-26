@@ -1,5 +1,12 @@
 
 % % % Generating the genome:
+% define Mutation strength:
+MutDelta0 = 0.04;   MutDelta1 = 0.02;
+
+nAnkle = 1;%1; % Number of ankle torques
+nHip = 1;   % Number of hip torques
+N = nAnkle+nHip;
+
 genome_file = 'MatsuokaGenome_4Neuron_tagaLike.mat';
 maxAnkle = 20;   % Max ankle torque
 maxHip = 8;    % Max hip torque
@@ -24,9 +31,15 @@ Mw = 10*ones(1,4);
 % Final genome with tau_r + beta (constant tau_u/tau_v ratio) 
 Keys = {'\tau_r', 'beta', 'amp_4n_symm',   '4neuron_taga_like', 'ks_\tau',     'ks_c_4n_symm', 'IC_matsuoka';
               1 ,      1,             1,                     4,        1 ,                 1 ,            0 };
-Range = {  0.02 ,    0.2,             0,                    mw,      -10 ,                 -1; % Min
-           0.25 ,    2.5,      maxAnkle,                    Mw,       10 ,                  1}; % Max
+Range = {  0.02 ,    0.2,             0,                    mw,      -10 ,                 -0.1*maxAnkle; % Min
+           0.25 ,    2.5,      maxAnkle,                    Mw,       10 ,                  0.1*maxAnkle}; % Max
+       
+       
+save(genome_file, 'nAnkle', 'nHip', 'maxAnkle', 'maxHip', ...
+    'Mamp', 'mamp', 'N', 'Mw', 'mw', ...
+    'MutDelta0', 'MutDelta1', 'Keys', 'Range');   
 
+clear all
 %%
 clear all; close all; clc
 
@@ -46,12 +59,18 @@ MML.tEnd = 15;
 %     'VGAM_4N_TagaLike_10_24_20_35_1tonicInput__NN_classi_only.mat'};
 % Legends = {'NN1','NN2','NN3'};
 
-InFiles_names = {'VGAM_4N_TagaLike_10_24_10_15_1tonicInput__NN_classi_only.mat',...
-    'VGAM_4N_TagaLike_10_24_14_29_1tonicInput__NN_classi_only.mat',...
-    'VGAM_4N_TagaLike_10_24_20_35_1tonicInput__NN_classi_only.mat',...
-    'VGAM_4N_TagaLike_10_24_10_25_1tonicInput__GA_only.mat',...
-    'VGAM_4N_TagaLike_10_24_00_32_1tonicInput__GA_only.mat'};
-Legends = {'NN1','NN2','NN3','GA1','GA2'};
+% InFiles_names = {'VGAM_4N_TagaLike_10_25_18_21_1tonicInput__GA_only.mat',...
+%     'VGAM_4N_TagaLike_10_25_18_27_1tonicInput__GA_only.mat',...
+%     'VGAM_4N_TagaLike_10_25_20_21_1tonicInput__GA_only.mat',...
+%     'VGAM_4N_TagaLike_10_25_21_29_1tonicInput__GA_only.mat'};
+% Legends = {'1','2','3','4'};
+
+% InFiles_names = {'VGAM_4N_TagaLike_10_24_10_15_1tonicInput__NN_classi_only.mat',...
+%     'VGAM_4N_TagaLike_10_24_14_29_1tonicInput__NN_classi_only.mat',...
+%     'VGAM_4N_TagaLike_10_24_20_35_1tonicInput__NN_classi_only.mat',...
+%     'VGAM_4N_TagaLike_10_24_10_25_1tonicInput__GA_only.mat',...
+%     'VGAM_4N_TagaLike_10_24_00_32_1tonicInput__GA_only.mat'};
+% Legends = {'NN1','NN2','NN3','GA1','GA2'};
 
 % % % the order of the parametrs in CPG Sequence:
 % Symm tonic inputs:
@@ -196,17 +215,21 @@ MML.perLimOut = MML.perLim + [-0.08 0.08]; % Desired period range
 MML.tStep = 0.05;
 MML.tEnd = 15;
 
+% % LOAD GA_only files:
+% InFiles_names = {'VGAM_4N_TagaLike_10_24_10_25_1tonicInput__GA_only.mat',...
+%     'VGAM_4N_TagaLike_10_23_17_27_1tonicInput__GA_only.mat',...
+%     'VGAM_4N_TagaLike_10_24_00_32_1tonicInput__GA_only.mat'};
+% Legends = {'GA1','GA2','GA3'};
 % LOAD GA_only files:
 InFiles_names = {'VGAM_4N_TagaLike_10_24_10_25_1tonicInput__GA_only.mat',...
-    'VGAM_4N_TagaLike_10_23_17_27_1tonicInput__GA_only.mat',...
-    'VGAM_4N_TagaLike_10_24_00_32_1tonicInput__GA_only.mat'};
-Legends = {'GA1','GA2','GA3'};
+    'VGAM_4N_TagaLike_10_23_17_27_1tonicInput__GA_only.mat'};
+Legends = {'GA1','GA2'};
 GA_only = plotMOOGA4Paper(MML,InFiles_names,Legends,seqOrder);
 
 % % LOAD GA_NN files:
-InFiles_names = {'VGAM_4N_TagaLike_10_24_10_15_1tonicInput__NN_classi_only.mat',...
-    'VGAM_4N_TagaLike_10_24_14_29_1tonicInput__NN_classi_only.mat',...
-    'VGAM_4N_TagaLike_10_24_20_35_1tonicInput__NN_classi_only.mat'};
+InFiles_names = {'VGAM_4N_TagaLike_10_24_10_15_1tonicInput__NN_classi_only_wrong_C.mat',...
+    'VGAM_4N_TagaLike_10_24_14_29_1tonicInput__NN_classi_only_wrong_C.mat',...
+    'VGAM_4N_TagaLike_10_24_20_35_1tonicInput__NN_classi_only_wrong_C.mat'};
 Legends = {'NN1','NN2','NN3'};
 GA_NN = plotMOOGA4Paper(MML,InFiles_names,Legends,seqOrder);
 
@@ -217,7 +240,7 @@ close all;
 Title = {'velFit','NrgFit','rangeVelFit'};
 
 % % Plot mean of maximum fitness for all MOGA runs:
-for j=3 %j=1:3
+for j=1:3
     whichFit2Plot = j;
     [x_data,GA_only_max] = GA_only.plot_fit_over_gen(whichFit2Plot,last_gen);
     [~,GA_NN_max] = GA_NN.plot_fit_over_gen(whichFit2Plot,last_gen);

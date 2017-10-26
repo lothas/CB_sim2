@@ -23,13 +23,14 @@ for i = 1:length(whichFit)
         switch minORmax(1,FitNum)
             case 1
                 [bestFit,bestID] = max(squeeze(y),[],1);
-                for g=1:length(x_data)
+                for g = 1:length(x_data)
                     bestGenes(g,:) = genes(bestID(g),:,g);
                 end
                 y_data(j,:) = bestFit;
             case -1
-                [M,I] = min(y,[],1);
-                y_data(j,:) = squeeze();
+                error('still need to implement it...');
+%                 [M,I] = min(y,[],1);
+%                 y_data(j,:) = squeeze();
         end
         
 %         % OPTIONAL: check best gene passing

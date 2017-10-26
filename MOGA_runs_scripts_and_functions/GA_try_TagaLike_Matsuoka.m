@@ -12,7 +12,8 @@ GA.FileIn = fileIn;
 
 FileName_start = 'VGAM_4N_TagaLike_';
 FileName_date = datestr(now,'mm_dd_hh_MM');
-FileName_extra = '_1tonicInput_';
+% FileName_extra = '_1tonicInput_';
+FileName_extra = '_test_oneFitness_only_';
 
 switch whichCase
     case 'GA only'
@@ -242,6 +243,10 @@ GA.FitFcn = {1, @MOOGA.VelFit;
              11, @MOOGA.EigenFit};
 GA.FitIDs = [1,2,3]; % Velocity and average COT
 GA.FitMinMax = [1, 1, 1, 1, -1, 1, -1, 1, -1, 1, 1];
+
+% GA.FitFcn = {1, @MOOGA.VelFit};
+% GA.FitIDs = [1]; % Velocity and average COT
+% GA.FitMinMax = [1];
 
 % GA.FitFcn = {1, @MOOGA.VelFit;
 %              2, @MOOGA.NrgEffFit;

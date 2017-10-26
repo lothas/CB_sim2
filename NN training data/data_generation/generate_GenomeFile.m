@@ -80,8 +80,8 @@ switch whichCase
         % Final genome with tau_r + beta (constant tau_u/tau_v ratio) 
         Keys = {'\tau_r', 'beta', 'amp_4n_symm',   '4neuron_taga_like', 'ks_\tau',     'ks_c_4n_symm', 'IC_matsuoka';
                       1 ,      1,             1,                     4,        1 ,                 1 ,            0 };
-        Range = {  0.02 ,    0.2,             0,                    mw,      -10 ,                 -1; % Min
-                   0.25 ,    2.5,      maxAnkle,                    Mw,       10 ,                  1}; % Max
+        Range = {  0.02 ,    0.2,             0,                    mw,      -10 ,                 -0.1*maxAnkle; % Min
+                   0.25 ,    2.5,      maxAnkle,                    Mw,       10 ,                  0.1*maxAnkle}; % Max
 
         % Note: the current encoding is for symmetric tonic inputs. 
         %   you can change it. but don't forget to change 
