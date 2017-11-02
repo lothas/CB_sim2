@@ -74,6 +74,25 @@ if strcmp(wSim.Con.name, 'Matsuoka')
     [TTemp,XTemp] = ode45(@MatsDerivative,t_span,IC0,options);
     Matsuoka_runTime = toc(Matsuoka_tic);
     
+    % % Check the generated ankle torque of the genome:
+    if ~isempty(GA.genomeChevkFcn) && strcmp(wSim.Con.name, 'Matsuoka')
+        noGO_flag = GA.genomeChevkFcn(XTemp, TTemp);
+        % If noGO flag is true, than don't evaluate the fitness (keep them
+        % zero). warning, this might cause an issue with minimizing
+        % fitness!
+        if noGO_flag
+            FitInd = GA.FitFcn(:,1); % Index for fit functions
+            thisFit = zeros(1,max(cell2mat(FitInd')));
+            Matsuoka_runTime = NaN;
+            Sim_runTime = NaN;
+            sim_endCond = NaN;
+            Tend_ratio = NaN;
+            varargout = {thisFit, thisSeq,Matsuoka_runTime,...
+                Sim_runTime,sim_endCond,Tend_ratio};
+            return;
+        end
+    end
+    
     % % % use regression NN to change the gene:
     if ~isempty(GA.NN_reg) && ~isempty(GA.NN_reg_Fcn) ...
             && strcmp(wSim.Con.name, 'Matsuoka')

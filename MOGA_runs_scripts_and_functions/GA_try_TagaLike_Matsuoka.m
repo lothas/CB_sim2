@@ -4,7 +4,7 @@ function [  ] = GA_try_TagaLike_Matsuoka(whichCase,fileIn)
 
 
 
-GA = MOOGA(10,1000);
+GA = MOOGA(5,500);
 GA = GA.SetFittest(15,15,0.5);
 GA.JOAT = 2; GA.Quant = 0.7;
 
@@ -13,14 +13,16 @@ GA.FileIn = fileIn;
 FileName_start = 'VGAM_4N_TagaLike_';
 FileName_date = datestr(now,'mm_dd_hh_MM');
 % FileName_extra = '_1tonicInput_';
-FileName_extra = '_general_tonicInputs_';
+FileName_extra = '_general_tonicInputs_TEST_';
 
 switch whichCase
     case 'GA only'
         % Use NN?
         use_NN = 0;
-        % Rescale?
-        GA.rescaleFcn = [];
+        % Check ankle Torque?
+        %   Assign a check function to check if a CPG doesn't have an oscillatory
+        %   Ankle joint.
+        GA.genomeChevkFcn = @genomeChevkFcn;
 %         out file name:
         GA.FileOut = [FileName_start,FileName_date,FileName_extra,...
             '_GA_only','.mat'];
@@ -33,13 +35,11 @@ switch whichCase
         
     case 'GA + NN_reg'
         use_NN = 'NN_reg';
-        GA.rescaleFcn = [];
         GA.FileOut = [FileName_start,FileName_date,FileName_extra,...
             '_NN_reg_only','.mat'];
         
     case 'GA + NN_classi'
         use_NN = 'NN_classi';
-        GA.rescaleFcn = [];
         GA.FileOut = [FileName_start,FileName_date,FileName_extra,...
             '_NN_classi_only','.mat'];
         
@@ -117,8 +117,7 @@ switch use_NN
         save(GANN_file,'net');
 
         GA.NN_classi = net;
-        % GA.NN_classi_Fcn = @NN_classi_Fcn;
-        GA.NN_classi_Fcn = @NN_classi_Fcn_improved;
+        GA.NN_classi_Fcn = @NN_classi_Fcn;
 end
 
 function seq = NN_reg_Fcn(Gen, net, seq, X, T)
@@ -141,6 +140,31 @@ function seq = NN_reg_Fcn(Gen, net, seq, X, T)
     seq(ids) = min(max(seq(ids),Gen.Range(1,ids)),Gen.Range(2,ids));
 end
 
+%%
+function noGO_flag = genomeChevkFcn(X,T)
+    % If the ankle torque is a posivite constant (larger than zero and with
+    % no period) than don't use this genome.
+    [~, periods, signals, ~, ~] = MML.processResults(X, T);
+    
+    % check that the ankle torque is positive:
+    ind2analize = ceil(0.7*size(signals,2));
+    lastOfAnkleSignal = signals(1,ind2analize:end);
+    
+    %  dont take CPGs if the ankle torque is not oscillating and positive
+    if (mean(lastOfAnkleSignal) > 0.001) && isnan(periods(1,1))
+        noGO_flag = 1;
+    else % if the hip torque is constant than ignore it as well
+        if isnan(periods(2,1))
+            noGO_flag = 1;
+        else
+            noGO_flag = 0;
+        end
+    end
+    
+end
+%% % % % First Class_NN vesion:
+% % Ruffle a sample from a random group.
+% 
 % function seq = NN_classi_Fcn(Gen, net, seq, X, T)
 %     
 %     [~, periods, ~, ~, ~] = MML.processResults(X, T);
@@ -155,8 +179,9 @@ end
 %     ids = seq < Gen.Range(1,:) | seq > Gen.Range(2,:);
 %     seq(ids) = min(max(seq(ids),Gen.Range(1,ids)),Gen.Range(2,ids));
 % end
-
-function seq = NN_classi_Fcn_improved(Gen,net,seq,lastGen,lastGenes, X, T)
+%% % Improve #1 Class_NN version:
+% % Ruffle it from the cross mutated version of the last generation
+function seq = NN_classi_Fcn(Gen,net,seq,lastGen,lastGenes, X, T)
     % get MOGA class instead of Gen class. Instead off ruffling random 
     %   CPGs, it's getting a random CPGs from the Mutated versions of the
     %   topPop.
@@ -188,6 +213,39 @@ function seq = NN_classi_Fcn_improved(Gen,net,seq,lastGen,lastGenes, X, T)
 %     seq(ids) = min(max(seq(ids),Gen.Range(1,ids)),Gen.Range(2,ids));
 end
 
+%% % Improve #2 Class_NN version:
+% % % Ruffle it from the cross mutated version of the last generation
+% % % ALSO, anable 10% of getting not making any change at all.
+% function seq = NN_classi_Fcn(Gen,net,seq,lastGen,lastGenes, X, T)
+%     % get MOGA class instead of Gen class. Instead off ruffling random 
+%     %   CPGs, it's getting a random CPGs from the Mutated versions of the
+%     %   topPop.
+%     
+%     % get radom integer from '1' to '10' if this number is 10 than dont use
+%     % the NN.
+%     if randi(10) > 9
+%         return;
+%     end
+%     
+%     [~, periods, ~, ~, ~] = MML.processResults(X, T);
+%     % don't do anything if CPG IS oscillating
+%     if ~any(isnan(periods)) 
+%         return
+%     end
+%     
+%     try
+%         rand_seq = [lastGenes;...
+%             MML.Gen.RandSeq(2000)];
+%         seq = MML.get_classi_NNPar(net, rand_seq);
+%     catch % if there are no good CPGs
+%         rand_seq = MML.Gen.RandSeq(100000);
+%         seq = MML.get_classi_NNPar(net, rand_seq);
+%     end
+% 
+%     ids = seq < Gen.Range(1,:) | seq > Gen.Range(2,:);
+%     % seq(ids) = min(max(seq(ids),Gen.Range(1,ids)),Gen.Range(2,ids));
+% end
+%% % Rescaling function:
 function seq = rescaleFcn(Gen, seq, X, T)
     [~, periods, ~, ~, ~] = MML.processResults(X, T);
 

@@ -33,6 +33,9 @@ classdef MOOGA
         % Rescale some genes to get a certain temporal performance
         rescaleFcn = [];
         
+        % Check function (use it to check for non-Oscillatory CPGs)
+        genomeChevkFcn = [];
+        
         % Objects
         Gen;        % Genome
         Sim;        % Simulation

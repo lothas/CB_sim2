@@ -1,4 +1,4 @@
-function [ ] = animate_seq(obj,whichGA,geneNum, GenID, Dur, filename)
+function [ ] = animate_seq(obj,whichGA,geneNum, GenID, Dur, timestep, filename)
 %PLOT_SEQ plots the CPG output for a given sequence
 
 GA = obj.data{1,whichGA}.GA;
@@ -39,8 +39,7 @@ Sim = GA.Gen.Decode(Sim, GA.Seqs(GenID,:,Generation));
 disp(GA.Gen.seq2str(GA.Seqs(GenID,:,Generation)));
 
 % Simulation parameters
-% Sim = Sim.SetTime(0,0.09,tend);
-Sim = Sim.SetTime(0,0.03,tend);
+Sim = Sim.SetTime(0,timestep,tend);
 
 % Set internal parameters (state dimensions, events, etc)
 Sim = Sim.Init();

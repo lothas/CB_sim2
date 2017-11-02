@@ -53,12 +53,16 @@ MML.perLimOut = MML.perLim + [-0.08 0.08]; % Desired period range
 MML.tStep = 0.05;
 MML.tEnd = 15;
 
+% % % % LOAD files:
+% InFiles_names = {'VGAM_4N_TagaLike_10_29_20_38_general_tonicInputs__GA_only.mat',...
+%     'VGAM_4N_TagaLike_10_29_23_55_general_tonicInputs__GA_only.mat',...
+%     'VGAM_4N_TagaLike_10_30_08_41_general_tonicInputs__NN_classi_only.mat',...
+%     'VGAM_4N_TagaLike_10_30_13_43_general_tonicInputs__NN_classi_only.mat'};
+% Legends = {'GA1','GA2','NN1','NN2'};
+
 % % % LOAD files:
-InFiles_names = {'VGAM_4N_TagaLike_10_29_20_38_general_tonicInputs__GA_only.mat',...
-    'VGAM_4N_TagaLike_10_29_23_55_general_tonicInputs__GA_only.mat',...
-    'VGAM_4N_TagaLike_10_30_08_41_general_tonicInputs__NN_classi_only.mat',...
-    'VGAM_4N_TagaLike_10_30_13_43_general_tonicInputs__NN_classi_only.mat'};
-Legends = {'GA1','GA2','NN1','NN2'};
+InFiles_names = {'VGAM_4N_TagaLike_11_02_11_31_general_tonicInputs_TEST__GA_only.mat'};
+Legends = {'GA1'};
 
 % % % the order of the parametrs in CPG Sequence:
 seqOrder = {'tau' ,'b', 'c1','c2', 'w1', 'w2', 'w3', 'w4',...
@@ -75,15 +79,16 @@ x_data = 1:last_gen;
 num_of_clusters = 4;
 
 %% 
-GA_file_num = 2;
-genNum = 10;
-% GA_graphs.plot_seqs_in_gen(GA_file_num,genNum,1:16)
+GA_file_num = 1;
+genNum = 5;
+GA_graphs.plot_seqs_in_gen(GA_file_num,genNum,1:16)
 
-duration = 20;
-geneID = 2;
-% GA_graphs.animate_seq(GA_file_num,genNum, geneID, duration, [])
+duration = 100;
+timestep = 0.01;
+geneID = 1;
+% GA_graphs.animate_seq(GA_file_num,genNum, geneID, duration,timestep, [])
 
-clear GA_file_num genNum duration geneID
+% clear GA_file_num genNum duration geneID
 %% plot max fit over generation:
 close all
 whichFit2Plot = 3;%1:11;
