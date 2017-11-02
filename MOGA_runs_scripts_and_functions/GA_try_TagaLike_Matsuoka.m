@@ -13,7 +13,7 @@ GA.FileIn = fileIn;
 FileName_start = 'VGAM_4N_TagaLike_';
 FileName_date = datestr(now,'mm_dd_hh_MM');
 % FileName_extra = '_1tonicInput_';
-FileName_extra = '_test_oneFitness_only_';
+FileName_extra = '_general_tonicInputs_';
 
 switch whichCase
     case 'GA only'
@@ -101,14 +101,15 @@ switch use_NN
 
         maxN = 250000;
 
-        inFilenames = {'MatsRandomRes_TagaLike_TrainingSet.mat'};
+%         inFilenames = {'MatsRandomRes_TagaLike_TrainingSet.mat'};
+        inFilenames = {'MatsRandomRes_TagaLike_2tonicInputs_TrainingSet.mat'};
         
-        MML.sample_genes = {'\tau_r','beta',...
-            'amp_4n_symm','4neuron_taga_like'}; 
+        MML.sample_genes = {'\tau_r','beta','4neuron_taga_like'}; 
         MML.target_genes = {'n_osc and osc classes'};
 
         [samples, targets] = ...
             MML.prepare_classi_NNData('4N_CPG',inFilenames, maxN);
+        
         MML.normParams = [];
 
         architecture = [10];
@@ -166,6 +167,14 @@ function seq = NN_classi_Fcn_improved(Gen,net,seq,lastGen,lastGenes, X, T)
         return
     end
     
+%     %%%%%%%%%%%%%%% Test 29.10.2017 %%%%%%%%%%%%%%%%%%%%%%
+%     % don't do anything if CPG IS oscillating
+        % the hip is more important than the ankle!
+%     if ~isnan(periods(2,1)) 
+%         return
+%     end
+%     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
     try
         rand_seq = [lastGenes;...
             MML.Gen.RandSeq(2000)];
@@ -176,7 +185,7 @@ function seq = NN_classi_Fcn_improved(Gen,net,seq,lastGen,lastGenes, X, T)
     end
 
     ids = seq < Gen.Range(1,:) | seq > Gen.Range(2,:);
-    seq(ids) = min(max(seq(ids),Gen.Range(1,ids)),Gen.Range(2,ids));
+%     seq(ids) = min(max(seq(ids),Gen.Range(1,ids)),Gen.Range(2,ids));
 end
 
 function seq = rescaleFcn(Gen, seq, X, T)

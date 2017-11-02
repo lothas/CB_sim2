@@ -2,7 +2,7 @@
 close all; clc; clear all;
 
 %% Create genome (only if necessary)
-generate_GenomeFile('4N_tagaLike')
+generate_GenomeFile('4N_tagaLike_generalInput')
 % CPG strucute: (ALSO Symm W_ij = W_ji)
 %   H_F   H_E           % 
 % 4 O-----O 3           %   
@@ -24,27 +24,31 @@ MML.tStep = 0.05;
 MML.tEnd = 15;
 
 header = sprintf('tau ratio is equal to %d \n',MML.Sim.Con.tau_ratio);
-header = [header,sprintf('data is for 4N TagaLike case \n')];
+header = [header,sprintf('data is for 4N TagaLike case with different C for each joint\n')];
 header = [header,sprintf('seq Order: \n')];
-header = [header,sprintf('"tau","b","c","w1","w2","w3","w4","k_tau","k_c" \n')];
+header = [header,sprintf('"tau","b","c1","c2","w1","w2","w3","w4","k_tau","k_c1","k_c2" \n')];
 header = [header,sprintf('"tau" in range ( %.2f , %.2f ) \n',...
     MML.Gen.Range(1,1),MML.Gen.Range(2,1))];
 header = [header,sprintf('"b" in range ( %.2f , %.2f ) \n',...
     MML.Gen.Range(1,2),MML.Gen.Range(2,2))];
-header = [header,sprintf('"c" in range ( %.2f , %.2f ) \n',...
+header = [header,sprintf('"c1" in range ( %.2f , %.2f ) \n',...
     MML.Gen.Range(1,3),MML.Gen.Range(2,3))];
-header = [header,sprintf('"w_1" in range ( %.2f , %.2f ) \n',...
+header = [header,sprintf('"c2" in range ( %.2f , %.2f ) \n',...
     MML.Gen.Range(1,4),MML.Gen.Range(2,4))];
+header = [header,sprintf('"w_1" in range ( %.2f , %.2f ) \n',...
+    MML.Gen.Range(1,5),MML.Gen.Range(2,4))];
 header = [header,sprintf('"w_2" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,5),MML.Gen.Range(2,5))];
+    MML.Gen.Range(1,6),MML.Gen.Range(2,5))];
 header = [header,sprintf('"w_3" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,6),MML.Gen.Range(2,6))];
+    MML.Gen.Range(1,7),MML.Gen.Range(2,6))];
 header = [header,sprintf('"w_4" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,7),MML.Gen.Range(2,7))];
+    MML.Gen.Range(1,8),MML.Gen.Range(2,7))];
 header = [header,sprintf('"k_tau" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,8),MML.Gen.Range(2,8))];
-header = [header,sprintf('"k_c" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,9),MML.Gen.Range(2,9))];
+    MML.Gen.Range(1,9),MML.Gen.Range(2,8))];
+header = [header,sprintf('"k_c1" in range ( %.2f , %.2f ) \n',...
+    MML.Gen.Range(1,10),MML.Gen.Range(2,9))];
+header = [header,sprintf('"k_c2" in range ( %.2f , %.2f ) \n',...
+    MML.Gen.Range(1,11),MML.Gen.Range(2,9))];
 
 disp(header);
 %% Train data: get All osc and n-osc (train data for classifier)

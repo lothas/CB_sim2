@@ -53,9 +53,7 @@ switch whichCase
                       1 ,      1,                   2,                            2,        1 ,                 2,            0 };
         Range = {  0.02 ,    0.2,                mamp,                           mw,      -10 ,           [-1,-1]; % Min
                    0.25 ,    2.5,                Mamp,                           Mw,       10 ,             [1,1]}; % Max
-
-
-    case '4N_tagaLike'
+    case '4N_tagaLike_1symmInput'
         genome_file = 'MatsuokaGenome_4Neuron_tagaLike.mat';
         maxAnkle = 20;   % Max ankle torque
         maxHip = 8;    % Max hip torque
@@ -83,15 +81,33 @@ switch whichCase
         Range = {  0.02 ,    0.2,             0,                    mw,      -10 ,                 -0.1*maxAnkle; % Min
                    0.25 ,    2.5,      maxAnkle,                    Mw,       10 ,                  0.1*maxAnkle}; % Max
 
-        % Note: the current encoding is for symmetric tonic inputs. 
-        %   you can change it. but don't forget to change 
-        %   the adaptation coef ('k_c') as well       
+    case '4N_tagaLike_generalInput'
+        genome_file = 'MatsuokaGenome_4Neuron_tagaLike.mat';
+        maxAnkle = 20;   % Max ankle torque
+        maxHip = 8;    % Max hip torque
+        Mamp = [maxAnkle*ones(1,2*nAnkle), maxHip*ones(1,2*nHip)];
+        mamp = 0*Mamp;
         
-%         % Final genome with tau_r + beta (constant tau_u/tau_v ratio) 
-%         Keys = {'\tau_r', 'beta',      'amp',   '4neuron_taga_like', 'ks_\tau',             'ks_c', 'IC_matsuoka';
-%                       1 ,      1,          4,                     4,        1 ,                  4,            0 };
-%         Range = {  0.02 ,    0.2,       mamp,                    mw,      -10 ,          -0.1*Mamp; % Min
-%                    0.25 ,    2.5,       Mamp,                    Mw,       10 ,           0.1*Mamp}; % Max
+        mw = 0*ones(1,4);
+        Mw = 10*ones(1,4);
+        
+        % CPG strucute: (ALSO Symm W_ij = W_ji)
+        %   H_F   H_E           % 
+        % 4 O-----O 3           %   
+        %    \    |             %   w = [0  , W12, 0  , 0  ; 
+        %     \   |             %        W21, 0  , w23, W24;
+        %      \  |             %        0  , 0  , 0  , W34;
+        %       \ |             %        0  , 0  , w43, 0  ;
+        % 1 O-----O 2           % w12=w21 = w1  
+        %  A_F    A_E           % w23 = w2
+        %                       % w24 = w3
+        %                       % w43=w34 = w4
+        
+        % Final genome with tau_r + beta (constant tau_u/tau_v ratio) 
+        Keys = {'\tau_r', 'beta',      'amp_same4each_joint',   '4neuron_taga_like', 'ks_\tau','ks_c_same4each_joint', 'IC_matsuoka';
+                      1 ,      1,                          2,                     4,        1 ,                     2,            0 };
+        Range = {  0.02 ,    0.2,        0*[maxAnkle,maxHip],                    mw,      -10 , -0.1*[maxAnkle,maxHip]; % Min
+                   0.25 ,    2.5,          [maxAnkle,maxHip],                    Mw,       10 ,  0.1*[maxAnkle,maxHip]}; % Max
 
 
     case '4N_general'

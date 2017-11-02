@@ -126,7 +126,9 @@ else
             case 'amp_2n_dif_inputs' % different tonic inputs to both MN
                 MO.Amp0 = [0;0;value(1);value(2)];
                 MO.Amp = MO.Amp0;
-                
+            case 'amp_same4each_joint'
+                MO.Amp0 = [value(1);value(1);value(2);value(2)];
+                MO.Amp = MO.Amp0;
             case 'amp_4n_symm'
                 MO.Amp0 = [value;value;value;value];
                 MO.Amp = MO.Amp0;
@@ -146,6 +148,8 @@ else
                 MO.ks_out = [0;0;value(1);value(2)];
             case {'ks_c_4n_symm'}
                 MO.ks_out = [value;value;value;value];
+            case {'ks_c_same4each_joint'}
+                MO.ks_out = [value(1);value(1);value(2);value(2)];
             
             otherwise
                 error(['Set failed: ',key,' property not found']);
