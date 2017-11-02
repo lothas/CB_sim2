@@ -238,7 +238,11 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
 %                 % Perform adaptation based on terrain slope
                 MO = MO.Adaptation(Slope);
 %             end
-%             
+
+                % % CHANGE: 2/11/2017
+                % % %reverse the torque at ground impact
+                MO.OutM = MO.OutM*(-1);
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %             if ~isempty(MO.ExtP_reset)
 %                 % Perform a phase reset
 %                 Xcon = MO.ExtP_reset;

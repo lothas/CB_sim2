@@ -61,8 +61,9 @@ MML.tEnd = 15;
 % Legends = {'GA1','GA2','NN1','NN2'};
 
 % % % LOAD files:
-InFiles_names = {'VGAM_4N_TagaLike_11_02_11_31_general_tonicInputs_TEST__GA_only.mat'};
-Legends = {'GA1'};
+InFiles_names = {'VGAM_4N_TagaLike_11_02_13_06_general_tonicInputs_TEST__GA_only.mat',...
+    'VGAM_4N_TagaLike_11_02_13_37_general_tonicInputs_TEST__NN_classi_only.mat'};
+Legends = {'GA1','NN1'};
 
 % % % the order of the parametrs in CPG Sequence:
 seqOrder = {'tau' ,'b', 'c1','c2', 'w1', 'w2', 'w3', 'w4',...
@@ -72,25 +73,25 @@ GA_graphs = plotMOOGA4Paper(MML,InFiles_names,Legends,seqOrder);
 
 % which fit to plot:
 FitNum = 3;% get x-axis data:
-last_gen = 10;
+last_gen = 5;
 x_data = 1:last_gen;
 
 % home many clusters in divesity plots:
 num_of_clusters = 4;
 
 %% 
-GA_file_num = 1;
+GA_file_num = 2;
 genNum = 5;
-GA_graphs.plot_seqs_in_gen(GA_file_num,genNum,1:16)
+GA_graphs.plot_seqs_in_gen(GA_file_num,genNum,1:9)
 
 duration = 100;
-timestep = 0.01;
-geneID = 1;
+timestep = 0.05;
+geneID = 8;
 % GA_graphs.animate_seq(GA_file_num,genNum, geneID, duration,timestep, [])
 
 % clear GA_file_num genNum duration geneID
 %% plot max fit over generation:
-close all
+close all; clc
 whichFit2Plot = 3;%1:11;
 GA_graphs.plot_fit_over_gen(whichFit2Plot,last_gen);
 

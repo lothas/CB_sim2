@@ -4,7 +4,7 @@ function [  ] = GA_try_TagaLike_Matsuoka(whichCase,fileIn)
 
 
 
-GA = MOOGA(5,500);
+GA = MOOGA(10,1000);
 GA = GA.SetFittest(15,15,0.5);
 GA.JOAT = 2; GA.Quant = 0.7;
 
@@ -13,7 +13,7 @@ GA.FileIn = fileIn;
 FileName_start = 'VGAM_4N_TagaLike_';
 FileName_date = datestr(now,'mm_dd_hh_MM');
 % FileName_extra = '_1tonicInput_';
-FileName_extra = '_general_tonicInputs_TEST_';
+FileName_extra = '_general_tonicInputs_';
 
 switch whichCase
     case 'GA only'
@@ -22,7 +22,7 @@ switch whichCase
         % Check ankle Torque?
         %   Assign a check function to check if a CPG doesn't have an oscillatory
         %   Ankle joint.
-        GA.genomeChevkFcn = @genomeChevkFcn;
+        GA.genomeChevkFcn = [];%@genomeChevkFcn;
 %         out file name:
         GA.FileOut = [FileName_start,FileName_date,FileName_extra,...
             '_GA_only','.mat'];
