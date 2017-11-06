@@ -61,9 +61,11 @@ MML.tEnd = 15;
 % Legends = {'GA1','GA2','NN1','NN2'};
 
 % % % LOAD files:
-InFiles_names = {'VGAM_4N_TagaLike_11_02_13_06_general_tonicInputs_TEST__GA_only.mat',...
-    'VGAM_4N_TagaLike_11_02_13_37_general_tonicInputs_TEST__NN_classi_only.mat'};
-Legends = {'GA1','NN1'};
+InFiles_names = {'VGAM_4N_TagaLike_11_06_08_52_general_tonicInputs__GA_only.mat',...
+    'VGAM_4N_TagaLike_11_06_09_25_general_tonicInputs__NN_classi_only.mat',...
+    'VGAM_4N_TagaLike_11_06_10_05_general_tonicInputs__GA_only.mat',...
+    'VGAM_4N_TagaLike_11_06_10_55_general_tonicInputs__NN_classi_only.mat'};
+Legends = {'GA1 500genes','NN1 500genes','GA2 1000genes','NN2 1000genes'};
 
 % % % the order of the parametrs in CPG Sequence:
 seqOrder = {'tau' ,'b', 'c1','c2', 'w1', 'w2', 'w3', 'w4',...
@@ -80,19 +82,51 @@ x_data = 1:last_gen;
 num_of_clusters = 4;
 
 %% 
-GA_file_num = 2;
+% close all
+GA_file_num = 4;
 genNum = 5;
 GA_graphs.plot_seqs_in_gen(GA_file_num,genNum,1:9)
 
-duration = 100;
+clear GA_file_num genNum
+%%
+GA_file_num = 4;
+genNum = 2;
+duration = 20;
 timestep = 0.05;
-geneID = 8;
-% GA_graphs.animate_seq(GA_file_num,genNum, geneID, duration,timestep, [])
+geneID = 2;
+simRun = GA_graphs.animate_seq(GA_file_num,genNum, geneID,duration,timestep, []);
+%%
+T_ankle = max(simRun.Out.X(:,5),0)-max(simRun.Out.X(:,6),0);
+T_hip = max(simRun.Out.X(:,7),0)-max(simRun.Out.X(:,8),0);
+
+figure;
+subplot(2,1,1);
+plot(simRun.Out.T,simRun.Out.Torques(:,1)); hold on;
+plot(simRun.Out.T,simRun.Out.Torques(:,2));
+legend ('\tau_{\theta_1}','\tau_{\theta_2}');
+xlabel('time'); ylabel('Torque');
+grid minor;
+
+subplot(2,1,2);
+plot(simRun.Out.T,T_ankle); hold on;
+plot(simRun.Out.T,T_hip);
+legend ('ankle Torque','hip Torque');
+xlabel('time'); ylabel('Torque');
+grid minor;
+
+figure;
+plot(simRun.Out.T,T_ankle,'--r'); hold on;
+plot(simRun.Out.T,T_hip),'--b';
+plot(simRun.Out.T,simRun.Out.Torques(:,1),'r'); hold on;
+plot(simRun.Out.T,simRun.Out.Torques(:,2),'b');
+legend ('ankle Torque','hip Torque','\tau_{\theta_1}','\tau_{\theta_2}');
+xlabel('time'); ylabel('Torque');
+grid minor;
 
 % clear GA_file_num genNum duration geneID
 %% plot max fit over generation:
 close all; clc
-whichFit2Plot = 3;%1:11;
+whichFit2Plot = 1:3;%1:11;
 GA_graphs.plot_fit_over_gen(whichFit2Plot,last_gen);
 
 %% plot max and Mean fit over generation num:

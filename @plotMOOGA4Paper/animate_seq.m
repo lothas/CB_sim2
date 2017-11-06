@@ -1,4 +1,4 @@
-function [ ] = animate_seq(obj,whichGA,geneNum, GenID, Dur, timestep, filename)
+function [Sim] = animate_seq(obj,whichGA,geneNum, GenID, Dur, timestep, filename)
 %PLOT_SEQ plots the CPG output for a given sequence
 
 GA = obj.data{1,whichGA}.GA;

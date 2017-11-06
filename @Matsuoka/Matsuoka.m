@@ -111,7 +111,7 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
             try
                 Torques = MO.OutM*y;
             catch
-                disp('f*ck!')
+                disp('unable to calculate torques')
             end
 %             Torques = MO.OutM*MO.Switch;
 
@@ -240,9 +240,10 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
 %             end
 
                 % % CHANGE: 2/11/2017
-                % % %reverse the torque at ground impact
-                MO.OutM = MO.OutM*(-1);
+                % % %reverse the hip torque at ground impact
+%                 MO.OutM = [1,0; 0, -1]*MO.OutM;
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                
 %             if ~isempty(MO.ExtP_reset)
 %                 % Perform a phase reset
 %                 Xcon = MO.ExtP_reset;
