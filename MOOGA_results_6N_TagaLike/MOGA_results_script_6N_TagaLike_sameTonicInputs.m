@@ -3,7 +3,7 @@
 % define Mutation strength:
 MutDelta0 = 0.04;   MutDelta1 = 0.02;
 
-nAnkle = 1;%1; % Number of ankle torques
+nAnkle = 2; % Number of ankle torques
 nHip = 1;   % Number of hip torques
 N = nAnkle+nHip;
 
@@ -13,26 +13,41 @@ maxHip = 8;    % Max hip torque
 Mamp = [maxAnkle*ones(1,2*nAnkle), maxHip*ones(1,2*nHip)];
 mamp = 0*Mamp;
 
-mw = 0*ones(1,4);
-Mw = 10*ones(1,4);
+mw = 0*ones(1,6);
+Mw = 5*ones(1,6);
 
 % CPG strucute: (ALSO Symm W_ij = W_ji)
-%   H_F   H_E           % 
-% 4 O-----O 3           %   
-%    \    |             %   w = [0  , W12, 0  , 0  ; 
-%     \   |             %        W21, 0  , w23, W24;
-%      \  |             %        0  , 0  , 0  , W34;
-%       \ |             %        0  , 0  , w43, 0  ;
-% 1 O-----O 2           % w12=w21 = w1  
-%  A_F    A_E           % w23 = w2
-%                       % w24 = w3
-%                       % w43=w34 = w4
+% 1) every pair of Extensor and reflexor neurons are connected to
+%   each other with symmetric weights.
+% 2) both of the ankles' Extensor neurons are connected to both of the hip neurons
+%
+%  A2_F    A2_E
+%(3) O-----O (4)
+%       /  |
+%      /   |
+%     /    |
+%    /     |
+%   H_F   H_E
+%(5) O-----O (6)  
+%     \    |             %   w = [0  , W12, 0  , 0  , 0  , 0; 
+%      \   |             %        W21, 0  , 0  , 0  , W25, W26;
+%       \  |             %        0  , 0  , 0  , W34, 0  , 0;
+%        \ |             %        0  , 0  , W43, 0  , W45, W46;
+%(1) O-----O (2)         %        0  , 0  , 0  , 0  , 0  , W56;
+%   A1_F    A1_E         %        0  , 0  , 0  , 0  , W65, 0;
+%                        
+%                        w12 = w21 = w34 = w43 = w1  
+%                        w56 = 65  = w2
+%                        w25 = w3
+%                        w26 = w4
+%                        w45 = w5
+%                        w46 = w6
 
 % Final genome with tau_r + beta (constant tau_u/tau_v ratio) 
-Keys = {'\tau_r', 'beta',      'amp_same4each_joint',   '4neuron_taga_like', 'ks_\tau','ks_c_same4each_joint', 'IC_matsuoka';
-              1 ,      1,                          2,                     4,        1 ,                     2,            0 };
-Range = {  0.02 ,    0.2,        0*[maxAnkle,maxHip],                    mw,      -10 , -0.1*[maxAnkle,maxHip]; % Min
-           0.25 ,    2.5,          [maxAnkle,maxHip],                    Mw,       10 ,  0.1*[maxAnkle,maxHip]}; % Max
+Keys = {'\tau_r', 'beta', 'amp_6n_symm',   '6neuron_taga_like', 'ks_\tau',     'ks_c_6n_symm', 'IC_matsuoka';
+              1 ,      1,             1,                     6,        1 ,                 1 ,            0 };
+Range = {  0.02 ,    0.2,             0,                    mw,      -10 ,                 -0.1*maxAnkle; % Min
+           0.25 ,    2.5,      maxAnkle,                    Mw,       10 ,                  0.1*maxAnkle}; % Max
 
        
 save(genome_file, 'nAnkle', 'nHip', 'maxAnkle', 'maxHip', ...
@@ -58,15 +73,16 @@ MML.nNeurons = 2*N;
 clear N;
 
 % % % LOAD files:
-InFiles_names = {'VGAM_4N_TagaLike_10_29_20_38_general_tonicInputs__GA_only.mat',...
-    'VGAM_4N_TagaLike_10_29_23_55_general_tonicInputs__GA_only.mat',...
-    'VGAM_4N_TagaLike_10_30_08_41_general_tonicInputs__NN_classi_only.mat',...
-    'VGAM_4N_TagaLike_10_30_13_43_general_tonicInputs__NN_classi_only.mat'};
-Legends = {'GA1','GA2','NN1','NN2'};
+% NOTE: because of some changes for sim.con Code, in order to run these
+%   simulation we need to set 'twoAnkleFlag' and 'jointSelM' manually
+InFiles_names = {'VGAM_6N_TagaLike_11_08_07_48_general_tonicInputs__GA_only.mat',...
+    'VGAM_6N_TagaLike_11_08_09_10_general_tonicInputs__NN_classi_only.mat',...
+    'VGAM_6N_TagaLike_11_08_18_01_general_tonicInputs__GA_only.mat',...
+    'VGAM_6N_TagaLike_11_08_19_36_general_tonicInputs__NN_classi_only.mat'};
+Legends = {'GA1','NN1','GA2','NN2'};
 
 % % % the order of the parametrs in CPG Sequence:
-seqOrder = {'tau' ,'b', 'c1','c2', 'w1', 'w2', 'w3', 'w4',...
-    'k_tau','k_{c1}','k_{c2}'};
+seqOrder = {'tau' ,'b', 'c', 'w1', 'w2', 'w3', 'w4', 'w5', 'w6','k_tau','k_{c}'};
 
 GA_graphs = plotMOOGA4Paper(MML,InFiles_names,Legends,seqOrder);
 
@@ -80,18 +96,19 @@ num_of_clusters = 4;
 
 %% 
 % close all
-GA_file_num = 2;
+GA_file_num = 4;
 genNum = 10;
 GA_graphs.plot_seqs_in_gen(GA_file_num,genNum,4)
 
 clear GA_file_num genNum
 %%
-GA_file_num = 1;
+GA_file_num = 4;
 genNum = 10;
-duration = 20;
+duration = 10;
 timestep = 0.05;
-geneID = 271;
-simRun = GA_graphs.animate_seq(GA_file_num,genNum, geneID,duration,timestep, []);
+geneID = 439;
+% simRun = GA_graphs.animate_seq(GA_file_num,genNum, geneID,duration,timestep, []);
+simRun = GA_graphs.stickFigure_plot(GA_file_num,genNum, geneID,duration,timestep, []);
 %%
 n_ankle = 2;
 n_hip = 1;
@@ -125,12 +142,12 @@ grid minor;
 % clear GA_file_num genNum duration geneID
 %% plot max fit over generation:
 close all; clc
-whichFit2Plot = [1,3];%1:11;
+whichFit2Plot = 1:3;%1:11;
 GA_graphs.plot_fit_over_gen(whichFit2Plot,last_gen);
 
 %% plot max and Mean fit over generation num:
 close all
-whichFit2Plot = 1:2;%1:3;
+whichFit2Plot = 1;%1:3;
 % GA_graphs.plot_mean_fit_over_gen(whichFit2Plot,last_gen,'all')
 
 [x_data,y_data_mean] = ...
@@ -237,22 +254,24 @@ MML.perLimOut = MML.perLim + [-0.08 0.08]; % Desired period range
 MML.tStep = 0.05;
 MML.tEnd = 15;
 
-% % LOAD GA_only files:
-% InFiles_names = {'VGAM_4N_TagaLike_10_24_10_25_1tonicInput__GA_only.mat',...
-%     'VGAM_4N_TagaLike_10_23_17_27_1tonicInput__GA_only.mat',...
-%     'VGAM_4N_TagaLike_10_24_00_32_1tonicInput__GA_only.mat'};
-% Legends = {'GA1','GA2','GA3'};
 % LOAD GA_only files:
-InFiles_names = {'VGAM_4N_TagaLike_10_24_10_25_1tonicInput__GA_only.mat',...
-    'VGAM_4N_TagaLike_10_23_17_27_1tonicInput__GA_only.mat'};
-Legends = {'GA1','GA2'};
+% % % LOAD files:
+InFiles_names = {'VGAM_6N_TagaLike_11_06_18_34_general_tonicInputs__GA_only.mat',...
+    'VGAM_6N_TagaLike_11_07_08_11_general_tonicInputs__GA_only.mat',...
+    'VGAM_6N_TagaLike_11_07_16_03_general_tonicInputs__GA_only.mat',...
+    'VGAM_6N_TagaLike_11_08_07_48_general_tonicInputs__GA_only.mat',...
+    'VGAM_6N_TagaLike_11_08_18_01_general_tonicInputs__GA_only.mat'}
+Legends = {'GA1'};
 GA_only = plotMOOGA4Paper(MML,InFiles_names,Legends,seqOrder);
 
 % % LOAD GA_NN files:
-InFiles_names = {'VGAM_4N_TagaLike_10_24_10_15_1tonicInput__NN_classi_only_wrong_C.mat',...
-    'VGAM_4N_TagaLike_10_24_14_29_1tonicInput__NN_classi_only_wrong_C.mat',...
-    'VGAM_4N_TagaLike_10_24_20_35_1tonicInput__NN_classi_only_wrong_C.mat'};
-Legends = {'NN1','NN2','NN3'};
+% % % LOAD files:
+InFiles_names = {'VGAM_6N_TagaLike_11_06_19_24_general_tonicInputs__NN_classi_only.mat',...
+    'VGAM_6N_TagaLike_11_07_10_10_general_tonicInputs__NN_classi_only.mat',...
+    'VGAM_6N_TagaLike_11_07_18_56_general_tonicInputs__NN_classi_only.mat',...
+    'VGAM_6N_TagaLike_11_08_09_10_general_tonicInputs__NN_classi_only.mat',...
+    'VGAM_6N_TagaLike_11_08_19_36_general_tonicInputs__NN_classi_only.mat'};
+Legends = {'NN1'};
 GA_NN = plotMOOGA4Paper(MML,InFiles_names,Legends,seqOrder);
 
 % get x-axis data:
@@ -279,9 +298,9 @@ for j=1:3
     plot(x_data,GA_NN_mean);
 %     errorbar(x_data,GA_NN_mean,GA_NN_std);
     xlabel('Generation number');
-    ylabel('Velocity Fitness Max');
+    ylabel('Fitness Mean');
     legend('MOGA','MOGA with NN assist');
-%     title([Title{1,j},'_{mean}']);
+    title([Title{1,j},'_{mean}']);
     grid minor
     axis([1,10,0,0.4]);
     set(gca,'fontsize',13)

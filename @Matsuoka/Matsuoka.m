@@ -1,8 +1,45 @@
 classdef Matsuoka < handle & matlab.mixin.Copyable
     % Version 0.1 - 04/01/2016
     
-    % Matsuoka oscillator class
-    
+%%    % Matsuoka oscillator class
+%     
+% *) 'y'- is the output from all of the neurons
+
+% *) 'OutM' - is the matrix which convert the CPG output ('y) to joints
+%   torques. for example, is we have 4 neurons:
+%   
+%     joints_Torques = OutM*y = |1,-1,0, 0|  * |y1| = |y1 - y2| = |tau_ankle|
+%                               |0, 0,1,-1|    |y2|   |y3 - y4|   |tau_hip  |
+%                                              |y3|
+%                                              |y4|
+%     
+%     Note: the ankle torque always comes first.
+% 
+% *) every step we also need to switch the sign of the CPG's hip torque.
+%       #) In the simulation the stance and swing leg are always switching
+%           at ground impact.
+%       #) The hip torque is defined in the simulation as the torque
+%           between the stance leg and the swing leg.
+%       #) we want the Matsuoka CPG to represent the actual torque of a
+%           real robot actuator. i.e. the CPG output need to represent the
+%           torque between the left leg to the right, regardless of which one
+%           of them is 'stance' or 'swing'.
+%     So, every time that in the model the stance and the swing are
+%     changing, we also chage the sign of the torque by changing the last
+%     row of 'OutM' which represents always the hip torque.
+%   Every ground impact we also multiply 'OutM' by [1,0;0,-1];
+% 
+% *) Important: if we use two ankle joints, then we need to switch between
+%           which pair of neurons go to the stance leg every step.
+%           'OutM' is defined:
+%           |1,-1,0, 0,0, 0| = every even step
+%           |0, 0,0, 0,1,-1|
+%           |0, 0,1,-1,0, 0| = every odd step
+%           |0, 0,0, 0,1,-1|
+% 
+
+
+%%
     properties
         name = 'Matsuoka'
         
@@ -30,7 +67,12 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
         % For case with two distinct ankle joints
         % every step a different pair of CPG neurons is chosen to actuate
         % the ankle.
-        jointSelM = diag([1,1,0,0,1,1]); % 1;
+        jointSelM = 1; %diag([1,1,0,0,1,1]);
+        
+        % if 'ture' then use 6neurons and actuate different ankles
+        %   if 'false then only actuate 'hip'
+        twoAnkleFlag = 0;
+        
         
         % Saturation
         MinSat; MaxSat;
@@ -72,16 +114,7 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
         end
         
         function MO = Reset(MO,Phase)
-%             if nargin<2
-%                 MO.Switch = 0*MO.Switch;
-%             else
-%                 % Find which Torques should be active
-%                 Start = MO.Offset;
-%                 End = Start + MO.Duration;
-%                 [Xperc] = MO.GetPhasePerc(Phase);
-%                 On = Xperc >= Start & Xperc < End;
-%                 MO.Switch = (MO.Amp.*On)';
-%             end 
+            
         end
         
         function MO = SetOutMatrix(MO, ppj)
@@ -97,8 +130,23 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
                     repmat([1, -1], 1, ppj(j));
                 p = p + 2*ppj(j);
             end
-        end
-            
+        end 
+        
+        function MO = SetAnkles_selection(MO, ankleNum)
+            % If we use two ankles the set 'jointSelM' that every step is
+            % chaging via event to be either:
+            %   diag([1,1,0,0,1,1]) - when the left leg is stance
+            % or,
+            %   diag([0,0,1,1,1,1]) - when the right leg is stance
+            if ankleNum == 2
+                MO.jointSelM = diag([1,1,0,0,1,1]);
+                MO.twoAnkleFlag = 1;
+            elseif ankleNum == 1
+                MO.jointSelM = 1;
+                MO.twoAnkleFlag = 0;
+            end
+        end 
+        
         function [Torques] = Output(MO, t, MOX, ~)
             y = max(MOX(1:2*MO.nPulses,:),0);
 %             y = diag(MO.Amp)*max(MOX(1:2*MO.nPulses,:),0);
@@ -108,7 +156,6 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
             catch
                 disp('unable to calculate torques')
             end
-%             Torques = MO.OutM*MO.Switch;
 
             % Apply saturation
             if ~isempty(MO.MinSat)
@@ -196,19 +243,15 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
 %                 % Perform adaptation based on terrain slope
                 MO = MO.Adaptation(Slope);
 %             end
-
-                % % CHANGE: 2/11/2017
-                % % %reverse the hip torque at ground impact
-%                 MO.OutM = [1,0; 0, -1]*MO.OutM;
-                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 
-                % % TEST: 6/11/2017
-                % define 3 pairs of neurons, thus both ankles have a
-                %   different signal.
-                MO.jointSelM = abs(MO.jointSelM - diag([1,1,1,1,0,0]));
+                if MO.twoAnkleFlag
+                    % define 3 pairs of neurons, thus both ankles have a
+                    %   different signal.
+                    MO.jointSelM = abs(MO.jointSelM - diag([1,1,1,1,0,0]));
+                end
+                
                 % % %reverse the hip torque after each ground impact
                 MO.OutM = [1,0; 0, -1]*MO.OutM;
-                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 
         end
         

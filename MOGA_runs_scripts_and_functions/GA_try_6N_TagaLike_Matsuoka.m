@@ -1,4 +1,5 @@
-function [  ] = GA_try_TagaLike_Matsuoka(whichCase,fileIn)
+function [  ] =...
+    GA_try_6N_TagaLike_Matsuoka(whichCase,fileIn,trainingDataFile)
 % Run MOOGA using only Vel, Nrg and Speed-range fitness but limiting the
 % simulation with a bounded foot size (ZMP threshold)
 
@@ -9,15 +10,14 @@ GA.JOAT = 2; GA.Quant = 0.7;
 
 GA.FileIn = fileIn;
 
-FileName_start = 'VGAM_4N_TagaLike_';
+FileName_start = 'VGAM_6N_TagaLike_';
 FileName_date = datestr(now,'mm_dd_hh_MM');
-% FileName_extra = '_1tonicInput_';
-FileName_extra = '_general_tonicInputs_';
+FileName_extra = '_same_tonicInputs_';
 
 % Check ankle Torque?
         %   Assign a check function to check if a CPG doesn't have an oscillatory
         %   Ankle joint.
-GA.genomeChevkFcn = [];%@genomeChevkFcn; %[];
+GA.genomeChevkFcn = [];%@genomeChevkFcn;
 
 switch whichCase
     case 'GA only'
@@ -57,7 +57,6 @@ switch whichCase
             '_NNclassi_and_rescale','.mat'];
 end
              
-
 GA.Graphics = 0;
 GA.ReDo = 1;
 
@@ -80,13 +79,12 @@ switch use_NN
         maxN = 250000;
         NNSamples = 500;
 
-        inFilenames =...
-            {'.mat'};
+        inFilenames = {trainingDataFile};
         
-        MML.sample_genes = {'\tau_r','4neuron_taga_like'}; 
-        MML.target_genes = {'beta'};
+        MML.sample_genes = {'\tau_r','beta','4neuron_taga_like'}; 
+        MML.target_genes = {'period'};
 
-        [samples, targets, normParams] = MML.prepare_reg_NNData('2N_CPG',inFilenames, maxN);
+        [samples, targets, normParams] = MML.prepare_reg_NNData('6N_CPG',inFilenames, maxN);
         MML.normParams = normParams;
 
         architecture = [10];
@@ -100,15 +98,12 @@ switch use_NN
         GANN_file = 'MatsGANN_classi.mat';
 
         maxN = 250000;
-
-%         inFilenames = {'MatsRandomRes_TagaLike_TrainingSet.mat'};
-        inFilenames = {'MatsRandomRes_TagaLike_2tonicInputs_TrainingSet.mat'};
         
-        MML.sample_genes = {'\tau_r','beta','4neuron_taga_like'}; 
+        inFilenames = {trainingDataFile};%
+        MML.sample_genes = {'\tau_r','beta','6neuron_taga_like'}; 
         MML.target_genes = {'n_osc and osc classes'};
-
         [samples, targets] = ...
-            MML.prepare_classi_NNData('4N_CPG',inFilenames, maxN);
+            MML.prepare_classi_NNData('6N_CPG',inFilenames, maxN);
 
         MML.normParams = [];
 
@@ -294,6 +289,7 @@ GA.Sim.Con.FBType = 0; % no slope feedback
 GA.Sim.Con.nPulses = N;
 GA.Sim.Con.stDim = 4*N;
 GA.Sim.Con = GA.Sim.Con.SetOutMatrix([nAnkle,nHip]);
+GA.Sim.Con = GA.Sim.Con.SetAnkles_selection(2); % set the simulation to work with two ankle joints
 GA.Sim.Con.MinSat = [-maxAnkle,-maxHip];
 GA.Sim.Con.MaxSat = [ maxAnkle, maxHip];
 
