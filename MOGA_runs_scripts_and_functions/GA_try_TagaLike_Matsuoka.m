@@ -4,7 +4,7 @@ function [  ] = GA_try_TagaLike_Matsuoka(whichCase,fileIn)
 
 
 
-GA = MOOGA(5,500);
+GA = MOOGA(10,2000);
 GA = GA.SetFittest(15,15,0.5);
 GA.JOAT = 2; GA.Quant = 0.7;
 
@@ -18,7 +18,7 @@ FileName_extra = '_general_tonicInputs_';
 % Check ankle Torque?
         %   Assign a check function to check if a CPG doesn't have an oscillatory
         %   Ankle joint.
-GA.genomeChevkFcn = @genomeChevkFcn; %[];
+GA.genomeChevkFcn = [];%@genomeChevkFcn; %[];
 
 switch whichCase
     case 'GA only'
@@ -102,15 +102,21 @@ switch use_NN
 
         maxN = 250000;
 
-%         inFilenames = {'MatsRandomRes_TagaLike_TrainingSet.mat'};
-        inFilenames = {'MatsRandomRes_TagaLike_2tonicInputs_TrainingSet.mat'};
+% %         inFilenames = {'MatsRandomRes_TagaLike_TrainingSet.mat'};
+%         inFilenames = {'MatsRandomRes_TagaLike_2tonicInputs_TrainingSet.mat'};
+%         
+%         MML.sample_genes = {'\tau_r','beta','4neuron_taga_like'}; 
+%         MML.target_genes = {'n_osc and osc classes'};
+% 
+%         [samples, targets] = ...
+%             MML.prepare_classi_NNData('4N_CPG',inFilenames, maxN);
         
-        MML.sample_genes = {'\tau_r','beta','4neuron_taga_like'}; 
+        inFilenames = {'MatsRandomRes_6N_TagaLike_TrainingSet.mat'};
+        MML.sample_genes = {'\tau_r','beta','6neuron_taga_like'}; 
         MML.target_genes = {'n_osc and osc classes'};
-
         [samples, targets] = ...
-            MML.prepare_classi_NNData('4N_CPG',inFilenames, maxN);
-        
+            MML.prepare_classi_NNData('6N_CPG',inFilenames, maxN);
+
         MML.normParams = [];
 
         architecture = [10];

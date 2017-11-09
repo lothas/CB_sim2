@@ -15,19 +15,7 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
         win = [];%[0, 3; 1, 0];
         wex = [];
         W = [];
-        
-%         % Parameters fo 2 nueons CPG
-%         tau0 = 0.25; tau = 0.25;
-%         tav0 = 0.5; tav = 0.5;
-%         tau_ratio = 5;
-%         beta = 2.5;
-%         u0 = 1;
-%         win = [];
-%         wex = [];
-%         W = [];
-
-
-        
+     
         stDim = 4; % state dimension
         nEvents = 1; % num. of simulation events
         
@@ -38,6 +26,11 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
         Amp0 = 1.5;%10
         Amp = 1.5;%10
         ExtPulses = [];
+        
+        % For case with two distinct ankle joints
+        % every step a different pair of CPG neurons is chosen to actuate
+        % the ankle.
+        jointSelM = diag([1,1,0,0,1,1]); % 1;
         
         % Saturation
         MinSat; MaxSat;
@@ -67,7 +60,8 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
             '2neuron_symm_weights','2neuron_general_weights',...
             'amp_2n_dif_inputs','amp_2n_same_inputs','ks_c_2n_symm','ks_c_2n_general',...
             '4neuron_symm_weights','amp_4n_symm','4neuron_taga_like','ks_c_4n_symm',...
-            'amp_same4each_joint','ks_c_same4each_joint'};
+            'amp_same4each_joint','ks_c_same4each_joint',...
+            'amp_6n_symm','6neuron_taga_like'};
     end
     
     methods
@@ -109,7 +103,8 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
             y = max(MOX(1:2*MO.nPulses,:),0);
 %             y = diag(MO.Amp)*max(MOX(1:2*MO.nPulses,:),0);
             try
-                Torques = MO.OutM*y;
+%                 Torques = MO.OutM*y;
+                Torques = MO.OutM*MO.jointSelM*y;
             catch
                 disp('unable to calculate torques')
             end
@@ -188,48 +183,11 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
             value = ones(MO.nEvents,1);
             isterminal = ones(MO.nEvents,1);
             direction = -ones(MO.nEvents,1);
-            
-            % Check for firing neuron
-%             Torques = MO.Output(0, X, 0);
-%             value(1) = -Torques(2,1);
-% 
-%             % Check for leg extension signal (for clearance)
-% %             value(2) = MO.P_LegE - X;
-%             
-%             % Check for switching on/off signal
-%             Xperc = MO.GetPhasePerc(X);
-%             value(3:2+MO.nPulses) = MO.Offset - Xperc;
-%             value(3+MO.nPulses:2+2*MO.nPulses) = ...
-%                 MO.Offset + MO.Duration - Xperc;
+
         end
         
         function [MO,Xa] = HandleEvent(MO, EvID, Xb)
             Xa = Xb;
-%             switch EvID
-%                 case 1
-%                     % Neuron fired
-%                     for i=1:MO.nPulses
-%                         if MO.Offset(i)==0;
-%                             % Turn on signal now
-%                             MO.Switch(i) = MO.Amp(i);
-%                         end
-%                     end
-%                     Xa = MO.P_reset; % reset phase
-%                 case 2
-%                     % Extend the leg
-%                     % This is done from the simulation file
-%                 case num2cell(3:2+MO.nPulses)
-%                     % Switch on signal
-%                     MO.Switch(EvID-2) = MO.Amp(EvID-2);
-%                 case num2cell(3+MO.nPulses:2+2*MO.nPulses)
-%                     % Switch off signal
-%                     PulseID = EvID-(2+MO.nPulses);
-%                     MO.Switch(PulseID) = 0;
-%                     if any(PulseID == MO.ExtPulses)
-%                         % Set offset back to 200%
-%                         MO.Offset(PulseID) = 2;
-%                     end
-%             end
         end
         
         function [MO, Xmod, Xcon] = HandleExtFB(MO, Xmod, Xcon, Slope)
@@ -244,33 +202,14 @@ classdef Matsuoka < handle & matlab.mixin.Copyable
 %                 MO.OutM = [1,0; 0, -1]*MO.OutM;
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 
-%             if ~isempty(MO.ExtP_reset)
-%                 % Perform a phase reset
-%                 Xcon = MO.ExtP_reset;
-%                 
-%                 % Check if any event happens at ExtP_reset
-%                 [value, it, dir] = MO.Events(Xcon); %#ok<NASGU,ASGLU>
-%                 EvIDs = find(value == 0);
-%                 for ev = 1:length(EvIDs)
-%                     [MO,Xcon] = MO.HandleEvent(EvIDs(ev),Xcon);
-%                 end
-%             end
-%             
-%             switch MO.FBImpulse
-%                 case 1 % 1 - add a constant value
-%                     Xmod(3:4) = Xmod(3:4) + MO.AngVelImp;
-%                 case 2 % 2 - set ang. vel. to certain value
-% %                     delta = MO.AngVelImp - Xmod(3:4)
-%                     Xmod(3:4) = MO.AngVelImp;
-%             end
-%             
-%             % Activate external pulses
-%             MO.Switch(MO.ExtPulses) = MO.Amp(MO.ExtPulses);
-%             MO.Offset(MO.ExtPulses) = MO.GetPhasePerc(Xcon);
-%             % Set the torque to get turned off after the neuron fires if
-%             % the off event is larger than 100% of osc. period
-%             Overflow = MO.Offset(MO.ExtPulses)+MO.Duration(MO.ExtPulses)>1;
-%             MO.Offset(MO.ExtPulses) = MO.Offset(MO.ExtPulses) - Overflow;
+                % % TEST: 6/11/2017
+                % define 3 pairs of neurons, thus both ankles have a
+                %   different signal.
+                MO.jointSelM = abs(MO.jointSelM - diag([1,1,1,1,0,0]));
+                % % %reverse the hip torque after each ground impact
+                MO.OutM = [1,0; 0, -1]*MO.OutM;
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                
         end
         
         function PlotTorques(MO, tstep, mux)

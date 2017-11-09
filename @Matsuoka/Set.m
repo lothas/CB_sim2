@@ -119,7 +119,7 @@ else
 %                     MO.Amp0 = value;
                 end
                 MO.Amp = MO.Amp0; 
-                
+          
             case 'amp_2n_same_inputs' % same tonic inputs to both MN
                 MO.Amp0 = [0;0;value(1);value(1)];
                 MO.Amp = MO.Amp0;
@@ -150,6 +150,23 @@ else
                 MO.ks_out = [value;value;value;value];
             case {'ks_c_same4each_joint'}
                 MO.ks_out = [value(1);value(1);value(2);value(2)];
+            case '6neuron_taga_like' % for case with 2 ankle torques (one for each foot)
+                MO.win = 0;
+                MO.wex = zeros(2*MO.nPulses);
+                MO.wex = [0       ,value(1),0       ,0       ,0       ,0;
+                          value(1),0       ,0       ,0       ,value(3),value(4);
+                          0       ,0       ,0       ,value(1),0       ,0;
+                          0       ,0       ,value(1),0       ,value(5),value(6);
+                          0       ,0       ,0       ,0       ,0       ,value(2);
+                          0       ,0       ,0       ,0       ,value(2),0;];
+            case 'amp_6n_symm'
+                MO.Amp0 = [value;value;value;value;value;value];
+                MO.Amp = MO.Amp0;
+            case {'ks_c_6n_symm'} % when we have only the hip joint
+                MO.ks_out = [value;value;value;value;value;value];
+            % Feedback        
+            % Controller Output    
+    
             
             otherwise
                 error(['Set failed: ',key,' property not found']);

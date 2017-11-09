@@ -25,7 +25,15 @@ close all; clear all; clc
 % GA_try_TagaLike_Matsuoka('GA + NN_classi',[]);
 
 %% 4N TagaLike CPG
-% generate_GenomeFile('4N_tagaLike_generalInput');
+generate_GenomeFile('4N_tagaLike_generalInput');
+GA_try_TagaLike_Matsuoka('GA only',[]);
+GA_try_TagaLike_Matsuoka('GA + NN_classi',[]);
+% GA_try_TagaLike_Matsuoka('GA only',[]);
+% GA_try_TagaLike_Matsuoka('GA + NN_classi',[]);
+
+%% 6N TagaLike CPG
+clc
+generate_GenomeFile('6N_tagaLike_2Ank_torques');
 GA_try_TagaLike_Matsuoka('GA only',[]);
 GA_try_TagaLike_Matsuoka('GA + NN_classi',[]);
 % GA_try_TagaLike_Matsuoka('GA only',[]);

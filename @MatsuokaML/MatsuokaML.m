@@ -71,7 +71,6 @@ classdef MatsuokaML
             obj.Sim.Con.MinSat = [-maxAnkle,-maxHip];
             obj.Sim.Con.MaxSat = [ maxAnkle, maxHip];
             
-%             obj.Sim = obj.GenDecode(obj.Sim, [0.1, 6.0, 2.2, 5.9, 4.7, 1.52, 1.94, 0.63, 1.22, 0.1, -0.17, 0, 1.88, 3.67, 0.89, 0, 1.57, 0, 0, 0, 0, 0]);
         end
         
     end

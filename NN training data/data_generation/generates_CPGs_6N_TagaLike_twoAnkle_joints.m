@@ -2,26 +2,21 @@
 close all; clc; clear all;
 
 %% Create genome (only if necessary)
-generate_GenomeFile('4N_tagaLike_generalInput')
-% CPG strucute: (ALSO Symm W_ij = W_ji)
-%   H_F   H_E           % 
-% 4 O-----O 3           %   
-%    \    |             %   w = [0  , W12, 0  , 0  ; 
-%     \   |             %        W21, 0  , w23, W24;
-%      \  |             %        0  , 0  , 0  , W34;
-%       \ |             %        0  , 0  , w43, 0  ;
-% 1 O-----O 2           % w12=w21 = w1  
-%  A_F    A_E           % w23 = w2
-%                       % w24 = w3
-%                       % w43=w34 = w4
+generate_GenomeFile('6N_tagaLike_2Ank_torques')
 
 %%
+
+% Set up the genome
+load('MatsuokaGenome_4Neuron_tagaLike.mat','N');
+
 % define the class:
 MML = MatsuokaML();
 MML.perLim = [0.68 0.78];
 MML.perLimOut = MML.perLim + [-0.08 0.08]; % Desired period range
 MML.tStep = 0.05;
 MML.tEnd = 15;
+MML.nNeurons = 2*N;
+clear N
 
 header = sprintf('tau ratio is equal to %d \n',MML.Sim.Con.tau_ratio);
 header = [header,sprintf('data is for 4N TagaLike case with different C for each joint\n')];
@@ -31,23 +26,23 @@ header = [header,sprintf('"tau" in range ( %.2f , %.2f ) \n',...
     MML.Gen.Range(1,1),MML.Gen.Range(2,1))];
 header = [header,sprintf('"b" in range ( %.2f , %.2f ) \n',...
     MML.Gen.Range(1,2),MML.Gen.Range(2,2))];
-header = [header,sprintf('"c1" in range ( %.2f , %.2f ) \n',...
+header = [header,sprintf('"c" in range ( %.2f , %.2f ) \n',...
     MML.Gen.Range(1,3),MML.Gen.Range(2,3))];
-header = [header,sprintf('"c2" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,4),MML.Gen.Range(2,4))];
 header = [header,sprintf('"w_1" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,5),MML.Gen.Range(2,5))];
+    MML.Gen.Range(1,4),MML.Gen.Range(2,4))];
 header = [header,sprintf('"w_2" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,6),MML.Gen.Range(2,6))];
+    MML.Gen.Range(1,5),MML.Gen.Range(2,5))];
 header = [header,sprintf('"w_3" in range ( %.2f , %.2f ) \n',...
-    MML.Gen.Range(1,7),MML.Gen.Range(2,7))];
+    MML.Gen.Range(1,6),MML.Gen.Range(2,6))];
 header = [header,sprintf('"w_4" in range ( %.2f , %.2f ) \n',...
+    MML.Gen.Range(1,7),MML.Gen.Range(2,7))];
+header = [header,sprintf('"w_5" in range ( %.2f , %.2f ) \n',...
     MML.Gen.Range(1,8),MML.Gen.Range(2,8))];
-header = [header,sprintf('"k_tau" in range ( %.2f , %.2f ) \n',...
+header = [header,sprintf('"w_6" in range ( %.2f , %.2f ) \n',...
     MML.Gen.Range(1,9),MML.Gen.Range(2,9))];
-header = [header,sprintf('"k_c1" in range ( %.2f , %.2f ) \n',...
+header = [header,sprintf('"k_tau" in range ( %.2f , %.2f ) \n',...
     MML.Gen.Range(1,10),MML.Gen.Range(2,10))];
-header = [header,sprintf('"k_c2" in range ( %.2f , %.2f ) \n',...
+header = [header,sprintf('"k_c" in range ( %.2f , %.2f ) \n',...
     MML.Gen.Range(1,11),MML.Gen.Range(2,11))];
 
 disp(header);
@@ -58,7 +53,7 @@ round_count = 0;
 max_round = 1000; % maximum iteraion for while loop (saftey reasons:)
 results = [];
 
-wanted_num_CPGs = 200000;
+wanted_num_CPGs = 100000;
 
 disp('start with the sim:');
 
@@ -94,36 +89,10 @@ end
 
 disp('sim end...');
 
-save('MatsRandomRes_TagaLike_TrainingSet.mat',...
+save('MatsRandomRes_6N_TagaLike_TrainingSet.mat',...
     'results','header');
 
 clear N
-
-%% plot CPG output:
-close all;
-
-% n=18;
-n = randsample(1:length(results),1);
-
-[out, ~, signal] = MML.runSim(results(n).seq);
-figure;
-subplot(2,1,1);
-plot(signal.T,signal.X);
-xlabel('time[sec]');    ylabel('X_i');
-legend('x1','x2','x3','x4','xp1','xp2','xp3','xp4');
-title({'X_i over time',...
-    ['id #',num2str(n),...
-    '    periods: ',...
-    num2str(out.periods')],...
-    ['PerOK1: ',num2str(out.perOK1),...
-    '    PerOK2: [',num2str(out.perOK2'),']'],...
-    ['neuronActive: ',num2str(out.neuronActive),...
-    '    neuronOsc: [',num2str(out.neuronOsc),']']});
-subplot(2,1,2)
-plot(signal.T,signal.signal(1,:),'b',signal.T,signal.signal(2,:),'r');
-legend('ankle','hip');
-clear signal out
-
 
 %% Run CB:
 

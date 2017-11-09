@@ -46,12 +46,16 @@ clear all; close all; clc
 % set default options
 set(0,'defaultlinelinewidth',2);
 
+load('MatsuokaGenome_4Neuron_tagaLike.mat','N');
+
 % define the class for CPG simulation:
 MML = MatsuokaML();
 MML.perLim = [0.68 0.78];
 MML.perLimOut = MML.perLim + [-0.08 0.08]; % Desired period range
 MML.tStep = 0.05;
 MML.tEnd = 15;
+MML.nNeurons = 2*N;
+clear N;
 
 % % % % LOAD files:
 % InFiles_names = {'VGAM_4N_TagaLike_10_29_20_38_general_tonicInputs__GA_only.mat',...
@@ -60,12 +64,15 @@ MML.tEnd = 15;
 %     'VGAM_4N_TagaLike_10_30_13_43_general_tonicInputs__NN_classi_only.mat'};
 % Legends = {'GA1','GA2','NN1','NN2'};
 
+% % % % LOAD files:
+% InFiles_names = {'VGAM_4N_TagaLike_11_06_13_48_general_tonicInputs__GA_only.mat',...
+%     'VGAM_4N_TagaLike_11_06_14_02_general_tonicInputs__NN_classi_only.mat'};
+% Legends = {'GA1 oscOnly','NN1 oscOnly'};
+
 % % % LOAD files:
-InFiles_names = {'VGAM_4N_TagaLike_11_06_08_52_general_tonicInputs__GA_only.mat',...
-    'VGAM_4N_TagaLike_11_06_09_25_general_tonicInputs__NN_classi_only.mat',...
-    'VGAM_4N_TagaLike_11_06_10_05_general_tonicInputs__GA_only.mat',...
-    'VGAM_4N_TagaLike_11_06_10_55_general_tonicInputs__NN_classi_only.mat'};
-Legends = {'GA1 500genes','NN1 500genes','GA2 1000genes','NN2 1000genes'};
+InFiles_names = {'VGAM_4N_TagaLike_11_06_18_34_general_tonicInputs__GA_only.mat',...
+    'VGAM_4N_TagaLike_11_06_19_24_general_tonicInputs__NN_classi_only.mat'};
+Legends = {'GA1 6Neurons','NN1 6Neurons'};
 
 % % % the order of the parametrs in CPG Sequence:
 seqOrder = {'tau' ,'b', 'c1','c2', 'w1', 'w2', 'w3', 'w4',...
@@ -75,7 +82,7 @@ GA_graphs = plotMOOGA4Paper(MML,InFiles_names,Legends,seqOrder);
 
 % which fit to plot:
 FitNum = 3;% get x-axis data:
-last_gen = 5;
+last_gen = 10;
 x_data = 1:last_gen;
 
 % home many clusters in divesity plots:
@@ -83,19 +90,29 @@ num_of_clusters = 4;
 
 %% 
 % close all
-GA_file_num = 4;
-genNum = 5;
-GA_graphs.plot_seqs_in_gen(GA_file_num,genNum,1:9)
+GA_file_num = 2;
+genNum = 10;
+GA_graphs.plot_seqs_in_gen(GA_file_num,genNum,9)
 
 clear GA_file_num genNum
 %%
-GA_file_num = 4;
-genNum = 2;
+GA_file_num = 2;
+genNum = 10;
 duration = 20;
 timestep = 0.05;
-geneID = 2;
+geneID = 271;
 simRun = GA_graphs.animate_seq(GA_file_num,genNum, geneID,duration,timestep, []);
 %%
+n_ankle = 2;
+n_hip = 1;
+N = n_ankle + n_hip;
+Torque = cell(1,N);
+TorquesNames = {'\tau_{ank1}','\tau_{ank2}','\tau_{hip}'};
+
+for i=1:N
+    Torque{1,i} = max(simRun.Out.X(:,4+(2*i-1)),0)-...
+        max(simRun.Out.X(:,4+(2*i)),0);
+end
 T_ankle = max(simRun.Out.X(:,5),0)-max(simRun.Out.X(:,6),0);
 T_hip = max(simRun.Out.X(:,7),0)-max(simRun.Out.X(:,8),0);
 
@@ -107,31 +124,23 @@ legend ('\tau_{\theta_1}','\tau_{\theta_2}');
 xlabel('time'); ylabel('Torque');
 grid minor;
 
-subplot(2,1,2);
-plot(simRun.Out.T,T_ankle); hold on;
-plot(simRun.Out.T,T_hip);
-legend ('ankle Torque','hip Torque');
-xlabel('time'); ylabel('Torque');
-grid minor;
-
-figure;
-plot(simRun.Out.T,T_ankle,'--r'); hold on;
-plot(simRun.Out.T,T_hip),'--b';
-plot(simRun.Out.T,simRun.Out.Torques(:,1),'r'); hold on;
-plot(simRun.Out.T,simRun.Out.Torques(:,2),'b');
-legend ('ankle Torque','hip Torque','\tau_{\theta_1}','\tau_{\theta_2}');
+subplot(2,1,2); hold on;
+for i=1:N
+    plot(simRun.Out.T,Torque{1,i});
+end
+legend (TorquesNames);
 xlabel('time'); ylabel('Torque');
 grid minor;
 
 % clear GA_file_num genNum duration geneID
 %% plot max fit over generation:
 close all; clc
-whichFit2Plot = 1:3;%1:11;
+whichFit2Plot = 3;%1:11;
 GA_graphs.plot_fit_over_gen(whichFit2Plot,last_gen);
 
 %% plot max and Mean fit over generation num:
 close all
-whichFit2Plot = 3;%1:3;
+whichFit2Plot = 1;%1:3;
 % GA_graphs.plot_mean_fit_over_gen(whichFit2Plot,last_gen,'all')
 
 [x_data,y_data_mean] = ...

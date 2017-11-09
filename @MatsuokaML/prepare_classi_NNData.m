@@ -36,6 +36,24 @@ function [ samples, targets] = ...
             
             % classifi all of the "bad" CPGs as "n-osc":
             periods(1,~good_ids) = NaN(1,sum(~good_ids));
+        case '6N_CPG'
+            % Filter CPG's where not both signals oscillating:
+            osc_ids = ~isnan(periods);
+            osc_ids = osc_ids(1,:) & osc_ids(2,:) & osc_ids(3,:);
+
+            % Filter CPG's where the is a big difference between hip and ankle:
+            periods_ratios = (periods(1,:)./periods(2,:));
+            diff_ids1 = (periods_ratios >  0.85) & (periods_ratios <  1.15); 
+            
+            periods_ratios = (periods(1,:)./periods(3,:));
+            diff_ids2 = (periods_ratios >  0.85) & (periods_ratios <  1.15); 
+            
+            good_ids = osc_ids & diff_ids1 & diff_ids2;
+            
+            periods = mean(periods,1);
+            
+            % classifi all of the "bad" CPGs as "n-osc":
+            periods(1,~good_ids) = NaN(1,sum(~good_ids));
     end
     
     % get the number of samples:
