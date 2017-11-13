@@ -4,7 +4,7 @@ function [  ] =...
 % simulation with a bounded foot size (ZMP threshold)
 
 
-GA = MOOGA(10,2000);
+GA = MOOGA(10,1000);
 GA = GA.SetFittest(15,15,0.5);
 GA.JOAT = 2; GA.Quant = 0.7;
 
@@ -100,7 +100,8 @@ switch use_NN
         maxN = 250000;
         
         inFilenames = {trainingDataFile};%
-        MML.sample_genes = {'\tau_r','beta','6neuron_taga_like'}; 
+%         MML.sample_genes = {'\tau_r','beta','6neuron_taga_like'}; 
+        MML.sample_genes = {'\tau_r','beta','6neuron_taga_like_symm'}; 
         MML.target_genes = {'n_osc and osc classes'};
         [samples, targets] = ...
             MML.prepare_classi_NNData('6N_CPG',inFilenames, maxN);

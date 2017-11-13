@@ -1,10 +1,8 @@
 
 close all; clc; clear all;
 
-%% Create genome (only if necessary)
+%% Run a more general case of Taga-like CPG (six types of weights)
 generate_GenomeFile('6N_tagaLike_2Ank_torques')
-
-%%
 
 % Set up the genome
 load('MatsuokaGenome_4Neuron_tagaLike.mat','N');
@@ -19,9 +17,9 @@ MML.nNeurons = 2*N;
 clear N
 
 header = sprintf('tau ratio is equal to %d \n',MML.Sim.Con.tau_ratio);
-header = [header,sprintf('data is for 4N TagaLike case with different C for each joint\n')];
+header = [header,sprintf('data is for 6N TagaLike case with same C for each joint\n')];
 header = [header,sprintf('seq Order: \n')];
-header = [header,sprintf('"tau","b","c1","c2","w1","w2","w3","w4","k_tau","k_c1","k_c2" \n')];
+header = [header,sprintf('"tau","b","c","w1","w2","w3","w4","w5","w6","k_tau","k_c" \n')];
 header = [header,sprintf('"tau" in range ( %.2f , %.2f ) \n',...
     MML.Gen.Range(1,1),MML.Gen.Range(2,1))];
 header = [header,sprintf('"b" in range ( %.2f , %.2f ) \n',...
@@ -44,6 +42,47 @@ header = [header,sprintf('"k_tau" in range ( %.2f , %.2f ) \n',...
     MML.Gen.Range(1,10),MML.Gen.Range(2,10))];
 header = [header,sprintf('"k_c" in range ( %.2f , %.2f ) \n',...
     MML.Gen.Range(1,11),MML.Gen.Range(2,11))];
+
+disp(header);
+
+%% %% Run a more specific case of Taga-like CPG (four types of weights)
+% in this case there is more symmetry in the CPG
+generate_GenomeFile('6N_tagaLike_2Ank_torques_symm');
+
+% Set up the genome
+load('MatsuokaGenome_4Neuron_tagaLike.mat','N');
+
+% define the class:
+MML = MatsuokaML();
+MML.perLim = [0.68 0.78];
+MML.perLimOut = MML.perLim + [-0.08 0.08]; % Desired period range
+MML.tStep = 0.05;
+MML.tEnd = 15;
+MML.nNeurons = 2*N;
+clear N
+
+header = sprintf('tau ratio is equal to %d \n',MML.Sim.Con.tau_ratio);
+header = [header,sprintf('data is for 6N TagaLike case with same C for each joint\n')];
+header = [header,sprintf('seq Order: \n')];
+header = [header,sprintf('"tau","b","c","w1","w2","w3","w4","k_tau","k_c" \n')];
+header = [header,sprintf('"tau" in range ( %.2f , %.2f ) \n',...
+    MML.Gen.Range(1,1),MML.Gen.Range(2,1))];
+header = [header,sprintf('"b" in range ( %.2f , %.2f ) \n',...
+    MML.Gen.Range(1,2),MML.Gen.Range(2,2))];
+header = [header,sprintf('"c" in range ( %.2f , %.2f ) \n',...
+    MML.Gen.Range(1,3),MML.Gen.Range(2,3))];
+header = [header,sprintf('"w_1" in range ( %.2f , %.2f ) \n',...
+    MML.Gen.Range(1,4),MML.Gen.Range(2,4))];
+header = [header,sprintf('"w_2" in range ( %.2f , %.2f ) \n',...
+    MML.Gen.Range(1,5),MML.Gen.Range(2,5))];
+header = [header,sprintf('"w_3" in range ( %.2f , %.2f ) \n',...
+    MML.Gen.Range(1,6),MML.Gen.Range(2,6))];
+header = [header,sprintf('"w_4" in range ( %.2f , %.2f ) \n',...
+    MML.Gen.Range(1,7),MML.Gen.Range(2,7))];
+header = [header,sprintf('"k_tau" in range ( %.2f , %.2f ) \n',...
+    MML.Gen.Range(1,8),MML.Gen.Range(2,8))];
+header = [header,sprintf('"k_c" in range ( %.2f , %.2f ) \n',...
+    MML.Gen.Range(1,9),MML.Gen.Range(2,9))];
 
 disp(header);
 %% Train data: get All osc and n-osc (train data for classifier)

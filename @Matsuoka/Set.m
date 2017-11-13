@@ -159,6 +159,15 @@ else
                           0       ,0       ,value(1),0       ,value(5),value(6);
                           0       ,0       ,0       ,0       ,0       ,value(2);
                           0       ,0       ,0       ,0       ,value(2),0;];
+            case '6neuron_taga_like_symm' % same as before, only semi-symmetric hip/ankle connection
+                MO.win = 0;
+                MO.wex = zeros(2*MO.nPulses);
+                MO.wex = [0       ,value(1),0       ,0       ,0       ,0;
+                          value(1),0       ,0       ,0       ,value(3),value(4);
+                          0       ,0       ,0       ,value(1),0       ,0;
+                          0       ,0       ,value(1),0       ,value(4),value(3);
+                          0       ,0       ,0       ,0       ,0       ,value(2);
+                          0       ,0       ,0       ,0       ,value(2),0;];
             case 'amp_6n_symm'
                 MO.Amp0 = [value;value;value;value;value;value];
                 MO.Amp = MO.Amp0;

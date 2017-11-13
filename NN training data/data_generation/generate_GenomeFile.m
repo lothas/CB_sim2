@@ -171,6 +171,50 @@ switch whichCase
                       1 ,      1,             1,                     6,        1 ,                 1 ,            0 };
         Range = {  0.02 ,    0.2,             0,                    mw,      -10 ,                 -0.1*maxAnkle; % Min
                    0.25 ,    2.5,      maxAnkle,                    Mw,       10 ,                  0.1*maxAnkle}; % Max
+case '6N_tagaLike_2Ank_torques_symm'
+        nAnkle = 2; % Number of ankle torques
+        nHip = 1;   % Number of hip torques
+        N = nAnkle+nHip;
+
+        genome_file = 'MatsuokaGenome_4Neuron_tagaLike.mat';
+        maxAnkle = 20;   % Max ankle torque
+        maxHip = 8;    % Max hip torque
+        Mamp = [maxAnkle*ones(1,2*nAnkle), maxHip*ones(1,2*nHip)];
+        mamp = 0*Mamp;
+        
+        mw = 0*ones(1,4);
+        Mw = 5*ones(1,4);
+        
+        % CPG strucute: (ALSO Symm W_ij = W_ji)
+        % 1) every pair of Extensor and reflexor neurons are connected to
+        %   each other with symmetric weights.
+        % 2) both of the ankles' Extensor neurons are connected to both of the hip neurons
+        %
+        %  A2_F    A2_E
+        %(3) O-----O (4)
+        %       /  |
+        %      /   |
+        %     /    |
+        %    /     |
+        %   H_F   H_E
+        %(5) O-----O (6)  
+        %     \    |             %   w = [0  , W12, 0  , 0  , 0  , 0; 
+        %      \   |             %        W21, 0  , 0  , 0  , W25, W26;
+        %       \  |             %        0  , 0  , 0  , W34, 0  , 0;
+        %        \ |             %        0  , 0  , W43, 0  , W45, W46;
+        %(1) O-----O (2)         %        0  , 0  , 0  , 0  , 0  , W56;
+        %   A1_F    A1_E         %        0  , 0  , 0  , 0  , W65, 0;
+        %                        
+        %                        w12 = w21 = w34 = w43 = w1  
+        %                        w56 = w65  = w2
+        %                        w25 = w46 = w3
+        %                        w26 = w45 = w4
+        
+        % Final genome with tau_r + beta (constant tau_u/tau_v ratio) 
+        Keys = {'\tau_r', 'beta', 'amp_6n_symm',  '6neuron_taga_like_symm', 'ks_\tau',     'ks_c_6n_symm', 'IC_matsuoka';
+                      1 ,      1,             1,                         4,        1 ,                 1 ,            0 };
+        Range = {  0.02 ,    0.2,             0,                        mw,      -10 ,                 -0.1*maxAnkle; % Min
+                   0.25 ,    2.5,      maxAnkle,                        Mw,       10 ,                  0.1*maxAnkle}; % Max
 
 
     otherwise

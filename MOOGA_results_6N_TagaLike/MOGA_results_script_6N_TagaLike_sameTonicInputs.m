@@ -72,17 +72,26 @@ MML.tEnd = 15;
 MML.nNeurons = 2*N;
 clear N;
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % % % LOAD files:
-% NOTE: because of some changes for sim.con Code, in order to run these
-%   simulation we need to set 'twoAnkleFlag' and 'jointSelM' manually
-InFiles_names = {'VGAM_6N_TagaLike_11_08_07_48_general_tonicInputs__GA_only.mat',...
-    'VGAM_6N_TagaLike_11_08_09_10_general_tonicInputs__NN_classi_only.mat',...
-    'VGAM_6N_TagaLike_11_08_18_01_general_tonicInputs__GA_only.mat',...
-    'VGAM_6N_TagaLike_11_08_19_36_general_tonicInputs__NN_classi_only.mat'};
-Legends = {'GA1','NN1','GA2','NN2'};
+% InFiles_names = {'VGAM_6N_TagaLike_11_09_17_01_same_tonicInputs__GA_only.mat',...
+%     'VGAM_6N_TagaLike_11_10_00_50_same_tonicInputs__GA_only.mat',...
+%     'VGAM_6N_TagaLike_11_10_15_51_same_tonicInputs__GA_only.mat',...
+%     'VGAM_6N_TagaLike_11_11_00_41_same_tonicInputs__NN_classi_only.mat',...
+%     'VGAM_6N_TagaLike_11_11_12_43_same_tonicInputs__NN_classi_only.mat',...
+%     'VGAM_6N_TagaLike_11_11_21_58_same_tonicInputs__NN_classi_only.mat'};
+% Legends = {'GA1','GA2','GA3','NN1','NN2','NN3'};
+% 
+% seqOrder = {'tau' ,'b', 'c', 'w1', 'w2', 'w3', 'w4', 'w5', 'w6','k_tau','k_{c}'};
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+InFiles_names = {'VGAM_6N_TagaLike_11_12_14_11_same_tonicInputs__GA_only.mat',...
+    'VGAM_6N_TagaLike_11_12_17_47_same_tonicInputs__NN_classi_only.mat'};
+Legends = {'GA1 test','NN1 test'};
 
 % % % the order of the parametrs in CPG Sequence:
-seqOrder = {'tau' ,'b', 'c', 'w1', 'w2', 'w3', 'w4', 'w5', 'w6','k_tau','k_{c}'};
+seqOrder = {'tau' ,'b', 'c', 'w1', 'w2', 'w3', 'w4','k_tau','k_{c}'};
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 GA_graphs = plotMOOGA4Paper(MML,InFiles_names,Legends,seqOrder);
 
@@ -96,19 +105,22 @@ num_of_clusters = 4;
 
 %% 
 % close all
-GA_file_num = 4;
-genNum = 10;
+GA_file_num = 2;
+genNum = 5;
 GA_graphs.plot_seqs_in_gen(GA_file_num,genNum,4)
 
 clear GA_file_num genNum
 %%
-GA_file_num = 4;
-genNum = 10;
+clc
+GA_file_num = 2;
+genNum = 5;
 duration = 10;
 timestep = 0.05;
-geneID = 439;
+geneID = 87;
 % simRun = GA_graphs.animate_seq(GA_file_num,genNum, geneID,duration,timestep, []);
-simRun = GA_graphs.stickFigure_plot(GA_file_num,genNum, geneID,duration,timestep, []);
+% simRun = GA_graphs.stickFigure_plot(GA_file_num,genNum, geneID,duration,timestep, []);
+simRun = GA_graphs.CBstick_Figure_plot(GA_file_num,genNum, geneID,duration,timestep, []);
+
 %%
 n_ankle = 2;
 n_hip = 1;
@@ -256,21 +268,23 @@ MML.tEnd = 15;
 
 % LOAD GA_only files:
 % % % LOAD files:
-InFiles_names = {'VGAM_6N_TagaLike_11_06_18_34_general_tonicInputs__GA_only.mat',...
-    'VGAM_6N_TagaLike_11_07_08_11_general_tonicInputs__GA_only.mat',...
-    'VGAM_6N_TagaLike_11_07_16_03_general_tonicInputs__GA_only.mat',...
-    'VGAM_6N_TagaLike_11_08_07_48_general_tonicInputs__GA_only.mat',...
-    'VGAM_6N_TagaLike_11_08_18_01_general_tonicInputs__GA_only.mat'}
+InFiles_names = {'VGAM_6N_TagaLike_11_09_17_01_same_tonicInputs__GA_only.mat',...
+    'VGAM_6N_TagaLike_11_10_00_50_same_tonicInputs__GA_only.mat',...
+    'VGAM_6N_TagaLike_11_10_15_51_same_tonicInputs__GA_only.mat',...
+    'VGAM_6N_TagaLike_11_10_23_14_same_tonicInputs__GA_only.mat',...
+    'VGAM_6N_TagaLike_11_11_09_39_same_tonicInputs__GA_only.mat',...
+    'VGAM_6N_TagaLike_11_11_20_38_same_tonicInputs__GA_only.mat'};
 Legends = {'GA1'};
 GA_only = plotMOOGA4Paper(MML,InFiles_names,Legends,seqOrder);
 
 % % LOAD GA_NN files:
 % % % LOAD files:
-InFiles_names = {'VGAM_6N_TagaLike_11_06_19_24_general_tonicInputs__NN_classi_only.mat',...
-    'VGAM_6N_TagaLike_11_07_10_10_general_tonicInputs__NN_classi_only.mat',...
-    'VGAM_6N_TagaLike_11_07_18_56_general_tonicInputs__NN_classi_only.mat',...
-    'VGAM_6N_TagaLike_11_08_09_10_general_tonicInputs__NN_classi_only.mat',...
-    'VGAM_6N_TagaLike_11_08_19_36_general_tonicInputs__NN_classi_only.mat'};
+InFiles_names = {'VGAM_6N_TagaLike_11_09_19_03_same_tonicInputs__NN_classi_only.mat',...
+    'VGAM_6N_TagaLike_11_10_04_03_same_tonicInputs__NN_classi_only.mat',...
+    'VGAM_6N_TagaLike_11_10_17_12_same_tonicInputs__NN_classi_only.mat',...
+    'VGAM_6N_TagaLike_11_11_00_41_same_tonicInputs__NN_classi_only.mat',...
+    'VGAM_6N_TagaLike_11_11_12_43_same_tonicInputs__NN_classi_only.mat',...
+    'VGAM_6N_TagaLike_11_11_21_58_same_tonicInputs__NN_classi_only.mat'};
 Legends = {'NN1'};
 GA_NN = plotMOOGA4Paper(MML,InFiles_names,Legends,seqOrder);
 
@@ -294,9 +308,9 @@ for j=1:3
 
     figure;
     plot(x_data,GA_only_mean); hold on;
-%     errorbar(x_data,GA_only_mean,GA_only_std);
+    errorbar(x_data,GA_only_mean,GA_only_std);
     plot(x_data,GA_NN_mean);
-%     errorbar(x_data,GA_NN_mean,GA_NN_std);
+    errorbar(x_data,GA_NN_mean,GA_NN_std);
     xlabel('Generation number');
     ylabel('Fitness Mean');
     legend('MOGA','MOGA with NN assist');

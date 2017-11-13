@@ -67,21 +67,33 @@ alpha = linspace(1,0.2,(length(Sim.Out.X)-1)); %0.2
 leftLeg = [0,0,1];
 rightLeg = [1,0,0];
  
+% for i=1:(length(Sim.Out.X)-1)
+%     if supportPos(i,1)
+%         x = Sim.Out.SuppPos(i,1);
+%         leftLeg = abs([1,0,1]-leftLeg);
+%         rightLeg = abs([1,0,1]-rightLeg);
+%         DrawBiPedRobot2(Sim.Out.X(i,:),leftLeg,rightLeg,x,alpha(1,i))
+%     else
+%         cnt1=cnt1+1;
+%         if(cnt1>=N)
+%               DrawBiPedRobot2(Sim.Out.X(i,:),leftLeg,rightLeg,x,alpha(1,i)) 
+%               cnt1=0;
+%         end
+%     end     
+% end
+
+
 for i=1:(length(Sim.Out.X)-1)
     if supportPos(i,1)
         x = Sim.Out.SuppPos(i,1);
         leftLeg = abs([1,0,1]-leftLeg);
         rightLeg = abs([1,0,1]-rightLeg);
-        DrawBiPedRobot2(Sim.Out.X(i,:),leftLeg,rightLeg,x,alpha(1,i))
-    else
-        cnt1=cnt1+1;
-        if(cnt1>=N)
-              DrawBiPedRobot2(Sim.Out.X(i,:),leftLeg,rightLeg,x,alpha(1,i)) 
-              cnt1=0;
-        end
+        
     end
-   
     
+    if ~mod(i,10)
+        DrawBiPedRobot2(Sim.Out.X(i,:),leftLeg,rightLeg,x,alpha(1,i));
+    end
 end
 
 end
