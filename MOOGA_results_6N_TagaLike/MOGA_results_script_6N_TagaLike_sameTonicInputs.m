@@ -254,11 +254,6 @@ clear all; close all; clc
 % set default options
 set(0,'defaultlinelinewidth',2);
 
-% % % the order of the parametrs in CPG Sequence:
-% Symm tonic inputs:
-seqOrder = {'tau' ,'b', 'c1','c2', 'w1', 'w2', 'w3', 'w4',...
-    'k_tau','k_{c1}','k_{c2}'};
-
 % define the class for CPG simulation:
 MML = MatsuokaML();
 MML.perLim = [0.68 0.78];
@@ -266,27 +261,59 @@ MML.perLimOut = MML.perLim + [-0.08 0.08]; % Desired period range
 MML.tStep = 0.05;
 MML.tEnd = 15;
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% % % the order of the parametrs in CPG Sequence:
+% % Symm tonic inputs:
+% seqOrder = {'tau' ,'b', 'c', 'w1', 'w2', 'w3', 'w4', 'w5', 'w6','k_tau','k_{c}'};
+% 
+% % LOAD GA_only files:
+% % % % LOAD files:
+% InFiles_names = {'VGAM_6N_TagaLike_11_09_17_01_same_tonicInputs__GA_only.mat',...
+%     'VGAM_6N_TagaLike_11_10_00_50_same_tonicInputs__GA_only.mat',...
+%     'VGAM_6N_TagaLike_11_10_15_51_same_tonicInputs__GA_only.mat',...
+%     'VGAM_6N_TagaLike_11_10_23_14_same_tonicInputs__GA_only.mat',...
+%     'VGAM_6N_TagaLike_11_11_09_39_same_tonicInputs__GA_only.mat',...
+%     'VGAM_6N_TagaLike_11_11_20_38_same_tonicInputs__GA_only.mat'};
+% Legends = {'GA1'};
+% GA_only = plotMOOGA4Paper(MML,InFiles_names,Legends,seqOrder);
+% 
+% % % LOAD GA_NN files:
+% % % % LOAD files:
+% InFiles_names = {'VGAM_6N_TagaLike_11_09_19_03_same_tonicInputs__NN_classi_only.mat',...
+%     'VGAM_6N_TagaLike_11_10_04_03_same_tonicInputs__NN_classi_only.mat',...
+%     'VGAM_6N_TagaLike_11_10_17_12_same_tonicInputs__NN_classi_only.mat',...
+%     'VGAM_6N_TagaLike_11_11_00_41_same_tonicInputs__NN_classi_only.mat',...
+%     'VGAM_6N_TagaLike_11_11_12_43_same_tonicInputs__NN_classi_only.mat',...
+%     'VGAM_6N_TagaLike_11_11_21_58_same_tonicInputs__NN_classi_only.mat'};
+% Legends = {'NN1'};
+% GA_NN = plotMOOGA4Paper(MML,InFiles_names,Legends,seqOrder);
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+seqOrder = {'tau' ,'b', 'c', 'w1', 'w2', 'w3', 'w4','k_tau','k_{c}'};
+
 % LOAD GA_only files:
 % % % LOAD files:
-InFiles_names = {'VGAM_6N_TagaLike_11_09_17_01_same_tonicInputs__GA_only.mat',...
-    'VGAM_6N_TagaLike_11_10_00_50_same_tonicInputs__GA_only.mat',...
-    'VGAM_6N_TagaLike_11_10_15_51_same_tonicInputs__GA_only.mat',...
-    'VGAM_6N_TagaLike_11_10_23_14_same_tonicInputs__GA_only.mat',...
-    'VGAM_6N_TagaLike_11_11_09_39_same_tonicInputs__GA_only.mat',...
-    'VGAM_6N_TagaLike_11_11_20_38_same_tonicInputs__GA_only.mat'};
+InFiles_names = {'VGAM_6N_TagaLike_11_12_14_11_same_tonicInputs__GA_only.mat',...
+    'VGAM_6N_TagaLike_11_13_09_49_same_tonicInputs__GA_only.mat',...
+    'VGAM_6N_TagaLike_11_13_11_31_same_tonicInputs__GA_only.mat',...
+    'VGAM_6N_TagaLike_11_13_17_06_same_tonicInputs__GA_only.mat',...
+    'VGAM_6N_TagaLike_11_13_17_28_same_tonicInputs__GA_only.mat',...
+    'VGAM_6N_TagaLike_11_14_00_54_same_tonicInputs__GA_only.mat',...
+    'VGAM_6N_TagaLike_11_14_01_27_same_tonicInputs__GA_only.mat'};
 Legends = {'GA1'};
 GA_only = plotMOOGA4Paper(MML,InFiles_names,Legends,seqOrder);
 
 % % LOAD GA_NN files:
 % % % LOAD files:
-InFiles_names = {'VGAM_6N_TagaLike_11_09_19_03_same_tonicInputs__NN_classi_only.mat',...
-    'VGAM_6N_TagaLike_11_10_04_03_same_tonicInputs__NN_classi_only.mat',...
-    'VGAM_6N_TagaLike_11_10_17_12_same_tonicInputs__NN_classi_only.mat',...
-    'VGAM_6N_TagaLike_11_11_00_41_same_tonicInputs__NN_classi_only.mat',...
-    'VGAM_6N_TagaLike_11_11_12_43_same_tonicInputs__NN_classi_only.mat',...
-    'VGAM_6N_TagaLike_11_11_21_58_same_tonicInputs__NN_classi_only.mat'};
+InFiles_names = {'VGAM_6N_TagaLike_11_12_17_47_same_tonicInputs__NN_classi_only.mat',...
+    'VGAM_6N_TagaLike_11_13_13_07_same_tonicInputs__NN_classi_only.mat',...
+    'VGAM_6N_TagaLike_11_13_13_33_same_tonicInputs__NN_classi_only.mat',...
+    'VGAM_6N_TagaLike_11_13_19_54_same_tonicInputs__NN_classi_only.mat',...
+    'VGAM_6N_TagaLike_11_13_20_37_same_tonicInputs__NN_classi_only.mat',...
+    'VGAM_6N_TagaLike_11_14_03_26_same_tonicInputs__NN_classi_only.mat',...
+    'VGAM_6N_TagaLike_11_14_03_52_same_tonicInputs__NN_classi_only.mat'};
 Legends = {'NN1'};
 GA_NN = plotMOOGA4Paper(MML,InFiles_names,Legends,seqOrder);
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % get x-axis data:
 last_gen = 10;
@@ -351,4 +378,66 @@ if false   % Don't plot it right now
         clear x_data GA_only_TPMF GA_NN_TPMF 
         clear GA_only_mean GA_only_std GA_NN_mean GA_NN_std
     end
+end
+
+if false % % Plot the AVG runTime of each generation
+    [x_data,GA_only_runTime] = GA_only.plot_gen_runTime(last_gen);
+    [~,GA_NN_runTime] = GA_NN.plot_gen_runTime(last_gen);
+
+    GA_only_mean = mean(GA_only_runTime);
+    GA_only_std = std(GA_only_runTime);
+
+    GA_NN_mean = mean(GA_NN_runTime);
+    GA_NN_std = std(GA_NN_runTime);
+
+    figure;
+    plot(x_data,GA_only_mean); hold on;
+    errorbar(x_data,GA_only_mean,GA_only_std);
+    plot(x_data,GA_NN_mean);
+    errorbar(x_data,GA_NN_mean,GA_NN_std);
+    xlabel('Generation number');
+    ylabel('Avg runTime [sec]');
+    legend('MOGA','MOGA with NN assist');
+    title('Avg runTime');
+    grid minor
+    axis([1,10,0,inf]);
+    set(gca,'fontsize',13)
+
+    clear x_data GA_only_runTime GA_NN_runTime 
+    clear GA_only_mean GA_only_std GA_NN_mean GA_NN_std
+end
+
+if false % % Plot the runTime of until the i-th generation
+    I = ones(last_gen,last_gen);
+    I = triu(I); % create an upper triangular matrix
+    
+    [x_data,GA_only_runTime] = GA_only.plot_gen_runTime(last_gen);
+    [~,GA_NN_runTime] = GA_NN.plot_gen_runTime(last_gen);
+    
+    % summing each genTime with the previuos time to get the time until
+    % that point (Time Elapesd)
+    GA_only_elapsed_time = GA_only_runTime*I;
+    GA_only_mean = mean(GA_only_elapsed_time);
+    GA_only_std = std(GA_only_elapsed_time);
+    
+    GA_NN_elapsed_time = GA_NN_runTime*I;
+    GA_NN_mean = mean(GA_NN_elapsed_time);
+    GA_NN_std = std(GA_NN_elapsed_time);
+
+    figure;
+    plot(x_data,GA_only_mean); hold on;
+    errorbar(x_data,GA_only_mean,GA_only_std);
+    plot(x_data,GA_NN_mean);
+    errorbar(x_data,GA_NN_mean,GA_NN_std);
+    xlabel('Generation number');
+    ylabel('Avg runTime [sec]');
+    legend('MOGA','MOGA with NN assist');
+    title('Avg runTime');
+    grid minor
+    axis([1,10,0,inf]);
+    set(gca,'fontsize',13)
+
+    clear x_data GA_only_runTime GA_NN_runTime 
+    clear GA_only_elapsed_time GA_NN_elapsed_time I
+    clear GA_only_mean GA_only_std GA_NN_mean GA_NN_std
 end

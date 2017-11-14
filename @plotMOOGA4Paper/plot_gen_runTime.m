@@ -1,4 +1,4 @@
-function plot_gen_runTime(obj,gen_num)
+function [X_data,runTime] = plot_gen_runTime(obj,gen_num)
 % plot the runtime of each generation in MOGA
 % 
 % Inputs:
@@ -6,22 +6,28 @@ function plot_gen_runTime(obj,gen_num)
 
 % generation numbers:
 X_data = 1:gen_num;
+runTime = zeros(numel(obj.data_names),length(X_data));
 
-figure; hold on;
-ax = gca;
+
 
 for i=1:numel(obj.data_names)
-   Y =  obj.data{1,i}.GA.totGenTime(1,X_data);
-   plot(ax,X_data,Y); 
-    
+       runTime(i,:) =  obj.data{1,i}.GA.totGenTime(1,X_data);
 end
 
-title('generation runTime');
-xlabel('generation num');
-ylabel('runTime [sec]');
-legend(obj.Legends);
-grid minor;
-hold off;
+if nargout == 0
+    figure; hold on;
+    ax = gca;
+    for i=1:numel(obj.data_names)
+       plot(ax,X_data,runTime(i,:)); 
+    end
+    title('generation runTime');
+    xlabel('generation num');
+    ylabel('runTime [sec]');
+    legend(obj.Legends);
+    grid minor;
+    hold off;
+end
+
 
 end
 

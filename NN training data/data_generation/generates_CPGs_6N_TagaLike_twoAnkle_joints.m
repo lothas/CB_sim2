@@ -92,7 +92,7 @@ round_count = 0;
 max_round = 1000; % maximum iteraion for while loop (saftey reasons:)
 results = [];
 
-wanted_num_CPGs = 100000;
+wanted_num_CPGs = 200000;
 
 disp('start with the sim:');
 
@@ -128,7 +128,7 @@ end
 
 disp('sim end...');
 
-save('MatsRandomRes_6N_TagaLike_TrainingSet.mat',...
+save('MatsRandomRes_6N_TagaLike_TrainingSet_2.mat',...
     'results','header');
 
 clear N
