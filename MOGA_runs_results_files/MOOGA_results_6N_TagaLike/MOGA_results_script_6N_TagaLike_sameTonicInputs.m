@@ -335,9 +335,14 @@ for j=1:3
 
     figure;
     plot(x_data,GA_only_mean); hold on;
-    errorbar(x_data,GA_only_mean,GA_only_std);
+%     errorbar(x_data,GA_only_mean,GA_only_std);
+    
+    fill([x_data;flipud(x_data)],...
+        [GA_only_mean - GA_only_std;flipud(GA_only_mean+GA_only_std)],...
+        [0.9, 0.9, 0.9],'linestyle','none');
+    
     plot(x_data,GA_NN_mean);
-    errorbar(x_data,GA_NN_mean,GA_NN_std);
+%     errorbar(x_data,GA_NN_mean,GA_NN_std);
     xlabel('Generation number');
     ylabel('Fitness Mean');
     legend('MOGA','MOGA with NN assist');

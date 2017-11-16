@@ -46,7 +46,9 @@ clc
 generate_GenomeFile('6N_tagaLike_2Ank_torques_symm');
 % trainDataFile = 'MatsRandomRes_6N_TagaLike_TrainingSet_test';
 trainDataFile = 'MatsRandomRes_6N_TagaLike_TrainingSet_2';
-% GA_try_6N_TagaLike_Matsuoka('GA only',[],trainDataFile);
+GA_try_6N_TagaLike_Matsuoka('GA only',[],trainDataFile);
 GA_try_6N_TagaLike_Matsuoka('GA + NN_classi',[],trainDataFile);
-% GA_try_6N_TagaLike_Matsuoka('GA only',[],trainDataFile);
-% GA_try_6N_TagaLike_Matsuoka('GA + NN_classi',[],trainDataFile);
+GA_try_6N_TagaLike_Matsuoka('GA only',[],trainDataFile);
+GA_try_6N_TagaLike_Matsuoka('GA + NN_classi',[],trainDataFile);
+GA_try_6N_TagaLike_Matsuoka('GA only',[],trainDataFile);
+GA_try_6N_TagaLike_Matsuoka('GA + NN_classi',[],trainDataFile);

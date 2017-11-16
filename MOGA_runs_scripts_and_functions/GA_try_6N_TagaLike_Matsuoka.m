@@ -4,7 +4,7 @@ function [  ] =...
 % simulation with a bounded foot size (ZMP threshold)
 
 
-GA = MOOGA(10,1000);
+GA = MOOGA(20,500);
 GA = GA.SetFittest(15,15,0.5);
 GA.JOAT = 2; GA.Quant = 0.7;
 
@@ -12,7 +12,7 @@ GA.FileIn = fileIn;
 
 FileName_start = 'VGAM_6N_TagaLike_';
 FileName_date = datestr(now,'mm_dd_hh_MM');
-FileName_extra = '_same_tonicInputs_';
+FileName_extra = '_same_tonicInputs_20Gen_500Genes_';
 
 % Check ankle Torque?
         %   Assign a check function to check if a CPG doesn't have an oscillatory
@@ -188,21 +188,20 @@ function seq = NN_classi_Fcn(Gen,net,seq,lastGen,lastGenes, X, T)
         return
     end
     
-%     %%%%%%%%%%%%%%% Test 29.10.2017 %%%%%%%%%%%%%%%%%%%%%%
-%     % don't do anything if CPG IS oscillating
-        % the hip is more important than the ankle!
-%     if ~isnan(periods(2,1)) 
-%         return
-%     end
-%     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
-    try
-        rand_seq = [lastGenes;...
-            MML.Gen.RandSeq(2000)];
-        seq = MML.get_classi_NNPar(net, rand_seq);
-    catch % if there are no good CPGs
+    % Give 10% chance for a random good sample to get selected (incresing
+    % exploration):
+    if randi(10) == 10
         rand_seq = MML.Gen.RandSeq(100000);
         seq = MML.get_classi_NNPar(net, rand_seq);
+    else
+        try % % try to select a mutated version of the topPop:
+            rand_seq = [lastGenes;...
+                MML.Gen.RandSeq(2000)];
+            seq = MML.get_classi_NNPar(net, rand_seq);
+        catch % if there are no good CPGs ruffle moere random samples
+            rand_seq = MML.Gen.RandSeq(100000);
+            seq = MML.get_classi_NNPar(net, rand_seq);
+        end
     end
 
     ids = seq < Gen.Range(1,:) | seq > Gen.Range(2,:);
