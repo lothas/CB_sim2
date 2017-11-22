@@ -133,6 +133,68 @@ save('MatsRandomRes_6N_TagaLike_TrainingSet_2.mat',...
 
 clear N
 
+%% Train data: get Only osc ( for regression NN)
+N = 1000; % the number of samples
+CPGs_num = 0;
+round_count = 0;
+max_round = 1000; % maximum iteraion for while loop (saftey reasons:)
+results = [];
+
+wanted_num_CPGs = 20000;
+
+disp('start with the sim:');
+
+while (CPGs_num < wanted_num_CPGs) && (round_count <= max_round)
+    
+    rand_seq = MML.Gen.RandSeq(N);
+    parfor i=1:N % Simulate and calculate the frequecy (also calc from Matsuoka extimation)
+%     for i=1:N
+%         disp(['at sim #',num2str(i)]);
+        [out, ~, signal] = MML.runSim(rand_seq(i,:));
+            % Prepare output:
+        % Parameters
+        results_temp(i).seq = rand_seq(i,:);
+
+        % Results- caculate perdiods using different methods:
+        results_temp(i).periods = out.periods;
+        
+        results_temp(i).x0 = out.x0;
+        results_temp(i).neuronActive = out.neuronActive;
+        results_temp(i).neuronOsc = out.neuronOsc;
+    end 
+    
+    periods = horzcat(results_temp.periods);
+    
+    % Filter CPG's where not both signals oscillating:
+    osc_ids = ~isnan(periods);
+    osc_ids = osc_ids(1,:) & osc_ids(2,:) & osc_ids(3,:);
+
+    % Filter CPG's where the is a big difference between hip and ankle:
+    periods_ratios = (periods(1,:)./periods(2,:));
+    diff_ids1 = (periods_ratios >  0.85) & (periods_ratios <  1.15); 
+
+    periods_ratios = (periods(1,:)./periods(3,:));
+    diff_ids2 = (periods_ratios >  0.85) & (periods_ratios <  1.15); 
+
+    good_ids = osc_ids & diff_ids1 & diff_ids2;
+    
+    results = [results,results_temp(good_ids)];
+    CPGs_num = length(results);
+
+    disp(['so far we have ',num2str(CPGs_num),' CPGs'])
+
+    round_count = round_count+1;
+    
+    clear results_temp rand_seq
+
+end
+
+disp('sim end...');
+
+save('MatsRandomRes_6N_TagaLike_TrainingSet_RegressionNN.mat',...
+    'results','header');
+
+clear N
 %% Run CB:
 
 % Set up the genome
