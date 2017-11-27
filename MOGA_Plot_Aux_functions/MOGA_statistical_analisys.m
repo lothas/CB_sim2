@@ -53,20 +53,19 @@ end
 
 
 % get x-axis data:
-last_gen = 10;
+last_gen = 20; % last generation to check
 
 
 switch whichGraph
     case 'mean_of_max_fitness_errBars'
         Title = {'velFit','NrgFit','rangeVelFit'};
-        last_gen = 10; % last generation to check
         genNum = 1:last_gen;
         % % Plot mean of maximum fitness for all MOGA runs:
         for j=1:3   % fitNum = 1:3 = {'velFit','NrgFit','rangeVelFit'}
             whichFit2Plot = j;
             
-            meanFit = zeros(categoryNum,10);
-            stdFit = zeros(categoryNum,10);
+            meanFit = zeros(categoryNum,last_gen);
+            stdFit = zeros(categoryNum,last_gen);
             
             for i=1:categoryNum
                 [~,maxFit] = ...
@@ -89,20 +88,19 @@ switch whichGraph
             legend(categoryLegend);
             title([Title{1,j},'_{mean}']);
             grid minor
-            axis([1,10,0,0.4]);
+            axis([1,last_gen,0,0.4]);
             set(gca,'fontsize',13);
             hold off;
         end
     case 'mean_of_max_fitness_thinLines'
             Title = {'velFit','NrgFit','rangeVelFit'};
-            last_gen = 10; % last generation to check
             genNum = 1:last_gen;
             % % Plot mean of maximum fitness for all MOGA runs:
             for j=1:3   % fitNum = 1:3 = {'velFit','NrgFit','rangeVelFit'}
                 whichFit2Plot = j;
 
-                meanFit = zeros(categoryNum,10);
-                stdFit = zeros(categoryNum,10);
+                meanFit = zeros(categoryNum,last_gen);
+                stdFit = zeros(categoryNum,last_gen);
 
                 for i=1:categoryNum
                     [~,maxFit] = ...
@@ -134,21 +132,20 @@ switch whichGraph
                 legend(categoryLegend);
                 title([Title{1,j},'_{mean}']);
                 grid minor
-                axis([1,10,0,0.4]);
+                axis([1,last_gen,0,0.4]);
                 set(gca,'fontsize',13);
                 hold off;
             end
     case 'mean_of_mean_fitness_errBars' % mean of meanFit at each generation
         % % Plot mean of "TopPop Mean Fitness" (TPMF) fitness for all MOGA runs:
         Title = {'velFit','NrgFit','rangeVelFit'};
-        last_gen = 10; % last generation to check
         genNum = 1:last_gen;
         % % Plot mean of maximum fitness for all MOGA runs:
         for j=1:3   % fitNum = 1:3 = {'velFit','NrgFit','rangeVelFit'}
             whichFit2Plot = j;
             
-            meanFit = zeros(categoryNum,10);
-            stdFit = zeros(categoryNum,10);
+            meanFit = zeros(categoryNum,last_gen);
+            stdFit = zeros(categoryNum,last_gen);
             
             for i=1:categoryNum
                 [~,AvgFit] = ...
@@ -171,20 +168,19 @@ switch whichGraph
             legend(categoryLegend);
             title([Title{1,j},'_{mean} of the avarage fitness']);
             grid minor
-            axis([1,10,0,0.4]);
+            axis([1,last_gen,0,0.4]);
             set(gca,'fontsize',13);
             hold off;
         end
     case 'mean_of_max_fitness_Signrank_test_per_Generation'
         Title = {'velFit','NrgFit','rangeVelFit'};
-        last_gen = 10; % last generation to check
         genNum = 1:last_gen;
         % % Plot mean of maximum fitness for all MOGA runs:
         for j=1:3   % fitNum = 1:3 = {'velFit','NrgFit','rangeVelFit'}
             whichFit2Plot = j;
             
-            meanFit = zeros(categoryNum,10);
-            stdFit = zeros(categoryNum,10);
+            meanFit = zeros(categoryNum,last_gen);
+            stdFit = zeros(categoryNum,last_gen);
             
             for i=1:categoryNum
                 [~,maxFit] = ...
@@ -231,20 +227,19 @@ switch whichGraph
             legend(categoryLegend);
             title([Title{1,j},'_{mean}']);
             grid minor
-            axis([1,10,0,0.51]);
+            axis([1,last_gen,0,0.51]);
             set(gca,'fontsize',13);
             hold off;
         end    
     case 'mean_of_max_fitness_Signrank_test_All_Generation'
         Title = {'velFit','NrgFit','rangeVelFit'};
-        last_gen = 10; % last generation to check
         genNum = 1:last_gen;
         % % Plot mean of maximum fitness for all MOGA runs:
         for j=1:3   % fitNum = 1:3 = {'velFit','NrgFit','rangeVelFit'}
             whichFit2Plot = j;
             
-            meanFit = zeros(categoryNum,10);
-            stdFit = zeros(categoryNum,10);
+            meanFit = zeros(categoryNum,last_gen);
+            stdFit = zeros(categoryNum,last_gen);
             
             for i=1:categoryNum
                 [~,maxFit] = ...

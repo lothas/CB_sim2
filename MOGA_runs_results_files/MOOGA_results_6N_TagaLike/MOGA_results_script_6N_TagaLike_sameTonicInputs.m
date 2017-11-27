@@ -85,9 +85,22 @@ clear N;
 % seqOrder = {'tau' ,'b', 'c', 'w1', 'w2', 'w3', 'w4', 'w5', 'w6','k_tau','k_{c}'};
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-InFiles_names = {'VGAM_6N_TagaLike_11_12_14_11_same_tonicInputs__GA_only.mat',...
-    'VGAM_6N_TagaLike_11_12_17_47_same_tonicInputs__NN_classi_only.mat'};
-Legends = {'GA1 test','NN1 test'};
+% InFiles_names = {'VGAM_6N_TagaLike_11_12_14_11_same_tonicInputs__GA_only.mat',...
+%     'VGAM_6N_TagaLike_11_12_17_47_same_tonicInputs__NN_classi_only.mat'};
+% Legends = {'GA1 test','NN1 test'};
+
+% %
+% LOAD GA_only files:
+InFiles_names = {'VGAM_6N_TagaLike_11_15_08_15_same_tonicInputs_20Gen_500Genes__GA_only.mat',...
+    'VGAM_6N_TagaLike_11_15_18_46_same_tonicInputs_20Gen_500Genes__GA_only.mat',...
+    'VGAM_6N_TagaLike_11_16_04_44_same_tonicInputs_20Gen_500Genes__GA_only.mat',...
+    'VGAM_6N_TagaLike_11_22_17_20_same_tonicInputs_20Gen_500Genes__GA_only.mat',...
+    'VGAM_6N_TagaLike_11_23_02_19_same_tonicInputs_20Gen_500Genes__GA_only.mat',...
+    'VGAM_6N_TagaLike_11_23_13_40_same_tonicInputs_20Gen_500Genes__GA_only.mat',...
+    'VGAM_6N_TagaLike_11_23_23_48_same_tonicInputs_20Gen_500Genes__GA_only.mat',...
+    'VGAM_6N_TagaLike_11_24_11_16_same_tonicInputs_20Gen_500Genes__GA_only.mat',...
+    'VGAM_6N_TagaLike_11_25_19_42_same_tonicInputs_20Gen_500Genes__GA_only.mat'};
+Legends = {'GA1','GA2','GA3','GA4','GA5','GA6','GA7','GA8','GA9'};
 
 % % % the order of the parametrs in CPG Sequence:
 seqOrder = {'tau' ,'b', 'c', 'w1', 'w2', 'w3', 'w4','k_tau','k_{c}'};
@@ -97,7 +110,7 @@ GA_graphs = plotMOOGA4Paper(MML,InFiles_names,Legends,seqOrder);
 
 % which fit to plot:
 FitNum = 3;% get x-axis data:
-last_gen = 10;
+last_gen = 20;
 x_data = 1:last_gen;
 
 % home many clusters in divesity plots:
