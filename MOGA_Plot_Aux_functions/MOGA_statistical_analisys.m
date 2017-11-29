@@ -55,21 +55,352 @@ end
 % get x-axis data:
 last_gen = 20; % last generation to check
 
+% fitNum = 1:3 = {'velFit','NrgFit','rangeVelFit'}
+Title = {'velFit','NrgFit','rangeVelFit'};
+whichFit2Plot = 1:3;
 
+% generations num vector:
+genNum = 1:last_gen;
+
+for j=1:length(whichFit2Plot)
+    meanFit = zeros(categoryNum,last_gen);
+    stdFit = zeros(categoryNum,last_gen);
+    switch whichGraph
+        % graphs of Fitness comparison:
+        case 'mean_of_max_fitness_errBars' % % Plot mean of maximum fitness for all MOGA runs
+                for i=1:categoryNum
+                    [~,maxFit] = ...
+                        MOGA_results{1,i}.plot_fit_over_gen(whichFit2Plot(j),last_gen);
+                    % calc mean and stdev:
+                    meanFit(i,:) = mean(maxFit);
+                    stdFit(i,:) = std(maxFit);
+                    maxFitVec{1,i} = maxFit;
+                end
+
+                figure; hold on;
+                y_max_lim = plot_data(categoryNum,maxFitVec,meanFit,stdFit,'errBars');
+
+                xlabel('Generation number');
+                ylabel('Fitness avg');
+                legend(categoryLegend);
+                grid minor
+                axis([0.5,last_gen,0,y_max_lim]);
+                set(gca,'fontsize',13);
+                title(['\fontsize{12}',Title{1,j},': max fitness avarage across multiple runs']);
+                hold off;
+
+        case 'mean_of_max_fitness_thinLines' % Plot mean of maximum fitness for all MOGA runs:
+                    for i=1:categoryNum
+                        [~,maxFit] = ...
+                            MOGA_results{1,i}.plot_fit_over_gen(whichFit2Plot(j),last_gen);
+
+                        % calc mean and stdev:
+                        meanFit(i,:) = mean(maxFit);
+                        stdFit(i,:) = std(maxFit);
+                        maxFitVec{1,i} = maxFit;
+                    end
+
+                    figure; hold on;
+                    y_max_lim = plot_data(categoryNum,maxFitVec,meanFit,stdFit,'thinLines');
+
+                    xlabel('Generation number');
+                    ylabel('Fitness avg');
+                    % legend([h{1,1},h{1,2}],categoryLegend);
+                    legend(categoryLegend);
+                    grid minor
+                    axis([0.5,last_gen,0,y_max_lim]);
+                    set(gca,'fontsize',13);
+                    title({['\fontsize{12}',Title{1,j},': max fitness avarage across multiple runs'],...
+                        '\fontsize{11} Bold lines = avg      clear lines = each sim'});
+                    hold off;
+
+        case 'mean_of_mean_fitness_errBars' % mean of meanFit at each generation
+            % % Plot mean of "TopPop Mean Fitness" (TPMF) fitness for all MOGA runs:
+                for i=1:categoryNum
+                    [~,AvgFit] = ...
+                        MOGA_results{1,i}.plot_mean_fit_over_gen(whichFit2Plot(j),last_gen,'top_pop');
+
+                    % calc mean and stdev:
+                    meanFit(i,:) = mean(AvgFit);
+                    stdFit(i,:) = std(AvgFit);
+                    avgFitVec{1,i} = AvgFit;
+                end
+
+                figure; hold on;
+                y_max_lim = plot_data(categoryNum,avgFitVec,meanFit,stdFit,'errBars');
+
+                xlabel('Generation number');
+                ylabel('Fitness Mean');
+                legend(categoryLegend);
+                grid minor
+                axis([1,last_gen,0,y_max_lim]);
+                set(gca,'fontsize',13);
+                title(['\fontsize{12}',Title{1,j},'_{mean} of the avarage fitness']);
+                hold off;
+
+        case 'mean_of_max_fitness_Signrank_test_per_Generation' % add statistical test
+                for i=1:categoryNum
+                    [~,maxFit] = ...
+                        MOGA_results{1,i}.plot_fit_over_gen(whichFit2Plot(j),last_gen);
+
+                    % calc mean and stdev:
+                    meanFit(i,:) = mean(maxFit);
+                    stdFit(i,:) = std(maxFit);
+
+                    maxFitVec{1,i} = maxFit;
+                end
+
+                % perf a SignRank test between the first two:
+                [prob,rejectFlag] = wilcox_sign_rank_test(maxFitVec,last_gen);
+
+                figure; hold on;
+                y_max_lim = plot_data(categoryNum,maxFitVec,meanFit,stdFit,'errBars');
+                
+                % place Markers when the results are statistically
+                % significant:
+                pointHight = y_max_lim+0.1;
+                place_signifi_markers(last_gen,pointHight,rejectFlag);
+                
+                xlabel('Generation number', 'FontSize', 13);
+                ylabel('Fitness Mean', 'FontSize', 13);
+                legend(categoryLegend);
+                set(gca,'fontsize',13);
+                title({['\fontsize{13}',Title{1,j},': max fitness avarage across multiple runs'],...
+                    ['\fontsize{10} green = statistically significant ;     red = not stat. sig']},'interpreter','tex');
+                grid minor
+                axis([0.5,last_gen,0,pointHight+0.05]);
+                
+                % % Uncomment if you want to print the p-values:
+%                 place_pValue_text(last_gen,pointHight,prob);
+                hold off;
+
+        case 'mean_of_max_fitness_Signrank_test_All_Generation' % perform the signRankTest to all generation combained
+                for i=1:categoryNum
+                    [~,maxFit] = ...
+                        MOGA_results{1,i}.plot_fit_over_gen(whichFit2Plot(j),last_gen);
+
+                    % calc mean and stdev:
+                    meanFit(i,:) = mean(maxFit);
+                    stdFit(i,:) = std(maxFit);
+
+                    maxFitVec{1,i} = maxFit;
+                end
+
+                % perf a SignRank test between the first two:
+                disp('Note: performing test only on the 1st two GA runs');
+                V1 = [];
+                V2 = [];
+                for k=1:last_gen
+                    V1 = [V1;maxFitVec{1,1}(:,k)];
+                    V2 = [V2;maxFitVec{1,2}(:,k)];
+                end
+                [p,h] = signrank(V1,V2);
+
+                disp(['at fit: ',Title{1,j}]);
+                if h == 1
+                    disp('    The null hypothesis was regected');
+                    disp('    the results are statistically significant!');
+                else
+                    disp('    The null hypothesis was NOT regected');
+                    disp('    the results are NOT statistically significant!');
+                end
+    end
+end
+
+mean_runTime = zeros(1,last_gen);
+std_runTime = zeros(1,last_gen);
+switch whichGraph % graphs about the runTime of the MOGA
+    case 'mean_of_max_runTime_Signrank_test_per_Generation' % % graphs of RunTime comparison
+            for i=1:categoryNum
+                [~,runTime] = ...
+                    MOGA_results{1,i}.plot_gen_runTime(last_gen);
+                % calc mean and stdev:
+                mean_runTime(i,:) = mean(runTime);
+                std_runTime(i,:) = std(runTime);
+                
+                runTimeVec{1,i} = runTime;
+            end
+
+            % perf a SignRank test between the first two:
+            [prob,rejectFlag] = wilcox_sign_rank_test(runTimeVec,last_gen);
+    
+            figure; hold on;
+            y_max_lim = plot_data(categoryNum,runTimeVec,...
+                mean_runTime,std_runTime,'errBars')
+
+            % place Markers when the results are statistically
+            % significant:
+            pointHight = y_max_lim*1.000001;
+            place_signifi_markers(last_gen,pointHight,rejectFlag);
+
+            xlabel('Generation number', 'FontSize', 13);
+            ylabel('RunTime [sec]', 'FontSize', 13);
+            legend(categoryLegend);
+            set(gca,'fontsize',13);
+            title('\fontsize{13} avg. runTime of each generation');
+            grid minor
+            axis([0.5,last_gen,0,y_max_lim]);
+
+            % % Uncomment if you want to print the p-values:
+%                 place_pValue_text(last_gen,pointHight,prob);
+            hold off;
+        
+    case 'mean_of_max_runTime_thinLines' % % graphs of RunTime comparison
+            for i=1:categoryNum
+                [~,runTime] = ...
+                    MOGA_results{1,i}.plot_gen_runTime(last_gen);
+                % calc mean and stdev:
+                mean_runTime(i,:) = mean(runTime);
+                std_runTime(i,:) = std(runTime);
+                
+                runTimeVec{1,i} = runTime;
+            end
+
+            figure; hold on;
+            y_max_lim = plot_data(categoryNum,runTimeVec,...
+                mean_runTime,std_runTime,'thinLines')
+
+            xlabel('Generation number', 'FontSize', 13);
+            ylabel('RunTime [sec]', 'FontSize', 13);
+            legend(categoryLegend);
+            set(gca,'fontsize',13);
+            title('\fontsize{13} avg. runTime of each generation');
+            grid minor
+            axis([0.5,last_gen,0,y_max_lim]);
+            hold off;
+            
+    case 'mean_runTime_until_the_ith_gen'
+        % % calc the run time of the GA until the i-th generation
+        % % i.e. it includes the time of the previuos generations
+        
+        I = ones(last_gen,last_gen);
+        I = triu(I); % create an upper triangular matrix
+        
+        for i=1:categoryNum
+            [~,runTime] = ...
+                MOGA_results{1,i}.plot_gen_runTime(last_gen);
+            
+            runTime_tot = runTime*I;
+            
+            % calc mean and stdev:
+            mean_runTime(i,:) = mean(runTime_tot);
+            std_runTime(i,:) = std(runTime_tot);
+
+            runTimeVec{1,i} = runTime_tot;
+        end
+
+        % perf a SignRank test between the first two:
+        [prob,rejectFlag] = wilcox_sign_rank_test(runTimeVec,last_gen);
+
+        figure; hold on;
+        y_max_lim = plot_data(categoryNum,runTimeVec,...
+            mean_runTime,std_runTime,'errBars')
+
+        % place Markers when the results are statistically
+        % significant:
+        pointHight = y_max_lim*1.000001;
+        place_signifi_markers(last_gen,pointHight,rejectFlag);
+
+        xlabel('Generation number', 'FontSize', 13);
+        ylabel('RunTime [sec]', 'FontSize', 13);
+        legend(categoryLegend);
+        set(gca,'fontsize',13);
+        title('\fontsize{13} avg. runTime until the i^{th} generation');
+        grid minor
+        axis([0.5,last_gen,0,y_max_lim]);
+
+        % % Uncomment if you want to print the p-values:
+%                 place_pValue_text(last_gen,pointHight,prob);
+        hold off;
+end
+
+    function [pValue,rejectFlag] = wilcox_sign_rank_test(res_vec,last_gen)
+        % perf a SignRank test between the first two:
+        
+        % % [p,h] = signrank(___) also returns a logical value indicating 
+        % %     the test decision. 
+        % %
+        % % 'p': p-value of a paired, two-sided test for the null hypothesis
+        % %     that x – y comes from a distribution with zero median.
+        % %
+        % %  h = 1 indicates a rejection of the null hypothesis, and
+        % %  h = 0 indicates a failure to reject the null hypothesis at the
+        % %      5% (percent) significance level.
+        % %  You can use any of the input arguments in the previous syntaxes.
+
+        disp('Note: performing test only on the 1st two GA runs');
+        for g=1:last_gen
+            [pValue(1,g),rejectFlag(1,g)] =...
+                signrank(res_vec{1,1}(:,g),res_vec{1,2}(:,g));
+        end
+    end
+
+    function [h] = place_signifi_markers(last_gen,pointHight,rejectFlag)
+        for gen=1:last_gen
+                    if rejectFlag(1,gen)==1
+                        h = scatter(gen,pointHight,'filled','Marker','o');
+                        h.MarkerFaceColor = [124,252,80]./255;
+                    else
+                        h = scatter(gen,pointHight,'filled','Marker','o');
+                        h.MarkerFaceColor = [230,51,7]./255;
+                    end
+                    h.MarkerEdgeColor = zeros(1,3);
+                    set(get(get(h,'Annotation'),'LegendInformation'),'IconDisplayStyle','off'); 
+        end
+    end
+
+    function place_pValue_text(last_gen,pointHight,pValue)
+        text(0.55,pointHight + 0.04,'p-values:','FontSize',12);
+        
+        textHight = 0.02;
+        for gen=1:last_gen
+            % place text of the p-value
+            text(gen,...
+                pointHight - textHight,...
+                sprintf('%.3f',pValue(1,gen)),...
+                'FontSize',11,...
+                'HorizontalAlignment','center');
+            textHight = textHight*(-1);
+        end
+    end
+
+    function y_max_lim = plot_data(categoryNum,res_vec,Mean,stdev,plotType)
+        for c=1:categoryNum
+            plot(genNum,Mean(c,:),'Color',COLORS(c,:));
+            switch plotType
+                case 'errBars' % plot with error bars
+                    h3 = errorbar(genNum,Mean(c,:),stdev(c,:));
+                    set(get(get(h3,'Annotation'),'LegendInformation'),'IconDisplayStyle','off');
+                case 'thinLines' % plot the max fits in thin lines
+                    for fit=1:size(res_vec{1,c},1)
+                        h3 = plot(genNum,res_vec{1,c}(fit,:),...
+                            'Color',COLORS_light(c,:),'LineWidth',2);
+                        set(get(get(h3,'Annotation'),'LegendInformation'),'IconDisplayStyle','off');
+                    end
+            end
+        end
+        
+        % find the maximum point:
+        y_limits = get(gca,'YLim');
+        y_max_lim = y_limits(1,2);
+    end
+
+
+if false
 switch whichGraph
+    % graphs of Fitness comparison:
     case 'mean_of_max_fitness_errBars'
         Title = {'velFit','NrgFit','rangeVelFit'};
         genNum = 1:last_gen;
         % % Plot mean of maximum fitness for all MOGA runs:
-        for j=1:3   % fitNum = 1:3 = {'velFit','NrgFit','rangeVelFit'}
-            whichFit2Plot = j;
-            
+        for j=1:length(whichFit2Plot)
+
             meanFit = zeros(categoryNum,last_gen);
             stdFit = zeros(categoryNum,last_gen);
             
             for i=1:categoryNum
                 [~,maxFit] = ...
-                    MOGA_results{1,i}.plot_fit_over_gen(whichFit2Plot,last_gen);
+                    MOGA_results{1,i}.plot_fit_over_gen(whichFit2Plot(j),last_gen);
                 
                 % calc mean and stdev:
                 meanFit(i,:) = mean(maxFit);
@@ -96,15 +427,13 @@ switch whichGraph
             Title = {'velFit','NrgFit','rangeVelFit'};
             genNum = 1:last_gen;
             % % Plot mean of maximum fitness for all MOGA runs:
-            for j=1:3   % fitNum = 1:3 = {'velFit','NrgFit','rangeVelFit'}
-                whichFit2Plot = j;
-
+            for j=1:length(whichFit2Plot)   
                 meanFit = zeros(categoryNum,last_gen);
                 stdFit = zeros(categoryNum,last_gen);
 
                 for i=1:categoryNum
                     [~,maxFit] = ...
-                        MOGA_results{1,i}.plot_fit_over_gen(whichFit2Plot,last_gen);
+                        MOGA_results{1,i}.plot_fit_over_gen(whichFit2Plot(j),last_gen);
 
                     % calc mean and stdev:
                     meanFit(i,:) = mean(maxFit);
@@ -141,15 +470,13 @@ switch whichGraph
         Title = {'velFit','NrgFit','rangeVelFit'};
         genNum = 1:last_gen;
         % % Plot mean of maximum fitness for all MOGA runs:
-        for j=1:3   % fitNum = 1:3 = {'velFit','NrgFit','rangeVelFit'}
-            whichFit2Plot = j;
-            
+        for j=1:length(whichFit2Plot)
             meanFit = zeros(categoryNum,last_gen);
             stdFit = zeros(categoryNum,last_gen);
             
             for i=1:categoryNum
                 [~,AvgFit] = ...
-                    MOGA_results{1,i}.plot_mean_fit_over_gen(whichFit2Plot,last_gen,'top_pop');
+                    MOGA_results{1,i}.plot_mean_fit_over_gen(whichFit2Plot(j),last_gen,'top_pop');
                 
                 % calc mean and stdev:
                 meanFit(i,:) = mean(AvgFit);
@@ -176,15 +503,13 @@ switch whichGraph
         Title = {'velFit','NrgFit','rangeVelFit'};
         genNum = 1:last_gen;
         % % Plot mean of maximum fitness for all MOGA runs:
-        for j=1:3   % fitNum = 1:3 = {'velFit','NrgFit','rangeVelFit'}
-            whichFit2Plot = j;
-            
+        for j=1:length(whichFit2Plot)
             meanFit = zeros(categoryNum,last_gen);
             stdFit = zeros(categoryNum,last_gen);
             
             for i=1:categoryNum
                 [~,maxFit] = ...
-                    MOGA_results{1,i}.plot_fit_over_gen(whichFit2Plot,last_gen);
+                    MOGA_results{1,i}.plot_fit_over_gen(whichFit2Plot(j),last_gen);
                 
                 % calc mean and stdev:
                 meanFit(i,:) = mean(maxFit);
@@ -235,15 +560,13 @@ switch whichGraph
         Title = {'velFit','NrgFit','rangeVelFit'};
         genNum = 1:last_gen;
         % % Plot mean of maximum fitness for all MOGA runs:
-        for j=1:3   % fitNum = 1:3 = {'velFit','NrgFit','rangeVelFit'}
-            whichFit2Plot = j;
-            
+        for j=1:length(whichFit2Plot)
             meanFit = zeros(categoryNum,last_gen);
             stdFit = zeros(categoryNum,last_gen);
             
             for i=1:categoryNum
                 [~,maxFit] = ...
-                    MOGA_results{1,i}.plot_fit_over_gen(whichFit2Plot,last_gen);
+                    MOGA_results{1,i}.plot_fit_over_gen(whichFit2Plot(j),last_gen);
                 
                 % calc mean and stdev:
                 meanFit(i,:) = mean(maxFit);
@@ -272,70 +595,7 @@ switch whichGraph
             end
         end        
 end
-
-
-
-% if false % % Plot the AVG runTime of each generation
-%     [x_data,GA_only_runTime] = GA_only.plot_gen_runTime(last_gen);
-%     [~,GA_NN_runTime] = GA_NN.plot_gen_runTime(last_gen);
-% 
-%     GA_only_mean = mean(GA_only_runTime);
-%     GA_only_std = std(GA_only_runTime);
-% 
-%     GA_NN_mean = mean(GA_NN_runTime);
-%     GA_NN_std = std(GA_NN_runTime);
-% 
-%     figure;
-%     plot(x_data,GA_only_mean); hold on;
-%     errorbar(x_data,GA_only_mean,GA_only_std);
-%     plot(x_data,GA_NN_mean);
-%     errorbar(x_data,GA_NN_mean,GA_NN_std);
-%     xlabel('Generation number');
-%     ylabel('Avg runTime [sec]');
-%     legend('MOGA','MOGA with NN assist');
-%     title('Avg runTime');
-%     grid minor
-%     axis([1,10,0,inf]);
-%     set(gca,'fontsize',13)
-% 
-%     clear x_data GA_only_runTime GA_NN_runTime 
-%     clear GA_only_mean GA_only_std GA_NN_mean GA_NN_std
-% end
-% 
-% if false % % Plot the runTime of until the i-th generation
-%     I = ones(last_gen,last_gen);
-%     I = triu(I); % create an upper triangular matrix
-%     
-%     [x_data,GA_only_runTime] = GA_only.plot_gen_runTime(last_gen);
-%     [~,GA_NN_runTime] = GA_NN.plot_gen_runTime(last_gen);
-%     
-%     % summing each genTime with the previuos time to get the time until
-%     % that point (Time Elapesd)
-%     GA_only_elapsed_time = GA_only_runTime*I;
-%     GA_only_mean = mean(GA_only_elapsed_time);
-%     GA_only_std = std(GA_only_elapsed_time);
-%     
-%     GA_NN_elapsed_time = GA_NN_runTime*I;
-%     GA_NN_mean = mean(GA_NN_elapsed_time);
-%     GA_NN_std = std(GA_NN_elapsed_time);
-% 
-%     figure;
-%     plot(x_data,GA_only_mean); hold on;
-%     errorbar(x_data,GA_only_mean,GA_only_std);
-%     plot(x_data,GA_NN_mean);
-%     errorbar(x_data,GA_NN_mean,GA_NN_std);
-%     xlabel('Generation number');
-%     ylabel('Avg runTime [sec]');
-%     legend('MOGA','MOGA with NN assist');
-%     title('Avg runTime');
-%     grid minor
-%     axis([1,10,0,inf]);
-%     set(gca,'fontsize',13)
-% 
-%     clear x_data GA_only_runTime GA_NN_runTime 
-%     clear GA_only_elapsed_time GA_NN_elapsed_time I
-%     clear GA_only_mean GA_only_std GA_NN_mean GA_NN_std
-% end
+end
 
 end
 
