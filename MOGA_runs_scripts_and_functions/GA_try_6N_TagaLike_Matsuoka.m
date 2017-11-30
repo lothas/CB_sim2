@@ -67,7 +67,9 @@ load('MatsuokaGenome_4Neuron_tagaLike.mat','Keys','Range','N',...
 GA.Gen = Genome(Keys, Range);
 
 MML = MatsuokaML();
-MML.perLim = [0.68 0.78];
+% MML.perLim = [0.68 0.78];
+% MML.perLimOut = MML.perLim + [-0.08 0.08]; % Desired period range
+MML.perLim = [1.3 1.5];
 MML.perLimOut = MML.perLim + [-0.08 0.08]; % Desired period range
 MML.nNeurons = 2*N;
 
